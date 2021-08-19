@@ -40,7 +40,7 @@ determine_dynamic_range <- function(AllFragmentsList, cellSubsetArchR, binSize, 
                                   extend = start(TotalRangesFilt)%% binSize)
 
   FinalBins <- stretch(anchor_start(RangeBins),extend = (binSize - end(RangeBins)%% binSize)) %>%
-    reduce_ranges() %>% slide_ranges(width = binSize, step = binSize)%>% filter(width(.) ==500)
+    reduce_ranges() %>% slide_ranges(width = binSize, step = binSize)%>% filter(width(.) ==binSize)
 
   return(FinalBins)
 
