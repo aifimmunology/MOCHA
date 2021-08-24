@@ -29,7 +29,7 @@ determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize, doB
                             doBin = FALSE,
                             coreNum = 30)
 
-  if(class(AllFragmentsList)!='list'){
+  if(class(AllFragmentsList)!='SimpleList'){
     stop('AllFragmentsList must be a list of arrow files')
   }
 
