@@ -13,7 +13,7 @@
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
-#' @usage calculate_intensities(fragMat, candidatePeaks, TRUE)
+#' @usage calculate_intensities(fragMat, candidatePeaks, FALSE)
 #'
 #' @references XX
 #'
@@ -53,9 +53,7 @@ calculate_intensities <- function(fragMat,
 
   numCells = length(unique(fragMat_dt$RG))
 
-  # 		fragsPerBin <- fragsPerBin[order(fragsPerBin$subjectHits),]
   fragsPerBin$cell <- fragMat_dt$RG[fragsPerBin$queryHits]
-
   fragsPerBin$bin <-  candidatePeaksDF$bin[fragsPerBin$subjectHits]
   fragsPerBin$chr <-  candidatePeaksDF$seqnames[fragsPerBin$subjectHits]
   fragsPerBin$start <- candidatePeaksDF$start[fragsPerBin$subjectHits]
@@ -85,6 +83,8 @@ calculate_intensities <- function(fragMat,
     ### get cell count matrix
     cell_counts = fragsPerBin[,list(N=.N),
                               by=list(bin,cell)]
+    cat('\n\nCalculating Region-Normalized reads per cell using 500bp wide bins\n\n')
+
 
     #### doing bin-level summaries
     setkey(cell_counts, bin)
@@ -92,11 +92,11 @@ calculate_intensities <- function(fragMat,
     #### calculate features
     countsByBin <-  cell_counts[, list(lambda1=sum(N)/numCells,
                                        maxIntensity = max(N)), by=bin
-    ]
+                               ]
   }
 
-  countsByBin <- dplyr::left_join(candidatePeaksDF[, c('seqnames','start','end','bin','width')],
-                                  countsByBin,
+  countsByBin <- dplyr::left_join(countsByBin,
+                                  candidatePeaksDF[, c('seqnames','start','end','bin')],
                                   by='bin')
 
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]

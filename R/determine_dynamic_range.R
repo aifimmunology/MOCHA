@@ -56,13 +56,14 @@ determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500,
   #Let's subtract out areas of fragments that overlap with blacklist regions.
   #Let's not remove the region entirely, because the regions may be long or only
 
-  TotalRangesFilt<- setdiff_ranges(TotalRange, blackList)
+  TotalRangesFilt<- plyranges::setdiff_ranges(TotalRange, blackList)
 
-  RangeBins <- plyranges::stretch(anchor_end(TotalRangesFilt),
-                                  extend = start(TotalRangesFilt)%% binSize)
+  RangeBins <- plyranges::stretch(plyranges::anchor_end(TotalRangesFilt),
+                                  extend = GenomicRanges::start(TotalRangesFilt)%% binSize)
 
-  FinalBins <- stretch(anchor_start(RangeBins),extend = (binSize - end(RangeBins)%% binSize)) %>%
-    reduce_ranges() %>% slide_ranges(width = binSize, step = binSize)%>% filter(width(.) ==binSize)
+  FinalBins <- plyranges::stretch(plyranges::anchor_start(RangeBins),
+                                  extend = (binSize - end(RangeBins)%% binSize)) %>%
+    plyranges::reduce_ranges() %>% plyranges::slide_ranges(width = binSize, step = binSize)%>% filter(width(.) ==binSize)
 
   return(FinalBins)
 
