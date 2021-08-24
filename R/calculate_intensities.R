@@ -13,6 +13,8 @@
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
+#' @usage calculate_intensities(fragMat, candidatePeaks, TRUE)
+#'
 #' @references XX
 #'
 
@@ -73,8 +75,7 @@ calculate_intensities <- function(fragMat,
     setkey(cell_counts, bin)
     cat('\n\nCalculating Region-Normalized reads per cell using 500bp wide bins\n\n')
 
-    countsByBin <-  cell_counts[, list(CellsWithNoReads=(numCells-sum(N>=1))/numCells,
-                                       ReadsPerCell=sum(N)/numCells,
+    countsByBin <-  cell_counts[, list(lambda1=sum(N)/numCells,
                                        maxIntensity = max(N)),
                                 by=bin
                                 ]
@@ -88,8 +89,7 @@ calculate_intensities <- function(fragMat,
     setkey(cell_counts, bin)
 
     #### calculate features
-    countsByBin <-  cell_counts[, list(CellsWithNoReads=(numCells-sum(N>=1))/numCells,
-                                       ReadsPerCell=sum(N)/numCells,
+    countsByBin <-  cell_counts[, list(lambda1=sum(N)/numCells,
                                        maxIntensity = max(N)), by=bin
     ]
   }
@@ -99,22 +99,14 @@ calculate_intensities <- function(fragMat,
                                   by='bin')
 
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
-
-  ## creating counts for bins with no reads
-  countsByBin$CellsWithNoReads[is.na(countsByBin$CellsWithNoReads)] <- 1
-  countsByBin$ReadsPerCell[is.na(countsByBin$ReadsPerCell)] <- 0
-  countsByBin$maxIntensity[is.na(countsByBin$maxIntensity)] <- 0
-
-  countsByBin$threeBin <- rollapply(countsByBin$ReadsPerCell, FUN=mean, width=3, by=1 ,partial=TRUE, alight='left')
   countsByBin$numCells <- numCells
-
 
   chromosomeOrder <- c("chr1"  ,"chr2" , "chr3",  "chr4",
                        "chr5" , "chr6" , "chr7"  ,"chr8",
                        "chr9" ,"chr10" ,"chr11", "chr12",
                        "chr13", "chr14", "chr15", "chr16",
                        "chr17", "chr18" ,"chr19", "chr20",
-                       "chr21", "chr22", "chrX", 'chrY' )
+                       "chr21", "chr22", "chrX", 'chrY')
 
   countsByBin$seqnames <- factor(countsByBin$seqnames, levels=chromosomeOrder, ordered=T)
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
