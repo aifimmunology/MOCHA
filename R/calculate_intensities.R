@@ -59,6 +59,7 @@ calculate_intensities <- function(fragMat,
   fragsPerBin$bin <-  candidatePeaksDF$bin[fragsPerBin$subjectHits]
   fragsPerBin$chr <-  candidatePeaksDF$seqnames[fragsPerBin$subjectHits]
   fragsPerBin$start <- candidatePeaksDF$start[fragsPerBin$subjectHits]
+  fragsPerBin$end <- candidatePeaksDF$end[fragsPerBin$subjectHits]
   fragsPerBin$width <- candidatePeaksDF$width[fragsPerBin$subjectHits]
 
 
@@ -94,7 +95,7 @@ calculate_intensities <- function(fragMat,
     ]
   }
 
-  countsByBin <- dplyr::left_join(candidatePeaksDF[, c('seqnames','start','bin','width')],
+  countsByBin <- dplyr::left_join(candidatePeaksDF[, c('seqnames','start','end','bin','width')],
                                   countsByBin,
                                   by='bin')
 
