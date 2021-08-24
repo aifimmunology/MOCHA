@@ -21,7 +21,7 @@
 
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
-                                  normalizeBins=TRUE) {
+                                  normalizeBins=FALSE) {
   print("calculating intensities from ArchR Project!")
 
   if(class(fragMat) != 'GRanges'){
