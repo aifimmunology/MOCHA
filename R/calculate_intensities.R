@@ -37,19 +37,19 @@ calculate_intensities <- function(fragMat,
          genomic regions should be normalized to fixed-width intervals')
   }
 
-  fragMat_dt <- as.data.table(fragMat)
+  fragMat_dt <- data.table::as.data.table(fragMat)
 
   ## transform granges to data.table
-  candidatePeaksDF <- as.data.table(candidatePeaks)
+  candidatePeaksDF <- data.table::as.data.table(candidatePeaks)
   candidatePeaksDF$bin <- paste(candidatePeaksDF$seqnames, ':',candidatePeaksDF$start,
                                '-',candidatePeaksDF$end,sep='')
 
   ###
-  fragsPerBin <- findOverlaps(fragMat,
+  fragsPerBin <- GenomicRanges::findOverlaps(fragMat,
                               candidatePeaks,
                               minoverlap=0)
 
-  fragsPerBin <- as.data.table(fragsPerBin)
+  fragsPerBin <- data.table::as.data.table(fragsPerBin)
 
   numCells = length(unique(fragMat_dt$RG))
 
@@ -95,10 +95,11 @@ calculate_intensities <- function(fragMat,
                                ]
   }
 
-  countsByBin <- dplyr::left_join(countsByBin,
-                                  candidatePeaksDF[, c('seqnames','start','end','bin')],
+  countsByBin <- dplyr::left_join(candidatePeaksDF[, c('seqnames','start','end','bin')],
+                                  countsByBin,
                                   by='bin')
 
+  countsByBin[is.na(countsByBin)] <- 0
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
   countsByBin$numCells <- numCells
 
