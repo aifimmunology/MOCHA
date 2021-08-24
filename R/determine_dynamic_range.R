@@ -24,9 +24,9 @@
 #'
 
 
-determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize, doBin){
+determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500, doBin=FALSE){
   TotalRange <- DynamicBins(AllFragmentsList = AllFragmentsList,
-                            doBin = FALSE,
+                            doBin = doBin,
                             coreNum = 30)
 
   if(class(AllFragmentsList)!='SimpleList'){
