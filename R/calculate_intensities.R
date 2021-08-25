@@ -109,8 +109,13 @@ calculate_intensities <- function(fragMat,
   countsByBin$seqnames <- factor(countsByBin$seqnames, levels=chromosomeOrder, ordered=T)
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
     
-  countsByBin$lambda2 <-NBDistribution[countsByBin$maxIntensity+1]    
-
+  countsByBin$lambda2 <-NBDistribution$lambda2[countsByBin$maxIntensity+1]    
+  countsByBin = countsByBin[,c('seqnames','start','end','lambda1','lambda2','numCells'),with=F]
+    
   print(paste('Analysis finished on ', numCells, 'cells'))
+    
+  countsByBin = GenomicRanges::makeGRangesFromDataFrame(countsByBin,
+                                                        keep.extra.columns=T
+                                                       )  
   return(countsByBin)
 }
