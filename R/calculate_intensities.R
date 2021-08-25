@@ -107,6 +107,8 @@ calculate_intensities <- function(fragMat,
 
   countsByBin$seqnames <- factor(countsByBin$seqnames, levels=chromosomeOrder, ordered=T)
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
+    
+  countsByBin$lambda2 <-NBDistribution[countsByBin$maxIntensity+1]    
 
   print(paste('Analysis finished on ', numCells, 'cells'))
   return(countsByBin)
