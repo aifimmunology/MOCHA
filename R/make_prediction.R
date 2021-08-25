@@ -23,18 +23,21 @@
 make_prediction <- function(X, finalModel){
 
     cell_model = X$numCells[1]
-    X = cbind(rep(1, nrow(X)),
+    designX = cbind(rep(1, nrow(X)),
               X[,c('lambda1','lambda2')]
     )
 
     model.idx <- which.min(abs(cell_model - finalModel$numCells))
 
-    tmpModel <- finalModel[model.idx,2:4]
+    tmpModel <- finalModel[model.idx,c('Intercept','lambda1','lambda2')]
     tmpModel = as.matrix(tmpModel)
     tmpModel = t(tmpModel)
-    X = as.matrix(X)
-    preds = X%*% tmpModel
+    designX = as.matrix(designX)
+    preds = designX%*% tmpModel
     preds = 1/(1+exp(-preds))
-    return(preds)
+    
+    X$Prediction = preds 
+    X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
+    return(X)
 
   }
