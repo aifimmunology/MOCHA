@@ -18,7 +18,6 @@
 #' @references XX
 #'
 
-
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
                                   normalizeBins=FALSE) {
@@ -72,8 +71,6 @@ calculate_intensities <- function(fragMat,
 
     #### doing bin-level summaries
     setkey(cell_counts, bin)
-    cat('\n\nCalculating Region-Normalized reads per cell using 500bp wide bins\n\n')
-
     countsByBin <-  cell_counts[, list(lambda1=sum(N)/numCells,
                                        maxIntensity = max(N)),
                                 by=bin
@@ -83,8 +80,6 @@ calculate_intensities <- function(fragMat,
     ### get cell count matrix
     cell_counts = fragsPerBin[,list(N=.N),
                               by=list(bin,cell)]
-    cat('\n\nCalculating Region-Normalized reads per cell using 500bp wide bins\n\n')
-
 
     #### doing bin-level summaries
     setkey(cell_counts, bin)
