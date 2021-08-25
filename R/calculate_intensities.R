@@ -20,6 +20,7 @@
 
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
+                                  NBDistribution,
                                   normalizeBins=FALSE) {
   print("calculating intensities from ArchR Project!")
 
