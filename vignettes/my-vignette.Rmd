@@ -1,0 +1,22 @@
+---
+title: "scMACS"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+# scMACS
+
+scMACS, single-cell Modeling of AtaC-Seq is a novel, single-cell centric approach to peak-calling.
+
+```{r setup}
+library(scMACS)
+```
