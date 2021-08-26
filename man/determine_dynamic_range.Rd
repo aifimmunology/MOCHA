@@ -4,7 +4,12 @@
 \alias{determine_dynamic_range}
 \title{\code{determine_dynamic_range}}
 \usage{
-determine_dynamic_range(AllFragmentsList, cellSubsetArchR, binSize, doBin)
+determine_dynamic_range(
+  AllFragmentsList,
+  ArchRProject,
+  binSize = 500,
+  doBin = FALSE
+)
 }
 \arguments{
 \item{AllFragmentsList:}{List of fragments by arrow file}

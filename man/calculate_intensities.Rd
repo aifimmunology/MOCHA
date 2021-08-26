@@ -4,7 +4,7 @@
 \alias{calculate_intensities}
 \title{\code{calculate_intensities}}
 \usage{
-calculate_intensities(fragMat, candidatePeaks, normalizeBins = TRUE)
+calculate_intensities(fragMat, candidatePeaks, FALSE)
 }
 \arguments{
 \item{fragMat}{a genomic ranges object containing the fragments}
