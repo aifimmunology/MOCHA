@@ -114,8 +114,6 @@ calculate_intensities <- function(fragMat,
     
   print(paste('Analysis finished on ', numCells, 'cells'))
     
-  countsByBin = GenomicRanges::makeGRangesFromDataFrame(countsByBin,
-                                                        keep.extra.columns=T
-                                                       )  
+
   return(countsByBin)
 }
