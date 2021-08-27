@@ -25,7 +25,7 @@
 
 
 determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500, doBin=FALSE){
-  TotalRange <- DynamicBins(AllFragmentsList = AllFragmentsList,
+  TotalRange <- scMACS::dynamic_bins(AllFragmentsList = AllFragmentsList,
                             doBin = doBin,
                             coreNum = 30)
 
