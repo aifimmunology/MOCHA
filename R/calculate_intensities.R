@@ -16,7 +16,8 @@
 #' @usage calculate_intensities(fragMat, candidatePeaks, FALSE)
 #'
 #' @references XX
-#'
+#' 
+#' @export
 
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
@@ -60,42 +61,34 @@ calculate_intensities <- function(fragMat,
   fragsPerBin$end <- candidatePeaksDF$end[fragsPerBin$subjectHits]
   fragsPerBin$width <- candidatePeaksDF$width[fragsPerBin$subjectHits]
 
+  fragsPerBin = as.data.table(fragsPerBin)
+  
+  ### get cell count matrix
+  cell_counts = fragsPerBin[,list(N=.N),
+                            by=list(bin,cell)]
+  #### doing bin-level summaries
+  setkey(cell_counts, bin)
 
-  if(normalizeBins){
-    ### get cell count matrix
-    cell_counts = fragsPerBin[,list(N=.N,
-                                    width=unique(width)),
-                              by=list(bin,cell)
-    ]
-    cell_counts$normed_width <- pmax(1, round(cell_counts$width/500))
-    cell_counts$normed_counts <- pmax(1,round(cell_counts$N/cell_counts$normed_width))
-
-    #### doing bin-level summaries
-    setkey(cell_counts, bin)
-    countsByBin <-  cell_counts[, list(lambda1=sum(N)/numCells,
-                                       maxIntensity = max(N)),
-                                by=bin
-                                ]
-
-  } else{
-    ### get cell count matrix
-    cell_counts = fragsPerBin[,list(N=.N),
-                              by=list(bin,cell)]
-
-    #### doing bin-level summaries
-    setkey(cell_counts, bin)
-
-    #### calculate features
-    countsByBin <-  cell_counts[, list(lambda1=sum(N)/numCells,
-                                       maxIntensity = max(N)), by=bin
-                               ]
-  }
+  #### calculate features
+  countsByBin <-  cell_counts[, list(lambda1=sum(N)/numCells,
+                                     maxIntensity = max(N)), by=bin
+                             ]
+  
+  ### join to the original dynamic bins 
+  ### to retain original variables
 
   countsByBin <- dplyr::left_join(candidatePeaksDF[, c('seqnames','start','end','bin')],
                                   countsByBin,
                                   by='bin')
 
+  ### if the dynamic bins is calculated
+  ### on a cohort, and applied to samples
+  ### some entries will be NAs
+  ### and this fixes with 0s
+  
   countsByBin[is.na(countsByBin)] <- 0
+  
+  ### order by chromosome
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
   countsByBin$numCells <- numCells
 
@@ -106,12 +99,14 @@ calculate_intensities <- function(fragMat,
                        "chr17", "chr18" ,"chr19", "chr20",
                        "chr21", "chr22", "chrX", 'chrY')
 
+
   countsByBin$seqnames <- factor(countsByBin$seqnames, levels=chromosomeOrder, ordered=T)
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
     
   countsByBin$lambda2 <-NBDistribution$lambda2[countsByBin$maxIntensity+1]    
+  
+  ### retain only features of interest and in order required
   countsByBin = countsByBin[,c('seqnames','start','end','lambda1','lambda2','numCells'),with=F]
-    
   print(paste('Analysis finished on ', numCells, 'cells'))
     
 

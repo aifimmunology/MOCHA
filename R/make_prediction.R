@@ -18,6 +18,7 @@
 #'
 #' @references XX
 #'
+#' @export
 
 make_prediction <- function(X, finalModel){
 
@@ -37,6 +38,7 @@ make_prediction <- function(X, finalModel){
     
     X$Prediction = preds 
     X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
+    X$PredictionStrength = X$lambda1
     return(X)
 
   }

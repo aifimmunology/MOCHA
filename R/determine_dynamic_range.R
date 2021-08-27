@@ -22,6 +22,7 @@
 #'
 #' @references XX
 #'
+#' @export
 
 
 determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500, doBin=FALSE){

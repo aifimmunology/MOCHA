@@ -22,6 +22,7 @@
 #'
 #' @references XX
 #'
+#' @export
 
 
 dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, coreNum, doBin){
