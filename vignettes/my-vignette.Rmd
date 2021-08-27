@@ -13,10 +13,122 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
-# scMACS
+# Overview
 
-scMACS, single-cell Modeling of AtaC-Seq is a novel, single-cell centric approach to peak-calling.
+scMACS, single-cell Modeling of AtaC-Seq is a novel, single-cell centric 
+approach to peak-calling. Similar to MACS/MACS2, scMACS leverages the signal
+provided by reads in a population of cells. However, contrary to MACS2, scMACS
+provides test statistics that leverage the single-cell aspect of sc-ATAC.
 
-```{r setup}
-library(scMACS)
+## Mathematical Model
+
+The proposed method, scMACS, is a Binomial-Poisson hierarchical model that doubly-estimates the expected intensity parameter, $\lambda$, to create a peak-calling algorithm that can leverage single-cell data. The hierarchical model is described below indicating how the probability of a (+) peak is calculated:
+
+$$ X_j \sim \text{Poisson}(\lambda_j) \\
+Y_j| \{X_{i,j}\}_i \sim \text{Binomial}(p_j= \bigg(\lambda_{1,j},\lambda_{2,j} \bigg) , n=1) $$
+
+where the reads observed in a region are modeled as counts arising from a Poisson distribution, parameterized with a mean intensity parameter, , that represents the expected number of reads per cell in a population of cells. The probability of a positive peak, 
+$$Pr (Y_j=+| \lambda_1,\lambda_2)$$ 
+is calculated using 
+- $\lambda_1$=the average number of reads per cell in a region, 
+= $\lambda_2$=the maximum observed reads in a cell in a region.
+
+## Parameter Estimates 
+
+The parameter estimates for $\lambda1, \lambda2$ can be calculated respectively 
+via the sample mean, and sample maximum, and then from these we can estimate 
+the true population estimate of $\lambda$=reads per cell. 
+
+$$\hat{\lambda}_1 = \frac{\Sigma X_{ij}}{N_c}$$
+
+where $X_ij$ are the reads in cell i, region j, and $N_c$ is the number of cells
+for a given population for cells. For $\lambda_2$ a theoretical derivation of 
+the probability distribution for the sample maximum is derived as follows: 
+
+$$F_{X_{(n)}}(x) = Pr(X_{(n)}\leq x|\lambda) = Pr(X_1 \leq x, \cdots X_n \leq x |\lambda) \\
+Pr(X_1 \leq x)\cdots Pr(X_n \leq x) = \bigg[Pr(X_i \leq x)\bigg]^n$$
+
+# Running scMACS
+
+## Input data 
+
+To run scMACS you first need to 2 input objects, an ArchR project object, and 
+the associated fragment files for the project. 
+
+```{r setup, message=FALSE}
+require(scMACS)
+suppressMessages(load("~/Desktop/sample_scMacs_data/sampleArchR.RData"))
+suppressMessages(load("~/Desktop/sample_scMacs_data/sampleFrag.RData"))
+load('~/Desktop/scMACS/data/NB_max_distribution.RDS')
+
+```
+
+The sample frags is a set of two fragment files file loaded from an ArchR project that one would get
+by running the command: getFragmentsFromProject(ArchRProject). 
+
+## Calculating "Dynamic Bins"
+
+Then we pass the sample fragment list to calculate the "dynamic" bins where 
+we are restricting the peak-calling space to genomic locations in which we
+actually observed activity (reads). 
+
+```{r }
+require(plyranges)
+require(GenomicRanges)
+require(ArchR)
+```
+
+## Calculating the intensity design matrix
+After this, we calculate the intensity matrices for each fragment file, which 
+generates the variables for the model 'design matrix' for the final peak
+calling predictions.
+
+```{r}
+
+candidatePeaks <- scMACS::determine_dynamic_range(sampleFrags,
+                                                  cellSubsetArchR,
+                                                  500,
+                                                  doBin=FALSE)
+
+
+int_matrix_1 <- scMACS::calculate_intensities(fragMat = sampleFrags[[1]],
+                             candidatePeaks=candidatePeaks,
+                             NBDistribution = NBDistribution_global,
+                             normalizeBins=FALSE
+                )
+
+int_matrix_2 <- scMACS::calculate_intensities(fragMat = sampleFrags[[2]],
+                             candidatePeaks=candidatePeaks,
+                             NBDistribution = NBDistribution_global,
+                             normalizeBins=FALSE
+                )
+
+```
+
+## Running Prediction Model 
+Using the intensity matrices generated above we can 
+run the model (logistic regression), and then make our predictions using a
+threshold of 50%.
+
+Here our model is presented as a table of coefficients and cell #s, and then
+given the number of cells in a sample, we fit the closest, most appropriate
+model. 
+
+```{r }
+finalModel <- read.csv('~/Downloads/final_model.csv')
+
+print(finalModel)
+```
+
+Now after finding the closest cell-model, we apply the coefficients and
+make our peak-calling predictions. 
+
+```{r echo=F}
+predictions <- make_prediction(int_matrix_1, finalModel)
+predictions2 <- make_prediction(int_matrix_2, finalModel)
+
+table(predictions$Prediction > 0.5)
+table(predictions2$Prediction > 0.5)
+
+predictions
 ```
