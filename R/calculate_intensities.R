@@ -108,7 +108,7 @@ calculate_intensities <- function(fragMat,
   countsByBin$lambda2<-NBDistribution[countsByBin$maxIntensity+1]
   
   ### retain only features of interest and in order required
-  countsByBin = countsByBin[,c('seqnames','start','end','lambda1','lambda2','numCells'),with=F]
+  countsByBin = countsByBin[,c('seqnames','start','end','lambda1','lambda2','maxIntensity','numCells'),with=F]
   print(paste('Analysis finished on ', numCells, 'cells'))
     
 
