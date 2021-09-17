@@ -7,7 +7,10 @@ require(ArchR)
 
 
 
+callPeaks <- function( ){
 
+
+}
 
 candidatePeaks <- scMACS::determine_dynamic_range(sampleFrags, cellSubsetArchR,500,doBin=FALSE)
 int_matrix_1 <- scMACS::calculate_intensities(fragMat = sampleFrags[[1]],candidatePeaks=candidatePeaks,
