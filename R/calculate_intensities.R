@@ -7,6 +7,10 @@
 #' @param fragMat a genomic ranges object containing the fragments
 #' @param candidatePeaks a genomic ranges object indicating where to call peaks. This could be a pre-selected peak set or a dynamic bins approach to searching the whole genome.
 #' @param normalizeBins a boolean indicating whether varying bin widths should be normalized to a fixed width
+#' @param theta a numeric value indicating the dispersion parameter for 
+#'        the negative binomial distribution maximum estimate
+#' @param width a numeric value indicating how wide to make the noise 
+#'        estimates for lambda3 
 #'
 #' @return a data.table, countsByBin, that returns the two intensity parameters required
 #' to calculate the probability of a (+) peak
@@ -22,7 +26,10 @@
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
                                   NBDistribution,
-                                  normalizeBins=FALSE) {
+                                  normalizeBins=FALSE,
+                                  theta=0.01,
+                                  width=20
+                                 ) {
   print("calculating intensities from ArchR Project!")
 
   if(class(fragMat) != 'GRanges'){
@@ -104,16 +111,20 @@ calculate_intensities <- function(fragMat,
   countsByBin <- countsByBin[order(countsByBin$seqnames, countsByBin$start, decreasing=FALSE),]
   
   if(is.null(NBDistribution)){
-    NBDistribution <- calculateNBDistribution(countsByBin, theta=0.005)      
+    NBDistribution <- calculateNBDistribution(countsByBin, theta=theta)      
   } else{
     NBDistribution = NBDistribution  
   }
   
 
   countsByBin$lambda2<-NBDistribution[countsByBin$maxIntensity+1]
+    
+  countsByBin$lambda3<- calculate_local_noise(countsByBin$lambda1, width=width)
   
   ### retain only features of interest and in order required
-  countsByBin = countsByBin[,c('seqnames','start','end','lambda1','lambda2','maxIntensity','numCells'),with=F]
+  countsByBin = countsByBin[,c('seqnames','start','end',
+                               'lambda1','lambda2','lambda3', 
+                               'maxIntensity','numCells'),with=F]
   print(paste('Analysis finished on ', numCells, 'cells'))
     
 
