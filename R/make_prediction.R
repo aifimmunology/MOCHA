@@ -35,7 +35,7 @@ make_prediction <- function(X, finalModel){
         
         model.idx <- which(distances %in% sorted.distances[1])
         
-        if(length(model.idx)==2{
+        if(length(model.idx)==2){
             
            interpolatedModel <- (finalModel[model.idx[1],] + finalModel[model.idx[2],])/2
 
