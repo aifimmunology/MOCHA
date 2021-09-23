@@ -6,11 +6,11 @@
 #AllFragmentsList: List of fragments by arrow file
 #'
 #'
-#' @param AllFragmentsList: List of fragments by arrow file
-#' @param GeneralWindowSize: Window size for sliding window generated over longer fragments.
-#' @param WindowSizeRange: The sliding window function will generate a smaller window at the end of a longer fragment,
+#' @param AllFragmentsList List of fragments by arrow file
+#' @param GeneralWindowSize Window size for sliding window generated over longer fragments.
+#' @param WindowSizeRange The sliding window function will generate a smaller window at the end of a longer fragment,
 #if the fragment is not evenly divisible by GeneralWindowSize. If that smaller window is less than or equal to
-#WindowSizeRange, then it will be merged with the preceding window to great a larger window. This means that
+#WindowSizeRange, then it will be merged with the preceding window to generate a larger window. This means that
 #longer fragments will be broken up into bins that are between WindowSizeRange and WindowSizeRange+GeneralWindowSize in length.
 #' @param coreNum an integer indicating the number of cores to use
 #' @param doBins is a boolean variable. When true, then it will into windows according to GeneralWindowSize and WindowSizeRange.
@@ -23,30 +23,54 @@
 #' @references XX
 #'
 #' @export
+dynamic_bins <- function(
+    AllFragmentsList, 
+    GeneralWindowSize = 500, 
+    WindowSizeRange = 100, 
+    coreNum = 1, 
+    doBin = TRUE){
 
+  all_chr <- unique(unlist(lapply(AllFragmentsList, seqlevels)))
 
-dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, coreNum, doBin){
-
-  AllFragsList <- mclapply(AllFragmentsList, function(x){
-    reduce_ranges(x, counts = n())
+  AllFrags <- lapply(
+    all_chr, 
+    function(chr) { 
+        chr_frag <- lapply(frags, function(frag) {
+            frag[[chr]]
+        })
+        plyranges::bind_ranges(chr_frag)
+    })
+    
+  AllFrags <- mclapply(
+      AllFrags, 
+      function(x) {
+        plyranges::reduce_ranges(x, counts = plyranges::n())
   }, mc.cores = coreNum)
-  AllFrags <- bind_ranges(AllFragsList) %>% reduce_ranges(counts = sum(counts))
+
+  AllFrags <- plyranges::bind_ranges(AllFrags)
 
   if(doBin){
     print("01 - Fragments bound into one set of non-overlapping ranges")
 
     SmallFrags <- AllFrags[width(AllFrags) <= GeneralWindowSize + WindowSizeRange]
 
-    BigFrags <- AllFrags[width(AllFrags) > GeneralWindowSize + WindowSizeRange] %>%
-      slide_ranges(width = GeneralWindowSize, step = GeneralWindowSize) %>%
-      anchor_end() %>% mutate(partition = (as.character(partition))) %>%
-      mutate(width = ifelse(width <= WindowSizeRange,width + 2,width-1)) %>% group_by(partition) %>%
-      reduce_ranges(minoverlap = 2) %>% mutate(width = width +1)
+    BigFrags <- AllFrags[width(AllFrags) > GeneralWindowSize + WindowSizeRange] 
+    BigFrags_counts <- BigFrags$counts
+
+    BigFrags <- BigFrags %>%
+      GenomicRanges::slidingWindows(width = GeneralWindowSize, step = GeneralWindowSize)
+
+    BigFrags_splits <- diff(c(0,BigFrags@partitioning@end))
+    BigFrags <- unlist(BigFrags)
+
+    BigFrags$counts <- base::rep(BigFrags_counts, BigFrags_splits)
+
     print("02 - Longer fragments broken into sliding windows")
-    FinalBins <- bind_ranges(BigFrags, SmallFrags)
-  }else{
+    FinalBins <- plyranges::bind_ranges(BigFrags, SmallFrags)
+
+  } else {
     FinalBins <- AllFrags
   }
 
-  return(FinalBins)
+  FinalBins
 }

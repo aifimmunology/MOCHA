@@ -1,6 +1,6 @@
 Package: scMACS
 Type: Package
-Title: What the Package Does (Title Case)
+Title: single-cell Modeling of Accessible Chromatin Sites
 Version: 0.1.0
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
@@ -10,6 +10,10 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
-Depends: data.table
+Depends: 
+  ArchR,
+  data.table,
+  dplyr,
+  plyranges
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
