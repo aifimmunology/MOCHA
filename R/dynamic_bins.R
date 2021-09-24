@@ -28,14 +28,21 @@ dynamic_bins <- function(
     GeneralWindowSize = 500, 
     WindowSizeRange = 100, 
     coreNum = 1, 
-    doBin = TRUE){
+    doBins = TRUE){
 
   all_chr <- unique(unlist(lapply(AllFragmentsList, seqlevels)))
 
   AllFrags <- lapply(
+      frags,
+      function(frag) {
+          split(frag, seqnames(frag))
+      }
+  )
+    
+  AllFrags <- lapply(
     all_chr, 
     function(chr) { 
-        chr_frag <- lapply(frags, function(frag) {
+        chr_frag <- lapply(AllFrags, function(frag) {
             frag[[chr]]
         })
         plyranges::bind_ranges(chr_frag)
@@ -49,7 +56,7 @@ dynamic_bins <- function(
 
   AllFrags <- plyranges::bind_ranges(AllFrags)
 
-  if(doBin){
+  if(doBins){
     print("01 - Fragments bound into one set of non-overlapping ranges")
 
     SmallFrags <- AllFrags[width(AllFrags) <= GeneralWindowSize + WindowSizeRange]
