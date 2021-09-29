@@ -20,7 +20,7 @@
 #'
 #' @export
 
-make_prediction <- function(X, finalModel){
+make_prediction <- function(X, finalModel, threshold=0.5){
 
     cell_model = X$numCells[1]
     
@@ -64,7 +64,7 @@ make_prediction <- function(X, finalModel){
         X$Prediction = preds 
         X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
         X$PredictionStrength = X$lambda1
-        X$Peak = X$Prediction > 0.5
+        X$Peak = X$Prediction > threshold
         
           return(X)
         
@@ -80,7 +80,7 @@ make_prediction <- function(X, finalModel){
         X$Prediction = preds 
         X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
         X$PredictionStrength = X$lambda1
-        X$Peak = X$Prediction > 0.5
+        X$Peak = X$Prediction > threshold
         
         return(X)
         }
