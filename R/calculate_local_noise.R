@@ -35,21 +35,21 @@ calculate_local_noise <- function(lambda1, width=20){
         
     ### use the roll mean function to calculate
     ### a centered local estimate of noise 
-    local_noise_estimates <- zoo::rollmean(lambda1, width,  na.rm=TRUE, fill=NA, align='center')
+    local_noise_estimates <- zoo::rollmean(lambda1, 
+                                           width,  
+                                           na.rm=TRUE, 
+                                           fill=NA, 
+                                           align='center')
+   
+    ### the boundary cases do not have 
+    ### enough windows near them to calculate 
+    ### a neighborhood estiamte so these 
+    ### estimates are replaced with the initial
+    ### lambda1 value 
     
-    ### boundary cases that are < width/2 to the ends of the
-    ### genome will have NA values. This provides a 1-sided 
-    ### estimate of noise searching width/2 tiles left and right 
-    ### of the lambda1 estimates 
-    
-    left_boundary <- rollmean(lambda1, half_width,  na.rm=TRUE, fill=NA, align='left')
-    right_boundary <- rollmean(lambda1, half_width,  na.rm=TRUE, fill=NA, align='right')
+    idxNAs <- which(is.na(local_noise_estimates))
+    local_noise_estimates[idxNAs] <- lambda1[idxNAs]
 
-    ### replace boundary cases with half-width estimates 
-    ### of noise 
-    local_noise_estimates[1:half_width] <- left_boundary[1:half_width]
-    local_noise_estimates[(N-half_width):N] <- right_boundary[(N-half_width):N]
-    
     return(local_noise_estimates)
     
 }

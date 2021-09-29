@@ -23,6 +23,11 @@
 make_prediction <- function(X, finalModel){
 
     cell_model = X$numCells[1]
+    
+    if(cell_model  < 20){
+        stop('Cannot make peak calls with < 20 cells')
+    }
+    
     designX = cbind(rep(1, nrow(X)),
               X[,c('lambda1','lambda2')]
     )
@@ -35,7 +40,7 @@ make_prediction <- function(X, finalModel){
         
         model.idx <- which(distances %in% sorted.distances[1])
         
-        if(length(model.idx)==2{
+        if(length(model.idx)==2){
             
            interpolatedModel <- (finalModel[model.idx[1],] + finalModel[model.idx[2],])/2
 
@@ -59,6 +64,7 @@ make_prediction <- function(X, finalModel){
         X$Prediction = preds 
         X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
         X$PredictionStrength = X$lambda1
+        X$Peak = X$Prediction > 0.5
         
           return(X)
         
@@ -74,6 +80,7 @@ make_prediction <- function(X, finalModel){
         X$Prediction = preds 
         X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
         X$PredictionStrength = X$lambda1
+        X$Peak = X$Prediction > 0.5
         
         return(X)
         }
