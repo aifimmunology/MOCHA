@@ -36,7 +36,7 @@ max_nbinom_mass_function <- function(mean.param, dispersion.param , n,k){
 obtainTheoreticalEstimates_NB <- function(mean.param, dispersion.param, n,maxObserved){
   
   values = c(0:maxObserved)
-  probDistn <- sapply(values, function(K) round(max_nbinom_mass_function(mean.param = mean.param, 
+  probDistn <- sapply(values, function(K) round(max_nbinom_mass_function(mean.param = mean.param,
                                                                          dispersion.param=dispersion.param, 
                                                                          n=n,
                                                                          k=K),5)
@@ -64,7 +64,7 @@ calculateLambda <- function(mat, observedMaxInt,fixedTheta){
   upperLimit <- 1   
   n = mat$numCells[1]
   
-  lambdaSearch <- seq(lowerLimit, upperLimit, by=.001)
+  lambdaSearch <- seq(lowerLimit, upperLimit, by=.0001)
   
   
   probsNB <- sapply(lambdaSearch, 
@@ -84,10 +84,6 @@ calculateNBDistribution <- function(mat, theta=0.1){
   
   n = mat$numCells[1]
   empiricalDist <- estimateEmpiricalDistribution(mat)
-  
-  fixedTheta = 2 
-  
-  
   
   NBDistribution <- sapply(0:maxObserved, 
                            function(x) calculateLambda(mat,x, fixedTheta=theta)
