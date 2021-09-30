@@ -27,18 +27,55 @@ make_prediction <- function(X, finalModel){
               X[,c('lambda1','lambda2')]
     )
 
-    model.idx <- which.min(abs(cell_model - finalModel$numCells))
-
-    tmpModel <- finalModel[model.idx,c('Intercept','lambda1','lambda2')]
-    tmpModel = as.matrix(tmpModel)
-    tmpModel = t(tmpModel)
-    designX = as.matrix(designX)
-    preds = designX%*% tmpModel
-    preds = 1/(1+exp(-preds))
+    model.idx <- which(cell_model == finalModel$numCells)
     
-    X$Prediction = preds 
-    X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
-    X$PredictionStrength = X$lambda1
-    return(X)
+    if(length(model.idx)==0){
+        distances <- (abs(cell_model - finalModel$numCells))
+        sorted.distances <- sort(distances, decreasing=F)      
+        
+        model.idx <- which(distances %in% sorted.distances[1])
+        
+        if(length(model.idx)==2{
+            
+           interpolatedModel <- (finalModel[model.idx[1],] + finalModel[model.idx[2],])/2
+
+        } else if(finalModel$numCells[model.idx] > cell_model){
+            
+           interpolatedModel <- (finalModel[model.idx,] + finalModel[model.idx-1,])/2
+
+        } else {
+            interpolatedModel <- (finalModel[model.idx,] + finalModel[model.idx+1,])/2
+            
+        }    
+        
+        
+        tmpModel <- interpolatedModel[,c('Intercept','lambda1','lambda2')]
+        tmpModel = as.matrix(tmpModel)
+        tmpModel = t(tmpModel)
+        designX = as.matrix(designX)
+        preds = designX%*% tmpModel
+        preds = 1/(1+exp(-preds))
+
+        X$Prediction = preds 
+        X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
+        X$PredictionStrength = X$lambda1
+        
+          return(X)
+        
+    } else {
+    
+        tmpModel <- finalModel[model.idx,c('Intercept','lambda1','lambda2')]
+        tmpModel = as.matrix(tmpModel)
+        tmpModel = t(tmpModel)
+        designX = as.matrix(designX)
+        preds = designX%*% tmpModel
+        preds = 1/(1+exp(-preds))
+
+        X$Prediction = preds 
+        X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
+        X$PredictionStrength = X$lambda1
+        
+        return(X)
+        }
 
   }
