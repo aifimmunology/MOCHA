@@ -20,69 +20,73 @@
 #'
 #' @export
 
-make_prediction <- function(X, finalModel, threshold=0.5){
+make_prediction <- function(X, finalModelObject){
 
     cell_model = X$numCells[1]
     
-    if(cell_model  < 20){
-        stop('Cannot make peak calls with < 20 cells')
+    if(cell_model  < 5){
+        stop('Cannot make peak calls with < 5 cells')
     }
     
-    designX = cbind(rep(1, nrow(X)),
-              X[,c('lambda1','lambda2')]
-    )
 
-    model.idx <- which(cell_model == finalModel$numCells)
+   if(cell_model<=80000){
+       
+       lambda0 <- predict(finalModelObject$LogFits[[1]], data.frame(numCells=cell_model))
+       lambda1 <- predict(finalModelObject$LogFits[[2]], data.frame(numCells=cell_model))
+       lambda2 <- predict(finalModelObject$LogFits[[3]], data.frame(numCells=cell_model))
+       tmpModel = c(lambda0, lambda1, lambda2    )
+       tmpModel = as.matrix(tmpModel)
+       
+       
+   } else if(cell_model>80000 & cell_model <= 120000){ 
     
-    if(length(model.idx)==0){
-        distances <- (abs(cell_model - finalModel$numCells))
-        sorted.distances <- sort(distances, decreasing=F)      
-        
-        model.idx <- which(distances %in% sorted.distances[1])
-        
-        if(length(model.idx)==2){
-            
-           interpolatedModel <- (finalModel[model.idx[1],] + finalModel[model.idx[2],])/2
+         
+       lambda0 <- mean(predict(finalModelObject$LogFits[[1]], data.frame(numCells=cell_model)),
+                       predict(finalModelObject$LinearFits[[1]], data.frame(numCells=cell_model))
+                       )
+       lambda1 <- mean(predict(finalModelObject$LogFits[[2]], data.frame(numCells=cell_model)),
+                       finalModelObject$LinearFits[[2]]
+                       )
+       lambda0 <- mean(predict(finalModelObject$LogFits[[3]], data.frame(numCells=cell_model)),
+                       predict(finalModelObject$LinearFits[[3]], data.frame(numCells=cell_model))
+                       )       
 
-        } else if(finalModel$numCells[model.idx] > cell_model){
-            
-           interpolatedModel <- (finalModel[model.idx,] + finalModel[model.idx-1,])/2
+       tmpModel = c(lambda0, lambda1, lambda2    )
+       tmpModel = as.matrix(tmpModel)
+       
+       
+      
+   } else {
+             
+       lambda0 <- predict(finalModelObject$LinearFits[[1]], data.frame(numCells=cell_model))
+       lambda1 <- finalModelObject$LinearFits[[2]]
+       lambda2 <- predict(finalModelObject$LinearFits[[3]], data.frame(numCells=cell_model))
+       
+       tmpModel = c(lambda0, lambda1, lambda2    )
+       tmpModel = as.matrix(tmpModel)    
+       
+    }
 
-        } else {
-            interpolatedModel <- (finalModel[model.idx,] + finalModel[model.idx+1,])/2
-            
-        }    
-        
-        
-        tmpModel <- interpolatedModel[,c('Intercept','lambda1','lambda2')]
-        tmpModel = as.matrix(tmpModel)
-        tmpModel = t(tmpModel)
-        designX = as.matrix(designX)
-        preds = designX%*% tmpModel
-        preds = 1/(1+exp(-preds))
-
-        X$Prediction = preds 
-        X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
-        X$PredictionStrength = X$lambda1
-        X$Peak = X$Prediction > threshold
-        
-          return(X)
-        
-    } else {
     
-        tmpModel <- finalModel[model.idx,c('Intercept','lambda1','lambda2')]
-        tmpModel = as.matrix(tmpModel)
-        tmpModel = t(tmpModel)
-        designX = as.matrix(designX)
-        preds = designX%*% tmpModel
-        preds = 1/(1+exp(-preds))
+       noiseZ <- c(1,min(X$lambda1), min(X$lambda2)) %*% tmpModel
+       adaptiveThreshold <- max(0.5, 1/(1+exp(-noiseZ)))
+       
+      
+       designX <- X[,c('lambda1','lambda2')]
+       designX$Intercept =1 
+       designX <- designX[,c('Intercept','lambda1','lambda2')]       
+       
+       z = as.matrix(designX) %*% tmpModel
+       preds = 1/(1+exp(-z))
+    
+       X$Prediction = preds 
+       X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
+       X$PredictionStrength = X$lambda1
+       X$Peak = X$Prediction > adaptiveThreshold
+    
+    
+    
+    return(X)
+    
 
-        X$Prediction = preds 
-        X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
-        X$PredictionStrength = X$lambda1
-        X$Peak = X$Prediction > threshold
-        
-        return(X)
-        }
-
-  }
+}
