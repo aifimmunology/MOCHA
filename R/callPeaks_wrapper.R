@@ -26,8 +26,8 @@
 #' @export
 
 callPeaks <- function(ArchRProj, 
-                      cellSubsets='CD14 Mono', 
-                      cellCol_label_name='predictedGroup_Col2.5',
+                      cellSubsets=NULL,
+                      cellCol_label_name=NULL,
                       returnAllPeaks=FALSE,
                       numCores=10
                      
@@ -100,7 +100,7 @@ callPeaks <- function(ArchRProj,
     
     ### call peaks by cell-subsets
     
-    callPeaks_by_population <- function(fragsList, cellSubset){
+    callPeaks_by_population <- function(fragsList, cellSubset,ArchRProj, barcodes_by_cell_pop){
         
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj,barcodes_by_cell_pop[[cellSubset]])
@@ -114,7 +114,7 @@ callPeaks <- function(ArchRProj,
         fragMat <- unlist(fragsList_by_cell)    
         
         FinalBins <-  determine_dynamic_range(fragsList_by_cell,
-                                         ArchRProj, 
+                                         cellSubsetArchR, 
                                          binSize=500, 
                                          doBin=FALSE)
         
@@ -129,7 +129,7 @@ callPeaks <- function(ArchRProj,
         countsMatrix$lambda1 <- countsMatrix$lambda1 * scaleFactor
         countsMatrix$lambda2 <- countsMatrix$lambda2 * scaleFactor        
         
-        scMACS_peaks <- scMACS::make_prediction(countsMatrix, finalModelObject )
+        scMACS_peaks <- scMACS::make_prediction(countsMatrix, scMACS::finalModelObject )
         
         cat(paste('\nfinished calling peaks on', cellSubset,'\n\n'))
         
@@ -146,7 +146,7 @@ callPeaks <- function(ArchRProj,
     }
     
     scMACs_PeakList <- mclapply(cellSubsets, function(x)      
-        callPeaks_by_population(fragsList, x),
+        callPeaks_by_population(fragsList, x, ArchRProj, barcodes_by_cell_pop),
                                 mc.cores =numCores,
                                 mc.preschedule=FALSE,
                                 mc.allow.recursive=FALSE
