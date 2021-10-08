@@ -59,6 +59,7 @@ callPeaks <- function(ArchRProj,
     ## coefficients trained on 3600 frags per cell 
     ## and future datasets need to be calibrated to
     ## these coefficients 
+    finalModelObject = scMACS::finalModelObject
     
     medianFrags_training = 3618
     
@@ -100,14 +101,14 @@ callPeaks <- function(ArchRProj,
     
     ### call peaks by cell-subsets
     
-    callPeaks_by_population <- function(fragsList, cellSubset,ArchRProj, barcodes_by_cell_pop){
+    callPeaks_by_population <- function(fragsList, cellPop,ArchRProj, barcodes_by_cell_pop){
         
         ### subset ArchR Project
-        cellSubsetArchR <- subsetCells(ArchRProj,barcodes_by_cell_pop[[cellSubset]])
+        cellSubsetArchR <- subsetCells(ArchRProj,barcodes_by_cell_pop[[cellPop]])
         metaSub= getCellColData(cellSubsetArchR)
          
         fragsList_by_cell <- SimpleList(lapply(fragsList, 
-                                function(x) x[x$RG %in% barcodes_by_cell_pop[[cellSubset]] ]
+                                function(x) x[x$RG %in% barcodes_by_cell_pop[[cellPop]] ]
                                 )
                                          )
         
@@ -129,9 +130,9 @@ callPeaks <- function(ArchRProj,
         countsMatrix$lambda1 <- countsMatrix$lambda1 * scaleFactor
         countsMatrix$lambda2 <- countsMatrix$lambda2 * scaleFactor        
         
-        scMACS_peaks <- scMACS::make_prediction(countsMatrix, scMACS::finalModelObject )
+        scMACS_peaks <- make_prediction(countsMatrix, finalModelObject )
         
-        cat(paste('\nfinished calling peaks on', cellSubset,'\n\n'))
+        cat(paste('\nfinished calling peaks on', cellPop,'\n\n'))
         
         if(returnAllPeaks){
             return(scMACS_peaks)
