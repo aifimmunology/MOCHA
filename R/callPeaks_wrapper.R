@@ -115,7 +115,7 @@ callPeaks <- function(ArchRProj,
         
         FinalBins <-  determine_dynamic_range(fragsList_by_cell,
                                          ArchRProj, 
-                                         binSize, 
+                                         binSize=500, 
                                          doBin=FALSE)
         
         countsMatrix <- calculate_intensities(fragMat, 
