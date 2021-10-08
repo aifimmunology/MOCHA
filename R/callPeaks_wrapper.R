@@ -70,12 +70,12 @@ callPeaks <- function(ArchRProj,
     meta = getCellColData(ArchRProj)
     
     if(cellSubsets=='ALL'){
-       cellSubsets= unique(meta[,cellCol_label_name])   
+       cellPopulations= unique(meta[,cellCol_label_name])   
       
+    } else{
+       cellPopulations=cellSubsets
     }
-    
-    cat('Running peak calls for the following cell populations:')
-    print(cellSubsets)
+
     
     ### obtain median # of fragments
     ### per cell to calibrate features
@@ -92,23 +92,33 @@ callPeaks <- function(ArchRProj,
     ### peak-calling by different 
     ### cell population 
     
-    barcodes_by_cell_pop <- lapply(cellSubsets, function(x)
+    barcodes_by_cell_pop <- lapply(cellPopulations, function(x)
         row.names(meta)[which(meta[,cellCol_label_name]==x)]
            )
     
     ### create named list 
-    names(barcodes_by_cell_pop) <- cellSubsets  
+    names(barcodes_by_cell_pop) <- cellPopulations  
+
+    cellsPerPop <- sapply(barcodes_by_cell_pop , function(x) length(x)
+           )
+    
+    df <- cbind(cellPopulations, cellsPerPop)
+        
+    cat('Running peak calls for the following cell populations:')
+    print(df)
+    
+    
     
     ### call peaks by cell-subsets
     
-    callPeaks_by_population <- function(fragsList, cellPop,ArchRProj, barcodes_by_cell_pop){
+    callPeaks_by_population <- function(fragsList, cellNames,ArchRProj, scaleFactor){
         
         ### subset ArchR Project
-        cellSubsetArchR <- subsetCells(ArchRProj,barcodes_by_cell_pop[[cellPop]])
+        cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
         metaSub= getCellColData(cellSubsetArchR)
          
         fragsList_by_cell <- SimpleList(lapply(fragsList, 
-                                function(x) x[x$RG %in% barcodes_by_cell_pop[[cellPop]] ]
+                                function(x) x[x$RG %in% cellNames ]
                                 )
                                          )
         
@@ -131,9 +141,7 @@ callPeaks <- function(ArchRProj,
         countsMatrix$lambda2 <- countsMatrix$lambda2 * scaleFactor        
         
         scMACS_peaks <- make_prediction(countsMatrix, finalModelObject )
-        
-        cat(paste('\nfinished calling peaks on', cellPop,'\n\n'))
-        
+                
         if(returnAllPeaks){
             return(scMACS_peaks)
             
@@ -146,8 +154,8 @@ callPeaks <- function(ArchRProj,
         
     }
     
-    scMACs_PeakList <- mclapply(cellSubsets, function(x)      
-        callPeaks_by_population(fragsList, x, ArchRProj, barcodes_by_cell_pop),
+    scMACs_PeakList <- mclapply(cellPopulations, function(x)      
+        callPeaks_by_population(fragsList, barcodes_by_cell_pop[[x]], ArchRProj, scaleFactor),
                                 mc.cores =numCores,
                                 mc.preschedule=FALSE,
                                 mc.allow.recursive=FALSE
@@ -155,7 +163,7 @@ callPeaks <- function(ArchRProj,
 
     ) 
     
-    names(scMACs_PeakList) <- cellSubsets
+    names(scMACs_PeakList) <- cellPopulations
                                               
                            
     ########################################################################
