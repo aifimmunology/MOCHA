@@ -68,24 +68,22 @@ make_prediction <- function(X, finalModelObject){
     }
 
     
-       noiseZ <- c(1,min(X$lambda1), min(X$lambda2)) %*% tmpModel
-       adaptiveThreshold <- max(0.5, 1/(1+exp(-noiseZ)))
+   noiseZ <- c(1,min(X$lambda1), min(X$lambda2)) %*% tmpModel
+   adaptiveThreshold <- max(0.5, 1/(1+exp(-noiseZ)))
+
+
+   designX <- X[,c('lambda1','lambda2')]
+   designX$Intercept =1 
+   designX <- designX[,c('Intercept','lambda1','lambda2')]       
+
+   z = as.matrix(designX) %*% tmpModel
+   preds = 1/(1+exp(-z))
+
+   X$Prediction = preds 
+   X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
+   X$PredictionStrength = X$lambda1
+   X$Peak = X$Prediction > adaptiveThreshold
        
-      
-       designX <- X[,c('lambda1','lambda2')]
-       designX$Intercept =1 
-       designX <- designX[,c('Intercept','lambda1','lambda2')]       
-       
-       z = as.matrix(designX) %*% tmpModel
-       preds = 1/(1+exp(-z))
-    
-       X$Prediction = preds 
-       X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
-       X$PredictionStrength = X$lambda1
-       X$Peak = X$Prediction > adaptiveThreshold
-    
-    
-    
     return(X)
     
 

@@ -5,14 +5,20 @@
 #'              of fragment files and an ArchR Project for meta-data purposes
 #'
 #'
-#' @param X an intensityMatrix output from \code{calculate_intensities}
-#' @param finalModel is a matrix with coefficients and an index indicating
-#'        the number of cell used to train that model
+#' @param ArchRProj an ArchR Project 
+#' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
+#' @param cellCol_label_name string indicating which column in the meta data file contains 
+#'        the cell population label
+#' 
+#' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
+#' 
+#' @param numCores integer. Number of cores to parallelize peak-calling across
+#'                 multiple cell populationsdevto
+#' 
 #'
-#' @return the original intensityMatrix with the two intensity parameters required
-#' to calculate the probability of a (+) peak, with an additional two columns
-#' that include the prediction probability
-#'
+#' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
+#'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
+#' 
 #' @details The technical details of the algorithm are found in XX.
 #'
 #' @references XX
@@ -21,7 +27,9 @@
 
 callPeaks <- function(ArchRProj, 
                       cellSubsets='CD14 Mono', 
-                      cellCol_label_name='predictedGroup_Col2.5'
+                      cellCol_label_name='predictedGroup_Col2.5',
+                      returnAllPeaks=FALSE,
+                      numCores=10
                      
                      ){
     
@@ -29,6 +37,7 @@ callPeaks <- function(ArchRProj,
     ########################################################################
     ########################################################################
     
+    ### User-input/Parameter Checks
     
       if(class(cellSubsets)!='character'){
         stop('cellSubsets must be a vector of strings indicating cell populations')
@@ -38,23 +47,34 @@ callPeaks <- function(ArchRProj,
         stop('cellCol_label_name must be a vector of strings indicating cell populations')      
       }   
 
-      if(class(ArchRProject)!='ArchRProject'){
+      if(class(ArchRProj)!='ArchRProject'){
         stop('ArchRProject must be an ArchR Project')
-      }
+      } 
     
 
-
-    
     
                                
     ########################################################################
     ########################################################################
+    ## coefficients trained on 3600 frags per cell 
+    ## and future datasets need to be calibrated to
+    ## these coefficients 
+    
     medianFrags_training = 3618
+    
     ### load fragment files from ArchR Project 
     fragsList<-  getFragmentsFromProject(ArchRProj)
     
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
+    
+    if(cellSubsets=='ALL'){
+       cellSubsets= unique(meta[,cellCol_label_name])   
+      
+    }
+    
+    cat('Running peak calls for the following cell populations:')
+    print(cellSubsets)
     
     ### obtain median # of fragments
     ### per cell to calibrate features
@@ -63,6 +83,9 @@ callPeaks <- function(ArchRProj,
     
     ### identify scaling factor 
     scaleFactor= medianFrags_training/ medianFrags_current
+    
+    cat(paste('\nScale factor is ', round(scaleFactor,2),'\n\n'))
+
     
     ### get barcodes by cell pop for 
     ### peak-calling by different 
@@ -108,14 +131,28 @@ callPeaks <- function(ArchRProj,
         
         scMACS_peaks <- scMACS::make_prediction(countsMatrix, finalModelObject )
         
-        return(scMACS_peaks)
+        cat(paste('\nfinished calling peaks on', cellSubset,'\n\n'))
+        
+        if(returnAllPeaks){
+            return(scMACS_peaks)
+            
+        } else {
+            scMACS_peaks = scMACS_peaks[scMACS_peaks$Peak==T]
+            return(scMACS_peaks)
+
+        }
+        
         
     }
     
     scMACs_PeakList <- mclapply(cellSubsets, function(x)      
         callPeaks_by_population(fragsList, x),
-                                mc.cores =10
-                                )
+                                mc.cores =numCores,
+                                mc.preschedule=FALSE,
+                                mc.allow.recursive=FALSE
+
+
+    ) 
     
     names(scMACs_PeakList) <- cellSubsets
                                               
