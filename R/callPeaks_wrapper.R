@@ -115,7 +115,6 @@ callPeaks <- function(ArchRProj,
         
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
-        metaSub= getCellColData(cellSubsetArchR)
          
         fragsList_by_cell <- SimpleList(lapply(fragsList, 
                                 function(x) x[x$RG %in% cellNames ]
@@ -154,8 +153,8 @@ callPeaks <- function(ArchRProj,
         
     }
     
-    scMACs_PeakList <- mclapply(cellPopulations, function(x)      
-        callPeaks_by_population(fragsList, barcodes_by_cell_pop[[x]], ArchRProj, scaleFactor),
+    scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), function(x)      
+        callPeaks_by_population(fragsList, cellNames=barcodes_by_cell_pop[[x]], ArchRProj, scaleFactor),
                                 mc.cores =numCores,
                                 mc.preschedule=FALSE,
                                 mc.allow.recursive=FALSE
