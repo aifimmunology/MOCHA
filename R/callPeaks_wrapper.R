@@ -146,6 +146,8 @@ callPeaks <- function(ArchRProj,
                                              theta=0.001,
                                              width=20
                                             )
+        
+        countsMatrix = countsMatrix[countsMatrix$lambda1 > 0,]
 
         countsMatrix$lambda1 <- countsMatrix$lambda1 * scaleFactor
         countsMatrix$lambda2 <- countsMatrix$lambda2 * scaleFactor        
