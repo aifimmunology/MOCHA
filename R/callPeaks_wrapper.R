@@ -108,26 +108,37 @@ callPeaks <- function(ArchRProj,
     print(df)
     
     
-    
     ### call peaks by cell-subsets
-    
+
     callPeaks_by_population <- function(fragsList, cellNames,ArchRProj, scaleFactor){
-        
+
+        print(length(cellNames))
+
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
-         
-        fragsList_by_cell <- SimpleList(lapply(fragsList, 
-                                function(x) x[x$RG %in% cellNames ]
+
+        print(cellSubsetArchR)
+        
+        subset_Frag <- function(cellNames, tmp){
+            tmp_df <- GenomicRanges::as.data.frame(tmp)
+            idx <- which(tmp_df$RG %in% cellNames)
+            tmp[ idx]
+           
+        }
+        fragsList_by_cell <- lapply(fragsList, 
+                                function(x) subset_Frag(cellNames, x)
                                 )
-                                         )
-        
+        print(fragsList_by_cell)
+                                         
+
+        fragsList_by_cell = SimpleList(fragsList_by_cell)
         fragMat <- unlist(fragsList_by_cell)    
-        
+
         FinalBins <-  determine_dynamic_range(fragsList_by_cell,
                                          cellSubsetArchR, 
                                          binSize=500, 
                                          doBin=FALSE)
-        
+
         countsMatrix <- calculate_intensities(fragMat, 
                                              FinalBins,
                                              NULL,
@@ -135,31 +146,33 @@ callPeaks <- function(ArchRProj,
                                              theta=0.001,
                                              width=20
                                             )
-        
+
         countsMatrix$lambda1 <- countsMatrix$lambda1 * scaleFactor
         countsMatrix$lambda2 <- countsMatrix$lambda2 * scaleFactor        
-        
+
         scMACS_peaks <- make_prediction(countsMatrix, finalModelObject )
-                
+
         if(returnAllPeaks){
             return(scMACS_peaks)
-            
+
         } else {
             scMACS_peaks = scMACS_peaks[scMACS_peaks$Peak==T]
             return(scMACS_peaks)
 
         }
-        
-        
+
+
     }
     
-    scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), function(x)      
-        callPeaks_by_population(fragsList, cellNames=barcodes_by_cell_pop[[x]], ArchRProj, scaleFactor),
+        
+    scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), 
+                                function(ZZ) callPeaks_by_population(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
+                                                                            ArchRProj, 
+                                                                            scaleFactor
+                                                                            ),
                                 mc.cores =numCores,
-                                mc.preschedule=FALSE,
+                                mc.preschedule=TRUE,
                                 mc.allow.recursive=FALSE
-
-
     ) 
     
     names(scMACs_PeakList) <- cellPopulations
