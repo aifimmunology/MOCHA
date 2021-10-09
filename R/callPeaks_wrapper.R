@@ -125,7 +125,7 @@ callPeaks <- function(ArchRProj,
             tmp[ idx]
            
         }
-        fragsList_by_cell <- lapply(fragsList, 
+        fragsList_by_cell <- mclapply(fragsList, 
                                 function(x) subset_Frag(cellNames, x)
                                 )
         print(fragsList_by_cell)
