@@ -68,7 +68,7 @@ calculate_intensities <- function(fragMat,
   fragsPerBin$end <- candidatePeaksDF$end[fragsPerBin$subjectHits]
   fragsPerBin$width <- candidatePeaksDF$width[fragsPerBin$subjectHits]
 
-  fragsPerBin = as.data.table(fragsPerBin)
+  fragsPerBin = data.table::as.data.table(fragsPerBin)
   
   ### get cell count matrix
   cell_counts = fragsPerBin[,list(N=.N),
