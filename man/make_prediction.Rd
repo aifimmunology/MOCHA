@@ -4,7 +4,7 @@
 \alias{make_prediction}
 \title{\code{determine_dynamic_range}}
 \usage{
-make_prediction(X, finalModel)
+make_prediction(X, finalModelObject)
 }
 \arguments{
 \item{X}{an intensityMatrix output from \code{calculate_intensities}}
