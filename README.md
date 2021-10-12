@@ -28,7 +28,7 @@ To install library, simply run the following lines of code to install either fro
     install.packages("scMACS_0.1.0.tar.gz", repos = NULL, type ="source")
     library("scMACS")
 
-or directly from GitHub, 
+or directly from GitHub
 
     devtools::install_github("aifimmunology/scMACS")
     library("scMACS")
