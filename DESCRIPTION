@@ -2,20 +2,12 @@ Package: scMACS
 Type: Package
 Title: single-cell Modeling of Accessible Chromatin Sites
 Version: 0.1.0
-Authors@R: 
-    c(person(given = "Samir",
-           family = "Rachid Zaim",
-           role = c("aut", "cre"),
-           email = "samir.rachidzaim@alleninstitute.org"),
-      person(given = "Mark-Phillip",
-           family = "Pebworth",
-           role = c("aut", "cre"),
-           email = "markphillip.pebworth@alleninstitute.org")
-           )                     
 Author: Samir Rachid Zaim [aut, cre],
         Mark-Phillip Pebworth [aut, cre]
 Maintainer: Samir Rachid Zaim <samir.rachidzaim@alleninstitute.org>
-Description: scMACS is a novel peak-calling algorithm that captures and leverage single-cell information to model and identify accesible chromatin in single-cell ATAC-Sequencing data.
+Description: scMACS is a novel peak-calling algorithm that captures and leverage single-cell 
+             information to model and identify accesible chromatin in single-cell 
+             ATAC-Sequencing data.
 License: Allen Institute Software License
 Encoding: UTF-8
 LazyData: true
