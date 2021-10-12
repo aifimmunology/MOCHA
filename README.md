@@ -87,3 +87,12 @@ This tutorial demonstrates how to call peaks for a given cell population.
         returnAllPeaks=returnAllPeaks,
         numCores=numCores
     )
+
+
+# <a name="contact"></a> Contact
+
+To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs. 
+    
+# <a name="license"></a> License
+
+scMACS follows the Allen Institute Software License - full information about the license can be found on the LICENSE file. 
