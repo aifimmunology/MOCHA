@@ -146,13 +146,13 @@ The result will be a nested list of lists where the hierarchy is organized as fo
    - CD4 Naive 
        - sample 1 peaks
        - sample 2 peaks 
-        ...
+       - ...
        - sample N peaks 
         
    - CD14 Monocytes
        - sample 1 peaks 
        - sample 2 peaks
-       ...
+       - ...
        - sample N peaks
  
 # <a name="contact"></a> Contact
