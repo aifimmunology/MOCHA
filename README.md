@@ -80,13 +80,15 @@ This tutorial demonstrates how to call peaks for a given cell population.
 
     ArchRProj <- ArchR::loadArchRProject('/path/to/ArchRProject')
 
-    peaks_by_sample <-scMACS::callPeaks_by_population(ArchRProj=ArchRProj,
+    ### Call peaks across cell populations
+    peaks_by_population <-scMACS::callPeaks_by_population(ArchRProj=ArchRProj,
         cellSubsets=cellSubsets,
         cellCol_label_name=cellCol_label_name,
         returnAllPeaks=returnAllPeaks,
         numCores=numCores)
     
-    peaks_by_sample['CD14 Mono']
+    ### Extract peaks for CD14 Cells
+    peaks_by_population['CD14 Mono']
 
     `CD14 Mono`
     GRanges object with 701223 ranges and 8 metadata columns:
