@@ -83,7 +83,6 @@ This tutorial demonstrates how to call peaks for a given cell population.
     peaks_by_sample <-scMACS::callPeaks_by_population(ArchRProj=ArchRProj,
         cellSubsets=cellSubsets,
         cellCol_label_name=cellCol_label_name,
-        sampleCol_label_name='Sample',
         returnAllPeaks=returnAllPeaks,
         numCores=numCores)
 
