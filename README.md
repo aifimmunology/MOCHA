@@ -88,7 +88,7 @@ This tutorial demonstrates how to call peaks for a given cell population.
         numCores=numCores)
 
 
-## <a name="example2"></a> Tutorial-1: Sample-specific Peak-calling
+## <a name="example2"></a> Tutorial-2: Sample-specific Peak-calling
 
 To make peak calls on specific samples rather than by pooling cells across samples the user must call a different function in scMACS (as shown below), which breaks down the fragment files in a Cell X Sample matrix to call sample-specific peaks across all cell populations. 
 
