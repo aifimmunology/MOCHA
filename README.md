@@ -88,7 +88,7 @@ This tutorial demonstrates how to call peaks for a given cell population.
     
     peaks_by_sample['CD14 Mono']
 
-    > `CD14 Mono`
+    `CD14 Mono`
     GRanges object with 701223 ranges and 8 metadata columns:
            seqnames            ranges strand |    lambda1     lambda2
               <Rle>         <IRanges>  <Rle> |  <numeric>   <numeric>
@@ -103,9 +103,35 @@ This tutorial demonstrates how to call peaks for a given cell population.
     [701221]     chrY 21650500-21650999      * | 0.00506472 0.000593277
     [701222]     chrY 21651000-21651499      * | 0.00101912 0.000346078
     [701223]     chrY 26315000-26315499      * | 0.00271766 0.000593277
+               lambda3 maxIntensity  numCells Prediction PredictionStrength
+             <numeric>    <integer> <integer>  <numeric>          <numeric>
+       [1]  0.00432257            2     16009   0.916841         0.00151324
+       [2]  0.00469423            4     16009   1.000000         0.03011040
+       [3]  0.00515960            4     16009   0.640429         0.00111177
+       [4]  0.00523143            4     16009   0.994498         0.00213089
+       [5]  0.00522831            4     16009   0.966985         0.00172942
+       ...         ...          ...       ...        ...                ...
+    [701219] 0.001061903            2     16009   0.826380         0.00132795
+    [701220] 0.001061903            2     16009   0.608304         0.00108089
+    [701221] 0.001077519            3     16009   1.000000         0.00506472
+    [701222] 0.001071272            2     16009   0.539962         0.00101912
+    [701223] 0.000480979            3     16009   0.999614         0.00271766
+                Peak
+           <logical>
+       [1]      TRUE
+       [2]      TRUE
+       [3]      TRUE
+       [4]      TRUE
+       [5]      TRUE
+       ...       ...
+    [701219]      TRUE
+    [701220]      TRUE
+    [701221]      TRUE
+    [701222]      TRUE
+    [701223]      TRUE
     -------
     seqinfo: 24 sequences from an unspecified genome; no seqlengths
-
+  
   
 
 ## <a name="example2"></a> Tutorial-2: Sample-specific Peak-calling
