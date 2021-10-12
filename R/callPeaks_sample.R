@@ -154,9 +154,28 @@ callPeaks_by_sample <- function(ArchRProj,
                                          binSize=500, 
                                          doBin=FALSE)
         
+        ### Subset fragments 
+        ### by samples 
         
-        frags_by_sample <- lapply(unique_samples,
-                                  function(x) fragMat[fragMat$RG %in% row.names(metaSubset)[which(metaSubset$Sample %in% x)]]
+        fragMat_df <- GenomicRanges::as.data.frame(fragMat, row.names=1:length(fragMat))
+        
+        subset_Frag_sample <- function(cell_sample, fragMat_df, fragMat){          
+           idx <- which(fragMat_df$RG %in% cell_sample)
+           fragMat[idx] 
+        }
+           
+        
+        
+        barcodes_by_sample <- lapply(unique_samples,
+                                     function(x) 
+                            row.names(metaSubset)[which(metaSubset$Sample %in% x)]
+                                     )
+        
+
+        
+        
+        frags_by_sample <- lapply(barcodes_by_sample,
+                                  function(x) subset_Frag_sample(x,fragMat_df, fragMat)
                                   )
         
         
