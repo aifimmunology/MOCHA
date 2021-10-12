@@ -88,7 +88,7 @@ This tutorial demonstrates how to call peaks for a given cell population.
         numCores=numCores)
     
     ### Extract peaks for CD14 Cells
-    peaks_by_population['CD14 Mono']
+    > peaks_by_population['CD14 Mono']
 
     `CD14 Mono`
     GRanges object with 701223 ranges and 8 metadata columns:
@@ -189,6 +189,86 @@ To make peak calls on specific samples rather than by pooling cells across sampl
         sampleCol_label_name='Sample',
         returnAllPeaks=returnAllPeaks,
         numCores=numCores)
+        
+        
+    > peaks_by_sample['CD14 Mono']
+    
+    `CD14 Mono`|`X001_PB5206W4-01`
+    GRanges object with 284164 ranges and 8 metadata columns:
+               seqnames              ranges strand |    lambda1     lambda2
+                  <Rle>           <IRanges>  <Rle> |  <numeric>   <numeric>
+           [1]     chr1       817000-817499      * | 0.02124364 0.001235993
+           [2]     chr1       827000-827499      * | 0.02220926 0.001928150
+           [3]     chr1       827500-827999      * | 0.04377477 0.001928150
+           [4]     chr1       869500-869999      * | 0.03122171 0.001235993
+           [5]     chr1       870000-870499      * | 0.00579372 0.000593277
+           ...      ...                 ...    ... .        ...         ...
+      [284160]     chrX 155891000-155891499      * | 0.00193124 0.001235993
+      [284161]     chrX 155891500-155891999      * | 0.00257499 0.000593277
+      [284162]     chrX 155892000-155892499      * | 0.00160937 0.000593277
+      [284163]     chrX 155893500-155893999      * | 0.00160937 0.000593277
+      [284164]     chrX 155898500-155898999      * | 0.00193124 0.001235993
+      -------
+      seqinfo: 24 sequences from an unspecified genome; no seqlengths
+      
+    `CD14 Mono`|`X001_PB5206W7-01`
+    GRanges object with 274422 ranges and 8 metadata columns:
+               seqnames              ranges strand |    lambda1     lambda2
+                  <Rle>           <IRanges>  <Rle> |  <numeric>   <numeric>
+           [1]     chr1       817000-817499      * | 0.01837908 0.001582072
+           [2]     chr1       820000-820499      * | 0.00183791 0.000741596
+           [3]     chr1       821500-821999      * | 0.00183791 0.000741596
+           [4]     chr1       822000-822499      * | 0.00275686 0.001582072
+           [5]     chr1       822500-822999      * | 0.00229739 0.001582072
+           ...      ...                 ...    ... .        ...         ...
+      [274418]     chrX 155885500-155885999      * | 0.00183791 0.000741596
+      [274419]     chrX 155886000-155886499      * | 0.00275686 0.001582072
+      [274420]     chrX 155891500-155891999      * | 0.00229739 0.000741596
+      [274421]     chrX 155893500-155893999      * | 0.00229739 0.000741596
+      [274422]     chrX 155896500-155896999      * | 0.00275686 0.000741596
+
+      -------
+      seqinfo: 24 sequences from an unspecified genome; no seqlengths
+
+    `CD14 Mono`|`X001_PB7626W2-01`
+    GRanges object with 211044 ranges and 8 metadata columns:
+               seqnames            ranges strand |    lambda1     lambda2
+                  <Rle>         <IRanges>  <Rle> |  <numeric>   <numeric>
+           [1]     chr1     817000-817499      * | 0.01121082 0.000889915
+           [2]     chr1     826500-826999      * | 0.00336325 0.000889915
+           [3]     chr1     827000-827499      * | 0.02130057 0.001829270
+           [4]     chr1     827500-827999      * | 0.03755626 0.001829270
+           [5]     chr1     869500-869999      * | 0.02242165 0.000889915
+           ...      ...               ...    ... .        ...         ...
+      [211040]     chrY 21422000-21422499      * | 0.01121082 0.001829270
+      [211041]     chrY 21440500-21440999      * | 0.00336325 0.000889915
+      [211042]     chrY 21650500-21650999      * | 0.00280271 0.000889915
+      [211043]     chrY 26315000-26315499      * | 0.00224216 0.000889915
+      [211044]     chrY 26434500-26434999      * | 0.00224216 0.000889915
+
+      -------
+      seqinfo: 24 sequences from an unspecified genome; no seqlengths
+
+    `CD14 Mono`|`X001_PB7626W4-01`
+    GRanges object with 179328 ranges and 8 metadata columns:
+               seqnames            ranges strand |    lambda1     lambda2
+                  <Rle>         <IRanges>  <Rle> |  <numeric>   <numeric>
+           [1]     chr1     817000-817499      * | 0.01622039  0.00202703
+           [2]     chr1     827000-827499      * | 0.02205973  0.00202703
+           [3]     chr1     827500-827999      * | 0.02725025  0.00202703
+           [4]     chr1     869500-869999      * | 0.03568485  0.00202703
+           [5]     chr1     870000-870499      * | 0.00583934  0.00202703
+           ...      ...               ...    ... .        ...         ...
+      [179324]     chrY 21260500-21260999      * | 0.00583934 0.000988795
+      [179325]     chrY 21289000-21289499      * | 0.00454171 0.000988795
+      [179326]     chrY 21315500-21315999      * | 0.00259526 0.000988795
+      [179327]     chrY 21422000-21422499      * | 0.00778579 0.000988795
+      [179328]     chrY 21650500-21650999      * | 0.00454171 0.000988795
+
+      -------
+      seqinfo: 24 sequences from an unspecified genome; no seqlengths
+
+
 
 The result will be a nested list of lists where the hierarchy is organized as follows (using CD4 Naive & CD14 Monocytes as examples): 
    - CD4 Naive 
