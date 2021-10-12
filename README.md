@@ -18,7 +18,7 @@ Table of Contents
 * * *
 
 # <a name="introduction"></a> Introduction
-scMACS is an R package for single-cell peak-calling algorithm that quantifies two measures of reads intensities in scATAC data to call peaks. It leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks. 
+scMACS is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model. 
 
 # <a name="library"></a> Install package and load library
 
@@ -40,7 +40,7 @@ This tutorial demonstrates how to call peaks for a given cell population.
 
 ### Load Library
    
-    #Load scMACS library
+    #Load scMACS and accompanying libraries
     library(scMACS)
     library(data.table)
     library(ArchR)
@@ -49,7 +49,16 @@ This tutorial demonstrates how to call peaks for a given cell population.
     
 ### Load data and assign parameters
     
-    ### parameters
+    ### To call peaks using scMACS
+    ### the user must input 4 different
+    ### Parameters: 
+    
+    ###  @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
+    ###  @param cellCol_label_name string indicating which column in the meta data file contains the cell population label
+
+    ###  @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
+    ### @param numCores integer. Number of cores to parallelize peak-calling across           multiple cell populations 
+    
     cellSubsets='ALL'
     cellCol_label_name="predictedGroup_Col2.5"
     returnAllPeaks=FALSE
