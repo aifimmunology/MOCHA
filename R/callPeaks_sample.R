@@ -25,9 +25,10 @@
 #'
 #' @export
 
-callPeaks <- function(ArchRProj, 
+callPeaks_by_sample <- function(ArchRProj, 
                       cellSubsets=NULL,
                       cellCol_label_name=NULL,
+                      sampleCol_label_name=NULL,                                
                       returnAllPeaks=FALSE,
                       numCores=10
                      
@@ -76,6 +77,7 @@ callPeaks <- function(ArchRProj,
        cellPopulations=cellSubsets
     }
 
+    unique_samples <- unique(meta[,sampleCol_label_name])
     
     ### obtain median # of fragments
     ### per cell to calibrate features
@@ -102,63 +104,102 @@ callPeaks <- function(ArchRProj,
     cellsPerPop <- sapply(barcodes_by_cell_pop , function(x) length(x)
            )
     
-    df <- cbind(cellPopulations, cellsPerPop)
+    df_cell <- cbind(cellPopulations, cellsPerPop)
         
     cat('Running peak calls for the following cell populations:')
-    print(df)
+    print(df_cell)
     
+    cat('Running peak calls for the following samples:')
+    df_sample <- as.data.frame(table(meta[,'Sample']))
+    colnames(df_sample) <- c('Sample', '# Cells')
+    print(df_sample)
     
     ### call peaks by cell-subsets
 
-    callPeaks_by_population <- function(fragsList, cellNames,ArchRProj, scaleFactor){
+    callPeaks_by_population_sample <- function(fragsList, 
+                                               cellNames,
+                                               ArchRProj, scaleFactor){
 
         print(length(cellNames))
 
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
+        metaSubset <- getCellColData(cellSubsetArchR)
+    
 
         print(cellSubsetArchR)
         
+        
+        ### Subset fragments 
+        ### by cell population 
         subset_Frag <- function(cellNames, tmp){
             tmp_df <- GenomicRanges::as.data.frame(tmp)
             idx <- which(tmp_df$RG %in% cellNames)
             tmp[ idx]
            
         }
+        
+        ### obtain 
         fragsList_by_cell <- mclapply(fragsList, 
                                 function(x) subset_Frag(cellNames, x)
-                                )
-        print(fragsList_by_cell)
-                                         
+                                )                                       
 
         fragsList_by_cell = SimpleList(fragsList_by_cell)
+        
+        
         fragMat <- unlist(fragsList_by_cell)    
 
         FinalBins <-  determine_dynamic_range(fragsList_by_cell,
                                          cellSubsetArchR, 
                                          binSize=500, 
                                          doBin=FALSE)
-
-        countsMatrix <- calculate_intensities(fragMat, 
-                                             FinalBins,
-                                             NULL,
-                                             normalizeBins=FALSE,
-                                             theta=0.001,
-                                             width=20
-                                            )
         
-        countsMatrix = countsMatrix[countsMatrix$lambda1 > 0,]
+        
+        frags_by_sample <- lapply(unique_samples,
+                                  function(x) fragMat[fragMat$RG %in% row.names(metaSubset)[which(metaSubset$Sample %in% x)]]
+                                  )
+        
+        
 
-        countsMatrix$lambda1 <- countsMatrix$lambda1 * scaleFactor
-        countsMatrix$lambda2 <- countsMatrix$lambda2 * scaleFactor        
+        countsMatrix_List <- mclapply(1:length(frags_by_sample), 
+                                      function(x) calculate_intensities(frags_by_sample[[x]], 
+                                                         FinalBins,
+                                                         NULL,
+                                                         normalizeBins=FALSE,
+                                                         theta=0.001,
+                                                         width=20
+                                                        ),
+                                      mc.cores=3
+                            )
+        
+        countsMatrix_List = lapply(countsMatrix_List, 
+                                   function(x) x[x$lambda1 > 0,]
+                                   )
+        
+        scale_matrices <- function(tmp){
+                
+            tmp$lambda1 = tmp$lambda1 * scaleFactor
+            tmp$lambda2 = tmp$lambda2 * scaleFactor
 
-        scMACS_peaks <- make_prediction(countsMatrix, finalModelObject )
+            return(tmp)
+        }
+
+        countsMatrix_List = lapply(countsMatrix_List, 
+                                   function(x) scale_matrices(x)
+                                   )
+        
+        scMACS_peaks <- lapply(countsMatrix_List,
+                               function(x) make_prediction(x, finalModelObject )
+                               )
 
         if(returnAllPeaks){
             return(scMACS_peaks)
 
         } else {
-            scMACS_peaks = scMACS_peaks[scMACS_peaks$Peak==T]
+            scMACS_peaks <- lapply( scMACS_peaks,
+                                function(x) x[x$Peak==T]
+                                )
+            
             return(scMACS_peaks)
 
         }
@@ -168,7 +209,7 @@ callPeaks <- function(ArchRProj,
     
         
     scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), 
-                                function(ZZ) callPeaks_by_population(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
+                                function(ZZ) callPeaks_by_population_sample(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
                                                                             ArchRProj, 
                                                                             scaleFactor
                                                                             ),

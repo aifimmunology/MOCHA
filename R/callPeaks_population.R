@@ -25,7 +25,7 @@
 #'
 #' @export
 
-callPeaks <- function(ArchRProj, 
+callPeaks_by_population <- function(ArchRProj, 
                       cellSubsets=NULL,
                       cellCol_label_name=NULL,
                       returnAllPeaks=FALSE,
