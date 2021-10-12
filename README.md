@@ -190,7 +190,15 @@ To make peak calls on specific samples rather than by pooling cells across sampl
         returnAllPeaks=returnAllPeaks,
         numCores=numCores)
         
+
+The trimmed output (below) is a nested list of lists (such as the output above) where the hierarchy is organized as follows (CD14 Monocyte peak calls as examples): 
         
+   - CD14 Monocytes
+       - sample 1 peaks 
+       - sample 2 peaks
+       - ...
+       - sample N peaks
+
     > peaks_by_sample['CD14 Mono']
     
     `CD14 Mono`|`X001_PB5206W4-01`
@@ -269,19 +277,6 @@ To make peak calls on specific samples rather than by pooling cells across sampl
       seqinfo: 24 sequences from an unspecified genome; no seqlengths
 
 
-
-The result will be a nested list of lists where the hierarchy is organized as follows (using CD4 Naive & CD14 Monocytes as examples): 
-   - CD4 Naive 
-       - sample 1 peaks
-       - sample 2 peaks 
-       - ...
-       - sample N peaks 
-        
-   - CD14 Monocytes
-       - sample 1 peaks 
-       - sample 2 peaks
-       - ...
-       - sample N peaks
  
 # <a name="contact"></a> Contact
 
