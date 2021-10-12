@@ -49,15 +49,26 @@ This tutorial demonstrates how to call peaks for a given cell population.
     
 ### Load data and assign parameters
     
+    ################################################################################
     ### To call peaks using scMACS
     ### the user must input 4 different
     ### Parameters: 
     
-    ###  @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
-    ###  @param cellCol_label_name string indicating which column in the meta data file contains the cell population label
+    ###  @param cellSubsets vector of strings. Cell subsets for which to call peaks. 
+    ###         Optional, 'ALL' defaults to all cell populations in metadata file. 
+    
+    ###  @param cellCol_label_name string indicating which column in the metadata 
+    ###         file contains the cell population label
 
-    ###  @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
-    ### @param numCores integer. Number of cores to parallelize peak-calling across           multiple cell populations 
+    ###  @param returnAllPeaks boolean. Indicates whether scMACS should return object 
+    ###         containing all genomic regions or just the positive (+) called peaks. 
+    
+    ###  @param numCores integer. Number of cores to parallelize peak-calling 
+    ###        across multiple cell populations 
+    
+    ################################################################################
+    
+    ### input parameters
     
     cellSubsets='ALL'
     cellCol_label_name="predictedGroup_Col2.5"
@@ -66,9 +77,10 @@ This tutorial demonstrates how to call peaks for a given cell population.
 
 
     ### load ArchR Project
-    start <- Sys.time()
+
     ArchRProj <- ArchR::loadArchRProject('/path/to/ArchRProject')
 
+    ### call peaks 
     peak_list <- scMACS::callPeaks(ArchRProj=ArchRProj,
         cellSubsets=cellSubsets,
         cellCol_label_name=cellCol_label_name,
