@@ -80,15 +80,81 @@ This tutorial demonstrates how to call peaks for a given cell population.
 
     ArchRProj <- ArchR::loadArchRProject('/path/to/ArchRProject')
 
-    ### call peaks 
-    peak_list <- scMACS::callPeaks(ArchRProj=ArchRProj,
+    peaks_by_sample <-scMACS::callPeaks_by_population(ArchRProj=ArchRProj,
         cellSubsets=cellSubsets,
         cellCol_label_name=cellCol_label_name,
+        sampleCol_label_name='Sample',
         returnAllPeaks=returnAllPeaks,
-        numCores=numCores
-    )
+        numCores=numCores)
 
 
+## <a name="example2"></a> Tutorial-1: Sample-specific Peak-calling
+
+To make peak calls on specific samples rather than by pooling cells across samples the user must call a different function in scMACS (as shown below), which breaks down the fragment files in a Cell X Sample matrix to call sample-specific peaks across all cell populations. 
+
+### Load Library
+   
+    #Load scMACS and accompanying libraries
+    library(scMACS)
+    library(data.table)
+    library(ArchR)
+    library(GenomicRanges)
+    library(plyranges)
+    
+### Load data and assign parameters
+    
+    ################################################################################
+    ### To call peaks using scMACS
+    ### the user must input 4 different
+    ### parameters: 
+    
+    ###  @param cellSubsets vector of strings. Cell subsets for which to call peaks. 
+    ###         Optional, 'ALL' defaults to all cell populations in metadata file. 
+    
+    ###  @param cellCol_label_name string indicating which column in the metadata 
+    ###         file contains the cell population label
+
+    ###  @param returnAllPeaks boolean. Indicates whether scMACS should return object 
+    ###         containing all genomic regions or just the positive (+) called peaks. 
+    
+    ###  @param numCores integer. Number of cores to parallelize peak-calling 
+    ###        across multiple cell populations 
+    
+    ################################################################################
+    
+    ### input parameters
+    
+    cellSubsets='ALL'
+    cellCol_label_name="predictedGroup_Col2.5"
+    returnAllPeaks=FALSE
+    numCores=10
+
+
+    ### load ArchR Project
+
+    ArchRProj <- ArchR::loadArchRProject('/path/to/ArchRProject')
+
+    ## call sample specific peaks
+    peaks_by_sample <- scMACS::callPeaks_by_sample(ArchRProj=ArchRProj,
+        cellSubsets=cellSubsets,
+        cellCol_label_name=cellCol_label_name,
+        sampleCol_label_name='Sample',
+        returnAllPeaks=returnAllPeaks,
+        numCores=numCores)
+
+The result will be a nested list of lists where the hierarchy is organized as follows (using CD4 Naive & CD14 Monocytes as examples): 
+   - CD4 Naive 
+       - sample 1 peaks
+       - sample 2 peaks 
+        ...
+       - sample N peaks 
+        
+   - CD14 Monocytes
+       - sample 1 peaks 
+       - sample 2 peaks
+       ...
+       - sample N peaks
+ 
 # <a name="contact"></a> Contact
 
 To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs. 
