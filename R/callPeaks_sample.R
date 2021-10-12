@@ -1,6 +1,6 @@
-#' @title \code{callPeaks}
+#' @title \code{callPeaks_by_sample}
 #'
-#' @description \code{callPeaks} is the main peak-calling function in scMACS
+#' @description \code{callPeaks_by_sample} is the main peak-calling function in scMACS
 #'              that serves as a wrapper function to call peaks provided a set 
 #'              of fragment files and an ArchR Project for meta-data purposes
 #'
@@ -9,6 +9,8 @@
 #' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
 #' @param cellCol_label_name string indicating which column in the meta data file contains 
 #'        the cell population label
+#' @param sample_label_name string indicating which column in the meta data file contains 
+#'        the samples
 #' 
 #' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
 #' 
