@@ -44,15 +44,15 @@ This tutorial demonstrates how to call peaks for a given cell population.
     library(scMACS)
     library(data.table)
     library(ArchR)
-    library(GenomicRanges, lib.loc=libLoc)
-    library(plyranges, lib.loc=libLoc)
+    library(GenomicRanges)
+    library(plyranges)
     
 ### Load data and assign parameters
     
     ################################################################################
     ### To call peaks using scMACS
     ### the user must input 4 different
-    ### Parameters: 
+    ### parameters: 
     
     ###  @param cellSubsets vector of strings. Cell subsets for which to call peaks. 
     ###         Optional, 'ALL' defaults to all cell populations in metadata file. 
