@@ -277,6 +277,9 @@ The trimmed output (below) is a nested list of lists (such as the output above) 
       seqinfo: 24 sequences from an unspecified genome; no seqlengths
 
 
+## <a name="example3"></a> Tutorial-3: Differential Accesibility
+
+This part is currently in development. TBD 
  
 # <a name="contact"></a> Contact
 
