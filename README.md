@@ -22,13 +22,13 @@ scMACS is an R package for single-cell peak-calling algorithm that quantifies tw
 
 # <a name="library"></a> Install package and load library
 
-To install library, simply run the following lines of code to install, 
+To install library, simply run the following lines of code to install either from source
    
    
     install.packages("scMACS_0.1.0.tar.gz", repos = NULL, type ="source")
     library("scMACS")
 
-Or to install from GitHub, 
+or directly from GitHub, 
 
     devtools::install_github("aifimmunology/scMACS")
     library("scMACS")
