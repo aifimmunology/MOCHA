@@ -110,7 +110,7 @@ callPeaks_by_sample <- function(ArchRProj,
     print(df_cell)
     
     cat('Running peak calls for the following samples:')
-    df_sample <- as.data.frame(table(meta[,'Sample']))
+    df_sample <- as.data.frame(table(meta[,sampleCol_label_name]))
     colnames(df_sample) <- c('Sample', '# Cells')
     print(df_sample)
     
@@ -188,10 +188,17 @@ callPeaks_by_sample <- function(ArchRProj,
                                    function(x) scale_matrices(x)
                                    )
         
-        scMACS_peaks <- lapply(countsMatrix_List,
+        idx <-  sapply(countsMatrix_List, function(x) x$numCells[1]
+                       )
+        nonzero_samples <- which(idx> 5)
+        
+        scMACS_peaks <- lapply(countsMatrix_List[nonzero_samples],
                                function(x) make_prediction(x, finalModelObject )
                                )
+        
+        names(scMACS_peaks) <- unique_samples[nonzero_samples]
 
+                                         
         if(returnAllPeaks){
             return(scMACS_peaks)
 
