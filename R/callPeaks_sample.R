@@ -32,6 +32,7 @@ callPeaks_by_sample <- function(ArchRProj,
                       cellCol_label_name=NULL,
                       sampleCol_label_name="Sample",                                
                       returnAllPeaks=FALSE,
+		      scaleFactor = NULL,
                       numCores=10
                      
                      ){
@@ -86,13 +87,15 @@ callPeaks_by_sample <- function(ArchRProj,
 
     unique_samples <- unique(meta[,sampleCol_label_name])
     
-    ### obtain median # of fragments
-    ### per cell to calibrate features
-    ### to pre-trained model 
-    medianFrags_current = median(ArchRProj@cellColData$nFrags)
+    if(is.null(scaleFactor)){
+    	### obtain median # of fragments
+    	### per cell to calibrate features
+    	### to pre-trained model 
+    	medianFrags_current = median(ArchRProj@cellColData$nFrags)
     
-    ### identify scaling factor 
-    scaleFactor= medianFrags_training/ medianFrags_current
+    	### identify scaling factor
+    	scaleFactor= medianFrags_training/ medianFrags_current
+    }
     
     cat(paste('\nScale factor is ', round(scaleFactor,2),'\n\n'))
 
