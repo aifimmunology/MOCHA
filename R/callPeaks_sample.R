@@ -124,6 +124,7 @@ callPeaks_by_sample <- function(ArchRProj,
 
     callPeaks_by_population_sample <- function(fragsList, 
                                                cellNames,
+					       sampleCol_label_name
                                                ArchRProj, scaleFactor){
 
         print(length(cellNames))
@@ -174,7 +175,7 @@ callPeaks_by_sample <- function(ArchRProj,
         
         barcodes_by_sample <- lapply(unique_samples,
                                      function(x) 
-                            row.names(metaSubset)[which(metaSubset$Sample %in% x)]
+                            row.names(metaSubset)[which(metaSubset[,sampleCol_label_name] %in% x)]
                                      )
         
 
