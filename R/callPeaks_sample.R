@@ -67,8 +67,12 @@ callPeaks_by_sample <- function(ArchRProj,
     medianFrags_training = 3618
     
     ### load fragment files from ArchR Project 
-    fragsList<-  getFragmentsFromProject(ArchRProj)
-    
+    arrows <- getArrowFiles(ArchRProj)
+    fragsList<-  mclapply(seq_along(arrows), function(x){
+				getFragmentsFromArrow(arrows[x])
+		}, mc.cores = numCores)
+    names(fragsList) <- names(arrows)    
+
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
     
