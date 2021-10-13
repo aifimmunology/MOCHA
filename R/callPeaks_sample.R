@@ -30,7 +30,7 @@
 callPeaks_by_sample <- function(ArchRProj, 
                       cellSubsets=NULL,
                       cellCol_label_name=NULL,
-                      sampleCol_label_name=NULL,                                
+                      sampleCol_label_name="Sample",                                
                       returnAllPeaks=FALSE,
                       numCores=10
                      
@@ -68,9 +68,9 @@ callPeaks_by_sample <- function(ArchRProj,
     
     ### load fragment files from ArchR Project 
     arrows <- getArrowFiles(ArchRProj)
-    fragsList<-  mclapply(seq_along(arrows), function(x){
+    fragsList<-  unlist(mclapply(seq_along(arrows), function(x){
 				getFragmentsFromArrow(arrows[x])
-		}, mc.cores = numCores)
+		}, mc.cores = numCores))
     names(fragsList) <- names(arrows)    
 
     ### obtain meta data from ArchR Project
@@ -123,9 +123,10 @@ callPeaks_by_sample <- function(ArchRProj,
     ### call peaks by cell-subsets
 
     callPeaks_by_population_sample <- function(fragsList, 
+					       ArchRProj, 
                                                cellNames,
-					       sampleCol_label_name
-                                               ArchRProj, scaleFactor){
+					       sampleCol_label_name,
+                                               scaleFactor){
 
         print(length(cellNames))
 
@@ -243,7 +244,9 @@ callPeaks_by_sample <- function(ArchRProj,
         
     scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), 
                                 function(ZZ) callPeaks_by_population_sample(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
-                                                                            ArchRProj, 
+                                                                            ArchRProj = ArchRProj,
+									    cellNames = barcodes_by_cell_pop[[ZZ]],
+									    sampleCol_label_name,
                                                                             scaleFactor
                                                                             ),
                                 mc.cores =numCores,
@@ -253,10 +256,8 @@ callPeaks_by_sample <- function(ArchRProj,
     
     names(scMACs_PeakList) <- cellPopulations
                                               
-                           
     ########################################################################
     ########################################################################
-
 
     return(scMACs_PeakList)
 
