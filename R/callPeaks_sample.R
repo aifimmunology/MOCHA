@@ -72,7 +72,7 @@ callPeaks_by_sample <- function(ArchRProj,
 				getFragmentsFromArrow(arrows[x])
 		}, mc.cores = numCores))
     names(fragsList) <- names(arrows)    
-    fragsList <- getFragmentsFromProject(ArchRProj)
+    #fragsList <- getFragmentsFromProject(ArchRProj)
 
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
@@ -249,7 +249,7 @@ callPeaks_by_sample <- function(ArchRProj,
 									    cellNames = barcodes_by_cell_pop[[ZZ]],
 									    sampleCol_label_name,
                                                                             scaleFactor
-                                                                            )#,
+                                                                            ),
                                 mc.cores =numCores,
                                 mc.preschedule=TRUE,
                                 mc.allow.recursive=FALSE
