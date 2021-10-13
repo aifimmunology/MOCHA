@@ -67,11 +67,12 @@ callPeaks_by_sample <- function(ArchRProj,
     medianFrags_training = 3618
     
     ### load fragment files from ArchR Project 
-    arrows <- getArrowFiles(ArchRProj)
-    fragsList<-  unlist(mclapply(seq_along(arrows), function(x){
-				getFragmentsFromArrow(arrows[x])
-		}, mc.cores = numCores))
-    names(fragsList) <- names(arrows)    
+    #arrows <- getArrowFiles(ArchRProj)
+    #fragsList<-  unlist(mclapply(seq_along(arrows), function(x){
+	#			getFragmentsFromArrow(arrows[x])
+	#	}, mc.cores = numCores))
+    #names(fragsList) <- names(arrows)    
+    fragsList <- getFragmentsFromProject(ArchRProj)
 
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
@@ -243,7 +244,7 @@ callPeaks_by_sample <- function(ArchRProj,
     
         
     scMACs_PeakList <- lapply(1:length(barcodes_by_cell_pop), 
-                                function(ZZ) callPeaks_by_population_sample(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
+                                function(ZZ) callPeaks_by_population_sample(fragsList, 
                                                                             ArchRProj = ArchRProj,
 									    cellNames = barcodes_by_cell_pop[[ZZ]],
 									    sampleCol_label_name,
