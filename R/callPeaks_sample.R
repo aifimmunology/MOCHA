@@ -242,16 +242,16 @@ callPeaks_by_sample <- function(ArchRProj,
     }
     
         
-    scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), 
+    scMACs_PeakList <- lapply(1:length(barcodes_by_cell_pop), 
                                 function(ZZ) callPeaks_by_population_sample(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
                                                                             ArchRProj = ArchRProj,
 									    cellNames = barcodes_by_cell_pop[[ZZ]],
 									    sampleCol_label_name,
                                                                             scaleFactor
-                                                                            ),
-                                mc.cores =numCores,
-                                mc.preschedule=TRUE,
-                                mc.allow.recursive=FALSE
+                                                                            )#,
+                                #mc.cores =numCores,
+                                #mc.preschedule=TRUE,
+                                #mc.allow.recursive=FALSE
     ) 
     
     names(scMACs_PeakList) <- cellPopulations
