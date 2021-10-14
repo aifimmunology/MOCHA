@@ -25,6 +25,9 @@ the cell population label}
 
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populationsdevto}
+
+\item{sample_label_name}{string indicating which column in the meta data file contains 
+the samples}
 }
 \value{
 scMACs_PeakList an list containing peak calls for each cell population passed on in the 
