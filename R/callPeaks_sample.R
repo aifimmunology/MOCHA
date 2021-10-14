@@ -247,7 +247,45 @@ callPeaks_by_sample <- function(ArchRProj,
     ) 
     
     names(scMACs_PeakList) <- cellPopulations
-                                              
+           
+    
+    
+    #### take all the individual samples
+    #### and take the union to identify
+    #### all possible peak combinations
+    #### across individual samples
+    
+    create_union_peakset <- function(cellType_peaks_by_sample){
+    
+        NSamples = length(cellType_peaks_by_sample)
+        
+        if(length(NSamples)>0){
+            ## Take Union of Peakset 
+            combinedPeakset <- as.data.table(do.call(rbind, cellType_peaks_by_sample)) 
+
+            summarized_union <- combinedPeakset[, list(AverageLambda1=mean(lambda1), 
+                                   AverageLambda2=mean(lambda2),
+                                   SamplesWithPeak = .N,
+                                   PropSamplesWithPeak = .N/NSamples), 
+                            by=c('PeakID','seqnames','start','end','strand')]
+
+
+            cellType_peaks_by_sample[['Union']] <- summarized_union
+            return(cellType_peaks_by_sample)
+        } else {
+            print('No peaks were called')
+            return(NULL)
+            
+        }
+    }
+    
+    scMACs_PeakList<- mclapply(1:length(scMACs_PeakList),
+                                    function(x) create_union_peakset(scMACs_PeakList[[x]]),
+                                      mc.cores=22
+                                    )
+    names(scMACs_PeakList) <- cellPopulations
+
+                               
                            
     ########################################################################
     ########################################################################
