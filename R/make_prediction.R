@@ -81,7 +81,7 @@ make_prediction <- function(X, finalModelObject){
        preds = 1/(1+exp(-z))
 
        X$Prediction = preds 
-       X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
+       #X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
        X$PredictionStrength = X$lambda1
        X$Peak = X$Prediction > adaptiveThreshold
 
