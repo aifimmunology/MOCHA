@@ -64,6 +64,8 @@ calculate_intensities <- function(fragMat,
   fragsPerBin$cell <- fragMat_dt$RG[fragsPerBin$queryHits]
   fragsPerBin$bin <-  candidatePeaksDF$bin[fragsPerBin$subjectHits]
   fragsPerBin$chr <-  candidatePeaksDF$seqnames[fragsPerBin$subjectHits]
+  fragsPerBin$strand <-  candidatePeaksDF$strand[fragsPerBin$subjectHits]
+  
   fragsPerBin$start <- candidatePeaksDF$start[fragsPerBin$subjectHits]
   fragsPerBin$end <- candidatePeaksDF$end[fragsPerBin$subjectHits]
   fragsPerBin$width <- candidatePeaksDF$width[fragsPerBin$subjectHits]
@@ -84,7 +86,7 @@ calculate_intensities <- function(fragMat,
   ### join to the original dynamic bins 
   ### to retain original variables
 
-  countsByBin <- dplyr::left_join(candidatePeaksDF[, c('seqnames','start','end','bin')],
+  countsByBin <- dplyr::left_join(candidatePeaksDF[, c('strand', 'seqnames','start','end','bin')],
                                   countsByBin,
                                   by='bin')
 
@@ -122,9 +124,11 @@ calculate_intensities <- function(fragMat,
   countsByBin$lambda3<- calculate_local_noise(countsByBin$lambda1, width=width)
   
   ### retain only features of interest and in order required
-  countsByBin = countsByBin[,c('seqnames','start','end',
+  countsByBin = countsByBin[,c('bin', 'seqnames','start','end','strand',
                                'lambda1','lambda2','lambda3', 
                                'maxIntensity','numCells'),with=F]
+    
+  colnames(countsByBin)[1] <- 'PeakID'
   print(paste('Analysis finished on ', numCells, 'cells'))
     
 
