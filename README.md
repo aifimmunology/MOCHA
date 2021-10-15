@@ -12,6 +12,8 @@ Table of Contents
     * [Tutorial-1: Peak-calling on Entire Cell Populations](#example1)
     * [Tutorial-2: Sample-specific Peak-calling](#example2)
     * [Tutorial-3: Differential Accessibility](#example3)
+    * [Tutorial-4: Peak Widths](#example4)
+
 * [Contact](#contact)
 * [License](#license)
 
@@ -19,6 +21,9 @@ Table of Contents
 
 # <a name="introduction"></a> Introduction
 scMACS is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model. 
+
+<br> ![img](vignettes/scMACS_overview.png) <br>
+scATAC processing and overview of the **scMACS** algorithm. 
 
 # <a name="library"></a> Install package and load library
 
