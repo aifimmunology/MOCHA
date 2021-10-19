@@ -219,8 +219,32 @@ The trimmed output (below) is a nested list of lists (such as the output above) 
 
 ## <a name="example3"></a> Tutorial-3: Differential Accesibility
 
-This part is currently in development. TBD 
- 
+To calculate differential accessibility, the code below can be invoked to 
+determine whether a particular region is open or not. 
+
+    # Determine the groups to analyze 
+
+    groupA = peaks_by_sample[['CD14 Mono']]
+    groupB = peaks_by_sample[['B memory']]
+
+    # identify region for differential
+    # accessibility analysis 
+    candidatePeak = 'chr1:817000-817499'
+    
+    ## output 
+    > differential_accessibility(groupA, groupB, candidatePeak= candidatePeak)
+    
+      ES    P.value PDR_A PDR_B
+    W 324 8.8414e-08     1   0.3
+    
+where the output contains the following pieces of information quantifying the differential accessibility:
+- ES = effect size of the wilcoxon rank sum test
+- P.value = the statistical significance of the Rank sum test
+- PDR_A = the probability of detecting a read for that region in group A
+- L1A_Avg= Avg lambda1 value across samples in group A
+- PDR_B = the probability of detecting a read for that region in group B
+- L1B_Avg= Avg lambda1 value across samples in group B
+
 # <a name="contact"></a> Contact
 
 To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs. 
