@@ -234,7 +234,7 @@ determine whether a particular region is open or not.
     ## output 
     > differential_accessibility(groupA, groupB, candidatePeak= candidatePeak)
     
-                Peak      ES    P.value   PDR_A     L1_avg     PDR_B      L2_avg
+                Peak      ES    P.value   PDR_A     L1A_avg     PDR_B      L1B_avg
     W chr1:817000-817499 324 8.8414e-08     1       0.0299      0.2       0.000542
     
 where the output contains the following pieces of information quantifying the differential accessibility:
