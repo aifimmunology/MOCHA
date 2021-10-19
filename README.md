@@ -41,7 +41,9 @@ or directly from GitHub
 # <a name="example-main"></a> Tutorials
 ## <a name="example1"></a> Tutorial-1: Peak-calling on Entire Cell Populations
 
-This tutorial demonstrates how to call peaks for a given cell population. 
+This tutorial demonstrates how to call peaks for a given cell population. This process
+assumes pooling cells across samples/subjects to call peaks for all cells in a given 
+cell population.
 
 ### Load Library
    
