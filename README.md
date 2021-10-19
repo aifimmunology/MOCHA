@@ -247,6 +247,9 @@ where the output contains the following pieces of information quantifying the di
 
 to qualify whether that region is differential accessible or not. The probability of detecting a read (PDR) is a new metric we developed to qualify technical noise across samples. Briefly, for each group, it compares the most open sample (highest lambda1) to the smallest sample (smallest N), by randomly downsampling cells of the most open sample (smallest N) and seeing how often was biological signal detected in that subsample. 
 
+# <a name="example4"></a> Tutorial-4 Peak Widths 
+TBD -- examples incoming. 
+
 # <a name="contact"></a> Contact
 
 To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs. 
