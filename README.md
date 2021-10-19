@@ -234,8 +234,8 @@ determine whether a particular region is open or not.
     ## output 
     > differential_accessibility(groupA, groupB, candidatePeak= candidatePeak)
     
-      ES    P.value PDR_A PDR_B
-    W 324 8.8414e-08     1   0.3
+                Peak      ES    P.value   PDR_A     L1_avg     PDR_B      L2_avg
+    W chr1:817000-817499 324 8.8414e-08     1       0.0299       0       0.000542
     
 where the output contains the following pieces of information quantifying the differential accessibility:
 - ES = effect size of the wilcoxon rank sum test
@@ -244,6 +244,8 @@ where the output contains the following pieces of information quantifying the di
 - L1A_Avg= Avg lambda1 value across samples in group A
 - PDR_B = the probability of detecting a read for that region in group B
 - L1B_Avg= Avg lambda1 value across samples in group B
+
+to qualify whether that region is differential accessible or not. The probability of detection 
 
 # <a name="contact"></a> Contact
 
