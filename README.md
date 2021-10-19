@@ -235,7 +235,7 @@ determine whether a particular region is open or not.
     > differential_accessibility(groupA, groupB, candidatePeak= candidatePeak)
     
                 Peak      ES    P.value   PDR_A     L1_avg     PDR_B      L2_avg
-    W chr1:817000-817499 324 8.8414e-08     1       0.0299       0       0.000542
+    W chr1:817000-817499 324 8.8414e-08     1       0.0299      0.2       0.000542
     
 where the output contains the following pieces of information quantifying the differential accessibility:
 - ES = effect size of the wilcoxon rank sum test
@@ -245,7 +245,7 @@ where the output contains the following pieces of information quantifying the di
 - PDR_B = the probability of detecting a read for that region in group B
 - L1B_Avg= Avg lambda1 value across samples in group B
 
-to qualify whether that region is differential accessible or not. The probability of detection 
+to qualify whether that region is differential accessible or not. The probability of detecting a read (PDR) is a new metric we developed to qualify technical noise across samples. Briefly, for each group, it compares the most open sample (highest lambda1) to the smallest sample (smallest N), by randomly downsampling cells of the most open sample (smallest N) and seeing how often was biological signal detected in that subsample. 
 
 # <a name="contact"></a> Contact
 
