@@ -28,11 +28,13 @@
 #' @export
 
 callPeaks_by_sample <- function(ArchRProj, 
-                      cellSubsets=NULL,
-                      cellCol_label_name=NULL,
-                      sampleCol_label_name=NULL,                                
-                      returnAllPeaks=FALSE,
-                      numCores=10
+                                meta,
+                                cellSubsets=NULL,
+                                cellCol_label_name=NULL,
+                                sampleCol_label_name=NULL,         
+                                batchCol_label_name=NULL,
+                                returnAllPeaks=FALSE,
+                                numCores=10
                      
                      ){
     
@@ -70,7 +72,6 @@ callPeaks_by_sample <- function(ArchRProj,
     fragsList<-  getFragmentsFromProject(ArchRProj)
     
     ### obtain meta data from ArchR Project
-    meta = getCellColData(ArchRProj)
     
     if(cellSubsets=='ALL'){
        cellPopulations= unique(meta[,cellCol_label_name])   
@@ -84,14 +85,15 @@ callPeaks_by_sample <- function(ArchRProj,
     ### obtain median # of fragments
     ### per cell to calibrate features
     ### to pre-trained model 
-    medianFrags_current = median(ArchRProj@cellColData$nFrags)
-    
+#     medianFrags_current = median(ArchRProj@cellColData$nFrags)
     ### identify scaling factor 
-    scaleFactor= medianFrags_training/ medianFrags_current
-    
-    cat(paste('\nScale factor is ', round(scaleFactor,2),'\n\n'))
+#     scaleFactor= medianFrags_training/ medianFrags_current
 
+    meta$BatchColumn = meta[,batchCol_label_name]
+    meta_dt <- as.data.table(meta)
     
+    scaling_factors <- meta_dt[, list(ScalingFactor=median(nFrags)), by=BatchColumn]
+        
     ### get barcodes by cell pop for 
     ### peak-calling by different 
     ### cell population 
@@ -120,9 +122,9 @@ callPeaks_by_sample <- function(ArchRProj,
 
     callPeaks_by_population_sample <- function(fragsList, 
                                                cellNames,
-                                               ArchRProj, scaleFactor){
+                                               ArchRProj, scaling_factors){
 
-        print(length(cellNames))
+        #print(length(cellNames))
 
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
@@ -197,16 +199,29 @@ callPeaks_by_sample <- function(ArchRProj,
                                    function(x) x[x$lambda1 > 0,]
                                    )
         
-        scale_matrices <- function(tmp){
+        scale_matrices <- function(tmp, meta, sampleID){
+            
+            sampleBatch <- meta[which(meta[,sampleCol_label_name]==sampleID)[1], batchCol_label_name]
+            
+            medianFrags_current <- scaling_factors[BatchColumn == sampleBatch]$ScalingFactor
+            
+            scaleFactor= medianFrags_training/ medianFrags_current
                 
             tmp$lambda1 = tmp$lambda1 * scaleFactor
             tmp$lambda2 = tmp$lambda2 * scaleFactor
 
             return(tmp)
         }
+        
+        ## identify which sample 
+        ## falls in which batch
+        ## 
 
-        countsMatrix_List = lapply(countsMatrix_List, 
-                                   function(x) scale_matrices(x)
+        countsMatrix_List = lapply(1:length(countsMatrix_List),
+                                   function(x) scale_matrices(tmp=countsMatrix_List[[x]],
+                                                              meta=meta,
+                                                              sampleID = unique_samples[x]
+                                                             )
                                    )
         
         idx <-  sapply(countsMatrix_List, function(x) x$numCells[1]
@@ -221,14 +236,18 @@ callPeaks_by_sample <- function(ArchRProj,
 
                                          
         if(returnAllPeaks){
-            return(scMACS_peaks)
+          return(list(scMACS_peaks=scMACS_peaks,
+                        SampleFragments=frags_by_sample
+                       ))
 
         } else {
             scMACS_peaks <- lapply( scMACS_peaks,
                                 function(x) x[x$Peak==T]
                                 )
             
-            return(scMACS_peaks)
+            return(list(scMACS_peaks=scMACS_peaks,
+                        SampleFragments=frags_by_sample
+                       ))
 
         }
 
@@ -241,7 +260,7 @@ callPeaks_by_sample <- function(ArchRProj,
                                                                             ArchRProj, 
                                                                             scaleFactor
                                                                             ),
-                                mc.cores =numCores,
+                                mc.cores =numCores-1,
                                 mc.preschedule=TRUE,
                                 mc.allow.recursive=FALSE
     ) 
@@ -279,12 +298,21 @@ callPeaks_by_sample <- function(ArchRProj,
         }
     }
     
-    scMACs_PeakList<- mclapply(1:length(scMACs_PeakList),
-                                    function(x) create_union_peakset(scMACs_PeakList[[x]]),
-                                      mc.cores=22
+    scMACs_PeakList2<- mclapply(1:length(scMACs_PeakList),
+                                    function(x) try(create_union_peakset(scMACs_PeakList[[x]][[1]])),
+                                      mc.cores=numCores,
+                                      mc.preschedule=TRUE,
+                                      mc.allow.recursive=FALSE
                                     )
-    names(scMACs_PeakList) <- cellPopulations
+    
+    names(scMACs_PeakList2) <- cellPopulations
+    
+    for(i in 1:length(scMACs_PeakList)){
+        
+         scMACs_PeakList[[i]][['scMACS_peaks']] <- scMACs_PeakList2[[i]]
 
+        
+    }
                                
                            
     ########################################################################
