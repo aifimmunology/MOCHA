@@ -122,7 +122,9 @@ callPeaks_by_sample <- function(ArchRProj,
 
     callPeaks_by_population_sample <- function(fragsList, 
                                                cellNames,
-                                               ArchRProj, scaling_factors){
+                                               ArchRProj, 
+                                               scaling_factors,
+                                              batchCol_label_name){
 
         #print(length(cellNames))
 
@@ -203,7 +205,7 @@ callPeaks_by_sample <- function(ArchRProj,
             
             sampleBatch <- meta[which(meta[,sampleCol_label_name]==sampleID)[1], batchCol_label_name]
             
-            medianFrags_current <- scaling_factors[BatchColumn == sampleBatch]$ScalingFactor
+            medianFrags_current <- scaling_factors[scaling_factors$BatchColumn == sampleBatch]$ScalingFactor
             
             scaleFactor= medianFrags_training/ medianFrags_current
                 
@@ -258,7 +260,8 @@ callPeaks_by_sample <- function(ArchRProj,
     scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), 
                                 function(ZZ) callPeaks_by_population_sample(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
                                                                             ArchRProj, 
-                                                                            scaleFactor
+                                                                            scaleFactor,
+                                                                            batchCol_label_name
                                                                             ),
                                 mc.cores =numCores-1,
                                 mc.preschedule=TRUE,
