@@ -224,20 +224,59 @@ The trimmed output (below) is a nested list of lists (such as the output above) 
 To calculate differential accessibility, the code below can be invoked to 
 determine whether a particular region is open or not. 
 
-    # Determine the groups to analyze 
+    ###############################################################################
+    ## example 1
+    ## to 'large' groups of 
+    ## cell pop'ns with enough
+    ## samples to determine
+    ## differential accessibility
 
     groupA = peaks_by_sample[['CD14 Mono']]
     groupB = peaks_by_sample[['B memory']]
 
-    # identify region for differential
-    # accessibility analysis 
-    candidatePeak = 'chr1:817000-817499'
+    > differential_accessibility(groupA, groupB, candidatePeak='chr1:817000-817499')
+
+                    Peak  ES    P.value PDR_A    L1A_avg PDR_B      L1B_avg
+    W chr1:817000-817499 324 8.8414e-08     1 0.02989618     0 0.0005415408
+    ###############################################################################
     
-    ## output 
-    > differential_accessibility(groupA, groupB, candidatePeak= candidatePeak)
     
-                Peak      ES    P.value   PDR_A     L1A_avg     PDR_B      L1B_avg
-    W chr1:817000-817499 324 8.8414e-08     1       0.0299      0.2       0.000542
+    ###############################################################################    
+    ## example 2 
+    ## only 1 sample in the plasmablast
+    ## population with enough cells 
+    ## to make predictions 
+
+    groupA = peaks_by_sample[['CD14 Mono']]
+    groupB = peaks_by_sample[['Plasmablast']]
+
+    > differential_accessibility(groupA, groupB, candidatePeak='chr1:817000-817499')
+    
+    [1] "not enough samples with enough cells to determine differential accessibility"
+    
+                    Peak ES P.value PDR_A L1A_avg PDR_B L1B_avg
+    1 chr1:817000-817499 NA      NA    NA      NA    NA      NA
+
+    ###############################################################################
+    
+    
+    ###############################################################################    
+    ## example 3 
+    ## one group has all samples with 
+    ## signal, other group has only 
+    ## half of the samples with signal
+
+    groupA = peaks_by_sample[['CD14 Mono']]
+    groupB = peaks_by_sample[['CD8 TCM']]
+    candidatePeak='chr1:827000-827499'
+    
+    > differential_accessibility(groupA, groupB, candidatePeak=candidatePeak)
+
+                    Peak  ES    P.value PDR_A    L1A_avg PDR_B    L1B_avg
+    W chr1:827000-827499 103 0.01660861     1 0.04210296     1 0.02110537
+    
+    ###############################################################################
+    ###############################################################################
     
 where the output contains the following pieces of information quantifying the differential accessibility:
 - ES = effect size of the wilcoxon rank sum test
