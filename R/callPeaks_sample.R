@@ -56,8 +56,15 @@ callPeaks_by_sample <- function(ArchRProj,
         stop('ArchRProject must be an ArchR Project')
       } 
     
+    ## calculate internal scaling factors 
+    meta$BatchColumn = meta[,batchCol_label_name]
+    meta_dt <- as.data.table(meta)
+    scaling_factors <- meta_dt[, list(ScalingFactor=median(nFrags)), by=BatchColumn]
 
     
+    ## override in case you need to down-sample
+    ## per MP 
+    meta <- getCellColData(ArchRProj)
                                
     ########################################################################
     ########################################################################
@@ -65,7 +72,6 @@ callPeaks_by_sample <- function(ArchRProj,
     ## and future datasets need to be calibrated to
     ## these coefficients 
     finalModelObject = scMACS::finalModelObject
-    
     medianFrags_training = 3618
     
     ### load fragment files from ArchR Project 
@@ -89,10 +95,8 @@ callPeaks_by_sample <- function(ArchRProj,
     ### identify scaling factor 
 #     scaleFactor= medianFrags_training/ medianFrags_current
 
-    meta$BatchColumn = meta[,batchCol_label_name]
-    meta_dt <- as.data.table(meta)
+
     
-    scaling_factors <- meta_dt[, list(ScalingFactor=median(nFrags)), by=BatchColumn]
         
     ### get barcodes by cell pop for 
     ### peak-calling by different 
