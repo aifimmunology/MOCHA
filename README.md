@@ -224,69 +224,42 @@ The trimmed output (below) is a nested list of lists (such as the output above) 
 To calculate differential accessibility, the code below can be invoked to 
 determine whether a particular region is open or not. 
 
-    ###############################################################################
-    ## example 1
-    ## to 'large' groups of 
-    ## cell pop'ns with enough
-    ## samples to determine
-    ## differential accessibility
+                            Peak ES_wilc   Wilcoxon     ES_Chisq Chisquare
+    W  chr14:100179000-100179499    59.5 0.59298010 7.149237e-32 1.0000000
+    W1    chr1:28838000-28838499    59.5 0.59298010 7.149237e-32 1.0000000
+    W2   chr22:21102500-21102999    45.0 0.23180711 4.901620e-01 0.4838550
+    W3    chr4:95244000-95244499    59.5 0.59298010 7.149237e-32 1.0000000
+    W4  chr1:206725500-206725999    38.5 0.06666009 1.137894e+00 0.2860978
+    W5   chr15:99754500-99754999    59.5 0.59298010 7.149237e-32 1.0000000
+    W6   chr15:60893000-60893499    59.5 0.59298010 7.149237e-32 1.0000000
+    W7      chr1:3567000-3567499    56.0 0.40326191 9.642857e-04 0.9752273
+    W8  chr1:175029000-175029499    52.5 0.28379398 1.244444e-01 0.7242632
+    W9  chr4:113760500-113760999    24.5 0.01133921 2.244801e+00 0.1340642
+          MinPval L1A_avg L1B_avg
+    W  0.59298010    0.00  0.0007
+    W1 0.59298010    0.00  0.0007
+    W2 0.23180711    0.02  0.0058
+    W3 0.59298010    0.00  0.0007
+    W4 0.06666009    0.00  0.0066
+    W5 0.59298010    0.00  0.0007
+    W6 0.59298010    0.00  0.0007
+    W7 0.40326191    0.00  0.0012
+    W8 0.28379398    0.00  0.0015
+    W9 0.01133921    0.00  0.0106
 
-    groupA = peaks_by_sample[['CD14 Mono']]
-    groupB = peaks_by_sample[['B memory']]
-
-    > differential_accessibility(groupA, groupB, candidatePeak='chr1:817000-817499')
-
-                    Peak  ES    P.value PDR_A    L1A_avg PDR_B      L1B_avg
-    W chr1:817000-817499 324 8.8414e-08     1 0.02989618     0 0.0005415408
-    ###############################################################################
-    
-    
-    ###############################################################################    
-    ## example 2 
-    ## only 1 sample in the plasmablast
-    ## population with enough cells 
-    ## to make predictions 
-
-    groupA = peaks_by_sample[['CD14 Mono']]
-    groupB = peaks_by_sample[['Plasmablast']]
-
-    > differential_accessibility(groupA, groupB, candidatePeak='chr1:817000-817499')
-    
-    [1] "not enough samples with enough cells to determine differential accessibility"
-    
-                    Peak ES P.value PDR_A L1A_avg PDR_B L1B_avg
-    1 chr1:817000-817499 NA      NA    NA      NA    NA      NA
-
-    ###############################################################################
-    
-    
-    ###############################################################################    
-    ## example 3 
-    ## one group has all samples with 
-    ## signal, other group has only 
-    ## half of the samples with signal
-
-    groupA = peaks_by_sample[['CD14 Mono']]
-    groupB = peaks_by_sample[['CD8 TCM']]
-    candidatePeak='chr1:827000-827499'
-    
-    > differential_accessibility(groupA, groupB, candidatePeak=candidatePeak)
-
-                    Peak  ES    P.value PDR_A    L1A_avg PDR_B    L1B_avg
-    W chr1:827000-827499 103 0.01660861     1 0.04210296     1 0.02110537
-    
-    ###############################################################################
-    ###############################################################################
-    
 where the output contains the following pieces of information quantifying the differential accessibility:
-- ES = effect size of the wilcoxon rank sum test
-- P.value = the statistical significance of the Rank sum test
-- PDR_A = the probability of detecting a read for that region in group A
+- Peak= Peak ID
+- ES_wilc = effect size of the wilcoxon rank sum test
+- Wilcoxon = the statistical significance of the Rank sum test
+- ES_Chisq = effect size of the chi square test
+- Chisquare = tthe statistical significance of the chi-square test
+- MinPval = minimum p-value across both tests
 - L1A_Avg= Avg lambda1 value across samples in group A
-- PDR_B = the probability of detecting a read for that region in group B
 - L1B_Avg= Avg lambda1 value across samples in group B
 
-to qualify whether that region is differential accessible or not. The probability of detecting a read (PDR) is a new metric we developed to qualify technical noise across samples. Briefly, for each group, it compares the most open sample (highest lambda1) to the smallest sample (smallest N), by randomly downsampling cells of the most open sample (smallest N) and seeing how often was biological signal detected in that subsample. 
+to qualify whether that region is differential accessible or not. 
+
+In addition, an optional parameter (not shown above) allows the user to calcualte PDR (probability of detection rate) he probability of detecting a read (PDR) is a new metric we developed to qualify technical noise across samples. The PDR ( probability detection rate) is a technical measure defined to capture dropout rate in single-cell ATAC data to better qualify whether differential accessibility is a product of technical noise or true biological signal. It calculates this metric, for each group, by comparing the most open sample (highest lambda1) to the smallest sample (smallest N), by randomly downsampling cells of the most open sample (smallest N) and seeing how often was biological signal detected in that subsample. 
 
 # <a name="example4"></a> Tutorial-4 Peak Widths 
 TBD -- examples incoming. 

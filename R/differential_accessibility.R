@@ -14,6 +14,8 @@
 #'
 #' @references XX
 #'
+#' @export
+
 
 differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:817000-817499', doPDRAnalysis=FALSE  ){
     
@@ -48,7 +50,14 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
         return(res)
         
     } else {
-    
+        
+    ### If there are enough samples 
+    ### proceed to do differential
+    ### accessibility analyses 
+
+        ### calculate # of cells 
+        ### per group 
+        
         numCellsA <- sapply(groupA[['scMACS_peaks']][sample_names_grA],
                             function(x) x$numCells[1]
                             )
@@ -58,7 +67,17 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
                             )
 
 
-
+        ################################################################################################
+        ################################################################################################
+        ### The following two functions are 
+        ### internally defined functions for 
+        ### PDR Analyses which can optionally
+        ### be set as "TRUE" if selected 
+        ### in the parameter settings 
+        
+        ### lambda1-subsample determines the 
+        ### value of lambda1 for a given subsample 
+        ### of cells selected for a given sample
         
         get_lambda1_subsample <- function(sampleSize, ind_sample, candidatePeak, FinalBins){
 
@@ -79,6 +98,12 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
         }
 
 
+        ### the PDR: probability detection rate 
+        ### is a technical measure defined to capture
+        ### dropout rate in single-cell ATAC data
+        ### to better qualify whether differential
+        ### accessibility is a product of technical noise 
+        ### or true biological signal. 
 
         calculate_PDR <- function(groupB, numCellsB, vals_groupB, candidatePeak, FinalBins){
 
@@ -101,6 +126,8 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
         }
 
         
+        ### Find differential Peaks is a 
+        ### wrapper that calculates  
         
         findDifferentialPeak_pdr  <- function(candidatePeak){
         
@@ -121,15 +148,29 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
             pdrA = calculate_PDR(groupA, numCellsA, vals_groupA ,candidatePeak, FinalBins_groupA)
             pdrB = calculate_PDR(groupB, numCellsB, vals_groupB,candidatePeak, FinalBins_groupB)    
 
+            chisq_mat <- rbind(c(sum(vals_groupA >0), length(vals_groupA)),
+                                               c(sum(vals_groupB >0), length(vals_groupB)))
 
+            Mat <- as.table(chisq_mat)
+            dimnames(Mat) <- list(Group = c("A", "B"),
+                                                  Peak = c("Positive","Total"))
+                      
+            wilcoxon_p <- wilcox.test(vals_groupA, vals_groupB)
+            chisq_p <- chisq.test(chisq_mat)
+
+                   
             res = data.frame(
-                Peak=candidatePeak,
-                ES=wilcox.test(vals_groupA, vals_groupB)$statistic,
-                P.value=wilcox.test(vals_groupA, vals_groupB)$p.value,
-                PDR_A=pdrA,
-                L1A_avg=mean(vals_groupA),
-                PDR_B= pdrB,
-                L1B_avg=mean(vals_groupB)
+
+                        Peak=candidatePeak,
+                        ES_wilc=wilcoxon_p$statistic,
+                        Wilcoxon=wilcoxon_p$p.value,
+                        ES_Chisq=chisq_p$statistic,
+                        Chisquare = chisq_p$p.value,
+                        MinPval = min(wilcoxon_p$p.value, chisq_p$p.value),
+                        PDR_A=pdrA,
+                        L1A_avg=mean(vals_groupA),
+                        PDR_B= pdrB,
+                        L1B_avg=mean(vals_groupB)
                 )
 
             return(res)
@@ -155,13 +196,13 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
         ## lambda1 is designated as 0. So here 
         ## we change the NAs (R-artifact) to 0s 
                 
-        diffPeaks <- mclapply(candidatePeaks, 
-                              function(x)
-                                  findDifferentialPeak_pdr(x),
-                              mc.cores = 3
-                              )
-                              
-        diffPeaks <- do.call(rbind, diffPeaks)
+            diffPeaks <- mclapply(candidatePeaks, 
+                                  function(x)
+                                      findDifferentialPeak_pdr(x),
+                                  mc.cores = 3
+                                  )
+
+            diffPeaks <- do.call(rbind, diffPeaks)
 
         } else { 
             
@@ -202,8 +243,6 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
                                 L1B_avg=round(mean(vals_groupB),4)
                                 )
                       
-                            res$FDR =  stats::p.adjust(res$MinPval, method='BH')
-
                             return(res)
 
                 
