@@ -17,16 +17,23 @@
 
 differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:817000-817499', doPDRAnalysis=FALSE  ){
     
-    
+    ### Get the sample IDs 
+    ### and remove the Union 
+    ### from the groups 
     sample_names_grA <- names(groupA[['scMACS_peaks']])
     sample_names_grA <- sample_names_grA[sample_names_grA != 'Union']
     
     sample_names_grB <- names(groupB[['scMACS_peaks']])
     sample_names_grB <- sample_names_grB[sample_names_grB != 'Union']
     
+    ### Error message: 
+    ###   - if either group has < 2 samples without at least 5 cells
+    ###     we cannot determine differential accessibility. 
+    ###     as both wilcoxon and X^2 test break
+    
     if(length(sample_names_grB) < 2 | length(sample_names_grA) <2){
         
-        print('not enough samples with at least 5 cells to determine differential accessibility')
+        print('not enough samples with at least 5 cells to determine differential accessibility. At least one group has less < 2 samples with > 5 cells, therefore no differential accessibility can be made.')
         
         res=data.frame(Peak = candidatePeaks,
                        ES_wilc=rep(NA, length(candidatePeaks)),
