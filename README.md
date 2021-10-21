@@ -222,8 +222,29 @@ The trimmed output (below) is a nested list of lists (such as the output above) 
 ## <a name="example3"></a> Tutorial-3: Differential Accesibility
 
 To calculate differential accessibility, the code below can be invoked to 
-determine whether a particular region is open or not. 
+determine whether a particular region is open or not.
 
+    ## example 1
+    ## to 'large' groups of 
+    ## cell pop'ns with enough
+    ## samples to determine
+    ## differential accessibility
+
+    ## define groups for differential 
+    ## analyses 
+    groupA = peaks_by_sample[['CD8 TCM']]
+    groupB = peaks_by_sample[['B memory']]
+
+    ## define a sample of peaks to look at 
+    ## for differential accessibility 
+    candidatePeaks <- sample(allPeaks,1000)
+
+    ## run function call 
+    tmp <- differential_accessibility(groupA, groupB, candidatePeaks=candidatePeaks, doPDRAnalysis=FALSE)
+    
+    ## examine output
+    > head(tmp, 10) 
+  
                             Peak ES_wilc   Wilcoxon     ES_Chisq Chisquare
     W  chr14:100179000-100179499    59.5 0.59298010 7.149237e-32 1.0000000
     W1    chr1:28838000-28838499    59.5 0.59298010 7.149237e-32 1.0000000
@@ -248,6 +269,7 @@ determine whether a particular region is open or not.
     W9 0.01133921    0.00  0.0106
 
 where the output contains the following pieces of information quantifying the differential accessibility:
+
 - Peak= Peak ID
 - ES_wilc = effect size of the wilcoxon rank sum test
 - Wilcoxon = the statistical significance of the Rank sum test
