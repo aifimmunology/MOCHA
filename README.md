@@ -12,7 +12,6 @@ Table of Contents
     * [Tutorial-1: Peak-calling on Entire Cell Populations](#example1)
     * [Tutorial-2: Sample-specific Peak-calling](#example2)
     * [Tutorial-3: Differential Accessibility](#example3)
-    * [Tutorial-4: Peak Widths](#example4)
 
 * [Contact](#contact)
 * [License](#license)
@@ -224,10 +223,8 @@ The trimmed output (below) is a nested list of lists (such as the output above) 
 To calculate differential accessibility, the code below can be invoked to 
 determine whether a particular region is open or not.
 
-    ## example 1
-    ## to 'large' groups of 
-    ## cell pop'ns with enough
-    ## samples to determine
+    ## two different cell pop'ns with 
+    ## enough samples to determine
     ## differential accessibility
 
     ## define groups for differential 
@@ -282,9 +279,6 @@ where the output contains the following pieces of information quantifying the di
 to qualify whether that region is differential accessible or not. 
 
 In addition, an optional parameter (not shown above) allows the user to calcualte PDR (probability of detection rate) he probability of detecting a read (PDR) is a new metric we developed to qualify technical noise across samples. The PDR ( probability detection rate) is a technical measure defined to capture dropout rate in single-cell ATAC data to better qualify whether differential accessibility is a product of technical noise or true biological signal. It calculates this metric, for each group, by comparing the most open sample (highest lambda1) to the smallest sample (smallest N), by randomly downsampling cells of the most open sample (smallest N) and seeing how often was biological signal detected in that subsample. 
-
-# <a name="example4"></a> Tutorial-4 Peak Widths 
-TBD -- examples incoming. 
 
 # <a name="contact"></a> Contact
 
