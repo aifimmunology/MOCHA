@@ -282,7 +282,7 @@ to qualify whether that region is differential accessible or not.
 
 In addition, an optional parameter (not shown above) allows the user to calcualte PDR (probability of detection rate) he probability of detecting a read (PDR) is a new metric we developed to qualify technical noise across samples. The PDR ( probability detection rate) is a technical measure defined to capture dropout rate in single-cell ATAC data to better qualify whether differential accessibility is a product of technical noise or true biological signal. It calculates this metric, for each group, by comparing the most open sample (highest lambda1) to the smallest sample (smallest N), by randomly downsampling cells of the most open sample (smallest N) and seeing how often was biological signal detected in that subsample. 
 
-## <a name="example3"></a> Tutorial-4: Sample X Peak Matrix 
+## <a name="example4"></a> Tutorial-4: Sample X Peak Matrix 
 
 In order to summarize peak-calls for a given population, the code 
 below can be used to create a sample X peak matrix that includes 
