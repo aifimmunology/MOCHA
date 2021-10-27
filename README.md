@@ -296,7 +296,21 @@ for each peak in which reads were observed across all patients.
 
     cd14_samples <- peaks_by_sample[['CD14 Mono']]
 
-    create_peak_sampleMatrix(cd14_samples)
+    > create_peak_sampleMatrix(cd14_samples)
+    
+    > sample_specific_matrix
+                                PeakID X001_PB5206W2-01 X001_PB5206W4-01
+          1:   chr10:10000000-10000499      0.000000000                0
+          2: chr10:100000000-100000499      0.000000000                0
+          3: chr10:100001000-100001499      0.000000000                0
+          4: chr10:100001500-100001999      0.000000000                0
+          5: chr10:100002000-100002499      0.003679851                0
+         ---                                                            
+    1474125:      chrY:9546500-9546999      0.000000000                0
+    1474126:      chrY:9811000-9811499      0.000000000                0
+    1474127:      chrY:9956000-9956499      0.000000000                0
+    1474128:      chrY:9974500-9974999      0.000000000                0
+    1474129:      chrY:9993000-9993499      0.000000000                0
 
 
 # <a name="contact"></a> Contact
