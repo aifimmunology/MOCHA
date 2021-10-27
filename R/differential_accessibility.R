@@ -6,9 +6,20 @@
 #'
 #' @param groupA: list of accessible peaks for each sample in group A
 #' @param groupB: list of accessible peaks for each sample in group B
+#' @param candidatePeaks: vector of strings containing PeakIDs (unique peak identifiers)
+#'                        used to conduct differential accessibility
 #' 
-#' @return a genomic ranges object that 
-#' to calculate the probability of a (+) peak
+#' @return a table indicating the results for differential accessibility
+#'         which includes the following pieces of informations
+#'         - Peak= Peak ID
+#'         - ES_wilc = effect size of the wilcoxon rank sum test
+#'         - Wilcoxon = the statistical significance of the Rank sum test
+#'         - ES_Chisq = effect size of the chi square test
+#'         - Chisquare = tthe statistical significance of the chi-square test
+#'         - MinPval = minimum p-value across both tests
+#'         - L1A_Avg= Avg lambda1 value across samples in group A
+#'         - L1B_Avg= Avg lambda1 value across samples in group B
+
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
