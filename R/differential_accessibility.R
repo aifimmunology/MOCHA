@@ -232,24 +232,24 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
                             vals_groupB[is.na(vals_groupB)] <- 0 
                             vals_groupA[is.na(vals_groupA)] <- 0 
 
-                            chisq_mat <- rbind(c(sum(vals_groupA >0), length(vals_groupA)),
+                            contingency_mat <- rbind(c(sum(vals_groupA >0), length(vals_groupA)),
                                                c(sum(vals_groupB >0), length(vals_groupB)))
 
-                            Mat <- as.table(chisq_mat)
+                            Mat <- as.table(contingency_mat)
                             dimnames(Mat) <- list(Group = c("A", "B"),
                                                   Peak = c("Positive","Total"))
                       
                             wilcoxon_p <- wilcox.test(vals_groupA, vals_groupB)
-                            chisq_p <- chisq.test(chisq_mat)
+                            fishers_test <- fisher.test(x=Mat)
 
                       
                             res = data.frame(
                                 Peak=candidatePeak,
                                 ES_wilc=wilcoxon_p$statistic,
                                 Wilcoxon=wilcoxon_p$p.value,
-                                ES_Chisq=chisq_p$statistic,
-                                Chisquare = chisq_p$p.value,
-                                MinPval = min(wilcoxon_p$p.value, chisq_p$p.value),
+                                ES_Fisher=fishers_test$estimate,
+                                Fisher = fishers_test$p.value,
+                                MinPval = min(wilcoxon_p$p.value, fishers_test$p.value),
                                 L1A_avg=round(mean(vals_groupA),4),
                                 L1B_avg=round(mean(vals_groupB),4)
                                 )
