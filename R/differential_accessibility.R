@@ -17,7 +17,7 @@
 #' @export
 
 
-differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:817000-817499', doPDRAnalysis=FALSE  ){
+differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:817000-817499', doPDRAnalysis=FALSE , numCores ){
     
     ### Get the sample IDs 
     ### and remove the Union 
