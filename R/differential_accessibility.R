@@ -28,7 +28,7 @@
 #' @export
 
 
-differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:817000-817499', doPDRAnalysis=FALSE , numCores ){
+differential_accessibility <- function(groupA, groupB, numCores ){
     
     ### Get the sample IDs 
     ### and remove the Union 
@@ -44,31 +44,42 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
     ###     we cannot determine differential accessibility. 
     ###     as both wilcoxon and X^2 test break
     
-    if(length(sample_names_grB) < 3 | length(sample_names_grA) <3){
+    if(length(sample_names_grB) < 5 | length(sample_names_grA) <5){
         
-        print('not enough samples with at least 5 cells to determine differential accessibility. At least one group has less < 2 samples with > 5 cells, therefore no differential accessibility can be made.')
+        print('not enough samples with at least 5 cells to determine differential accessibility. Returning the set-difference.')
         
-        res=data.frame(Peak = candidatePeaks,
-                       ES_wilc=rep(NA, length(candidatePeaks)),
-                       Wilcoxon=rep(NA, length(candidatePeaks)),
-                       ES_Chisq=rep(NA, length(candidatePeaks)),
-                       Chisquare = rep(NA, length(candidatePeaks)),
-                       MinPval = rep(NA, length(candidatePeaks)),
-                       L1A_avg=rep(NA, length(candidatePeaks)),
-                       L1B_avg=rep(NA, length(candidatePeaks))
-                                )
-     
+        ## Find the union 
+        groupA_peaks <- groupA[['scMACS_peaks']]$Union
+        groupB_peaks <- groupB[['scMACS_peaks']]$Union
+        
+        ### choose peaks in at least 2 samples
+        groupA_peaks <- groupA_peaks[SamplesWithPeak>1]
+        groupB_peaks <- groupB_peaks[SamplesWithPeak>1]   
+        
+        ### Common peaks
+        commonPeaks <- intersect(groupA_peaks$PeakID, groupB_peaks$PeakID)
+        
+        ### Unique in A 
+        ### Unique in B 
+        uniqueA <- groupA_peaks[!PeakID %in% commonPeaks]
+        uniqueB <- groupB_peaks[!PeakID %in% commonPeaks]
+        
+        
+        res= list(UniquePeaksA=uniqueA, 
+                  UniquePeaksB=uniqueB,
+                  CommonPeaks = commonPeaks)
+                                
         return(res)
         
     } else {
-        
-    ### If there are enough samples 
-    ### proceed to do differential
-    ### accessibility analyses 
+
+        ### If there are enough samples 
+        ### proceed to do differential
+        ### accessibility analyses 
 
         ### calculate # of cells 
         ### per group 
-        
+
         numCellsA <- sapply(groupA[['scMACS_peaks']][sample_names_grA],
                             function(x) x$numCells[1]
                             )
@@ -76,148 +87,38 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
         numCellsB <- sapply(groupB[['scMACS_peaks']][sample_names_grB],
                             function(x) x$numCells[1]
                             )
-
-
-        ################################################################################################
-        ################################################################################################
-        ### The following two functions are 
-        ### internally defined functions for 
-        ### PDR Analyses which can optionally
-        ### be set as "TRUE" if selected 
-        ### in the parameter settings 
         
-        ### lambda1-subsample determines the 
-        ### value of lambda1 for a given subsample 
-        ### of cells selected for a given sample
+        ## Find the union 
+        groupA_peaks <- groupA[['scMACS_peaks']]$Union
+        groupB_peaks <- groupB[['scMACS_peaks']]$Union
         
-        get_lambda1_subsample <- function(sampleSize, ind_sample, candidatePeak, FinalBins){
-
-                cellList <- unique(ind_sample$RG)
-                subsample <- ind_sample[ind_sample$RG %in% sample(cellList,sampleSize, replace=F)]
-
-                tmp <- scMACS::calculate_intensities(subsample,
-                                              FinalBins,
-                                              NBDistribution=NULL,
-                                              normalizeBins=FALSE,
-                                              theta=0.001, 
-                                              width=20
-                                             )
-                tmpL1 <- round( tmp$lambda1[tmp$PeakID ==candidatePeak],4)
-                print(tmpL1)
-                return(tmpL1)
-
-        }
-
-
-        ### the PDR: probability detection rate 
-        ### is a technical measure defined to capture
-        ### dropout rate in single-cell ATAC data
-        ### to better qualify whether differential
-        ### accessibility is a product of technical noise 
-        ### or true biological signal. 
-
-        calculate_PDR <- function(groupB, numCellsB, vals_groupB, candidatePeak, FinalBins){
-
-                min_num_sample <- min(numCellsB)
-                most_open_sample <-  which.max(vals_groupB)
-
-                print(paste("Smallest sample has cells =", min_num_sample))
-
-                ind_sample <- groupB$SampleFragments[[most_open_sample]]
-
-                lambda1_subsamples <- unlist(mclapply(1:25, function(x) 
-                    try(get_lambda1_subsample(min_num_sample, ind_sample,candidatePeak,FinalBins )),
-                         mc.cores=numCores,
-                         mc.preschedule=TRUE,
-                         mc.allow.recursive=FALSE
-                         ))
-
-                pdr = mean(lambda1_subsamples > 0)
-                return( pdr)
-        }
-
+        ### choose peaks in at least 2 samples
+        groupA_peaks <- groupA_peaks[SamplesWithPeak>1]
+        groupB_peaks <- groupB_peaks[SamplesWithPeak>1]  
         
-        ### Find differential Peaks is a 
-        ### wrapper that calculates  
+        candidatePeaks <- unique(c(groupA_peaks$PeakID,
+                                   groupB_peaks$PeakID)
+                                 )
         
-        findDifferentialPeak_pdr  <- function(candidatePeak){
-        
-            vals_groupA <- as.numeric(sapply(groupA[['scMACS_peaks']][sample_names_grA],
-                                function(x) x$lambda1[x$PeakID ==candidatePeak]
-                                )
-                                      )
-
-            vals_groupB <- as.numeric(sapply(groupB[['scMACS_peaks']][sample_names_grB],
-                                function(x)  x$lambda1[x$PeakID ==candidatePeak]
-                                ) 
-                                      )
-
-            vals_groupB[is.na(vals_groupB)] <- 0 
-            vals_groupA[is.na(vals_groupA)] <- 0 
-
-        
-            pdrA = calculate_PDR(groupA, numCellsA, vals_groupA ,candidatePeak, FinalBins_groupA)
-            pdrB = calculate_PDR(groupB, numCellsB, vals_groupB,candidatePeak, FinalBins_groupB)    
-
-            chisq_mat <- rbind(c(sum(vals_groupA >0), length(vals_groupA)),
-                                               c(sum(vals_groupB >0), length(vals_groupB)))
-
-            Mat <- as.table(chisq_mat)
-            dimnames(Mat) <- list(Group = c("A", "B"),
-                                                  Peak = c("Positive","Total"))
-                      
-            wilcoxon_p <- wilcox.test(vals_groupA, vals_groupB)
-            chisq_p <- chisq.test(chisq_mat)
-
-                   
-            res = data.frame(
-
-                        Peak=candidatePeak,
-                        ES_wilc=wilcoxon_p$statistic,
-                        Wilcoxon=wilcoxon_p$p.value,
-                        ES_Chisq=chisq_p$statistic,
-                        Chisquare = chisq_p$p.value,
-                        MinPval = min(wilcoxon_p$p.value, chisq_p$p.value),
-                        PDR_A=pdrA,
-                        L1A_avg=mean(vals_groupA),
-                        PDR_B= pdrB,
-                        L1B_avg=mean(vals_groupB)
-                )
-
-            return(res)
-        
-        }
-        
-              
-        if(doPDRAnalysis){
-            
-            
-            FinalBins_groupA <- determine_dynamic_range(SimpleList(groupA$SampleFragments),
-                                                 ArchRProj, 
-                                                 binSize=500, 
-                                                 doBin=FALSE)
-
-            FinalBins_groupB <- determine_dynamic_range(SimpleList(groupB$SampleFragments),
-                                                 ArchRProj, 
-                                                 binSize=500, 
-                                                 doBin=FALSE)
-            
-            
-        ## If a sample had > 5 cells but no reads,
-        ## lambda1 is designated as 0. So here 
-        ## we change the NAs (R-artifact) to 0s 
-                
-            diffPeaks <- mclapply(candidatePeaks, 
+        diffPeaks <- mclapply(candidatePeaks, 
                                   function(x)
-                                      findDifferentialPeak_pdr(x),
-                                  mc.cores = 3
+                                      findDifferentialPeak(x),
+                                  mc.cores = numCores
                                   )
 
-            diffPeaks <- do.call(rbind, diffPeaks)
-
-        } else { 
+        diffPeaks <- do.call(rbind, diffPeaks)
+       
             
-                  findDifferentialPeak  <- function(candidatePeak){
+        }
+                                      
+        return(diffPeaks)                      
+        
+    
+}
+
+
+### 
+findDifferentialPeak  <- function(candidatePeak){
 
                             vals_groupA <- as.numeric(sapply(groupA[['scMACS_peaks']][sample_names_grA],
                                                 function(x) x$lambda1[x$PeakID ==candidatePeak]
@@ -232,8 +133,12 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
                             vals_groupB[is.na(vals_groupB)] <- 0 
                             vals_groupA[is.na(vals_groupA)] <- 0 
 
-                            contingency_mat <- rbind(c(sum(vals_groupA >0), length(vals_groupA)),
-                                               c(sum(vals_groupB >0), length(vals_groupB)))
+                            A = sum(vals_groupA >0)
+                            B = length(vals_groupA)-A
+                            C = sum(vals_groupB >0)
+                            D = length(vals_groupB) - C
+                            contingency_mat <- rbind(c(A,B),
+                                                     c(C,D))
 
                             Mat <- as.table(contingency_mat)
                             dimnames(Mat) <- list(Group = c("A", "B"),
@@ -257,30 +162,6 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
                             return(res)
 
                 
-                  }
-
-                
-            diffPeaks <- mclapply(candidatePeaks, 
-                              function(x)
-                                  findDifferentialPeak(x),
-                              mc.cores = numCores
-                              )
-                              
-            diffPeaks <- do.call(rbind, diffPeaks)
-    
-            
-            
-            
-            
-        }
-
-
-
-                              
-                                      
-        return(diffPeaks)                      
-        
-    }
-
+                  
 }
 
