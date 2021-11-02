@@ -44,7 +44,7 @@ differential_accessibility <- function(groupA, groupB, candidatePeaks='chr1:8170
     ###     we cannot determine differential accessibility. 
     ###     as both wilcoxon and X^2 test break
     
-    if(length(sample_names_grB) < 2 | length(sample_names_grA) <2){
+    if(length(sample_names_grB) < 3 | length(sample_names_grA) <3){
         
         print('not enough samples with at least 5 cells to determine differential accessibility. At least one group has less < 2 samples with > 5 cells, therefore no differential accessibility can be made.')
         
