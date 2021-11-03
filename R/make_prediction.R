@@ -20,7 +20,7 @@
 #'
 #' @export
 
-make_prediction <- function(X, finalModelObject){
+make_prediction <- function(X, finalModelObject, tolerance=0.01){
 
     cell_model = X$numCells[1]
     
@@ -81,9 +81,13 @@ make_prediction <- function(X, finalModelObject){
        preds = 1/(1+exp(-z))
 
        X$Prediction = preds 
-       #X =makeGRangesFromDataFrame(X, keep.extra.columns=T)
        X$PredictionStrength = X$lambda1
-       X$Peak = X$Prediction > adaptiveThreshold
+       
+       ### tolerance
+       ### included to account for 
+       ### precision errors in low 
+       ### values 
+       X$Peak = X$Prediction > adaptiveThreshold + tolerance
 
         return(X)
 
