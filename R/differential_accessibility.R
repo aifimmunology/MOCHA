@@ -96,70 +96,101 @@ differential_accessibility <- function(groupA, groupB, numCores ){
         groupA_peaks <- groupA_peaks[SamplesWithPeak>1]
         groupB_peaks <- groupB_peaks[SamplesWithPeak>1]  
         
+        ### Identify the 
         candidatePeaks <- unique(c(groupA_peaks$PeakID,
                                    groupB_peaks$PeakID)
                                  )
         
-        diffPeaks <- mclapply(candidatePeaks, 
+        ### Common peaks
+        commonPeaks <- intersect(groupA_peaks$PeakID, groupB_peaks$PeakID)
+     
+        ### Unique in A 
+        ### Unique in B 
+        uniqueA <- groupA_peaks[!PeakID %in% commonPeaks]
+        uniqueB <- groupB_peaks[!PeakID %in% commonPeaks]
+        
+        ### Do the differential
+        ### accessibility analyses
+        ### only on the intersection
+        ### of the peak calls 
+        
+        diffPeaks <- mclapply(commonPeaks, 
                                   function(x)
-                                      findDifferentialPeak(x),
+                                      findDifferentialPeak(x, 
+                                                           groupA, 
+                                                           groupB),
                                   mc.cores = numCores
                                   )
 
         diffPeaks <- do.call(rbind, diffPeaks)
-       
+        diffPeaks = as.data.table(diffPeaks)
+        
+        res= list(UniquePeaksA=uniqueA, 
+                  UniquePeaksB=uniqueB,
+                  CommonPeaks =  diffPeaks[diffPeaks$MinPval < 0.05,],
+                  diffPeaks=diffPeaks
+                 )
             
         }
                                       
-        return(diffPeaks)                      
+        return(res)                      
         
     
 }
 
 
 ### 
-findDifferentialPeak  <- function(candidatePeak){
+findDifferentialPeak  <- function(candidatePeak, groupA, groupB){
+    
+    ### Get the sample IDs 
+    ### and remove the Union 
+    ### from the groups 
+    sample_names_grA <- names(groupA[['scMACS_peaks']])
+    sample_names_grA <- sample_names_grA[sample_names_grA != 'Union']
+    
+    sample_names_grB <- names(groupB[['scMACS_peaks']])
+    sample_names_grB <- sample_names_grB[sample_names_grB != 'Union']
 
-                            vals_groupA <- as.numeric(sapply(groupA[['scMACS_peaks']][sample_names_grA],
-                                                function(x) x$lambda1[x$PeakID ==candidatePeak]
-                                                )
-                                                      )
+    vals_groupA <- as.numeric(sapply(groupA[['scMACS_peaks']][sample_names_grA],
+                        function(x) x$lambda1[x$PeakID ==candidatePeak]
+                        )
+                              )
 
-                            vals_groupB <- as.numeric(sapply(groupB[['scMACS_peaks']][sample_names_grB],
-                                                function(x)  x$lambda1[x$PeakID ==candidatePeak]
-                                                ) 
-                                                      )
+    vals_groupB <- as.numeric(sapply(groupB[['scMACS_peaks']][sample_names_grB],
+                        function(x)  x$lambda1[x$PeakID ==candidatePeak]
+                        ) 
+                              )
 
-                            vals_groupB[is.na(vals_groupB)] <- 0 
-                            vals_groupA[is.na(vals_groupA)] <- 0 
+    vals_groupB[is.na(vals_groupB)] <- 0 
+    vals_groupA[is.na(vals_groupA)] <- 0 
 
-                            A = sum(vals_groupA >0)
-                            B = length(vals_groupA)-A
-                            C = sum(vals_groupB >0)
-                            D = length(vals_groupB) - C
-                            contingency_mat <- rbind(c(A,B),
-                                                     c(C,D))
+    A = sum(vals_groupA >0)
+    B = length(vals_groupA)-A
+    C = sum(vals_groupB >0)
+    D = length(vals_groupB) - C
+    contingency_mat <- rbind(c(A,B),
+                             c(C,D))
 
-                            Mat <- as.table(contingency_mat)
-                            dimnames(Mat) <- list(Group = c("A", "B"),
-                                                  Peak = c("Positive","Total"))
-                      
-                            wilcoxon_p <- wilcox.test(vals_groupA, vals_groupB)
-                            fishers_test <- fisher.test(x=Mat)
+    Mat <- as.table(contingency_mat)
+    dimnames(Mat) <- list(Group = c("A", "B"),
+                          Peak = c("Positive","Total"))
 
-                      
-                            res = data.frame(
-                                Peak=candidatePeak,
-                                ES_wilc=wilcoxon_p$statistic,
-                                Wilcoxon=wilcoxon_p$p.value,
-                                ES_Fisher=fishers_test$estimate,
-                                Fisher = fishers_test$p.value,
-                                MinPval = min(wilcoxon_p$p.value, fishers_test$p.value),
-                                L1A_avg=round(mean(vals_groupA),4),
-                                L1B_avg=round(mean(vals_groupB),4)
-                                )
-                      
-                            return(res)
+    wilcoxon_p <- wilcox.test(vals_groupA, vals_groupB)
+    fishers_test <- fisher.test(x=Mat)
+
+
+    res = data.frame(
+        Peak=candidatePeak,
+        ES_wilc=wilcoxon_p$statistic,
+        Wilcoxon=wilcoxon_p$p.value,
+        ES_Fisher=fishers_test$estimate,
+        Fisher = fishers_test$p.value,
+        MinPval = min(wilcoxon_p$p.value, fishers_test$p.value),
+        L1A_avg=round(mean(vals_groupA),4),
+        L1B_avg=round(mean(vals_groupB),4)
+        )
+
+    return(res)
 
                 
                   
