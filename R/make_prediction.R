@@ -20,7 +20,7 @@
 #'
 #' @export
 
-make_prediction <- function(X, finalModelObject, tolerance=0.01){
+make_prediction <- function(X, finalModelObject, tolerance=0.001){
 
     cell_model = X$numCells[1]
     
@@ -45,10 +45,11 @@ make_prediction <- function(X, finalModelObject, tolerance=0.01){
            lambda0 <- mean(predict(finalModelObject$LogFits[[1]], data.frame(numCells=cell_model)),
                            predict(finalModelObject$LinearFits[[1]], data.frame(numCells=cell_model))
                            )
+           
            lambda1 <- mean(predict(finalModelObject$LogFits[[2]], data.frame(numCells=cell_model)),
-                           finalModelObject$LinearFits[[2]]
+                           finalModelObject$LinearFits[[2]]$coefficients[1]
                            )
-           lambda0 <- mean(predict(finalModelObject$LogFits[[3]], data.frame(numCells=cell_model)),
+           lambda2 <- mean(predict(finalModelObject$LogFits[[3]], data.frame(numCells=cell_model)),
                            predict(finalModelObject$LinearFits[[3]], data.frame(numCells=cell_model))
                            )       
 
@@ -60,38 +61,53 @@ make_prediction <- function(X, finalModelObject, tolerance=0.01){
        } else {
 
            lambda0 <- predict(finalModelObject$LinearFits[[1]], data.frame(numCells=cell_model))
-           lambda1 <- finalModelObject$LinearFits[[2]]
+           lambda1 <- finalModelObject$LinearFits[[2]]$coefficients[1]
            lambda2 <- predict(finalModelObject$LinearFits[[3]], data.frame(numCells=cell_model))
 
            tmpModel = c(lambda0, lambda1, lambda2    )
            tmpModel = as.matrix(tmpModel)    
 
         }
+           
+
+   
+        }
+    
+    designX <- X[,c('lambda1','lambda2')]
+    designX$Intercept =1 
+    designX <- designX[,c('Intercept','lambda1','lambda2')]       
+
+    z = as.matrix(designX) %*% tmpModel
+    preds = 1/(1+exp(-z))
+
+    X$Prediction = preds 
+    X$PredictionStrength = X$lambda1
+
+    if(cell_model < 2000){
+           ## controls against noise
+           noiseZ <- c(1,min(X$lambda1), min(X$lambda2)) %*% tmpModel
+           adaptiveThreshold <- max(0.5, 1/(1+exp(-noiseZ)))
+           
+    } else{
+           ## controls against being hyper 
+           ## conservative in calls 
+           d = X$Prediction
+           pmf <- table(round(d,4))
+           idx <- which.min(pmf[names(pmf) < 0.15])
+           adaptiveThreshold <- as.numeric(names(pmf[idx]))
+           
+       }
 
 
-       noiseZ <- c(1,min(X$lambda1), min(X$lambda2)) %*% tmpModel
-       adaptiveThreshold <- max(0.5, 1/(1+exp(-noiseZ)))
+   ### tolerance
+   ### included to account for 
+   ### precision errors in low 
+   ### values 
+   X$Peak = X$Prediction > adaptiveThreshold + tolerance
 
-
-       designX <- X[,c('lambda1','lambda2')]
-       designX$Intercept =1 
-       designX <- designX[,c('Intercept','lambda1','lambda2')]       
-
-       z = as.matrix(designX) %*% tmpModel
-       preds = 1/(1+exp(-z))
-
-       X$Prediction = preds 
-       X$PredictionStrength = X$lambda1
-       
-       ### tolerance
-       ### included to account for 
-       ### precision errors in low 
-       ### values 
-       X$Peak = X$Prediction > adaptiveThreshold + tolerance
-
-        return(X)
+    return(X)
 
 
         
-    }
+    
 }
