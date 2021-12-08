@@ -91,10 +91,13 @@ make_prediction <- function(X, finalModelObject, tolerance=0.001){
     } else{
            ## controls against being hyper 
            ## conservative in calls 
+       
            d = X$Prediction
-           pmf <- table(round(d,4))
-           idx <- which.min(pmf[names(pmf) < 0.15])
-           adaptiveThreshold <- as.numeric(names(pmf[idx]))
+           pmf <- table(round(d,2))    
+           local.min <- which(diff(sign(diff(pmf)))==-2)+3
+           #local.min[1:10]
+        
+           adaptiveThreshold <- as.numeric(names(local.min[2]))
            
        }
 
