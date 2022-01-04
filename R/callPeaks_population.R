@@ -13,8 +13,9 @@
 #' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
 #' 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
-#'                 multiple cell populationsdevto
-#' 
+#'                 multiple cell populations 
+#'
+#' @overrideFragmentEstimation Boolean. SET TO FALSE. PARAMETER SET FOR TRAINING AND VALIDATION PURPOSES
 #'
 #' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
 #'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
@@ -29,7 +30,9 @@ callPeaks_by_population <- function(ArchRProj,
                       cellSubsets=NULL,
                       cellCol_label_name=NULL,
                       returnAllPeaks=FALSE,
-                      numCores=10
+                      numCores=10,
+                      overrideFragmentEstimation=FALSE,
+                      fragsList=NULL
                      
                      ){
     
@@ -56,15 +59,25 @@ callPeaks_by_population <- function(ArchRProj,
                                
     ########################################################################
     ########################################################################
-    ## coefficients trained on 3600 frags per cell 
+    ## coefficients trained on ~ 3600 frags per cell 
     ## and future datasets need to be calibrated to
     ## these coefficients 
     finalModelObject = scMACS::finalModelObject
     
-    medianFrags_training = 3618
+    medianFrags_training = 3628
     
     ### load fragment files from ArchR Project 
-    fragsList<-  getFragmentsFromProject(ArchRProj)
+    if( is.null(fragsList)){
+        
+        fragsList<- getPopFrags(ArchRProj, metaColumn = cellCol_label_name, 
+                         cellSubsets = cellSubsets, 
+                         numCores= numCores)
+    } else{
+        fragsList <- fragsList
+        
+    }
+    
+    fragsList <- S4Vectors::SimpleList(fragsList)
     
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
@@ -80,7 +93,19 @@ callPeaks_by_population <- function(ArchRProj,
     ### obtain median # of fragments
     ### per cell to calibrate features
     ### to pre-trained model 
-    medianFrags_current = median(ArchRProj@cellColData$nFrags)
+    if(overrideFragmentEstimation){
+        
+        ## use original distribution
+        ## not recommended!
+        medianFrags_current = medianFrags_training
+
+    } else{    
+        
+        ## estimate median fragments
+        ## from current ArchR Project
+        
+        medianFrags_current = median(ArchRProj@cellColData$nFrags)
+    }
     
     ### identify scaling factor 
     scaleFactor= medianFrags_training/ medianFrags_current
@@ -128,7 +153,7 @@ callPeaks_by_population <- function(ArchRProj,
         fragsList_by_cell <- mclapply(fragsList, 
                                 function(x) subset_Frag(cellNames, x)
                                 )
-        print(fragsList_by_cell)
+        #print(fragsList_by_cell)
                                          
 
         fragsList_by_cell = SimpleList(fragsList_by_cell)
