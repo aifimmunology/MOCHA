@@ -20,7 +20,7 @@
 #'
 #' @export
 
-make_prediction <- function(X, finalModelObject, tolerance=0.001){
+make_prediction <- function(X, finalModelObject, tolerance=0.001, thresholdCutoff=6){
 
     cell_model = X$numCells[1]
     
@@ -83,24 +83,21 @@ make_prediction <- function(X, finalModelObject, tolerance=0.001){
     X$Prediction = preds 
     X$PredictionStrength = X$lambda1
 
-    if(cell_model < 2000){
+    if(cell_model <= 1000){
            ## controls against noise
            noiseZ <- c(1,min(X$lambda1), min(X$lambda2)) %*% tmpModel
            adaptiveThreshold <- max(0.5, 1/(1+exp(-noiseZ)))
            
-    } else{
-           ## controls against being hyper 
-           ## conservative in calls 
-       
-           d = X$Prediction
-           pmf <- table(round(d,2))    
-           local.min <- which(diff(sign(diff(pmf)))==-2)+3
-           #local.min[1:10]
+    } else if(cell_model > 1000 & cell_model < 135000){
         
-           adaptiveThreshold <- as.numeric(names(local.min[2]))
+           newdata = data.frame(NCells = cell_model)
+           adaptiveThreshold = predict(thresh_model, newdata=newdata)     
+            
+    } else if(cell_model > 135000){
+            adaptiveThreshold = 0.029 # max value of loess model 
+        
+    }
            
-       }
-
 
    ### tolerance
    ### included to account for 
