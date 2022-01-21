@@ -93,11 +93,11 @@ callPeaks_by_population <- function(ArchRProj,
     ### obtain median # of fragments
     ### per cell to calibrate features
     ### to pre-trained model 
-    if(overrideFragmentEstimation){
+    if(!is.null(overrideFragmentEstimation)){
         
         ## use original distribution
         ## not recommended!
-        medianFrags_current = medianFrags_training
+        medianFrags_current = overrideFragmentEstimation
 
     } else{    
         
