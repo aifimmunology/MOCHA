@@ -91,7 +91,7 @@ make_prediction <- function(X, finalModelObject, tolerance=0.001, thresholdCutof
     } else if(cell_model > 1000 & cell_model < 135000){
         
            newdata = data.frame(NCells = cell_model)
-           adaptiveThreshold = predict(thresh_model, newdata=newdata)     
+           adaptiveThreshold = predict(scMACS::thresh_model_youden, newdata=newdata)     
             
     } else if(cell_model > 135000){
             adaptiveThreshold = 0.029 # max value of loess model 
