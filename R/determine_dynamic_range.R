@@ -65,6 +65,8 @@ determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500,
   FinalBins <- plyranges::stretch(plyranges::anchor_start(RangeBins),
                                   extend = (binSize - end(RangeBins)%% binSize)) %>%
     plyranges::reduce_ranges() %>% plyranges::slide_ranges(width = binSize, step = binSize)%>% filter(width(.) ==binSize)
+    
+  FinalBins<- subsetByOverlaps(FinalBins, blackList, invert=T)
 
   return(FinalBins)
 
