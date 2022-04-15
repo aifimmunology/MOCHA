@@ -1,3 +1,21 @@
+#' @title \code{TwoPart}
+#'
+#' @description \code{TwoPart} is the main peak-calling function in scMACS
+#'              that serves as a wrapper function to call peaks provided a set 
+#'              of fragment files and an ArchR Project for meta-data purposes
+#'
+#'
+#' @param data is a vector containing the values for the 2-part test
+#' @param group is a vector containing the two groups for comparison (in binary, 0,1)
+#' 
+#' @return ans is a list containing the test statistic & p-value corresponding to the 
+#'         two-part wilcoxon test. 
+#' 
+#' @details The code from the two part test is taken from Taylor & pollard (2009) (reference below) which illustrates how to create a composite test from zero-inflated data. 
+#'
+#' @references Taylor, Sandra, and Katherine Pollard. "Hypothesis tests for point-mass mixture data #' with application toomics data with many zero values." Statistical applications in genetics and #' molecular biology 8.1 (2009).
+#'
+
 # Function for calculating two-part statistics
 TwoPart <- function(data, group, test="t.test", point.mass=0){
     Index1 <- c(group==1)

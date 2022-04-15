@@ -21,7 +21,8 @@
 #'          while the implementation (scHOT R package), can be found here:
 #'               http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
 #'
-#' @references XX
+#' @references Pimentel, Ronald Silva, "Kendall's Tau and Spearman's Rho 
+#'               for Zero-Inflated Data" (2009). Dissertations. 
 #'
 #' @export
 

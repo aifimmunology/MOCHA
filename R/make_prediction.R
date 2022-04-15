@@ -43,6 +43,7 @@ make_prediction <- function(X, finalModelObject, thresholdModel){
        ### Fit, final part is a linear fit,
        ### Middle part is an average between 
        ### Loess & Linear fits. 
+        
        if(cell_model<=100000){
 
            ## Loess Fit 
