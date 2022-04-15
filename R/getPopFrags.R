@@ -1,3 +1,22 @@
+#' @title \code{getPopFrags}
+#'
+#' @description \code{getPopFrags} is an R helper function that extracts fragments  
+#'              for a cell population from an archR Project
+
+#' @param ArchRProj an ArchR Project 
+#' @param metaColumn a string indicating which column to use to extract cells
+#' @region a chromosomal location. If NULL, it pull from the entire genome. 
+#' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
+#' @param NormMethod = string indicating which normalization method to use. For scMACS modeling
+#' we require the nFrags normalization
+#' @param blacklist  a granges object indicating the blacklist region
+#' @param overlapList integer indicating acceptable overlap with blacklist regions in bp 
+#'
+#'
+#' @return a list of fragments with a given normalization factor.
+#'
+#' @export
+
 getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NULL, numCores = 1, 
                         NormMethod = "NFrags", blackList = NULL, overlapList = 50){
     
