@@ -80,7 +80,6 @@ callPeaks_by_sample <- function(ArchRProj,
                                             returnAllPeaks=TRUE,
                                             numCores=1,
                                             totalFrags=normalization_factors[x],
-                                            normScale=10^9,
                                             fragsList =frags[[x]]
                            )),
                           mc.cores=numCores

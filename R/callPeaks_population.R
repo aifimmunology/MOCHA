@@ -16,7 +16,6 @@
 #'                 multiple cell populations 
 #'
 #' @totalFrags # of fragments in that sample for that cell population
-#' @normScale normalization factor
 #' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
 #'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
 #' 
@@ -32,7 +31,6 @@ callPeaks_by_population <- function(ArchRProj,
                       returnAllPeaks=FALSE,
                       numCores=10,
                       totalFrags,
-                      normScale=10^9,                                    
                       fragsList=NULL
                      
                      ){
@@ -134,7 +132,6 @@ callPeaks_by_population <- function(ArchRProj,
         countsMatrix <- calculate_intensities(fragMat, 
                                               FinalBins,
                                               totalFrags=totalFrags,
-                                              normScale=normScale,
                                               normalizeBins=FALSE
                                             )
         
