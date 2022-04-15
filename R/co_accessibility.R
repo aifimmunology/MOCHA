@@ -34,7 +34,7 @@ co_accessibility <- function(mat, numCores=40){
     zi_cor_function <- function(x, y){
        
        x=as.numeric(x)
-        y=as.numeric(y)
+       y=as.numeric(y)
         
         return(scHOT::weightedZISpearman(x,y))
         
