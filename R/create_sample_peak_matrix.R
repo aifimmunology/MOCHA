@@ -20,7 +20,7 @@
 create_peak_sampleMatrix <- function(sample_specific_peaks){
     
     
-    tmp_peaks <- sample_specific_peaks[['scMACS_peaks']]
+    tmp_peaks <- sample_specific_peaks
 
     for(i in 1:length(tmp_peaks)){
 

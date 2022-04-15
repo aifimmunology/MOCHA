@@ -15,8 +15,8 @@
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'                 multiple cell populations 
 #'
-#' @overrideFragmentEstimation Boolean. SET TO FALSE. PARAMETER SET FOR TRAINING AND VALIDATION PURPOSES
-#'
+#' @totalFrags # of fragments in that sample for that cell population
+#' @normScale normalization factor
 #' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
 #'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
 #' 
@@ -31,7 +31,8 @@ callPeaks_by_population <- function(ArchRProj,
                       cellCol_label_name=NULL,
                       returnAllPeaks=FALSE,
                       numCores=10,
-                      overrideFragmentEstimation=FALSE,
+                      totalFrags,
+                      normScale=10^9,                                    
                       fragsList=NULL
                      
                      ){
@@ -53,6 +54,10 @@ callPeaks_by_population <- function(ArchRProj,
       if(class(ArchRProj)!='ArchRProject'){
         stop('ArchRProject must be an ArchR Project')
       } 
+      if(is.null(fragsList)){
+          stop('Load fragments prior to running scMACS')
+          
+      }
     
 
     
@@ -63,21 +68,8 @@ callPeaks_by_population <- function(ArchRProj,
     ## and future datasets need to be calibrated to
     ## these coefficients 
     finalModelObject = scMACS::finalModelObject
-    
-    medianFrags_training = 3628
-    
-    ### load fragment files from ArchR Project 
-    if( is.null(fragsList)){
-        
-        fragsList<- getPopFrags(ArchRProj, metaColumn = cellCol_label_name, 
-                         cellSubsets = cellSubsets, 
-                         numCores= numCores)
-    } else{
-        fragsList <- fragsList
-        
-    }
-    
     fragsList <- S4Vectors::SimpleList(fragsList)
+    thresholdModel = scMACS::thresholdModel
     
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
@@ -88,30 +80,6 @@ callPeaks_by_population <- function(ArchRProj,
     } else{
        cellPopulations=cellSubsets
     }
-
-    
-    ### obtain median # of fragments
-    ### per cell to calibrate features
-    ### to pre-trained model 
-    if(!is.null(overrideFragmentEstimation)){
-        
-        ## use original distribution
-        ## not recommended!
-        medianFrags_current = overrideFragmentEstimation
-
-    } else{    
-        
-        ## estimate median fragments
-        ## from current ArchR Project
-        
-        medianFrags_current = median(ArchRProj@cellColData$nFrags)
-    }
-    
-    ### identify scaling factor 
-    scaleFactor= medianFrags_training/ medianFrags_current
-    
-    cat(paste('\nScale factor is ', round(scaleFactor,2),'\n\n'))
-
     
     ### get barcodes by cell pop for 
     ### peak-calling by different 
@@ -135,14 +103,13 @@ callPeaks_by_population <- function(ArchRProj,
     
     ### call peaks by cell-subsets
 
-    callPeaks_by_population <- function(fragsList, cellNames,ArchRProj, scaleFactor){
+    callPeaks_by_cell_population <- function(fragsList, cellNames,ArchRProj, totalFrags,
+                                            normScale=10^9){
 
         print(length(cellNames))
 
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
-
-        print(cellSubsetArchR)
         
         subset_Frag <- function(cellNames, tmp){
             tmp_df <- GenomicRanges::as.data.frame(tmp)
@@ -165,25 +132,21 @@ callPeaks_by_population <- function(ArchRProj,
                                          doBin=FALSE)
 
         countsMatrix <- calculate_intensities(fragMat, 
-                                             FinalBins,
-                                             NULL,
-                                             normalizeBins=FALSE,
-                                             theta=0.001,
-                                             width=20
+                                              FinalBins,
+                                              totalFrags=totalFrags,
+                                              normScale=normScale,
+                                              normalizeBins=FALSE
                                             )
         
-        countsMatrix = countsMatrix[countsMatrix$lambda1 > 0,]
-
-        countsMatrix$lambda1 <- countsMatrix$lambda1 * scaleFactor
-        countsMatrix$lambda2 <- countsMatrix$lambda2 * scaleFactor        
-
-        scMACS_peaks <- make_prediction(countsMatrix, finalModelObject )
+        countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]
+        scMACS_peaks <- make_prediction(countsMatrix, finalModelObject,thresholdModel
+                                       )
 
         if(returnAllPeaks){
             return(scMACS_peaks)
 
         } else {
-            scMACS_peaks = scMACS_peaks[scMACS_peaks$Peak==T]
+            scMACS_peaks = scMACS_peaks[scMACS_peaks$peak==T]
             return(scMACS_peaks)
 
         }
@@ -193,10 +156,10 @@ callPeaks_by_population <- function(ArchRProj,
     
         
     scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), 
-                                function(ZZ) callPeaks_by_population(fragsList,                                                                           cellNames=barcodes_by_cell_pop[[ZZ]], 
-                                                                            ArchRProj, 
-                                                                            scaleFactor
-                                                                            ),
+                                function(ZZ) callPeaks_by_cell_population(fragsList,                                                                    cellNames=barcodes_by_cell_pop[[ZZ]], 
+                                                       ArchRProj,
+                                                       totalFrags,
+                                            normScale=10^9),
                                 mc.cores =numCores,
                                 mc.preschedule=TRUE,
                                 mc.allow.recursive=FALSE
