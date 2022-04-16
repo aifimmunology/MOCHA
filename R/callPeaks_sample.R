@@ -16,8 +16,6 @@
 #'
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'                 multiple cell populations
-#' @overrideFragmentEstimation Boolean. SET TO FALSE. PARAMETER SET FOR TRAINING AND VALIDATION PURPOSES
-#'
 #'
 #' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
 #'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.

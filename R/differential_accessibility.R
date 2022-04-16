@@ -7,7 +7,7 @@
 #' @param tmp_mat: sample-peak matrix 
 #' @param tileID: chromosome region to analyze 
 #' @param group: vector of group indices (0,1)
-#' @savePlotToFile: boolean: do you want to save this file. Defaults to current directory
+#' @param savePlotToFile: boolean: do you want to save this file. Defaults to current directory
 #'
 #' @return a table indicating the results for differential accessibility
 #'         which includes the following pieces of informations

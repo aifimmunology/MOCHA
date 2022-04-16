@@ -15,7 +15,7 @@
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'                 multiple cell populations 
 #'
-#' @totalFrags # of fragments in that sample for that cell population
+#' @param totalFrags # of fragments in that sample for that cell population
 #' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
 #'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
 #' 
@@ -131,8 +131,7 @@ callPeaks_by_population <- function(ArchRProj,
 
         countsMatrix <- calculate_intensities(fragMat, 
                                               FinalBins,
-                                              totalFrags=totalFrags,
-                                              normalizeBins=FALSE
+                                              totalFrags=totalFrags
                                             )
         
         countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]

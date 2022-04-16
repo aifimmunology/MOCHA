@@ -5,8 +5,9 @@
 
 #' @param ArchRProj an ArchR Project 
 #' @param metaColumn a string indicating which column to use to extract cells
-#' @region a chromosomal location. If NULL, it pull from the entire genome. 
 #' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
+#' @param region a chromosomal location. If NULL, it pull from the entire genome. 
+#' @param numCores integer number of cores to parallelize on
 #' @param NormMethod = string indicating which normalization method to use. For scMACS modeling
 #' we require the nFrags normalization
 #' @param blacklist  a granges object indicating the blacklist region
