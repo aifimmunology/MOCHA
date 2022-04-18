@@ -45,7 +45,7 @@ co_accessibility <- function(mat, numCores=40){
                  zi_cor_function(x=mat[pairwise_combos$Var1[x],],
                                  y=mat[pairwise_combos$Var2[x],]
                                  ),
-             mc.cores=40
+             mc.cores=numCores
              ))
     
     zi_spear_mat <- data.frame(Correlation=zero_inflated_spearman,
