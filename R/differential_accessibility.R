@@ -27,10 +27,10 @@
 #'
 #' @export
 
-estimate_differential_accessibility <- function(tmp_mat,tileID,group, savePlotToFile=FALSE, doPermutationTest = FALSE){
+estimate_differential_accessibility <- function(tmp_mat,tileID,group, savePlotToFile=FALSE){
     ## Filter out 
     ## 'tileID' column
-    idx = which(tmp_mat$Tile == tileID)
+    idx = which(tmp_mat$tileID == tileID)
     test_vec = as.numeric(tmp_mat[idx,2:ncol(tmp_mat)])
 
     ## log-transform the values 
@@ -39,22 +39,13 @@ estimate_differential_accessibility <- function(tmp_mat,tileID,group, savePlotTo
     ## conduct two part test
     two_part_results <- TwoPart(test_vec, group=group, test='wilcoxon', point.mass=0)
 
-    if(doPermutationTest){
-        ## permutation test
-        n_a = sum(group)
-        n_b = length(group) - n_a
+    ## permutation test
+    n_a = sum(group)
+    n_b = length(group) - n_a
 
-        permutations <- mclapply(1:100000, function(x){
-            sampled_test_vec <- sample(test_vec, size=n_a+n_b, replace=F)
-            TwoPart(sampled_test_vec, group=group, test='wilcoxon', point.mass=0)$statistic
-
-                },
-                                 mc.cores=10
-                       )
-
-        p_value <- mean(two_part_results$statistic > permutations)
-        
-    }
+    sampled_test_vec <- sample(test_vec, size=n_a+n_b, replace=F)
+    permuted_pvalue <- TwoPart(sampled_test_vec, group=group, test='wilcoxon', 
+                               point.mass=0)$pvalue
 
     
     ## filter non-zero values for group1
@@ -72,7 +63,7 @@ estimate_differential_accessibility <- function(tmp_mat,tileID,group, savePlotTo
     )
     
     ## create all pairwise combinations 
-    pairwise_matrix <- as.data.table(expand_grid(nonzero_dx, nonzero_control))
+    pairwise_matrix <- data.table::as.data.table(expand.grid(nonzero_dx, nonzero_control))
     pairwise_matrix$diff <- pairwise_matrix[,1] - pairwise_matrix[,2]
     
     hodges_lehmann <- median(pairwise_matrix$diff)
@@ -84,7 +75,8 @@ estimate_differential_accessibility <- function(tmp_mat,tileID,group, savePlotTo
         Case_mu=median(nonzero_dx),
         Case_rho=mean(data[group==1]==0),
         Control_mu=median(nonzero_control),
-        Control_rho=mean(data[group==0]==0)
+        Control_rho=mean(data[group==0]==0),
+        Permuted_Pvalue = permuted_pvalue
         
         )
     
@@ -111,114 +103,20 @@ estimate_differential_accessibility <- function(tmp_mat,tileID,group, savePlotTo
 }
 
 
-#' @title \code{calculate_dropout_rate}
-#'
-#' @description \code{differential_accessibility} allows you to determine whether regions of chromatin are 
-#'              differentially accessible betwen groups by conducting a test 
-#'
-#'
-#' @param case_frags: list of fragment files in case group
-#' @param control_frags: list of fragment files in control group
-#' @param case_peaks_gr: list of peaks in case group
-#' @param control_peaks_gr: list of peaks in control group
-#' @param numCores = number of cores to parallelize with
-#' @param numReps = number of times to replicate dropout estimation
-#'
-#' @return median dropout rate
-#' 
-#'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
-#'
-#' @export
+find_optimal_threshold <- function(res_pvals, threshold, numCores=10){
+    
 
+    search <- seq(from=1e-5, to=1e-2, length=500)
+    estimates <- sapply(search, 
+           function(x)
 
-calculate_dropout_rate <- function(case_frags, control_frags,
-                                   case_peaks_gr, control_peaks_gr, numCores=10, numReps=50){
-
-    print('calculating dropout rate')
-    ## calculate nFrags per sample
-    nfrags_case = sapply(case_frags, length)
-    nfrags_control=sapply(control_frags, length)
-
-    median_frags_case <- median(nfrags_case)
-    median_frags_control <- median(nfrags_control)
-
-        if(median_frags_case > median_frags_control){
-            
-            print('case group has more fragments than control. Calculate dropout relative to control')
-
-            
-
-            dropout_rate <- unlist(mclapply(1:numReps, function(x){
-                
-                # select sample
-                selected_sample <- names(sample(which(nfrags_case > median_frags_case),1))
-                selected_sample_frags <- case_frags[selected_sample][[1]]
-                
-                # calculate dropout
-                calculate_dropout_per_sample(selected_sample_frags, 
-                                             control_peaks_gr,
-                                             median_frags_control)
-                },
-                     mc.cores=numCores
-                
-
-                    ))
-            return(median(dropout_rate))
-
-
-        } else  if(median_frags_case < median_frags_control){
-            print('control group has more fragments than case. Calculate dropout relative to case')                      
-            
-            dropout_rate <- unlist(mclapply(1:numReps, function(x){
-                
-                # select sample
-                selected_sample <- names(sample(which(nfrags_control > median_frags_control),1))
-                selected_sample_frags <- control_frags[selected_sample][[1]]
-                
-                calculate_dropout_per_sample(selected_sample_frags, 
-                                             case_peaks_gr,
-                                             median_frags_case)
-                
-                }
-                                            
-                                            
-                                            ,
-                     mc.cores=numCores
-
-                    ))
-            return(dropout_rate)
-        }
-        
+        sum(res_pvals$Permuted_Pvalue<x) / sum(res_pvals$P_value < x)
+           )
+    
+    max_threshold <- max(which(estimates < threshold))
+    nominal_threshold <- search[max_threshold]
+    return(nominal_threshold)
+    
+    
 }
 
-#' @title \code{calculate_dropout_per_sample}
-#'
-#' @description \code{differential_accessibility} allows you to determine whether regions of chromatin are 
-#'              differentially accessible betwen groups by conducting a test 
-#'
-#'
-#' @param selected_sample_frags: a fragment file used to estimate dropout
-#' @param peaks_gr: peakset from same condition as sample fragment file
-#' @param downsample_target: # of fragments to downsample to estimate dropout
-#'
-#' @return dropout rate for a given iteration
-#' 
-#'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
-#'
-#' @export
-
-
-calculate_dropout_per_sample <- function(selected_sample_frags, peaks_gr, downsample_target){
-
-                downsample <- selected_sample_frags[sample(length(selected_sample_frags),  downsample_target)]
-                overlaps <- count_overlaps(peaks_gr, downsample)
-                dropout_rate <- mean(overlaps == 0)
-        return(dropout_rate)
-
-}
