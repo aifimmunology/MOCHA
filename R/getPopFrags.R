@@ -18,6 +18,7 @@
 #'
 #' @export
 
+
 getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NULL, numCores = 1, 
                         NormMethod = "NFrags", blackList = NULL, overlapList = 50){
     
@@ -154,7 +155,8 @@ getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NUL
     
     #From scMACS - Function to sort fragments by populations based on cell barcode lists
     subset_Frag <- function(cellNames, tmp){
-            idx <- which(tmp$RG %in% cellNames)
+            tmp_dt = data.table::as.data.table(tmp)
+            idx <- which(tmp_dt$RG %in% cellNames)
             tmp[ idx] 
         }
     ## Identify which subset of arrows the population can be found it. 
@@ -166,17 +168,17 @@ getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NUL
        
     #Sort fragments into a list by cell population
         
-    popFrags <- lapply(seq_along(barcodes_by_cell_pop),function(x){
+    popFrags <- mclapply(seq_along(barcodes_by_cell_pop),function(x){
                     print(paste('Sorting ', names(barcodes_by_cell_pop)[x], sep = ""))
                     if(sum(fragsListIndex[[x]]) > 1){
-                       tmp <- mclapply(which(fragsListIndex[[x]]) , function(y) {
+                       tmp <- lapply(which(fragsListIndex[[x]]) , function(y) {
                             subset_Frag(barcodes_by_cell_pop[[x]], fragsList[[y]])
-                        }, mc.cores = 20) 
+                        }) 
                       stack(as(tmp,'GRangesList'))
                     }else{
                        subset_Frag(barcodes_by_cell_pop[[x]], fragsList[[which(fragsListIndex[[x]])]])
                     }
-               })
+               }, mc.cores=numCores)
     names(popFrags) <- names(barcodes_by_cell_pop)
     return(popFrags)
     
