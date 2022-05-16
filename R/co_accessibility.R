@@ -25,25 +25,22 @@
 #' @example 
 #' Generate 
 #' mat1 = matrix(pmax(0, rnorm(1000)), ncol=100); row.names(mat1) <- paste('A',1:10,sep='_')
-#' mat2 = matrix(pmax(0, rnorm(1000)), ncol=100); row.names(mat2) <- paste('B',1:10,sep='_')
-#' ziSpear_mat <- co_accessibility(mat1,mat2, numCores=5)
+#' ziSpear_mat <- co_accessibility(mat1, numCores=5)
 #' head(ziSpear_mat)
 #' @export
 
-co_accessibility <- function(mat1, mat2, numCores=40){
+co_accessibility <- function(mat1, numCores=40){
     
     ### generate all pairwise combinations
     N = nrow(mat1)
-    M = nrow(mat2)
-    
-    pairwise_combos = expand.grid(1:N, 1:M)
+    pairwise_combos = expand.grid(1:N, 1:N)
     
     ### Loop through all pairwise 
     ### combinations of peaks 
     zero_inflated_spearman <- unlist(mclapply(1:nrow(pairwise_combos),
              function(x)
                  scHOT::weightedZISpearman(x=mat1[pairwise_combos$Var1[x],],
-                                 y=mat2[pairwise_combos$Var2[x],]
+                                 y=mat1[pairwise_combos$Var2[x],]
                                  ),
              mc.cores=numCores
              ))
@@ -52,7 +49,7 @@ co_accessibility <- function(mat1, mat2, numCores=40){
     ### from correlation values, 
     zi_spear_mat <- data.frame(Correlation=zero_inflated_spearman,
                                Peak1= row.names(mat1)[pairwise_combos$Var1],
-                               Peak2= row.names(mat2)[pairwise_combos$Var2]
+                               Peak2= row.names(mat1)[pairwise_combos$Var2]
                                )
     
     return(zi_spear_mat)
