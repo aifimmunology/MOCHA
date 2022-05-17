@@ -126,33 +126,7 @@ getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NUL
         row.names(metadf)[which(metadf[,metaColumn]==x)]
            )
     
-    # Add normalization factor. 
-    if(tolower(NormMethod) == "ncells"){
-        
-        names(barcodes_by_cell_pop) = paste(gsub(" |_",".",cellPopulations), cellCounts/1000, sep = "_")
-        
-    }else if(tolower(NormMethod) == "nfrags"){
-        
-        names(barcodes_by_cell_pop) = paste(gsub(" |_",".",cellPopulations), Norm$nFrags/10^6, sep = "_")
-        
-    }else if(tolower(NormMethod) == "median"){
-        
-        names(barcodes_by_cell_pop) = paste(gsub(" |_",".",cellPopulations), "Median", sep = "_")
-        
-    }else if(tolower(NormMethod) == "medmax"){
-        
-        names(barcodes_by_cell_pop) = paste(gsub(" |_",".",cellPopulations), "MedianMax", sep = "_")
-        
-    }else if(tolower(NormMethod) == "TotalSampleByNCells"){
-        
-        names(barcodes_by_cell_pop) = paste(gsub(" |_",".",cellPopulations), totalsampleFrags/10^6*cellCounts/1000, sep = "_")
-        
-    }else{
-    
-        stop("Error: Incorrect NormMethod given.")
-    }
-
-    
+    names(barcodes_by_cell_pop) <- cellPopulations
     #From scMACS - Function to sort fragments by populations based on cell barcode lists
     subset_Frag <- function(cellNames, tmp){
             tmp_dt = data.table::as.data.table(tmp)
