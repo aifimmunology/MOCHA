@@ -39,7 +39,7 @@ co_accessibility <- function(mat1, numCores=40){
     ### combinations of peaks 
     zero_inflated_spearman <- unlist(mclapply(1:nrow(pairwise_combos),
              function(x)
-                 scHOT::weightedZISpearman(x=mat1[pairwise_combos$Var1[x],],
+                 weightedZISpearman(x=mat1[pairwise_combos$Var1[x],],
                                  y=mat1[pairwise_combos$Var2[x],]
                                  ),
              mc.cores=numCores
