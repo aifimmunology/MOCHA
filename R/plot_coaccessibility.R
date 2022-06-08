@@ -27,7 +27,7 @@
 #' @export
 
 
-plot_coaccessibility <- function(zi_mat, index, peak_mat){
+plot_coaccessibility <- function(zi_mat, index, peak_mat,fname){
     
     df = data.frame(
         Values_X = as.numeric(peak_mat[zi_mat$Peak1[index], 2:ncol(peak_mat)]),
@@ -51,14 +51,14 @@ plot_coaccessibility <- function(zi_mat, index, peak_mat){
                ZI_Spearman=zi_spear_cor,
                Spearman_NonZero=spear_nonzero)
 
-    fname =paste(regions$region[index],'.png',sep='')
+    fname =paste(fname,'.png',sep='')
     png(fname)
     p <- ggplot(df,
                 aes(x=log2(Values_X+1),
                     y=log2(Values_Y+1)
                    ))+    ThemeMain+geom_point()+
         ggtitle(paste("Co-Accessibility"))+xlim(0,17)+ylim(0,17)+
-            xlab(regions$Peak1[index])+ylab(regions$Peak2[index])+
+            xlab(zi_mat$Peak1[index])+ylab(zi_mat$Peak2[index])+
     geom_text(  x = c(10), y = c(2),
               label=paste('ZI-Spearman=',
                            round(zi_spear_cor,2)),
@@ -66,10 +66,6 @@ plot_coaccessibility <- function(zi_mat, index, peak_mat){
         geom_text(  x = c(10), y = c(4),
               label=paste('Spearman=',
                            round(spear_cor,2)),
-                                   size=8)+
-            geom_text(  x = c(10), y = c(6),
-              label=paste('NonZero Spearman=',
-                           round(spear_nonzero,2)),
                                    size=8)
     
     print(p)

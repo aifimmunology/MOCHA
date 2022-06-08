@@ -88,3 +88,20 @@ weightedSpearman = function(x, y, w = 1) {
   yr = rank(y[keep])
   return(weightedPearson(x = xr, y = yr, w = w[keep]))
 }
+
+weightedPearson = function(x, y, w = 1) {
+
+  if (length(x) != length(y)) stop("data must be the same length")
+
+  if (length(w) == 1) {
+    w <- rep(w, length(x))
+  }
+
+  nw = sum(w)
+  wssx = nw * sum(w * (x^2)) - sum(w * x)^2
+  wssy = nw * sum(w * (y^2)) - sum(w * y)^2
+  wssxy = nw * sum(w * x * y) - sum(w * x) * sum(w * y)
+  wcor = wssxy/sqrt(wssx * wssy)
+  return(wcor)
+}
+

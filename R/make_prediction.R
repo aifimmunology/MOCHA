@@ -2,7 +2,7 @@
 #'
 #' @description \code{make_prediction} is an R helper function, part of the single-cell peak calling
 #' algorithm scMACS by (XXX et al, 2021) that determines which genomic regions, or bins,
-#' will be used for de-novo peak calling. The function "make_prediction" applies the
+#' will be used to determine accessibility. The function "make_prediction" applies the
 #' logistic regression model predictions and then calls peaks that exceed a given
 #' threshold.
 #'
@@ -18,11 +18,11 @@
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
-#' @references XX
-#'
-#' 
+#' @keywords internal 
 
-make_prediction <- function(X, finalModelObject, thresholdModel){
+make_prediction <- function(X, finalModelObject){
+
+
 
     ### Model was trained on varying
     ### cell abundances. Identify 
@@ -47,9 +47,12 @@ make_prediction <- function(X, finalModelObject, thresholdModel){
        if(cell_model<=100000){
 
            ## Loess Fit 
-           Intercept <- predict(finalModelObject$Loess$Intercept, data.frame(NumCells=cell_model))
-           Total <- predict(finalModelObject$Loess$Total, data.frame(NumCells=cell_model))
-           Max <- predict(finalModelObject$Loess$Max, data.frame(NumCells=cell_model))
+           Intercept <- predict(finalModelObject$Loess$Intercept, 
+                                data.frame(NumCells=cell_model))
+           Total <- predict(finalModelObject$Loess$Total, 
+                            data.frame(NumCells=cell_model))
+           Max <- predict(finalModelObject$Loess$Max,
+                          data.frame(NumCells=cell_model))
            tmpModel = c(Intercept, Total, Max)
            tmpModel = as.matrix(tmpModel)
 
@@ -63,11 +66,15 @@ make_prediction <- function(X, finalModelObject, thresholdModel){
                                    data.frame(NumCells=cell_model))
                            )
            
-           Total <- mean(predict(finalModelObject$Loess$Total, data.frame(NumCells=cell_model)),
-                           predict(finalModelObject$Linear$Total, data.frame(NumCells=cell_model))
+           Total <- mean(predict(finalModelObject$Loess$Total, 
+                                 data.frame(NumCells=cell_model)),
+                           predict(finalModelObject$Linear$Total, 
+                                   data.frame(NumCells=cell_model))
                            )
-           Max <- mean(predict(finalModelObject$Loess$Max, data.frame(NumCells=cell_model)),
-                           predict(finalModelObject$Linear$Max, data.frame(NumCells=cell_model))
+           Max <- mean(predict(finalModelObject$Loess$Max, 
+                               data.frame(NumCells=cell_model)),
+                           predict(finalModelObject$Linear$Max, 
+                                   data.frame(NumCells=cell_model))
                            )       
 
            tmpModel = c(Intercept, Total, Max)
@@ -83,9 +90,8 @@ make_prediction <- function(X, finalModelObject, thresholdModel){
            tmpModel = as.matrix(tmpModel)
         }
            
-
-   
-        }
+        
+    }
     
     ### Create Design Matrix 
     designX <- X[,c('TotalIntensity','maxIntensity')]
@@ -102,62 +108,19 @@ make_prediction <- function(X, finalModelObject, thresholdModel){
     ### Create a Prediction Strength Feature 
     X$Prediction = round(preds ,4)
     X$PredictionStrength = X$TotalIntensity
-
-    ### Smoothened Thresholding 
-    ### To create stable model 
-    ### Across varying cell abundances
-    ### Using the Youden Index 
-    ### to create the smoothened threshold
-    ### model. Loess & Linear fits were 
-    ### used to create a smoothened 
-    ### threshold to be robust against
-    ### sparsity & noise. A global offset
-    ### is included to account for the fact
-    ### that the nFrags normalizing factor 
-    ### will shift probabilities of accessiblities
-    ### slightly. 
+       
+    ### Identify cutoff based on 
+    ### different abundances 
+    newdata = data.frame(Ncells = cell_model)
+    adaptiveThreshold = as.numeric(predict(scMACS::youden_threshold, 
+                                            newdata=newdata))
     
-    if(cell_model <= 2000){ 
-           newdata = data.frame(Ncells = cell_model)
-           adaptiveThreshold = predict(thresholdModel$loess_low, 
-                                       newdata=newdata)+.02
-    
-    } else if(cell_model > 2000 & cell_model < 5000){
-
-           newdata = data.frame(Ncells = cell_model)
-           adaptiveThreshold = mean(predict(thresholdModel$loess_low, 
-                                       newdata=newdata),
-                                    predict(thresholdModel$loess_mid, 
-                                       newdata=newdata)   
-                                    )+.03
-    } else if(cell_model >= 5000 & cell_model <= 60000){
-        
-           newdata = data.frame(Ncells = cell_model)
-           adaptiveThreshold = predict(thresholdModel$loess_mid, 
-                                       newdata=newdata)+.02
-        
-    } else if(cell_model > 60000 & cell_model <= 150000){
-           newdata = data.frame(Ncells = cell_model)
-           adaptiveThreshold = predict(thresholdModel$linear, 
-                                       newdata=newdata)+.02                
-    } else if(cell_model > 150000){
-           ### Fix threshold based on
-           ### Youden Index Convergence 
-           adaptiveThreshold = 0.20
-    }
-           
-   ## enforce threshold to be numeric object
-   adaptiveThreshold=as.numeric(adaptiveThreshold)
    
-   ### a global tolerance offset 
-   ### included to account for numerical rounding
-   ### and call peaks based on probabilities > threshold  
-   tolerance=0.001
-   X$peak = X$Prediction > round(adaptiveThreshold,4) + tolerance
+    ### Boolean indicating whether 
+    ### probability of accessibility
+    ### exceeded our threshold.
+    X$peak = X$Prediction > round(adaptiveThreshold,3) 
 
-    return(X)
-
-
-        
+   return(X)
     
 }
