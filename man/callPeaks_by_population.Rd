@@ -2,14 +2,17 @@
 % Please edit documentation in R/callPeaks_population.R
 \name{callPeaks_by_population}
 \alias{callPeaks_by_population}
-\title{\code{callPeaks_by_population}}
+\title{\code{callPeaks}}
 \usage{
 callPeaks_by_population(
   ArchRProj,
   cellSubsets = NULL,
   cellCol_label_name = NULL,
   returnAllPeaks = FALSE,
-  numCores = 10
+  numCores = 10,
+  totalFrags,
+  fragsList = NULL,
+  StudypreFactor = NULL
 )
 }
 \arguments{
@@ -23,14 +26,18 @@ the cell population label}
 \item{returnAllPeaks}{boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks.}
 
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
-multiple cell populationsdevto}
+multiple cell populations}
+
+\item{totalFrags}{# of fragments in that sample for that cell population}
+
+\item{StudypreFactor}{ratio of average signal between new study and training set}
 }
 \value{
 scMACs_PeakList an list containing peak calls for each cell population passed on in the 
         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
 }
 \description{
-\code{callPeaks_by_population} is the main peak-calling function in scMACS
+\code{callPeaks} is the main peak-calling function in scMACS
              that serves as a wrapper function to call peaks provided a set 
              of fragment files and an ArchR Project for meta-data purposes
 }
