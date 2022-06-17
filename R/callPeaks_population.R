@@ -16,6 +16,7 @@
 #'                 multiple cell populations 
 #'
 #' @param totalFrags # of fragments in that sample for that cell population
+#' @param StudypreFactor ratio of average signal between new study and training set
 #' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
 #'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
 #' 
@@ -31,7 +32,8 @@ callPeaks_by_population <- function(ArchRProj,
                       returnAllPeaks=FALSE,
                       numCores=10,
                       totalFrags,
-                      fragsList=NULL
+                      fragsList=NULL,
+                      StudypreFactor = NULL
                      
                      ){
     
@@ -95,7 +97,7 @@ callPeaks_by_population <- function(ArchRProj,
     
     df <- cbind(cellPopulations, cellsPerPop)
         
-    cat('Running peak calls for the following cell populations:')
+    cat('\n\nRunning peak calls for the following cell populations:\n')
     print(df)
     
     
@@ -103,8 +105,6 @@ callPeaks_by_population <- function(ArchRProj,
 
     callPeaks_by_cell_population <- function(fragsList, cellNames,ArchRProj, totalFrags,
                                             normScale=10^9){
-
-        print(length(cellNames))
 
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
@@ -133,10 +133,11 @@ callPeaks_by_population <- function(ArchRProj,
                                               FinalBins,
                                               totalFrags=totalFrags
                                             )
+        countsMatrix$TotalIntensity <- countsMatrix$TotalIntensity * StudypreFactor
+        countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor    
         
         countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]
-        scMACS_peaks <- make_prediction(countsMatrix, finalModelObject,thresholdModel
-                                       )
+        scMACS_peaks <- make_prediction(countsMatrix, finalModelObject)
 
         if(returnAllPeaks){
             return(scMACS_peaks)

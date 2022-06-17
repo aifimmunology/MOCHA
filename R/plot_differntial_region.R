@@ -25,26 +25,7 @@ plot_differential_region<- function(tmp_mat,tileID,group){
     ## log-transform the values 
     data=log2(test_vec+1)
    
-    ## conduct two part test
-    two_part_results <- TwoPart(test_vec, group=group, test='wilcoxon', point.mass=0)
-
-    ## permutation test
-    n_a = sum(group)
-    n_b = length(group) - n_a
-
-    sampled_test_vec <- sample(test_vec, size=n_a+n_b, replace=F)
-    permuted_pvalue <- TwoPart(sampled_test_vec, group=group, test='wilcoxon', 
-                               point.mass=0)$pvalue
-
-    
-    ## filter non-zero values for group1
-    nonzero_dx <- data[group==1]
-    nonzero_dx=nonzero_dx[nonzero_dx!=0]
-    
-    ## filter non-zero values for group0
-    nonzero_control <- data[group==0]
-    nonzero_control=nonzero_control[nonzero_control!=0]
-    
+  
     df = data.frame(
         Vals = data,
         Group= group,
@@ -53,17 +34,39 @@ plot_differential_region<- function(tmp_mat,tileID,group){
     
 
         
-        fname =paste(res$Peak,'.png',sep='')
-        png(fname)
+        fname =paste(tileID,'.png',sep='')
+    
+    # p <- ggplot(df,
+    #    aes(x=Group_label,
+    #        y=Vals,
+    #       col=Group_label)) + 
+    # ggdist::stat_halfeye()+geom_boxplot(width=0.2) +
+    # ggdist::stat_dots(side='left', justification=1.1, binwidth=0.01)+
+    # theme(legend.position = 'none', 
+    #     axis.title.y = element_text(size=20),
+    #     axis.title.x = element_text(size=20),
+    #     strip.text.x = element_text(size=20),
+    #     axis.text.x = element_text(size=20, angle = 90),
+    #     axis.text.y = element_text(size=20)) + 
+    # xlab('')+ylab('Log2 Intensity')
+
+    
+
         p <- ggplot(df,
-                   aes(x=Vals, col=Group_label, fill=Group_label))+
-               geom_histogram(aes(y=0.1*..density..),
-                 alpha=0.5,position='identity',binwidth=0.1)+facet_wrap(~df$Group_label, ncol=1, scales='free')+ThemeMain+
-                ggtitle(paste("Differential Accessibility",res$Peak,sep='\n'))+
+                   aes(x=Vals, col=Group_label, fill=Group_label))+#geom_density()+
+                   geom_histogram(aes(y=0.2*..density..),
+                 alpha=0.5,position='identity',binwidth=0.2)+
+    facet_wrap(~df$Group_label, ncol=1, scales='free')+
+                ggtitle(tileID)+
         xlab('Log2 Intensity')+ylab('Frequency')+
-            xlim(c(min(df$Vals)-1, max(df$Vals)+1))
-        print(p)
-        dev.off()
-        print(paste('file saved to ',fname))
+            xlim(c(min(df$Vals)-1, max(df$Vals)+1))+
+    theme(legend.position='none',
+         axis.text.x=element_text(size=18),
+         axis.title.x=element_text(size=18),          
+         axis.title.y=element_text(size=18),         
+         plot.title=element_text(size=18),                   
+         axis.text.y=element_text(size=18)
+          )
+        return(p)
         
-   }
+}

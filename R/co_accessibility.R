@@ -25,11 +25,11 @@
 #' @example 
 #' Generate 
 #' mat1 = matrix(pmax(0, rnorm(1000)), ncol=100); row.names(mat1) <- paste('A',1:10,sep='_')
-#' mat2 = matrix(pmax(0, rnorm(1000)), ncol=100); row.names(mat2) <- paste('B',1:10,sep='_')
-#' ziSpear_mat <- co_accessibility(mat1,mat2, numCores=5)
+#' ziSpear_mat <- co_accessibility(mat1, numCores=5)
 #' head(ziSpear_mat)
 #' @export
 
+<<<<<<< HEAD
 co_accessibility <- function(GR, filterPairs = NULL, index = NULL, numCores=40, verbose = FALSE){
   
   ## Prep data.table of peaks for correlations. 
@@ -101,6 +101,30 @@ FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores 
   wideRange <- stretch(regions, windowSize)
   
   if(length(regions) > 1){
+=======
+co_accessibility <- function(mat1, numCores=40){
+    
+    ### generate all pairwise combinations
+    N = nrow(mat1)
+    pairwise_combos = expand.grid(1:N, 1:N)
+    
+    ### Loop through all pairwise 
+    ### combinations of peaks 
+    zero_inflated_spearman <- unlist(mclapply(1:nrow(pairwise_combos),
+             function(x)
+                 weightedZISpearman(x=mat1[pairwise_combos$Var1[x],],
+                                 y=mat1[pairwise_combos$Var2[x],]
+                                 ),
+             mc.cores=numCores
+             ))
+    
+    ### Create zero-inflated correlation matrix
+    ### from correlation values, 
+    zi_spear_mat <- data.frame(Correlation=zero_inflated_spearman,
+                               Peak1= row.names(mat1)[pairwise_combos$Var1],
+                               Peak2= row.names(mat1)[pairwise_combos$Var2]
+                               )
+>>>>>>> 6b861c17fdd2a0bd55c69732851c72177a624d6e
     
     wideList <- split(wideRange,seq(1,length(wideRange)))
     window_tmp <- plyranges::filter_by_overlaps(tileList,wideList[[1]])

@@ -7,20 +7,16 @@
 
 #'
 #' @export
-get_differential_accessible_regions <- function(Union_peaks,sample_specific_peaks,
+get_differential_accessible_regions <- function(sample_peak_matrix,
                                                metaFile, fdr_control=0.2, nCores=2){
 
-        ## Create sample specific matrix
-        sample_peak_matrix <- create_peak_sampleMatrix(sample_specific_peaks,
-                                                       Union_peaks)
 
         ## Get group labels 
-        positive_samples <- metaFile$Sample[metaFile$Class=='Positive']
+        positive_samples <- metaFile$SampleCellType[metaFile$Class=='Positive']
         group <- ifelse(names(sample_peak_matrix)[2:ncol(sample_peak_matrix)] %in% positive_samples,1,0)
-
         
         ## Estimate differential accessibility
-        res_pvals <- mclapply(Union_peaks, 
+        res_pvals <- mclapply(sample_peak_matrix$tileID, 
            function(x) estimate_differential_accessibility(sample_peak_matrix,x,group, F),
                  mc.cores=nCores
            )

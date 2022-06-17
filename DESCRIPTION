@@ -13,7 +13,7 @@ License: LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
-Depends: R (>= 3.5.0), data.table, ArchR, dplyr, plyranges, GenomicRanges, scHOT
+Depends: R (>= 3.5.0), data.table, ArchR, dplyr, plyranges, GenomicRanges
 Suggests: knitr, rmarkdown
 biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization
 VignetteBuilder: knitr
