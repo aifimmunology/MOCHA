@@ -108,14 +108,18 @@ FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores 
     window_tmp <- plyranges::filter_by_overlaps(tileList,wideRange)
   }
   
-  
+  pb = txtProgressBar(min = 0, max = length(wideList), initial = 0)  
   
   ##Run correlations for the first window
   PeakCorr <- co_accessibility(window_tmp, numCores=numCores)
   
+  setTxtProgressBar(pb,1)
+  
   if(length(regions) > 1){
     for(i in 2:length(wideList)){
-      #print(i)
+      
+      setTxtProgressBar(pb,i)
+      
       ## Find all peaks in the next window
       window_tmp <- plyranges::filter_by_overlaps(tileList,wideList[[i]])
       keyPeak <- queryHits(findOverlaps(window_tmp, regions[i]))
@@ -125,6 +129,8 @@ FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores 
       
     }
   }
+  
+  close(pb)
   
   return(PeakCorr)
   
