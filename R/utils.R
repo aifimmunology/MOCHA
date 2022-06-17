@@ -72,4 +72,29 @@ StringsToGRanges <- function(regionString){
   
 }
 
+### Reverse function. Converst a GRanges object to a string in the format 'chr1:100-200'
+GRangesToString <- function(GR_obj){
+  
+  paste(seqnames(GR_obj), ":",start(GR_obj),"-",end(GR_obj),sep="")
+  
+}
+
+
+##### This functions takes the output of coaccessibility, filters by a correlation threshold,
+#### and then returns a data.frame
+# tielCorrelations = output of coaccessibility
+# nearbyTiles - data.table of peaks within the correlation
+# threshold - Absolute correlation threshold
+createLinks <- function(nearByTiles, tileCorrelations, threshold = 0.5){
+  
+  filCorr <- tileCorrelations %>% filter(Peak1 != Peak2) %>%
+    filter(abs(Correlation) > threshold)
+  region <- makeGRangesFromDataFrame(nearByTiles) %>% 
+    plyranges::mutate(idx = c(1:length(.))) %>%
+    plyranges::mutate(mid = as.integer((start+end)/2)) 
+  filCorr$midPeak1 <- region$mid[match(filCorr$Peak1,region$idx)]
+  filCorr$midPeak2 <- region$mid[match(filCorr$Peak2,region$idx)]
+  filCorr[!duplicated(t(apply(filCorr[2:3], 1, sort))), ]
+}
+
 

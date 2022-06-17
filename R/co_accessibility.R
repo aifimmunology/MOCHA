@@ -30,31 +30,116 @@
 #' head(ziSpear_mat)
 #' @export
 
-co_accessibility <- function(mat1, mat2, numCores=40){
+co_accessibility <- function(GR, filterPairs = NULL, index = NULL, numCores=40, verbose = FALSE){
+  
+  ## Prep data.table of peaks for correlations. 
+  mat1 <- as.data.frame(mcols(GR))
+  rownames(mat1) <- GRangesToString(GR)
+  
+  
+  ### generate all pairwise combinations
+  N = nrow(mat1)
+  pairwise_combos = expand.grid(1:N, 1:N)
+  pairwise_combos = pairwise_combos[!duplicated(t(apply(pairwise_combos[1:2], 1, sort))), ]
+  pairwise_combos$Peak1 <- row.names(mat1)[pairwise_combos$Var1]
+  pairwise_combos$Peak2 <- row.names(mat1)[pairwise_combos$Var2]
+  pairwise_combos <- pairwise_combos[pairwise_combos$Peak1 != pairwise_combos$Peak2,]
+  
+  ## Filter out any pairs that have already been tested
+  if(!is.null(filterPairs)){
     
-    ### generate all pairwise combinations
-    N = nrow(mat1)
-    M = nrow(mat2)
+    pairwise_combos <- pairwise_combos[!(pairwise_combos$Peak1 %in% filterPairs$Peak1 &
+                                           pairwise_combos$Peak2 %in% filterPairs$Peak2),]
     
-    pairwise_combos = expand.grid(1:N, 1:M)
+  }
+  
+  if(!is.null(index) & class(index) == 'numeric'){
     
-    ### Loop through all pairwise 
-    ### combinations of peaks 
-    zero_inflated_spearman <- unlist(mclapply(1:nrow(pairwise_combos),
-             function(x)
-                 scHOT::weightedZISpearman(x=mat1[pairwise_combos$Var1[x],],
-                                 y=mat2[pairwise_combos$Var2[x],]
-                                 ),
-             mc.cores=numCores
-             ))
+    pairwise_combos <- pairwise_combos[pairwise_combos$Peak1 %in% rownames(mat1)[index] | 
+                                         pairwise_combos$Peak2 %in% rownames(mat1)[index] ,]
     
-    ### Create zero-inflated correlation matrix
-    ### from correlation values, 
-    zi_spear_mat <- data.frame(Correlation=zero_inflated_spearman,
-                               Peak1= row.names(mat1)[pairwise_combos$Var1],
-                               Peak2= row.names(mat2)[pairwise_combos$Var2]
-                               )
+  }else if(verbose){ print('No valid index given. Testing all peaks within range.')}
+  
+  ### Loop through all pairwise 
+  ### combinations of peaks 
+  
+  if(nrow(pairwise_combos) == 0){return(NULL)}
+  #return(mat1)
+  zero_inflated_spearman <- unlist(mclapply(1:nrow(pairwise_combos),
+                                            function(x)
+                                              weightedZISpearman(x=mat1[pairwise_combos$Var1[x],],
+                                                                 y=mat1[pairwise_combos$Var2[x],]
+                                              ),
+                                            mc.cores=numCores
+  ))
+  
+  #return(zero_inflated_spearman)
+  ### Create zero-inflated correlation matrix
+  ### from correlation values, 
+  zi_spear_mat <- data.frame(Correlation=zero_inflated_spearman,
+                             Peak1= row.names(mat1)[pairwise_combos$Var1],
+                             Peak2= row.names(mat1)[pairwise_combos$Var2],
+                             seqnames = as.character(seqnames(GR))[pairwise_combos$Var1],
+                             start = min(start(GR)[pairwise_combos$Var1],start(GR)[pairwise_combos$Var2] ),
+                             end = max(end(GR)[pairwise_combos$Var1],end(GR)[pairwise_combos$Var2] )
+  )
+  
+  return(zi_spear_mat)
+  
+}         
+
+
+
+
+FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores = 1,  verbose = FALSE){
+  
+  
+  tileList <- StringsToGRanges(peakDT$tileID)
+  peakMat <- as.data.frame(peakDT)[,-1]
+  mcols(tileList) <- peakMat
+  
+  wideRange <- stretch(regions, windowSize)
+  
+  if(length(regions) > 1){
     
-    return(zi_spear_mat)
+    wideList <- split(wideRange,seq(1,length(wideRange)))
+    window_tmp <- plyranges::filter_by_overlaps(tileList,wideList[[1]])
+  }else{
     
-}
+    window_tmp <- plyranges::filter_by_overlaps(tileList,wideRange)
+  }
+  
+  
+  
+  ##Run correlations for the first window
+  PeakCorr <- co_accessibility(window_tmp, numCores=numCores)
+  
+  if(length(regions) > 1){
+    for(i in 2:length(wideList)){
+      #print(i)
+      ## Find all peaks in the next window
+      window_tmp <- plyranges::filter_by_overlaps(tileList,wideList[[i]])
+      keyPeak <- queryHits(findOverlaps(window_tmp, regions[i]))
+      nextCorr <- co_accessibility(window_tmp, PeakCorr, numCores=numCores,
+                                   index = keyPeak, verbose = verbose)
+      PeakCorr <- rbind(PeakCorr, nextCorr)
+      
+    }
+  }
+  
+  return(PeakCorr)
+  
+}  
+
+
+
+
+
+
+
+
+
+
+
+
+
