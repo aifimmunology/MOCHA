@@ -114,12 +114,9 @@ FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores 
   
   regionDF <- as.data.frame(regions)
  
-  pb = txtProgressBar(min = 0, max = length(regions), initial = 0)  
-  
   #Initialize Correlation Datatable. 
   PeakCorr <- NULL
-  
-  setTxtProgressBar(pb,1)
+  pb = txtProgressBar(min = 0, max = length(wideList), initial = 0)  
   
   for(i in 1:length(regions)){
       print(i)
