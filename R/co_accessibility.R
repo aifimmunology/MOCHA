@@ -111,7 +111,9 @@ FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores 
   pb = txtProgressBar(min = 0, max = length(wideList), initial = 0)  
   
   ##Run correlations for the first window
-  PeakCorr <- co_accessibility(window_tmp, numCores=numCores)
+  keyPeak <- queryHits(findOverlaps(window_tmp, regions[i]))
+  PeakCorr <- co_accessibility(window_tmp, numCores=numCores,
+                              index = keyPeak, verbose = verbose)
   
   setTxtProgressBar(pb,1)
   
