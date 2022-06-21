@@ -22,7 +22,7 @@
 #'               http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
 #'
 #' @references XX
-#' @example 
+#' @examples 
 #' Generate 
 #' mat1 = matrix(pmax(0, rnorm(1000)), ncol=100); row.names(mat1) <- paste('A',1:10,sep='_')
 #' ziSpear_mat <- co_accessibility(mat1, numCores=5)

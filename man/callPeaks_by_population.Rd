@@ -11,8 +11,12 @@ callPeaks_by_population(
   returnAllPeaks = FALSE,
   numCores = 10,
   totalFrags,
+<<<<<<< Updated upstream
   fragsList = NULL,
   StudypreFactor = NULL
+=======
+  fragsList = NULL
+>>>>>>> Stashed changes
 )
 }
 \arguments{
@@ -29,8 +33,11 @@ the cell population label}
 multiple cell populations}
 
 \item{totalFrags}{# of fragments in that sample for that cell population}
+<<<<<<< Updated upstream
 
 \item{StudypreFactor}{ratio of average signal between new study and training set}
+=======
+>>>>>>> Stashed changes
 }
 \value{
 scMACs_PeakList an list containing peak calls for each cell population passed on in the 

@@ -33,7 +33,7 @@ calculate_intensities <- function(fragMat,
   if(class(candidatePeaks) != 'GRanges'){
     stop('candidatePeaks user-input must be a Genomic Ranges (GRanges) object')
   }
-  if(class(totalFrags) != 'numeric'){
+  if(!is.integer(totalFrags)){
     stop('totalFrags user-input must be an integer denoting the total # of frags')
   }    
 
@@ -79,6 +79,8 @@ calculate_intensities <- function(fragMat,
   fragsPerBin = data.table::as.data.table(fragsPerBin)
   
   ### get cell count matrix
+  
+  # TODO Error in .subset(x, j) : invalid subscript type 'list'
   cell_counts = fragsPerBin[,list(N=.N),
                             by=list(bin,cell)]
 

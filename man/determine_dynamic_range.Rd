@@ -16,7 +16,10 @@ determine_dynamic_range(
 
 \item{GeneralWindowSize:}{Window size for sliding window generated over longer fragments.}
 
-\item{WindowSizeRange:}{The sliding window function will generate a smaller window at the end of a longer fragment,}
+\item{WindowSizeRange:}{The sliding window function will generate a smaller window at the end of a longer fragment,
+if the fragment is not evenly divisible by GeneralWindowSize. If that smaller window is less than or equal to
+WindowSizeRange, then it will be merged with the preceding window to great a larger window. This means that
+longer fragments will be broken up into bins that are between WindowSizeRange and WindowSizeRange+GeneralWindowSize in length.}
 
 \item{coreNum}{an integer indicating the number of cores to use}
 

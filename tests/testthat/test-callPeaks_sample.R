@@ -1,11 +1,17 @@
 test_that("We can call peaks by sample", {
-  peakCallResults <- callPeaks_by_sample(
-    ArchRProj,
+  
+  # testProj <- loadArchRProject("PBMCSmall", force = TRUE)
+  withr::local_options(timeout = 600) # 10 minute timeout for download
+  testProj <- getTestProject()
+  
+  peakCallResults <- scMACS::callPeaks_by_sample(
+    testProj,
     metadf,
-    cellType_to_analyze = "CD14 Mono",
-    cellType_sample_label_name = "cellType_sample",
+    cellSubsets = "C1",
+    cellCol_label_name = "Clusters",
+    cellType_sample_label_name = "Sample",
     returnAllPeaks = TRUE,
     numCores = 10
   )
-  expect_equal(2 * 2, 4)
+  
 })

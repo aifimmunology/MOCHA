@@ -16,18 +16,32 @@ callPeaks_by_sample(
 \arguments{
 \item{ArchRProj}{an ArchR Project}
 
+<<<<<<< Updated upstream
 \item{returnAllPeaks}{boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks.}
 
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populations}
+=======
+\item{metadf}{TODO}
+>>>>>>> Stashed changes
 
 \item{cellSubsets}{vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata}
 
 \item{cellCol_label_name}{string indicating which column in the meta data file contains 
 the cell population label}
 
+<<<<<<< Updated upstream
 \item{sample_label_name}{string indicating which column in the meta data file contains 
 the samples}
+=======
+\item{cellType_sample_label_name}{string indicating which column in the meta data file contains 
+the samples}
+
+\item{returnAllPeaks}{boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks.}
+
+\item{numCores}{integer. Number of cores to parallelize peak-calling across
+multiple cell populations}
+>>>>>>> Stashed changes
 }
 \value{
 scMACs_PeakList an list containing peak calls for each cell population passed on in the 

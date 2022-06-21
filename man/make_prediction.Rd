@@ -4,10 +4,12 @@
 \alias{make_prediction}
 \title{\code{determine_dynamic_range}}
 \usage{
-make_prediction(X, finalModelObject)
+make_prediction(X, finalModelObject, thresholdModel)
 }
 \arguments{
 \item{X}{an intensityMatrix output from \code{calculate_intensities}}
+
+\item{thresholdModel}{is an internal threhsod}
 
 \item{finalModel}{is a matrix with coefficients and an index indicating
 the number of cell used to train that model}

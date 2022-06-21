@@ -9,11 +9,15 @@ Maintainer: Samir Rachid Zaim <samir.rachidzaim@alleninstitute.org>
 Description: scMACS is a novel peak-calling algorithm that captures and leverage single-cell 
              information to model and identify accesible chromatin in single-cell 
              ATAC-Sequencing data.
-License: LICENSE
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
-Depends: R (>= 3.5.0), data.table, ArchR, dplyr, plyranges, GenomicRanges
-Suggests: knitr, rmarkdown
+RoxygenNote: 7.2.0
+Imports: parallel, data.table, ArchR, dplyr, plyranges, GenomicRanges
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
 biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization
 VignetteBuilder: knitr
+Config/testthat/edition: 3

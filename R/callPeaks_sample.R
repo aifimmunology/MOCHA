@@ -6,10 +6,11 @@
 #'
 #'
 #' @param ArchRProj an ArchR Project 
+#' @param metadf TODO 
 #' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
 #' @param cellCol_label_name string indicating which column in the meta data file contains 
 #'        the cell population label
-#' @param sample_label_name string indicating which column in the meta data file contains 
+#' @param cellType_sample_label_name string indicating which column in the meta data file contains 
 #'        the samples
 #'
 #' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
@@ -28,23 +29,28 @@
 
 callPeaks_by_sample <- function(ArchRProj, 
                                 metadf,
-                                cellType_to_analyze='CD14 Mono',
-                                cellType_sample_label_name='cellType_sample',         
+                                cellSubsets,
+                                cellCol_label_name, 
+                                cellType_sample_label_name,
                                 returnAllPeaks=TRUE,
                                 numCores=30
-                     
                      ){
     
     ## identify cell population to export 
     ## across samples by cell types
     
-    cellTypesToExport <- unique(cellTypesToExport)
+    cellTypesToExport <- unique(cellSubsets)
     frags <- getPopFrags(ArchRProj, 
-                         metaColumn = cellType_sample_label_name, 
-                         cellSubsets = cellTypesToExport, 
+                         metaColumn = cellCol_label_name, 
+                         cellSubsets = cellSubsets, 
                          numCores= numCores)
-
-    names(frags) <- cellTypesToExport
+    
+    # Why not:
+    # Get fragments specific to samples+celltype
+    # callPeaks_by_population() for each sample+celltype
+    ## Would avoid subsetting entire ArchR projects
+    
+    names(frags) <- cellSubsets
 
     ## identify cell barcodes 
     normalization_factors <- sapply(frags, length)
@@ -60,26 +66,26 @@ callPeaks_by_sample <- function(ArchRProj,
     barcodes <- lapply(frags, function (x) unique(x$RG)
                )
 
-    subset_ArchR_projects <- mclapply(barcodes, function(x) 
-           subsetCells(covidArchR, x),
+    subset_ArchR_projects <- parallel::mclapply(barcodes, function(x) 
+           subsetCells(ArchRProj, x),
                                       mc.cores=numCores
            )
 
-    pryr::mem_used()
+    #pryr::mem_used()
 
     ### call peaks using 
     ### scMACS functionalities
-    peak_lists <- mclapply(1:length(subset_ArchR_projects),
+    peak_lists <- parallel::mclapply(1:length(subset_ArchR_projects),
                            function(x)
 
-                           try(callPeaks_by_population(ArchRProj=subset_ArchR_projects[[x]],
-                                            cellSubsets=cellTypesToExport[x],
+                           callPeaks_by_population(ArchRProj=subset_ArchR_projects[[x]],
+                                            cellSubsets=cellSubsets[x],
                                             cellCol_label_name=cellType_sample_label_name,
                                             returnAllPeaks=TRUE,
                                             numCores=1,
                                             totalFrags=normalization_factors[x],
                                             fragsList =frags[[x]]
-                           )),
+                           ),
                           mc.cores=numCores
 
                         )
