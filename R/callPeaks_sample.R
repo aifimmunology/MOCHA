@@ -17,6 +17,7 @@
 #'
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'                 multiple cell populations
+#' @param returnFrags boolean. Determines if fragment files should be returned
 #'
 #' @return scMACs_PeakList an list containing peak calls for each cell population passed on in the 
 #'         cell subsets argument. Each peak call is returned as as Genomic Ranges object.
@@ -53,8 +54,14 @@ callPeaks_by_sample <- function(ArchRProj,
     names(frags) <- cellSubsets
 
     ## identify cell barcodes 
-    normalization_factors <- sapply(frags, length)
-
+    normalization_factors <- as.numeric(sapply(frags, length))
+    
+    
+    ## add preFactor multiplier across datasets
+    curr_frags_median <- median(ArchRProj@cellColData$nFrags)
+    study_prefactor = 3668/curr_frags_median # training median
+    
+    normalization_factors = normalization_factors 
     # ###########################################################
     # ###########################################################
     # ## call scMACS peaks 
@@ -77,7 +84,6 @@ callPeaks_by_sample <- function(ArchRProj,
     ### scMACS functionalities
     peak_lists <- parallel::mclapply(1:length(subset_ArchR_projects),
                            function(x)
-
                            callPeaks_by_population(ArchRProj=subset_ArchR_projects[[x]],
                                             cellSubsets=cellSubsets[x],
                                             cellCol_label_name=cellType_sample_label_name,
@@ -85,15 +91,15 @@ callPeaks_by_sample <- function(ArchRProj,
                                             numCores=1,
                                             totalFrags=normalization_factors[x],
                                             fragsList =frags[[x]]
+
                            ),
                           mc.cores=numCores
 
                         )
     
-    finalObject = list(Sample_peaks=peak_lists,
-                       Sample_fragments=frags)
+    rm(subset_ArchR_projects, frags)
+    pryr::mem_used()
     
-    return(finalObject)
-    
+    return(peak_lists)
 
 }
