@@ -35,11 +35,28 @@ plot_differential_region<- function(tmp_mat,tileID,group){
 
         
         fname =paste(tileID,'.png',sep='')
-        #png(fname)
+    
+    # p <- ggplot(df,
+    #    aes(x=Group_label,
+    #        y=Vals,
+    #       col=Group_label)) + 
+    # ggdist::stat_halfeye()+geom_boxplot(width=0.2) +
+    # ggdist::stat_dots(side='left', justification=1.1, binwidth=0.01)+
+    # theme(legend.position = 'none', 
+    #     axis.title.y = element_text(size=20),
+    #     axis.title.x = element_text(size=20),
+    #     strip.text.x = element_text(size=20),
+    #     axis.text.x = element_text(size=20, angle = 90),
+    #     axis.text.y = element_text(size=20)) + 
+    # xlab('')+ylab('Log2 Intensity')
+
+    
+
         p <- ggplot(df,
-                   aes(x=Vals, col=Group_label, fill=Group_label))+
-               geom_histogram(aes(y=0.1*..density..),
-                 alpha=0.5,position='identity',binwidth=0.1)+facet_wrap(~df$Group_label, ncol=1, scales='free')+
+                   aes(x=Vals, col=Group_label, fill=Group_label))+#geom_density()+
+                   geom_histogram(aes(y=0.2*..density..),
+                 alpha=0.5,position='identity',binwidth=0.2)+
+    facet_wrap(~df$Group_label, ncol=1, scales='free')+
                 ggtitle(tileID)+
         xlab('Log2 Intensity')+ylab('Frequency')+
             xlim(c(min(df$Vals)-1, max(df$Vals)+1))+
