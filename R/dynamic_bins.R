@@ -29,7 +29,7 @@ dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, c
 
   AllFragsList <- parallel::mclapply(AllFragmentsList, function(x){
     # TODO error no function n() found
-    plyranges::reduce_ranges(x, counts = n())
+    plyranges::reduce_ranges(x, counts = plyranges::n())
   }, mc.cores = coreNum)
   AllFrags <- plyranges::bind_ranges(AllFragsList) %>% plyranges::reduce_ranges(counts = sum(counts))
 
