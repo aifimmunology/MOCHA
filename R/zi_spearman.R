@@ -57,7 +57,7 @@ weightedZISpearman <- function(x, y, w = 1) {
   p_00 = sum(w * (!posx & !posy))/sum(w)
   p_01 = sum(w * (!posx & posy))/sum(w)
   p_10 = sum(w * (posx & !posy))/sum(w)
-  rho_11 = weightedSpearman(x = x[pospos], y = y[pospos], w = w[pospos])
+  rho_11 = wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
   rho_star = p_11 * (p_01 + p_11) * (p_10 + p_11) * rho_11 +
     3*(p_00 * p_11 - p_10 * p_01)
 
