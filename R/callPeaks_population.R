@@ -6,8 +6,8 @@
 #'
 #'
 #' @param ArchRProj an ArchR Project 
-#' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
-#' @param cellCol_label_name string indicating which column in the meta data file contains 
+#' @param cellPopulations vector of strings. Cell subsets for which to call peaks. Optional, if cellPopulations='ALL', then peak calling is done on all cell populations in the ArchR project metadata
+#' @param cellPopLabel string indicating which column in the meta data file contains 
 #'        the cell population label
 #' 
 #' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
@@ -26,8 +26,8 @@
 #'
 #' @export
 callPeaks_by_population <- function(ArchRProj, 
-                      cellSubsets=NULL,
-                      cellCol_label_name=NULL,
+                      cellPopulations=NULL,
+                      cellPopLabel=NULL,
                       returnAllPeaks=FALSE,
                       numCores=10,
                       totalFrags,
@@ -40,13 +40,13 @@ callPeaks_by_population <- function(ArchRProj,
     ########################################################################
     
     ### User-input/Parameter Checks
-    
-      if(class(cellSubsets)!='character'){
-        stop('cellSubsets must be a vector of strings indicating cell populations')
+    browser()
+      if(class(cellPopulations)!='character'){
+        stop('cellPopulations must be a vector of strings indicating cell populations')
       }
     
-      if(class(cellCol_label_name)!='character'){
-        stop('cellCol_label_name must be a vector of strings indicating cell populations')      
+      if(class(cellPopLabel)!='character'){
+        stop('cellPopLabel must be a vector of strings indicating cell populations')      
       }   
 
       if(class(ArchRProj)!='ArchRProject'){
@@ -72,11 +72,11 @@ callPeaks_by_population <- function(ArchRProj,
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
     
-    if(cellSubsets=='ALL'){
-       cellPopulations <- unique(meta[,cellCol_label_name])   
+    if(cellPopulations=='ALL'){
+       cellPopulations <- unique(meta[,cellPopLabel])   
       
     } else{
-       cellPopulations <- cellSubsets
+       cellPopulations <- cellPopulations
     }
     
     ### get barcodes by cell pop for 
@@ -84,7 +84,7 @@ callPeaks_by_population <- function(ArchRProj,
     ### cell population 
     
     barcodes_by_cell_pop <- lapply(cellPopulations, function(x)
-        row.names(meta)[which(meta[,cellCol_label_name]==x)]
+        row.names(meta)[which(meta[,cellPopLabel]==x)]
            )
     
     ### create named list 
@@ -102,7 +102,7 @@ callPeaks_by_population <- function(ArchRProj,
 
     callPeaks_by_cell_population <- function(fragsList, cellNames,ArchRProj, totalFrags,
                                             normScale=10^9){
-        
+        browser()
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
         
@@ -148,9 +148,11 @@ callPeaks_by_population <- function(ArchRProj,
 
     }
     
-        
+    browser()    
     scMACs_PeakList <- parallel::mclapply(1:length(barcodes_by_cell_pop), 
-                                function(ZZ) callPeaks_by_cell_population(fragsList,                                                                    cellNames=barcodes_by_cell_pop[[ZZ]], 
+                                function(ZZ) callPeaks_by_cell_population(
+                                  fragsList,
+                                  cellNames=barcodes_by_cell_pop[[ZZ]], 
                                                        ArchRProj,
                                                        totalFrags,
                                             normScale=10^9),

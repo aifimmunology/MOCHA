@@ -6,13 +6,11 @@
 #'
 #'
 #' @param ArchRProj an ArchR Project 
-#' @param metadf TODO 
-#' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
-#' @param cellCol_label_name string indicating which column in the meta data file contains 
-#'        the cell population label
-#' @param cellType_sample_label_name string indicating which column in the meta data file contains 
+#' @param cellPopulations vector of strings. Cell subsets for which to call peaks. Optional, if cellPopulations='ALL', then peak calling is done on all cell populations in the ArchR project metadata
+#' @param cellPopLabel string indicating which column in the meta data file contains 
+#'        the cell type label
+#' @param sampleLabel string indicating which column in the meta data file contains 
 #'        the samples
-#'
 #' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
 #'
 #' @param numCores integer. Number of cores to parallelize peak-calling across
@@ -28,33 +26,32 @@
 #'
 #' @export
 
-callPeaks_by_sample <- function(ArchRProj, 
-                                metadf,
-                                cellSubsets,
-                                cellCol_label_name, 
-                                cellType_sample_label_name,
-                                returnAllPeaks=TRUE,
+callPeaks_by_sample <- function(ArchRProj,
+                                cellPopulations = "ALL",
+                                cellPopLabel, 
+                                sampleLabel,
+                                returnAllPeaks=FALSE,
                                 numCores=30
                      ){
-    
-    ## identify cell population to export 
-    ## across samples by cell types
-    
-    cellTypesToExport <- unique(cellSubsets)
+
+    # Get fragments for our given cell subsets.
+    cellPopulations <- unique(cellPopulations)
     frags <- getPopFrags(ArchRProj, 
-                         metaColumn = cellCol_label_name, 
-                         cellSubsets = cellSubsets, 
-                         numCores= numCores)
+                         metaColumn = cellPopLabel, 
+                         cellSubsets = cellPopulations, 
+                         numCores = numCores)
+    
+    cellPopulations <- names(frags)
     
     # Why not:
     # Get fragments specific to samples+celltype
     # callPeaks_by_population() for each sample+celltype
     ## Would avoid subsetting entire ArchR projects
     
-    names(frags) <- cellSubsets
 
     ## identify cell barcodes 
     normalization_factors <- as.numeric(sapply(frags, length))
+    
     
     
     ## add preFactor multiplier across datasets
@@ -68,7 +65,7 @@ callPeaks_by_sample <- function(ArchRProj,
 
     # ## subset archr projects using 
     # ## the barcodes to create 
-    # ## different projects per downsample 
+    # ## different projects per population 
 
     barcodes <- lapply(frags, function (x) unique(x$RG)
                )
@@ -85,10 +82,10 @@ callPeaks_by_sample <- function(ArchRProj,
     peak_lists <- parallel::mclapply(1:length(subset_ArchR_projects),
                            function(x)
                            callPeaks_by_population(ArchRProj=subset_ArchR_projects[[x]],
-                                            cellSubsets=cellSubsets[x],
-                                            cellCol_label_name=cellType_sample_label_name,
-                                            returnAllPeaks=TRUE,
-                                            numCores=1,
+                                            cellPopulations=cellPopulations[x],
+                                            cellPopLabel=cellPopLabel,
+                                            returnAllPeaks=returnAllPeaks,
+                                            numCores=numCores,
                                             totalFrags=normalization_factors[x],
                                             fragsList =frags[[x]]
 
@@ -98,7 +95,6 @@ callPeaks_by_sample <- function(ArchRProj,
                         )
     
     rm(subset_ArchR_projects, frags)
-    pryr::mem_used()
     
     return(peak_lists)
 
