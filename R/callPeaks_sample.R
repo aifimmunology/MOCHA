@@ -45,7 +45,7 @@ callPeaks_by_sample <- function(ArchRProj,
                          cellSubsets = cellType_Samples, 
                          numCores= numCores)
     
-    pryr::mem_used()
+    
     sample_names <- names(frags)
     ## identify cell barcodes 
     normalization_factors <- as.numeric(sapply(frags, length))
@@ -71,11 +71,11 @@ callPeaks_by_sample <- function(ArchRProj,
            subsetCells(ArchRProj, x)
            )
 
-    pryr::mem_used()
+    
                                
     ### call peaks using 
     ### scMACS functionalities
-    peak_lists <- mclapply(1:length(subset_ArchR_projects),
+    peak_lists <- parallel::mclapply(1:length(subset_ArchR_projects),
                            function(x)
 
                     callPeaks_by_population(ArchRProj=subset_ArchR_projects[[x]],
@@ -92,7 +92,7 @@ callPeaks_by_sample <- function(ArchRProj,
                         )
     
     rm(subset_ArchR_projects, frags)
-    pryr::mem_used()
+    
     
     return(peak_lists)
 

@@ -78,7 +78,7 @@ getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NUL
 
     if(is.null(region)){
 
-	        fragsList<-  mclapply(seq_along(arrows), function(x){
+	        fragsList<-  parallel::mclapply(seq_along(arrows), function(x){
                     getFragmentsFromArrow(arrows[x])
             }, mc.cores = numCores)
             
@@ -100,7 +100,7 @@ getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NUL
         }
 
       chrom = regionGRanges %>% as.data.frame() %>% dplyr::select(seqnames)
-	  fragsList<-  mclapply(seq_along(arrows), function(x){
+	  fragsList<-  parallel::mclapply(seq_along(arrows), function(x){
 			      
                   tmp1 <- getFragmentsFromArrow(arrows[x],chr = as.character(chrom[,1])) %>%
 							plyranges::join_overlap_intersect(regionGRanges)
@@ -142,7 +142,7 @@ getPopFrags <- function(ArchRProj, metaColumn,cellSubsets = 'ALL' , region = NUL
        
     #Sort fragments into a list by cell population
         
-    popFrags <- mclapply(seq_along(barcodes_by_cell_pop),function(x){
+    popFrags <- parallel::mclapply(seq_along(barcodes_by_cell_pop),function(x){
                     print(paste('Sorting ', names(barcodes_by_cell_pop)[x], sep = ""))
                     if(sum(fragsListIndex[[x]]) > 1){
                        tmp <- lapply(which(fragsListIndex[[x]]) , function(y) {

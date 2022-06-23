@@ -75,10 +75,10 @@ callPeaks_by_population <- function(ArchRProj,
     meta = getCellColData(ArchRProj)
     
     if(cellSubsets=='ALL'){
-       cellPopulations= unique(meta[,cellCol_label_name])   
+       cellPopulations <- unique(meta[,cellCol_label_name])   
       
     } else{
-       cellPopulations=cellSubsets
+       cellPopulations <- cellSubsets
     }
     
     ### get barcodes by cell pop for 
@@ -115,7 +115,7 @@ callPeaks_by_population <- function(ArchRProj,
             tmp[ idx]
            
         }
-        fragsList_by_cell <- mclapply(fragsList, 
+        fragsList_by_cell <- parallel::mclapply(fragsList, 
                                 function(x) subset_Frag(cellNames, x)
                                 )
         #print(fragsList_by_cell)
@@ -152,7 +152,7 @@ callPeaks_by_population <- function(ArchRProj,
     }
     
         
-    scMACs_PeakList <- mclapply(1:length(barcodes_by_cell_pop), 
+    scMACs_PeakList <- parallel::mclapply(1:length(barcodes_by_cell_pop), 
                                 function(ZZ) callPeaks_by_cell_population(fragsList,                                                                    cellNames=barcodes_by_cell_pop[[ZZ]], 
                                                        ArchRProj,
                                                        totalFrags,
