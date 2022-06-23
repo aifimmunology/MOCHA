@@ -11,13 +11,7 @@ calculate_intensities(fragMat, candidatePeaks, FALSE)
 
 \item{candidatePeaks}{a genomic ranges object indicating where to call peaks. This could be a pre-selected peak set or a dynamic bins approach to searching the whole genome.}
 
-\item{normalizeBins}{a boolean indicating whether varying bin widths should be normalized to a fixed width}
-
-\item{theta}{a numeric value indicating the dispersion parameter for 
-the negative binomial distribution maximum estimate}
-
-\item{width}{a numeric value indicating how wide to make the noise 
-estimates for lambda3}
+\item{totalFrags}{a numeric normalizing value, indicating the total # of fragments for a cell pop'n in a sample}
 }
 \value{
 a data.table, countsByBin, that returns the two intensity parameters required

@@ -11,6 +11,8 @@ make_prediction(X, finalModelObject)
 
 \item{finalModel}{is a matrix with coefficients and an index indicating
 the number of cell used to train that model}
+
+\item{thresholdModel}{is an internal threhsod}
 }
 \value{
 the original intensityMatrix with the two intensity parameters required
@@ -20,12 +22,11 @@ that include the prediction probability
 \description{
 \code{make_prediction} is an R helper function, part of the single-cell peak calling
 algorithm scMACS by (XXX et al, 2021) that determines which genomic regions, or bins,
-will be used for de-novo peak calling. The function "make_prediction" applies the
-logistic regression model predictions
+will be used to determine accessibility. The function "make_prediction" applies the
+logistic regression model predictions and then calls peaks that exceed a given
+threshold.
 }
 \details{
 The technical details of the algorithm are found in XX.
 }
-\references{
-XX
-}
+\keyword{internal}
