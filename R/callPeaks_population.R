@@ -71,6 +71,7 @@ callPeaks_by_population <- function(ArchRProj,
     fragsList <- S4Vectors::SimpleList(fragsList)
     thresholdModel = scMACS::thresholdModel
     
+  
     ### obtain meta data from ArchR Project
     meta = getCellColData(ArchRProj)
     
@@ -102,10 +103,10 @@ callPeaks_by_population <- function(ArchRProj,
     
     
     ### call peaks by cell-subsets
+    
 
     callPeaks_by_cell_population <- function(fragsList, cellNames,ArchRProj, totalFrags,
                                             normScale=10^9){
-
         ### subset ArchR Project
         cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
         
@@ -115,6 +116,7 @@ callPeaks_by_population <- function(ArchRProj,
             tmp[ idx]
            
         }
+        # TODO note 
         fragsList_by_cell <- parallel::mclapply(fragsList, 
                                 function(x) subset_Frag(cellNames, x)
                                 )
@@ -124,20 +126,27 @@ callPeaks_by_population <- function(ArchRProj,
         fragsList_by_cell = SimpleList(fragsList_by_cell)
         fragMat <- unlist(fragsList_by_cell)    
 
-        FinalBins <-  determine_dynamic_range(fragsList_by_cell,
-                                         cellSubsetArchR, 
-                                         binSize=500, 
-                                         doBin=FALSE)
+        FinalBins <-  determine_dynamic_range(
+            AllFragmentsList = fragsList_by_cell,
+            ArchRProject = cellSubsetArchR, 
+            binSize = 500, 
+            doBin = FALSE
+        )
 
-        countsMatrix <- calculate_intensities(fragMat, 
-                                              FinalBins,
-                                              totalFrags=totalFrags
-                                            )
+        countsMatrix <- calculate_intensities(
+            fragMat = fragMat,
+            candidatePeaks = FinalBins,
+            totalFrags = totalFrags
+        )
+        
         countsMatrix$TotalIntensity <- countsMatrix$TotalIntensity * StudypreFactor
         countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor    
         
         countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]
-        scMACS_peaks <- make_prediction(countsMatrix, finalModelObject)
+        scMACS_peaks <- make_prediction(
+            X = countsMatrix,
+            finalModelObject = finalModelObject
+        )
 
         if(returnAllPeaks){
             return(scMACS_peaks)
@@ -152,14 +161,19 @@ callPeaks_by_population <- function(ArchRProj,
     }
     
         
-    scMACs_PeakList <- parallel::mclapply(1:length(barcodes_by_cell_pop), 
-                                function(ZZ) callPeaks_by_cell_population(fragsList,                                                                    cellNames=barcodes_by_cell_pop[[ZZ]], 
-                                                       ArchRProj,
-                                                       totalFrags,
-                                            normScale=10^9),
-                                mc.cores =numCores,
-                                mc.preschedule=TRUE,
-                                mc.allow.recursive=FALSE
+    scMACs_PeakList <- lapply(1:length(barcodes_by_cell_pop), 
+                                function(ZZ) {
+                                    callPeaks_by_cell_population(
+                                        fragsList,
+                                        cellNames=barcodes_by_cell_pop[[ZZ]], 
+                                        ArchRProj,
+                                        totalFrags,
+                                        normScale=10^9
+                                    )
+                                # mc.cores =numCores,
+                                # mc.preschedule=TRUE,
+                                # mc.allow.recursive=FALSE
+                                }
     ) 
     
     names(scMACs_PeakList) <- cellPopulations

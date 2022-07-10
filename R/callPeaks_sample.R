@@ -6,7 +6,6 @@
 #'
 #'
 #' @param ArchRProj an ArchR Project 
-#' @param metadf meta data file
 #' @param cellType_Samples vector of strings. CellType samples to call peaks on.
 #' @param metaColumn string indicating which column in the meta data file contains 
 #'        the cell population label
@@ -26,8 +25,7 @@
 #'
 #' @export
 
-callPeaks_by_sample <- function(ArchRProj, 
-                                metadf,
+callPeaks_by_sample <- function(ArchRProj,
                                 cellType_Samples,
                                 metaColumn,
                                 returnAllPeaks=TRUE,
@@ -40,15 +38,20 @@ callPeaks_by_sample <- function(ArchRProj,
     ## across samples by cell types
     
     cellType_Samples <- unique(cellType_Samples)
+    
+    # Get frags where the cellSubsets are pre-grouped cellType_Samples
     frags <- getPopFrags(ArchRProj, 
                          metaColumn = metaColumn, 
                          cellSubsets = cellType_Samples, 
                          numCores= numCores)
+    # Check for and remove celltype_samples for which there are no fragments.
+    frags_no_null <- frags[lengths(frags) != 0]
     
     
-    sample_names <- names(frags)
-    ## identify cell barcodes 
-    normalization_factors <- as.numeric(sapply(frags, length))
+    sample_names <- names(frags_no_null)
+    
+    # calculate normalization factors as the number of fragments for each celltype_samples
+    normalization_factors <- as.integer(sapply(frags_no_null, length))
     
     
     ## add preFactor multiplier across datasets
@@ -64,32 +67,36 @@ callPeaks_by_sample <- function(ArchRProj,
     # ## the barcodes to create 
     # ## different projects per downsample 
 
-    barcodes <- lapply(frags, function (x) unique(x$RG)
-               )
+    barcodes <- lapply(
+        frags_no_null,
+        function(x){
+            unlist(unique(x$RG))
+        }
+    )
     
     subset_ArchR_projects <- lapply(barcodes, function(x) 
-           subsetCells(ArchRProj, x)
-           )
+           ArchR::subsetCells(ArchRProj, x)
+    )
 
-    
-                               
+                           
     ### call peaks using 
     ### scMACS functionalities
-    peak_lists <- parallel::mclapply(1:length(subset_ArchR_projects),
-                           function(x)
-
-                    callPeaks_by_population(ArchRProj=subset_ArchR_projects[[x]],
-                                            cellSubsets=sample_names[x],
-                                            cellCol_label_name=metaColumn,
-                                            returnAllPeaks=TRUE,
-                                            numCores=1,
-                                            totalFrags=normalization_factors[x],
-                                            fragsList =frags[[x]],
-                                            StudypreFactor = study_prefactor
-                           ),
-                          mc.cores=numCores
-
-                        )
+    peak_lists <- lapply(
+        1:length(subset_ArchR_projects),
+        function(x){
+            callPeaks_by_population(
+                ArchRProj=subset_ArchR_projects[[x]],
+                cellSubsets=sample_names[x],
+                cellCol_label_name=metaColumn,
+                returnAllPeaks=TRUE,
+                numCores=1,
+                totalFrags=normalization_factors[x],
+                fragsList=frags_no_null[[x]],
+                StudypreFactor = study_prefactor
+            )
+        }#,
+        #mc.cores=numCores
+    )
     
     rm(subset_ArchR_projects, frags)
     

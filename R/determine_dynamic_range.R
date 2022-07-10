@@ -26,13 +26,14 @@
 
 
 determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500, doBin=FALSE){
-  TotalRange <- scMACS::dynamic_bins(AllFragmentsList = AllFragmentsList,
-                            doBin = doBin,
-                            coreNum = 30)
 
   if(class(AllFragmentsList)!='SimpleList'){
     stop('AllFragmentsList must be a list of arrow files')
   }
+    
+  TotalRange <- scMACS::dynamic_bins(AllFragmentsList = AllFragmentsList,
+                            doBin = doBin,
+                            coreNum = 30)
 
   if(class(ArchRProject)!='ArchRProject'){
     stop('ArchRProject must be an ArchR Project')
@@ -64,9 +65,9 @@ determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500,
 
   FinalBins <- plyranges::stretch(plyranges::anchor_start(RangeBins),
                                   extend = (binSize - end(RangeBins)%% binSize)) %>%
-    plyranges::reduce_ranges() %>% plyranges::slide_ranges(width = binSize, step = binSize)%>% filter(width(.) ==binSize)
+    plyranges::reduce_ranges() %>% plyranges::slide_ranges(width = binSize, step = binSize) %>% plyranges::filter(width(.)==binSize)
     
-  FinalBins<- subsetByOverlaps(FinalBins, blackList, invert=T)
+  FinalBins <- subsetByOverlaps(FinalBins, blackList, invert=T)
 
   return(FinalBins)
 

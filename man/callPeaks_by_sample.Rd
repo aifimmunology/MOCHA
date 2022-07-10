@@ -6,7 +6,6 @@
 \usage{
 callPeaks_by_sample(
   ArchRProj,
-  metadf,
   cellType_Samples,
   metaColumn,
   returnAllPeaks = TRUE,
@@ -16,8 +15,6 @@ callPeaks_by_sample(
 }
 \arguments{
 \item{ArchRProj}{an ArchR Project}
-
-\item{metadf}{meta data file}
 
 \item{cellType_Samples}{vector of strings. CellType samples to call peaks on.}
 

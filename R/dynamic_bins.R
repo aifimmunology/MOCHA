@@ -27,8 +27,8 @@
 
 dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, coreNum, doBin){
 
-  AllFragsList <- mclapply(AllFragmentsList, function(x){
-    reduce_ranges(x, counts = n())
+  AllFragsList <- parallel::mclapply(AllFragmentsList, function(x){
+    plyranges::reduce_ranges(x, counts = plyranges::n())
   }, mc.cores = coreNum)
   AllFrags <- plyranges::bind_ranges(AllFragsList) %>% plyranges::reduce_ranges(counts = sum(counts))
 

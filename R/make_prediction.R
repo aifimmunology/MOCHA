@@ -112,8 +112,7 @@ make_prediction <- function(X, finalModelObject){
     ### Identify cutoff based on 
     ### different abundances 
     newdata = data.frame(Ncells = cell_model)
-    adaptiveThreshold = as.numeric(predict(scMACS::youden_threshold, 
-                                            newdata=newdata))
+    adaptiveThreshold = as.numeric(predict(scMACS::youden_threshold, newdata=newdata))
     
    
     ### Boolean indicating whether 

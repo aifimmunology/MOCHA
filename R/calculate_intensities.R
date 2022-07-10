@@ -17,6 +17,8 @@
 #'
 #' @references XX
 #' 
+#' @import data.table
+#'
 #' @export
 
 calculate_intensities <- function(fragMat,
@@ -76,14 +78,13 @@ calculate_intensities <- function(fragMat,
 
   ### Convert frags per bin matrix into 
   ### a data.table for obtaining cell counts 
-  fragsPerBin = data.table::as.data.table(fragsPerBin)
+  fragsPerBin <- data.table::as.data.table(fragsPerBin)
   
   ### get cell count matrix
-  cell_counts = fragsPerBin[,list(N=.N),
-                            by=list(bin,cell)]
+  cell_counts <- fragsPerBin[, .N, by=list(bin,cell)]
 
   ### include normalized counts 
-  cell_counts$normedFrags= cell_counts$N / (totalFrags / normScale)
+  cell_counts$normedFrags <- cell_counts$N / (totalFrags / normScale)
         
   #### doing bin-level summaries
   setkey(cell_counts, bin)
