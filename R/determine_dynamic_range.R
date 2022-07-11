@@ -7,6 +7,7 @@
 #'
 #'
 #' @param AllFragmentsList: List of fragments by arrow file
+#' @param blackList: The blacklist obtained from the original ArchR Project
 #' @param GeneralWindowSize: Window size for sliding window generated over longer fragments.
 #' @param WindowSizeRange: The sliding window function will generate a smaller window at the end of a longer fragment,
 #if the fragment is not evenly divisible by GeneralWindowSize. If that smaller window is less than or equal to
@@ -25,7 +26,7 @@
 #' @export
 
 
-determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500, doBin=FALSE){
+determine_dynamic_range <- function(AllFragmentsList, blackList, binSize=500, doBin=FALSE){
 
   # if(class(AllFragmentsList)!='SimpleList'){
   #   stop('AllFragmentsList must be a list of arrow files')
@@ -34,10 +35,6 @@ determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500,
   TotalRange <- scMACS::dynamic_bins(AllFragmentsList = AllFragmentsList,
                             doBin = doBin,
                             coreNum = 30)
-
-  if(class(ArchRProject)!='ArchRProject'){
-    stop('ArchRProject must be an ArchR Project')
-  }
 
   if(class(binSize)!='numeric' | binSize <0){
     stop(paste('invalid binSize!: binSize must be an integer value > 0 indicating the width of the genomic region check "binSize=',
@@ -52,8 +49,6 @@ determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500,
   if(class(doBin) != 'logical'){
     stop('doBin user-input must be a TRUE/FALSE boolean input')
   }
-
-  blackList <- getBlacklist(ArchRProject)
 
   #Let's subtract out areas of fragments that overlap with blacklist regions.
   #Let's not remove the region entirely, because the regions may be long or only

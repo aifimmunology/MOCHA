@@ -2,11 +2,12 @@
 #'
 #' @description \code{callPeaks} is the main peak-calling function in scMACS
 #'              that serves as a wrapper function to call peaks provided a set 
-#'              of fragment files and an ArchR Project for meta-data purposes
+#'              of fragment files and cell metadata
 #'
 #'
-#' @param ArchRProj an ArchR Project 
-#' @param cellSubsets vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata
+#' @param cellColData The metadata from the original ArchR Project
+#' @param blackList The blacklist from the original ArchR Project
+#' @param cellPopulation String/character vector. Cell subset for which to call peaks.
 #' @param cellCol_label_name string indicating which column in the meta data file contains 
 #'        the cell population label
 #' 
@@ -27,8 +28,9 @@
 #' @export
 
 callPeaks_by_population <- function(
-    ArchRProj, 
-    cellSubsets,
+    cellColData,
+    blackList,
+    cellPopulation,
     cellCol_label_name,
     returnAllPeaks=FALSE,
     numCores=10,
@@ -36,47 +38,34 @@ callPeaks_by_population <- function(
     fragsList,
     StudypreFactor
 ){
-    
-                               
-    ########################################################################
-    ########################################################################
-    
+
     ### User-input/Parameter Checks
     
-      if(class(cellSubsets)!='character'){
-        stop('cellSubsets must be a vector of strings indicating cell populations')
+      if(class(cellPopulation)!='character'){
+        stop('cellPopulation must be a string indicating cell population')
       }
-    
       if(class(cellCol_label_name)!='character'){
-        stop('cellCol_label_name must be a vector of strings indicating cell populations')      
+        stop('cellCol_label_name must be a string indicating the column in cellColData containing cell population labels')      
       }   
-
-      if(class(ArchRProj)!='ArchRProject'){
-        stop('ArchRProject must be an ArchR Project')
-      } 
       if(is.null(fragsList)){
           stop('Load fragments prior to running scMACS')
           
       }
 
-    ########################################################################
-    ########################################################################
     ## coefficients trained on ~ 3600 frags per cell 
     ## and future datasets need to be calibrated to
     ## these coefficients 
     finalModelObject = scMACS::finalModelObject
     thresholdModel = scMACS::thresholdModel
     
-    ### obtain meta data from ArchR Project
-    meta <- getCellColData(ArchRProj)
-    
-    cellPopulation <- cellSubsets
+    # Rename parameters for downstream use TODO remove in later final cleanup 
+    cellPopulation <- cellPopulation
     
     ### get barcnodes by cell pop for 
     ### peak-calling by different 
     ### cell population 
     
-    cellNames <- row.names(meta)[which(meta[,cellCol_label_name]==cellPopulation)]
+    cellNames <- row.names(cellColData)[which(cellColData[,cellCol_label_name]==cellPopulation)]
 
     cellsPerPop <- length(cellNames)
     
@@ -87,13 +76,11 @@ callPeaks_by_population <- function(
     
     #########################
     #########################
-    #########################
-        
-    normScale <- 10^9   
+    ######################### 
 
     FinalBins <-  determine_dynamic_range(
         AllFragmentsList = fragsList,
-        ArchRProject = ArchRProj, 
+        blackList = blackList,
         binSize = 500, 
         doBin = FALSE
     )

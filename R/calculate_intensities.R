@@ -41,7 +41,7 @@ calculate_intensities <- function(fragMat,
 
   ### set normalization 
   ### scale for fragment counts
-  normScale=10^9
+  normScale <- 10^9
   
   ## transform fragments into data.table
   fragMat_dt <- data.table::as.data.table(fragMat)

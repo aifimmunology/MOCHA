@@ -31,8 +31,11 @@ callPeaks_by_sample <- function(ArchRProj,
                                 returnAllPeaks=TRUE,
                                 numCores=30,
                                 returnFrags=F
-                     
                      ){
+    
+    # Get cell metadata and blacklisted regions from ArchR Project
+    cellColData <- ArchR::getCellColData(ArchRProj)
+    blackList <- ArchR::getBlacklist(ArchRProj)
     
     ## identify cell population to export 
     ## across samples by cell types
@@ -47,18 +50,15 @@ callPeaks_by_sample <- function(ArchRProj,
     # Check for and remove celltype_samples for which there are no fragments.
     frags_no_null <- frags[lengths(frags) != 0]
     
-    
     sample_names <- names(frags_no_null)
     
     # calculate normalization factors as the number of fragments for each celltype_samples
     normalization_factors <- as.integer(sapply(frags_no_null, length))
     
-    
     ## add preFactor multiplier across datasets
-    curr_frags_median <- median(ArchRProj@cellColData$nFrags)
+    curr_frags_median <- median(cellColData$nFrags)
     study_prefactor = 3668/curr_frags_median # training median
     
-    normalization_factors = normalization_factors 
     # ###########################################################
     # ###########################################################
     # ## call scMACS peaks 
@@ -67,31 +67,32 @@ callPeaks_by_sample <- function(ArchRProj,
     # ## the barcodes to create 
     # ## different projects per downsample 
 
-    barcodes <- lapply(
-        frags_no_null,
-        function(x){
-            unlist(unique(x$RG))
-        }
-    )
+#     barcodes <- lapply(
+#         frags_no_null,
+#         function(x){
+#             unlist(unique(x$RG))
+#         }
+#     )
     
-    subset_ArchR_projects <- lapply(barcodes, function(x) 
-           ArchR::subsetCells(ArchRProj, x)
-    )
-
+#     subset_ArchR_projects <- lapply(barcodes, function(x) 
+#            ArchR::subsetCells(ArchRProj, x)
+#     )
+    
     ### This mclapply would parallelize over each sample within a celltype.
     ### Each arrow is a sample so this is allowed
     ### (Arrow files are locked - one access at a time)
     rangeList <- parallel::mclapply(
-        1:length(subset_ArchR_projects),
+        1:length(frags_no_null),
         function(x){
             callPeaks_by_population(
-                ArchRProj=subset_ArchR_projects[[x]],
-                cellSubsets=sample_names[x],
-                cellCol_label_name=metaColumn,
-                returnAllPeaks=TRUE,
-                numCores=1,
-                totalFrags=normalization_factors[x],
-                fragsList=frags_no_null[[x]],
+                cellColData = cellColData, # ArchR::getCellColData(subset_ArchR_projects[[x]]),
+                blackList = blackList,
+                cellPopulation = sample_names[x],
+                cellCol_label_name = metaColumn,
+                returnAllPeaks = TRUE,
+                numCores = 1,
+                totalFrags = normalization_factors[x],
+                fragsList = frags_no_null[[x]],
                 StudypreFactor = study_prefactor
             )
         },
@@ -99,6 +100,7 @@ callPeaks_by_sample <- function(ArchRProj,
     )
     
     names(rangeList) <- sample_names
+
     # Package rangeList into a RaggedExperiment
     ragexp <- RaggedExperiment::RaggedExperiment(
         rangeList
