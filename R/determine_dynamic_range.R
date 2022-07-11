@@ -27,9 +27,9 @@
 
 determine_dynamic_range <- function(AllFragmentsList, ArchRProject, binSize=500, doBin=FALSE){
 
-  if(class(AllFragmentsList)!='SimpleList'){
-    stop('AllFragmentsList must be a list of arrow files')
-  }
+  # if(class(AllFragmentsList)!='SimpleList'){
+  #   stop('AllFragmentsList must be a list of arrow files')
+  # }
     
   TotalRange <- scMACS::dynamic_bins(AllFragmentsList = AllFragmentsList,
                             doBin = doBin,

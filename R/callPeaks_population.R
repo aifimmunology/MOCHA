@@ -26,16 +26,16 @@
 #'
 #' @export
 
-callPeaks_by_population <- function(ArchRProj, 
-                      cellSubsets=NULL,
-                      cellCol_label_name=NULL,
-                      returnAllPeaks=FALSE,
-                      numCores=10,
-                      totalFrags,
-                      fragsList=NULL,
-                      StudypreFactor = NULL
-                     
-                     ){
+callPeaks_by_population <- function(
+    ArchRProj, 
+    cellSubsets,
+    cellCol_label_name,
+    returnAllPeaks=FALSE,
+    numCores=10,
+    totalFrags,
+    fragsList,
+    StudypreFactor
+){
     
                                
     ########################################################################
@@ -58,131 +58,65 @@ callPeaks_by_population <- function(ArchRProj,
           stop('Load fragments prior to running scMACS')
           
       }
-    
 
-    
-                               
     ########################################################################
     ########################################################################
     ## coefficients trained on ~ 3600 frags per cell 
     ## and future datasets need to be calibrated to
     ## these coefficients 
     finalModelObject = scMACS::finalModelObject
-    fragsList <- S4Vectors::SimpleList(fragsList)
     thresholdModel = scMACS::thresholdModel
     
-  
     ### obtain meta data from ArchR Project
-    meta = getCellColData(ArchRProj)
+    meta <- getCellColData(ArchRProj)
     
-    if(cellSubsets=='ALL'){
-       cellPopulations <- unique(meta[,cellCol_label_name])   
-      
-    } else{
-       cellPopulations <- cellSubsets
-    }
+    cellPopulation <- cellSubsets
     
-    ### get barcodes by cell pop for 
+    ### get barcnodes by cell pop for 
     ### peak-calling by different 
     ### cell population 
     
-    barcodes_by_cell_pop <- lapply(cellPopulations, function(x)
-        row.names(meta)[which(meta[,cellCol_label_name]==x)]
-           )
-    
-    ### create named list 
-    names(barcodes_by_cell_pop) <- cellPopulations  
+    cellNames <- row.names(meta)[which(meta[,cellCol_label_name]==cellPopulation)]
 
-    cellsPerPop <- sapply(barcodes_by_cell_pop , function(x) length(x)
-           )
+    cellsPerPop <- length(cellNames)
     
-    df <- cbind(cellPopulations, cellsPerPop)
+    df <- cbind(cellPopulation, cellsPerPop)
         
-    cat('\n\nRunning peak calls for the following cell populations:\n')
+    cat('\n\nRunning peak calls for the following cell population:\n')
     print(df)
     
-    
-    ### call peaks by cell-subsets
-    
-
-    callPeaks_by_cell_population <- function(fragsList, cellNames,ArchRProj, totalFrags,
-                                            normScale=10^9){
-        ### subset ArchR Project
-        cellSubsetArchR <- subsetCells(ArchRProj, cellNames=cellNames)
+    #########################
+    #########################
+    #########################
         
-        subset_Frag <- function(cellNames, tmp){
-            tmp_df <- GenomicRanges::as.data.frame(tmp)
-            idx <- which(tmp_df$RG %in% cellNames)
-            tmp[ idx]
-           
-        }
-        # TODO note 
-        fragsList_by_cell <- parallel::mclapply(fragsList, 
-                                function(x) subset_Frag(cellNames, x)
-                                )
-        #print(fragsList_by_cell)
-                                         
+    normScale <- 10^9   
 
-        fragsList_by_cell = SimpleList(fragsList_by_cell)
-        fragMat <- unlist(fragsList_by_cell)    
+    FinalBins <-  determine_dynamic_range(
+        AllFragmentsList = fragsList,
+        ArchRProject = ArchRProj, 
+        binSize = 500, 
+        doBin = FALSE
+    )
 
-        FinalBins <-  determine_dynamic_range(
-            AllFragmentsList = fragsList_by_cell,
-            ArchRProject = cellSubsetArchR, 
-            binSize = 500, 
-            doBin = FALSE
-        )
+    countsMatrix <- calculate_intensities(
+        fragMat = fragsList,
+        candidatePeaks = FinalBins,
+        totalFrags = totalFrags
+    )
 
-        countsMatrix <- calculate_intensities(
-            fragMat = fragMat,
-            candidatePeaks = FinalBins,
-            totalFrags = totalFrags
-        )
-        
-        countsMatrix$TotalIntensity <- countsMatrix$TotalIntensity * StudypreFactor
-        countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor    
-        
-        countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]
-        scMACS_peaks <- make_prediction(
-            X = countsMatrix,
-            finalModelObject = finalModelObject
-        )
+    countsMatrix$TotalIntensity <- countsMatrix$TotalIntensity * StudypreFactor
+    countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor    
 
-        if(returnAllPeaks){
-            return(scMACS_peaks)
+    countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]
+    scMACS_peaks <- make_prediction(
+        X = countsMatrix,
+        finalModelObject = finalModelObject
+    )
 
-        } else {
-            scMACS_peaks = scMACS_peaks[scMACS_peaks$peak==T]
-            return(scMACS_peaks)
-
-        }
-
-
+    if(!returnAllPeaks){
+        scMACS_peaks <- scMACS_peaks[scMACS_peaks$peak==T]
     }
     
-        
-    scMACs_PeakList <- lapply(1:length(barcodes_by_cell_pop), 
-                                function(ZZ) {
-                                    callPeaks_by_cell_population(
-                                        fragsList,
-                                        cellNames=barcodes_by_cell_pop[[ZZ]], 
-                                        ArchRProj,
-                                        totalFrags,
-                                        normScale=10^9
-                                    )
-                                # mc.cores =numCores,
-                                # mc.preschedule=TRUE,
-                                # mc.allow.recursive=FALSE
-                                }
-    ) 
-    
-    names(scMACs_PeakList) <- cellPopulations
-                                              
-                           
-    ########################################################################
-    ########################################################################
-
-
-    return(scMACs_PeakList)
+    return(scMACS_peaks)
 
 }

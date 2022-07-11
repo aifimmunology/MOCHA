@@ -78,10 +78,10 @@ callPeaks_by_sample <- function(ArchRProj,
            ArchR::subsetCells(ArchRProj, x)
     )
 
-                           
-    ### call peaks using 
-    ### scMACS functionalities
-    peak_lists <- lapply(
+    ### This mclapply would parallelize over each sample within a celltype.
+    ### Each arrow is a sample so this is allowed
+    ### (Arrow files are locked - one access at a time)
+    rangeList <- parallel::mclapply(
         1:length(subset_ArchR_projects),
         function(x){
             callPeaks_by_population(
@@ -94,13 +94,16 @@ callPeaks_by_sample <- function(ArchRProj,
                 fragsList=frags_no_null[[x]],
                 StudypreFactor = study_prefactor
             )
-        }#,
-        #mc.cores=numCores
+        },
+        mc.cores = numCores
     )
     
-    rm(subset_ArchR_projects, frags)
+    names(rangeList) <- sample_names
+    # Package rangeList into a RaggedExperiment
+    ragexp <- RaggedExperiment::RaggedExperiment(
+        rangeList
+    )
     
-    
-    return(peak_lists)
+    return(ragexp)
 
 }
