@@ -48,32 +48,12 @@ callPeaks_by_sample <- function(ArchRProj,
         overlapList = 50
     )
     
-    # Check for and remove celltype_samples for which there are no fragments.
+    # Check for and remove celltype-sample groups for which there are no fragments.
     fragsNoNull <- frags[lengths(frags) != 0]
     
-    # Rename frags by cell population
-    renamedFrags <- lapply(
-        1:length(fragsNoNull),
-        function(y){
-            # Split out celltype and sample from the name
-            x <- fragsNoNull[y]
-            print(names(x))
-            celltype_sample <- names(x)
-            splits <- unlist(str_split(celltype_sample, "#"))
-            celltype <- splits[1]
-            sample <- unlist(str_split(splits[2], "__"))[1]
-            # Rename the fragments with just the sample
-            names(x) <- sample
-            # Return as a list named for celltype
-            output <- list(x)
-            names(output) <- celltype
-            output
-        }
-    )
-    
-    # Group frags by cell population
-    renamedFrags <- unlist(renamedFrags, recursive=FALSE)
-    splitFrags <- split(renamedFrags, f=names(renamedFrags))
+    # Split the fragments list into a list of lists per cell population
+    splitFrags <- splitFragsByCellPop(fragsNoNull)
+    print(paste(c("Cell populations for peak calling: ", names(splitFrags)), collapse=" "))
     
     # Main loop over all cell populations
     experimentList <- list()

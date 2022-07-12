@@ -1,4 +1,30 @@
-
+splitFragsByCellPop <- function(frags) {
+    
+    # Rename frags by cell population
+    renamedFrags <- lapply(
+        1:length(frags),
+        function(y){
+            # Split out celltype and sample from the name
+            x <- frags[y]
+            print(names(x))
+            celltype_sample <- names(x)
+            splits <- unlist(str_split(celltype_sample, "#"))
+            celltype <- splits[1]
+            sample <- unlist(str_split(splits[2], "__"))[1]
+            # Rename the fragments with just the sample
+            names(x) <- sample
+            # Return as a list named for celltype
+            output <- list(x)
+            names(output) <- celltype
+            output
+        }
+    )
+    
+    # Group frags by cell population
+    renamedFrags <- unlist(renamedFrags, recursive=FALSE)
+    splitFrags <- split(renamedFrags, f=names(renamedFrags))
+    return(splitFrags)
+}
 
 
 
