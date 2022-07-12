@@ -5,8 +5,8 @@
 #'              of fragment files and cell metadata
 #'
 #'
-#' @param cellColData The metadata from the original ArchR Project
-#' @param blackList The blacklist from the original ArchR Project
+#' @param cellColData The cell-level metadata from the original ArchR Project
+#' @param blackList A GRanges object containing a blacklist of regions to exclude
 #' @param cellPopulation String/character vector. Cell subset for which to call peaks.
 #' @param cellCol_label_name string indicating which column in the meta data file contains 
 #'        the cell population label

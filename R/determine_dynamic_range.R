@@ -7,7 +7,7 @@
 #'
 #'
 #' @param AllFragmentsList: List of fragments by arrow file
-#' @param blackList: The blacklist obtained from the original ArchR Project
+#' @param blackList A GRanges object containing a blacklist of regions to exclude
 #' @param GeneralWindowSize: Window size for sliding window generated over longer fragments.
 #' @param WindowSizeRange: The sliding window function will generate a smaller window at the end of a longer fragment,
 #if the fragment is not evenly divisible by GeneralWindowSize. If that smaller window is less than or equal to
