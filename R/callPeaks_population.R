@@ -8,9 +8,8 @@
 #' @param cellColData The cell-level metadata from the original ArchR Project
 #' @param blackList A GRanges object containing a blacklist of regions to exclude
 #' @param cellPopulation String/character vector. Cell subset for which to call peaks.
-#' @param cellCol_label_name string indicating which column in the meta data file contains 
-#'        the cell population label
-#' 
+#' @param cellPopLabel string indicating which column in the ArchRProject metadata contains 
+#'        the cell population label.
 #' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
 #' 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
@@ -28,10 +27,10 @@
 #' @export
 
 callPeaks_by_population <- function(
-    cellColData,
+    # cellColData,
     blackList,
-    cellPopulation,
-    cellCol_label_name,
+    # cellPopulation,
+    # cellPopLabel,
     returnAllPeaks=FALSE,
     numCores=10,
     totalFrags,
@@ -41,12 +40,12 @@ callPeaks_by_population <- function(
 
     ### User-input/Parameter Checks
     
-      if(class(cellPopulation)!='character'){
-        stop('cellPopulation must be a string indicating cell population')
-      }
-      if(class(cellCol_label_name)!='character'){
-        stop('cellCol_label_name must be a string indicating the column in cellColData containing cell population labels')      
-      }   
+      # if(class(cellPopulation)!='character'){
+      #   stop('cellPopulation must be a string indicating cell population')
+      # }
+      # if(class(cellPopLabel)!='character'){
+      #   stop('cellPopLabel must be a string indicating the column in cellColData containing cell population labels')      
+      # }   
       if(is.null(fragsList)){
           stop('Load fragments prior to running scMACS')
           
@@ -59,20 +58,20 @@ callPeaks_by_population <- function(
     thresholdModel = scMACS::thresholdModel
     
     # Rename parameters for downstream use TODO remove in later final cleanup 
-    cellPopulation <- cellPopulation
+#    cellPopulation <- cellPopulation
     
-    ### get barcnodes by cell pop for 
+    ### get barcodes by cell pop for 
     ### peak-calling by different 
     ### cell population 
-    
-    cellNames <- row.names(cellColData)[which(cellColData[,cellCol_label_name]==cellPopulation)]
+# TODO remove redundant code, these variables aren't used downstream    
+#     cellNames <- row.names(cellColData)[which(cellColData[,cellPopLabel]==cellPopulation)]
 
-    cellsPerPop <- length(cellNames)
+#     cellsPerPop <- length(cellNames)
     
-    df <- cbind(cellPopulation, cellsPerPop)
+#     df <- cbind(cellPopulation, cellsPerPop)
         
-    cat('\n\nRunning peak calls for the following cell population:\n')
-    print(df)
+#     cat('\n\nRunning peak calls for the following cell population:\n')
+#     print(df)
     
     #########################
     #########################
