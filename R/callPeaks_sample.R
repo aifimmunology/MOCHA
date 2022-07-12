@@ -35,6 +35,7 @@ callPeaks_by_sample <- function(ArchRProj,
     blackList <- ArchR::getBlacklist(ArchRProj)
 
     # Get frags grouped by cell population and sample
+    # This will also validate the input cellPopulations
     frags <- getPopFrags(
         ArchRProj = ArchRProj,
         metaColumn = cellPopLabel,
@@ -48,65 +49,104 @@ callPeaks_by_sample <- function(ArchRProj,
     )
     
     # Check for and remove celltype_samples for which there are no fragments.
-    frags_no_null <- frags[lengths(frags) != 0]
+    fragsNoNull <- frags[lengths(frags) != 0]
     
-    # Get our celltype_sample groupings
-    sample_names <- names(frags_no_null)
-    
-    # Calculate normalization factors as the number of fragments for each celltype_samples
-    normalization_factors <- as.integer(sapply(frags_no_null, length))
-    
-    # Add prefactor multiplier across datasets
-    curr_frags_median <- median(cellColData$nFrags)
-    study_prefactor = 3668/curr_frags_median # Training median
-    
-    # ###########################################################
-    # ###########################################################
-    # ## call scMACS peaks 
-
-    # ## subset archr projects using 
-    # ## the barcodes to create 
-    # ## different projects per downsample 
-
-#     barcodes <- lapply(
-#         frags_no_null,
-#         function(x){
-#             unlist(unique(x$RG))
-#         }
-#     )
-    
-#     subset_ArchR_projects <- lapply(barcodes, function(x) 
-#            ArchR::subsetCells(ArchRProj, x)
-#     )
-    
-    # This mclapply would parallelize over each sample within a celltype.
-    # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time)
-    rangeList <- parallel::mclapply(
-        1:length(frags_no_null),
-        function(x){
-            callPeaks_by_population(
-                # cellColData = cellColData,
-                blackList = blackList,
-                # cellPopulation = sample_names[x],
-                # cellPopLabel = cellPopLabel,
-                returnAllPeaks = TRUE,
-                numCores = numCores,
-                totalFrags = normalization_factors[x],
-                fragsList = frags_no_null[[x]],
-                StudypreFactor = study_prefactor
-            )
-        },
-        mc.cores = numCores
+    # Rename frags by cell population
+    renamedFrags <- lapply(
+        1:length(fragsNoNull),
+        function(y){
+            # Split out celltype and sample from the name
+            x <- fragsNoNull[y]
+            print(names(x))
+            celltype_sample <- names(x)
+            splits <- unlist(str_split(celltype_sample, "#"))
+            celltype <- splits[1]
+            sample <- unlist(str_split(splits[2], "__"))[1]
+            # Rename the fragments with just the sample
+            names(x) <- sample
+            # Return as a list named for celltype
+            output <- list(x)
+            names(output) <- celltype
+            output
+        }
     )
+    # Group them by cell population
+    renamedFrags <- unlist(renamedFrags, recursive=FALSE)
+    splitFrags <- split(renamedFrags, f=names(renamedFrags))
     
-    names(rangeList) <- sample_names
+    # Main loop over all cell populations
+    experimentList <- list()
+    for (cellPop in names(splitFrags)){
+        
+        print(str_interp("Calling peaks for cell population ${cellPop}"))
+        
+        # Get our fragments for this cellPop
+        popFrags <- unlist(splitFrags[[cellPop]])
+        
+        # Simplify sample names to remove everything before the first "."
+        sampleNames <-  gsub("^([^.]+).", "", names(popFrags))
+        names(popFrags) <- sampleNames
+        
+        # Calculate normalization factors as the number of fragments for each celltype_samples
+        normalization_factors <- as.integer(sapply(popFrags, length))
 
-    # Package rangeList into a RaggedExperiment
-    ragexp <- RaggedExperiment::RaggedExperiment(
-        rangeList
-    )
+        # Add prefactor multiplier across datasets
+        curr_frags_median <- median(cellColData$nFrags)
+        study_prefactor = 3668/curr_frags_median # Training median
+
+        # ###########################################################
+        # ###########################################################
+        # ## call scMACS peaks 
+
+        # ## subset archr projects using 
+        # ## the barcodes to create 
+        # ## different projects per downsample 
+
+    #     barcodes <- lapply(
+    #         popFrags,
+    #         function(x){
+    #             unlist(unique(x$RG))
+    #         }
+    #     )
+
+    #     subset_ArchR_projects <- lapply(barcodes, function(x) 
+    #            ArchR::subsetCells(ArchRProj, x)
+    #     )
+
+
+        # This mclapply would parallelize over each sample within a celltype.
+        # Each arrow is a sample so this is allowed
+        # (Arrow files are locked - one access at a time)
+        peaksGRangesList <- parallel::mclapply(
+            1:length(popFrags),
+            function(x){
+                callPeaks_by_population(
+                    # cellColData = cellColData,
+                    blackList = blackList,
+                    # cellPopulation = sampleNames[x],
+                    # cellPopLabel = cellPopLabel,
+                    returnAllPeaks = TRUE,
+                    numCores = numCores,
+                    totalFrags = normalization_factors[x],
+                    fragsList = popFrags[[x]],
+                    StudypreFactor = study_prefactor
+                )
+            },
+            mc.cores = numCores
+        )
+
+        names(peaksGRangesList) <- sampleNames
+
+        # Package rangeList into a RaggedExperiment
+        ragExp <- RaggedExperiment::RaggedExperiment(
+            peaksGRangesList
+        )
+        
+        # And add it to the experimentList for this cell population
+        experimentList <- append(experimentList, ragExp)
+    }
     
-    return(ragexp)
-
+    # TODO: Add experimentList to MultiAssayExperiment
+    names(experimentList) <- names(splitFrags)
+    return(experimentList)
 }
