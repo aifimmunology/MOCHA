@@ -70,7 +70,8 @@ callPeaks_by_sample <- function(ArchRProj,
             output
         }
     )
-    # Group them by cell population
+    
+    # Group frags by cell population
     renamedFrags <- unlist(renamedFrags, recursive=FALSE)
     splitFrags <- split(renamedFrags, f=names(renamedFrags))
     
@@ -94,37 +95,14 @@ callPeaks_by_sample <- function(ArchRProj,
         curr_frags_median <- median(cellColData$nFrags)
         study_prefactor = 3668/curr_frags_median # Training median
 
-        # ###########################################################
-        # ###########################################################
-        # ## call scMACS peaks 
-
-        # ## subset archr projects using 
-        # ## the barcodes to create 
-        # ## different projects per downsample 
-
-    #     barcodes <- lapply(
-    #         popFrags,
-    #         function(x){
-    #             unlist(unique(x$RG))
-    #         }
-    #     )
-
-    #     subset_ArchR_projects <- lapply(barcodes, function(x) 
-    #            ArchR::subsetCells(ArchRProj, x)
-    #     )
-
-
-        # This mclapply would parallelize over each sample within a celltype.
+        # This mclapply will parallelize over each sample within a celltype.
         # Each arrow is a sample so this is allowed
         # (Arrow files are locked - one access at a time)
         peaksGRangesList <- parallel::mclapply(
             1:length(popFrags),
             function(x){
                 callPeaks_by_population(
-                    # cellColData = cellColData,
                     blackList = blackList,
-                    # cellPopulation = sampleNames[x],
-                    # cellPopLabel = cellPopLabel,
                     returnAllPeaks = TRUE,
                     numCores = numCores,
                     totalFrags = normalization_factors[x],
@@ -146,11 +124,14 @@ callPeaks_by_sample <- function(ArchRProj,
         experimentList <- append(experimentList, ragExp)
     }
     
-    # TODO: Add experimentList to MultiAssayExperiment
+    # Add experimentList to MultiAssayExperiment
     names(experimentList) <- names(splitFrags)
-    browser()
     results <- MultiAssayExperiment::MultiAssayExperiment(
         experiments = experimentList
     )
+    
+    # TODO: Automate ArchR cell-metadata to sample-level metadata
+    # Adding this sample-metadata as colData to the MultiAssayExperiment 
+    # necessary for downstream steps
     return(results)
 }

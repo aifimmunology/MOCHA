@@ -4,14 +4,8 @@
 #'              that serves as a wrapper function to call peaks provided a set 
 #'              of fragment files and cell metadata
 #'
-#'
-#' @param cellColData The cell-level metadata from the original ArchR Project
 #' @param blackList A GRanges object containing a blacklist of regions to exclude
-#' @param cellPopulation String/character vector. Cell subset for which to call peaks.
-#' @param cellPopLabel string indicating which column in the ArchRProject metadata contains 
-#'        the cell population label.
 #' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
-#' 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'                 multiple cell populations 
 #'
@@ -26,10 +20,7 @@
 #'
 
 callPeaks_by_population <- function(
-    # cellColData,
     blackList,
-    # cellPopulation,
-    # cellPopLabel,
     returnAllPeaks=FALSE,
     numCores=10,
     totalFrags,
@@ -37,44 +28,16 @@ callPeaks_by_population <- function(
     StudypreFactor
 ){
 
-    ### User-input/Parameter Checks
-    
-      # if(class(cellPopulation)!='character'){
-      #   stop('cellPopulation must be a string indicating cell population')
-      # }
-      # if(class(cellPopLabel)!='character'){
-      #   stop('cellPopLabel must be a string indicating the column in cellColData containing cell population labels')      
-      # }   
       if(is.null(fragsList)){
           stop('Load fragments prior to running scMACS')
           
       }
 
-    ## coefficients trained on ~ 3600 frags per cell 
-    ## and future datasets need to be calibrated to
-    ## these coefficients 
+    # Coefficients trained on ~ 3600 frags per cell 
+    # Future datasets need to be calibrated to
+    # these coefficients 
     finalModelObject = scMACS::finalModelObject
     thresholdModel = scMACS::thresholdModel
-    
-    # Rename parameters for downstream use TODO remove in later final cleanup 
-#    cellPopulation <- cellPopulation
-    
-    ### get barcodes by cell pop for 
-    ### peak-calling by different 
-    ### cell population 
-# TODO remove redundant code, these variables aren't used downstream    
-#     cellNames <- row.names(cellColData)[which(cellColData[,cellPopLabel]==cellPopulation)]
-
-#     cellsPerPop <- length(cellNames)
-    
-#     df <- cbind(cellPopulation, cellsPerPop)
-        
-#     cat('\n\nRunning peak calls for the following cell population:\n')
-#     print(df)
-    
-    #########################
-    #########################
-    ######################### 
 
     FinalBins <-  determine_dynamic_range(
         AllFragmentsList = fragsList,
