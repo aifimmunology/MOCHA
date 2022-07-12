@@ -6,12 +6,14 @@
 \usage{
 determine_dynamic_range(
   AllFragmentsList,
-  ArchRProject,
+  blackList,
   binSize = 500,
   doBin = FALSE
 )
 }
 \arguments{
+\item{blackList}{A GRanges object containing a blacklist of regions to exclude}
+
 \item{AllFragmentsList:}{List of fragments by arrow file}
 
 \item{GeneralWindowSize:}{Window size for sliding window generated over longer fragments.}

@@ -5,23 +5,16 @@
 \title{\code{callPeaks}}
 \usage{
 callPeaks_by_population(
-  ArchRProj,
-  cellSubsets = NULL,
-  cellCol_label_name = NULL,
+  blackList,
   returnAllPeaks = FALSE,
   numCores = 10,
   totalFrags,
-  fragsList = NULL,
-  StudypreFactor = NULL
+  fragsList,
+  StudypreFactor
 )
 }
 \arguments{
-\item{ArchRProj}{an ArchR Project}
-
-\item{cellSubsets}{vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata}
-
-\item{cellCol_label_name}{string indicating which column in the meta data file contains 
-the cell population label}
+\item{blackList}{A GRanges object containing a blacklist of regions to exclude}
 
 \item{returnAllPeaks}{boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks.}
 
@@ -31,6 +24,13 @@ multiple cell populations}
 \item{totalFrags}{# of fragments in that sample for that cell population}
 
 \item{StudypreFactor}{ratio of average signal between new study and training set}
+
+\item{cellColData}{The cell-level metadata from the original ArchR Project}
+
+\item{cellPopulation}{String/character vector. Cell subset for which to call peaks.}
+
+\item{cellPopLabel}{string indicating which column in the ArchRProject metadata contains 
+the cell population label.}
 }
 \value{
 scMACs_PeakList an list containing peak calls for each cell population passed on in the 
@@ -39,7 +39,7 @@ scMACs_PeakList an list containing peak calls for each cell population passed on
 \description{
 \code{callPeaks} is the main peak-calling function in scMACS
              that serves as a wrapper function to call peaks provided a set 
-             of fragment files and an ArchR Project for meta-data purposes
+             of fragment files and cell metadata
 }
 \details{
 The technical details of the algorithm are found in XX.

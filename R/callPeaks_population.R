@@ -24,7 +24,6 @@
 #'
 #' @references XX
 #'
-#' @export
 
 callPeaks_by_population <- function(
     # cellColData,

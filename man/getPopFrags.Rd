@@ -2,7 +2,7 @@
 % Please edit documentation in R/getPopFrags.R
 \name{getPopFrags}
 \alias{getPopFrags}
-\title{\code{getPopFrags}}
+\title{Extract fragments by populations from an ArchR Project}
 \usage{
 getPopFrags(
   ArchRProj,
@@ -10,33 +10,46 @@ getPopFrags(
   cellSubsets = "ALL",
   region = NULL,
   numCores = 1,
-  NormMethod = "NFrags",
+  sampleSpecific = TRUE,
+  NormMethod = "nfrags",
   blackList = NULL,
   overlapList = 50
 )
 }
 \arguments{
-\item{ArchRProj}{an ArchR Project}
+\item{ArchRProj}{The ArchR Project.}
 
-\item{metaColumn}{a string indicating which column to use to extract cells}
+\item{metaColumn}{The name of metadata column that contains the populations
+of cells you want to merge and export.}
 
-\item{cellSubsets}{vector of strings. Cell subsets for which to call peaks. Optional, if cellSubsets='ALL', then peak calling is done on all cell populations in the ArchR project metadata}
+\item{cellSubsets}{Default is 'ALL'. If you want to export only some groups,
+then give it a list of group names. This needs to be unique - no duplicated
+names. This list of group names must be identical to names that appear in
+the metadata column of the ArchR Project (e.g. metaColumn).}
 
-\item{region}{a chromosomal location. If NULL, it pull from the entire genome.}
+\item{region}{Optional parameter. Set this if you only want to extract
+fragments from particular regions of the genome. Format should be as a
+string (e.g. 'chr1:1000-2000'), or a GRanges object.}
 
-\item{numCores}{integer number of cores to parallelize on}
+\item{numCores}{Number of cores to use.}
 
-\item{NormMethod}{= string indicating which normalization method to use. For scMACS modeling
-we require the nFrags normalization}
+\item{sampleSpecific}{Set to TRUE to further subset cells by sample}
 
-\item{overlapList}{integer indicating acceptable overlap with blacklist regions in bp}
+\item{NormMethod}{Normalization method. Can be either "nFrags","nCells", or
+"Median".}
 
-\item{blacklist}{a granges object indicating the blacklist region}
+\item{blackList}{Blacklisted region to filter out. Default is to not filter
+out anything (i.e. NULL). Input should be provided as a GRanges object. Any
+fragments with more than a certain overlap will be thrown out.}
+
+\item{overlapList}{The minimum overlap necessary for a fragment marked as
+overlapping with the blacklist region and thus thrown out.}
 }
 \value{
-a list of fragments with a given normalization factor.
+A list of GRanges containing fragments. Each GRanges corresponds to a
+  population defined by cellSubsets (and sample, if
+  \code{sampleSpecific=TRUE})
 }
 \description{
-\code{getPopFrags} is an R helper function that extracts fragments  
-             for a cell population from an archR Project
+\code{getPopFrags} returns a list of fragments per cell subset as a GRanges.
 }
