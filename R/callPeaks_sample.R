@@ -148,5 +148,9 @@ callPeaks_by_sample <- function(ArchRProj,
     
     # TODO: Add experimentList to MultiAssayExperiment
     names(experimentList) <- names(splitFrags)
-    return(experimentList)
+    browser()
+    results <- MultiAssayExperiment::MultiAssayExperiment(
+        experiments = experimentList
+    )
+    return(results)
 }
