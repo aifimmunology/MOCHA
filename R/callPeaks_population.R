@@ -28,11 +28,6 @@ callPeaks_by_population <- function(
     StudypreFactor
 ){
 
-      if(is.null(fragsList)){
-          stop('Load fragments prior to running scMACS')
-          
-      }
-
     # Coefficients trained on ~ 3600 frags per cell 
     # Future datasets need to be calibrated to
     # these coefficients 
