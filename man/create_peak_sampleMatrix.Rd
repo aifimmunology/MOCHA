@@ -4,15 +4,15 @@
 \alias{create_peak_sampleMatrix}
 \title{\code{create_peak_sampleMatrix}}
 \usage{
-create_peak_sampleMatrix(sample_specific_peaks, union_peaks)
+create_peak_sampleMatrix(peakCallResults, cellPopulation, reproduciblePeaks)
 }
 \arguments{
-\item{sample_specific_peaks}{output of calls_peaks_by_sample (peaks only)}
+\item{peakCallResults}{output of calls_peaks_by_sample}
 
-\item{union_peaks:}{a vector containing the tileIDs to subset the peak matrix}
+\item{reproduciblePeaks}{a vector containing the tileIDs to subset the peak matrix}
 }
 \value{
-sample_peak_matrix a sample X peak matrix containing observed 
+samplePeakIntensityMat a sample X peak matrix containing observed 
         measurements for each sample at each peak.
 }
 \description{
