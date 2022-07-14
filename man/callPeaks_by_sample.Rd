@@ -8,9 +8,7 @@ callPeaks_by_sample(
   ArchRProj,
   cellPopLabel,
   cellPopulations = "ALL",
-  returnAllPeaks = TRUE,
-  numCores = 30,
-  returnFrags = F
+  numCores = 30
 )
 }
 \arguments{
@@ -21,12 +19,8 @@ the cell population label.}
 
 \item{cellPopulations}{vector of strings. Cell subsets for which to call peaks. This list of group names must be identical to names that appear in the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak calling is done on all cell populations in the ArchR project metadata. Default is 'ALL'.}
 
-\item{returnAllPeaks}{boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks.}
-
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populations}
-
-\item{returnFrags}{boolean. Determines if fragment files should be returned}
 }
 \value{
 

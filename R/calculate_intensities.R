@@ -18,7 +18,9 @@
 #' @references XX
 #' 
 #' @import data.table
-#'
+#' 
+#' @noRd
+#' 
 
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,

@@ -18,6 +18,8 @@
 #'
 #' @references XX
 #'
+#' @noRd
+#' 
 
 callPeaks_by_population <- function(
     blackList,
@@ -34,14 +36,14 @@ callPeaks_by_population <- function(
     finalModelObject = scMACS::finalModelObject
     thresholdModel = scMACS::thresholdModel
 
-    FinalBins <-  determine_dynamic_range(
+    FinalBins <-  scMACS:::determine_dynamic_range(
         AllFragmentsList = fragsList,
         blackList = blackList,
         binSize = 500, 
         doBin = FALSE
     )
 
-    countsMatrix <- calculate_intensities(
+    countsMatrix <- scMACS:::calculate_intensities(
         fragMat = fragsList,
         candidatePeaks = FinalBins,
         totalFrags = totalFrags
@@ -51,7 +53,7 @@ callPeaks_by_population <- function(
     countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor    
 
     countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]
-    scMACS_peaks <- make_prediction(
+    scMACS_peaks <- scMACS:::make_prediction(
         X = countsMatrix,
         finalModelObject = finalModelObject
     )

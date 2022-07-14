@@ -18,7 +18,8 @@
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
-#' @keywords internal 
+#' @noRd
+#'
 
 make_prediction <- function(X, finalModelObject){
 

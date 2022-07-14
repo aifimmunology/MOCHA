@@ -8,11 +8,9 @@
 #' @param ArchRProj an ArchR Project 
 #' @param cellPopulations vector of strings. Cell subsets for which to call peaks. This list of group names must be identical to names that appear in the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak calling is done on all cell populations in the ArchR project metadata. Default is 'ALL'.
 #' @param cellPopLabel string indicating which column in the ArchRProject metadata contains 
-#'        the cell population label.
-#' @param returnAllPeaks boolean. Indicates whether scMACS should return object containing all genomic regions or just the positive (+) called peaks. Default to the latter, only positive peaks. 
+#'        the cell population label. 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'                 multiple cell populations
-#' @param returnFrags boolean. Determines if fragment files should be returned
 #'
 #' @return 
 #'
@@ -25,9 +23,8 @@
 callPeaks_by_sample <- function(ArchRProj,
                                 cellPopLabel,
                                 cellPopulations = "ALL",
-                                returnAllPeaks = TRUE,
-                                numCores = 30,
-                                returnFrags = F
+                                # returnAllPeaks = TRUE,
+                                numCores = 30
                      ){
     
     # Get cell metadata and blacklisted regions from ArchR Project
@@ -105,7 +102,7 @@ callPeaks_by_sample <- function(ArchRProj,
     }
     
     # Add experimentList to MultiAssayExperiment
-    names(experimentList) <- names(splitFrags)
+    names(experimentList) <- names(splitFrags) # DC MAIT
     results <- MultiAssayExperiment::MultiAssayExperiment(
         experiments = experimentList
     )

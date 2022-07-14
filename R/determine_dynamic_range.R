@@ -22,7 +22,9 @@
 #' @details The technical details of the algorithm are found in XX.
 #'
 #' @references XX
-#'
+#' 
+#' @noRd
+#' 
 
 
 determine_dynamic_range <- function(AllFragmentsList, blackList, binSize=500, doBin=FALSE){
@@ -31,7 +33,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize=500, do
   #   stop('AllFragmentsList must be a list of arrow files')
   # }
     
-  TotalRange <- scMACS::dynamic_bins(AllFragmentsList = AllFragmentsList,
+  TotalRange <- scMACS:::dynamic_bins(AllFragmentsList = AllFragmentsList,
                             doBin = doBin,
                             coreNum = 30)
 
