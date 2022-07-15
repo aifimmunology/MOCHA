@@ -20,7 +20,8 @@
 create_peak_sampleMatrix <- function(
     peakCallResults,
     cellPopulation,
-    reproduciblePeaks
+    reproduciblePeaks,
+    NAtoZero = TRUE
 ){
     
     # Get the RaggedExperiment for this cellPopulation
@@ -30,8 +31,10 @@ create_peak_sampleMatrix <- function(
     samplePeakIntensityMat <- RaggedExperiment::compactAssay(
         peaksExperiment, i="TotalIntensity")
     
-    # Replace NAs with zeroes for zero-inflated hypothesis testing 
-    samplePeakIntensityMat[is.na(samplePeakIntensityMat)] <- 0
+    if (NAtoZero) {
+        # Replace NAs with zeroes for zero-inflated hypothesis testing 
+        samplePeakIntensityMat[is.na(samplePeakIntensityMat)] <- 0
+    }
     
     # Filter to just peaks in the given reproduciblePeaks
     samplePeakIntensityMat <- samplePeakIntensityMat[reproduciblePeaks, ]
