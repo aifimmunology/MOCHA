@@ -21,9 +21,9 @@
 #' @noRd
 #' 
 
-callPeaks_by_population <- function(
+callTilesBySample <- function(
     blackList,
-    returnAllPeaks=FALSE,
+    returnAllTiles=FALSE,
     numCores=10,
     totalFrags,
     fragsList,
@@ -53,15 +53,15 @@ callPeaks_by_population <- function(
     countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor    
 
     countsMatrix = countsMatrix[countsMatrix$TotalIntensity > 0,]
-    scMACS_peaks <- scMACS:::make_prediction(
+    scMACS_tiles <- scMACS:::make_prediction(
         X = countsMatrix,
         finalModelObject = finalModelObject
     )
 
-    if(!returnAllPeaks){
-        scMACS_peaks <- scMACS_peaks[scMACS_peaks$peak==T]
+    if(!returnAllTiles){
+        scMACS_tiles <- scMACS_tiles[scMACS_tiles$peak==T]
     }
     
-    return(scMACS_peaks)
+    return(scMACS_tiles)
 
 }

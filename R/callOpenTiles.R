@@ -1,6 +1,6 @@
-#' @title \code{callPeaks_by_sample}
+#' @title \code{callOpenTiles}
 #'
-#' @description \code{callPeaks_by_sample} is the main peak-calling function in scMACS
+#' @description \code{callOpenTiles} is the main peak-calling function in scMACS
 #'              that serves as a wrapper function to call peaks provided a set 
 #'              of fragment files and an ArchR Project for meta-data purposes
 #'
@@ -26,7 +26,6 @@ callOpenTiles <- function(ArchRProj,
                                 cellPopLabel,
                                 cellPopulations = "ALL",
                                 sampleLabel,
-                                # returnAllPeaks = TRUE,
                                 numCores = 30
                      ){
     
@@ -59,7 +58,7 @@ callOpenTiles <- function(ArchRProj,
     experimentList <- list()
     for (cellPop in names(splitFrags)){
         
-        print(str_interp("Calling peaks for cell population ${cellPop}"))
+        print(str_interp("Calling open tiles for cell population ${cellPop}"))
         
         # Get our fragments for this cellPop
         popFrags <- unlist(splitFrags[[cellPop]])
@@ -78,12 +77,12 @@ callOpenTiles <- function(ArchRProj,
         # This mclapply will parallelize over each sample within a celltype.
         # Each arrow is a sample so this is allowed
         # (Arrow files are locked - one access at a time)
-        peaksGRangesList <- parallel::mclapply(
+        tilesGRangesList <- parallel::mclapply(
             1:length(popFrags),
             function(x){
-                callPeaks_by_population(
+                callTilesBySample(
                     blackList = blackList,
-                    returnAllPeaks = TRUE,
+                    returnAllTiles = TRUE,
                     numCores = numCores,
                     totalFrags = normalization_factors[x],
                     fragsList = popFrags[[x]],
@@ -93,11 +92,11 @@ callOpenTiles <- function(ArchRProj,
             mc.cores = numCores
         )
 
-        names(peaksGRangesList) <- sampleNames
+        names(tilesGRangesList) <- sampleNames
 
         # Package rangeList into a RaggedExperiment
         ragExp <- RaggedExperiment::RaggedExperiment(
-            peaksGRangesList
+            tilesGRangesList
         )
         
         # And add it to the experimentList for this cell population
