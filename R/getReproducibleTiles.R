@@ -30,24 +30,4 @@ getReproducibleTiles <- function(tileResults,
 
   return(reproduciblePeaks)
 
-  ##################################
-  ##################################
-  ##################################
-
-  #     reproducible_casePeaks = counts_by_group$CasePeaks[V1>= Repro_Limit]
-  #     reproducible_controlPeaks = counts_by_group$ControlPeaks[V1>= Repro_Limit]
-
-  #     # Generate the two sets for
-  #     # the venn diagramß
-  #     set1 <- reproducible_casePeaks$tileID
-  #     set2 <- reproducible_controlPeaks$tileID
-  #     common_peaks <- intersect(set1,set2)
-  #     union_peaks <- union(set1, set2)
-
-  #     results <- list(CasePeaks=set1,
-  #                     ControlPeaks=set2,
-  #                     Intersection=common_peaks,
-  #                     Union=union_peaks)
-
-  #     return(results)
 }

@@ -41,44 +41,4 @@ getSampleTileMatrix <- function(tileResults,
 
   return(sampleTileIntensityMat)
 
-  #     ## Extract Peak list from Sample Specific Peaks Object
-  #     sample_names <-  sapply(sample_specific_peaks, function(x) names(x))
-
-  #     ## assign sample names to intensity matrix
-  #     for(i in 1:length(sample_specific_peaks)){
-
-  #         sample_specific_peaks[[i]][[1]]$Sample <- sample_names[i]
-
-  #     }
-
-  #     ## extract matrices
-  #     sample_specific_peaks <- lapply(sample_specific_peaks,
-  #                         function(x) x[[1]]
-  #                         )
-
-  #     ## concatenate matrix
-  #     fullMatrix <- rbindlist(sample_specific_peaks)
-
-  #     ## Filter and rename feature names
-  #     fullMatrix <-  fullMatrix[,c('TotalIntensity','tileID','Sample')]
-  #     colnames(fullMatrix)[1] <- 'lambda1'
-
-  #     ## Reshape long to wide to create
-  #     ## Sample X Peak matrix.
-  #     sample_peak_matrix <- data.table::dcast(fullMatrix,
-  #                                             formula=tileID ~ Sample,
-  #                                             value.var='lambda1')
-
-  #     ## Replace NAs with zeroes for zero-inflated
-  #     ## hypothesis testing
-  #     sample_peak_matrix[is.na(sample_peak_matrix)] <- 0
-
-  #     if(is.null(union_peaks)){
-
-  #         return(sample_peak_matrix)
-
-  #     } else {
-
-  #         return(sample_peak_matrix[tileID %in% union_peaks])
-  #     }
 }

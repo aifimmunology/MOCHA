@@ -13,8 +13,8 @@
 #'   Default is 'ALL'.
 #' @param cellPopLabel string indicating which column in the ArchRProject
 #'   metadata contains the cell population label.
-#' @param sampleLabel string indicating wich column in the ArchRProject metadata
-#'   contains the sample IDs.
+#' @param sampleLabel string indicating which column in the ArchRProject
+#'   metadata contains the sample IDs.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #'
