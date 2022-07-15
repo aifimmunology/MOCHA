@@ -4,14 +4,14 @@
 #' 
 #' @export
 
-get_reproducible_peaks <- function(
-    peakCallResults,
+getReproducibleTiles <- function(
+    tileResults,
     cellPopulation,       
     reproducibility = 0.2
 ){
 
     # Get the RaggedExperiment for this cellPopulation
-    peaksExperiment <- peakCallResults[[cellPopulation]]
+    peaksExperiment <- tileResults[[cellPopulation]]
     nSamples <- length(colnames(peaksExperiment))
     
     # Extract matrices of samples by peak tileIDs with peak status

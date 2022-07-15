@@ -22,7 +22,7 @@
 #'
 #' @export
 
-callPeaks_by_sample <- function(ArchRProj,
+callOpenTiles <- function(ArchRProj,
                                 cellPopLabel,
                                 cellPopulations = "ALL",
                                 sampleLabel,

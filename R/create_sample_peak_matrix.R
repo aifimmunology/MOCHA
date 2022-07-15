@@ -6,9 +6,9 @@
 #'              each sample.
 #'
 #'
-#' @param peakCallResults output of calls_peaks_by_sample
-#' @param reproduciblePeaks a vector containing the tileIDs to subset the peak matrix
-#' @return samplePeakIntensityMat a sample X peak matrix containing observed 
+#' @param tileResults output of callOpenTiles
+#' @param reproducibleTiles a vector containing the tileIDs to subset the sample-tile matrix
+#' @return sampleTileIntensityMat a sample X peak matrix containing observed 
 #'         measurements for each sample at each peak. 
 #' 
 #' @details The technical details of the algorithm are found in XX.
@@ -17,29 +17,29 @@
 #'
 #' @export
 
-create_peak_sampleMatrix <- function(
-    peakCallResults,
+getSampleTileMatrix <- function(
+    tileResults,
     cellPopulation,
-    reproduciblePeaks,
+    reproducibleTiles,
     NAtoZero = TRUE
 ){
     
     # Get the RaggedExperiment for this cellPopulation
-    peaksExperiment <- peakCallResults[[cellPopulation]]
+    peaksExperiment <- tileResults[[cellPopulation]]
     
     # Extract matrices of samples by peak tileIDs with TotalIntensity
-    samplePeakIntensityMat <- RaggedExperiment::compactAssay(
+    sampleTileIntensityMat <- RaggedExperiment::compactAssay(
         peaksExperiment, i="TotalIntensity")
     
     if (NAtoZero) {
         # Replace NAs with zeroes for zero-inflated hypothesis testing 
-        samplePeakIntensityMat[is.na(samplePeakIntensityMat)] <- 0
+        sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
     }
     
-    # Filter to just peaks in the given reproduciblePeaks
-    samplePeakIntensityMat <- samplePeakIntensityMat[reproduciblePeaks, ]
+    # Filter to just peaks in the given reproducibleTiles
+    sampleTileIntensityMat <- sampleTileIntensityMat[reproducibleTiles, ]
     
-    return(samplePeakIntensityMat)
+    return(sampleTileIntensityMat)
         
 #     ## Extract Peak list from Sample Specific Peaks Object 
 #     sample_names <-  sapply(sample_specific_peaks, function(x) names(x))

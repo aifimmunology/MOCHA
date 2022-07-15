@@ -7,17 +7,22 @@
 
 #'
 #' @export
-get_differential_accessible_regions <- function(sample_peak_matrix,
-                                               metaFile, fdr_control=0.2, nCores=2){
+getDifferentialAccessibleTiles <- function(
+    sampleTileMatrix,
+    tileResults,
+    fdr_control=0.2,
+    numCores=2
+){
 
-
+        metaFile <- MultiAssayExperiment::colData(tileResults)
+    
         ## Get group labels 
         positive_samples <- metaFile$SampleCellType[metaFile$Class=='Positive']
-        group <- ifelse(names(sample_peak_matrix)[2:ncol(sample_peak_matrix)] %in% positive_samples,1,0)
+        group <- ifelse(names(sampleTileMatrix)[2:ncol(sampleTileMatrix)] %in% positive_samples,1,0)
         
         ## Estimate differential accessibility
-        res_pvals <- mclapply(sample_peak_matrix$tileID, 
-           function(x) estimate_differential_accessibility(sample_peak_matrix,x,group, F),
+        res_pvals <- mclapply(sampleTileMatrix$tileID, 
+           function(x) estimate_differential_accessibility(sampleTileMatrix,x,group, F),
                  mc.cores=nCores
            )
 
