@@ -9,6 +9,8 @@
 #' @param cellPopulations vector of strings. Cell subsets for which to call peaks. This list of group names must be identical to names that appear in the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak calling is done on all cell populations in the ArchR project metadata. Default is 'ALL'.
 #' @param cellPopLabel string indicating which column in the ArchRProject metadata contains 
 #'        the cell population label. 
+#' @param sampleLabel string indicating wich column in the ArchRProject metadata contains 
+#'        the sample IDs. 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'                 multiple cell populations
 #'
@@ -23,6 +25,7 @@
 callPeaks_by_sample <- function(ArchRProj,
                                 cellPopLabel,
                                 cellPopulations = "ALL",
+                                sampleLabel,
                                 # returnAllPeaks = TRUE,
                                 numCores = 30
                      ){
@@ -101,14 +104,15 @@ callPeaks_by_sample <- function(ArchRProj,
         experimentList <- append(experimentList, ragExp)
     }
     
+    # Create sample metadata from cellColData using util function
+    sampleData <- scMACS:::sampleDataFromCellColData(cellColData, sampleLabel)
+    
     # Add experimentList to MultiAssayExperiment
     names(experimentList) <- names(splitFrags) # DC MAIT
     results <- MultiAssayExperiment::MultiAssayExperiment(
-        experiments = experimentList
+        experiments = experimentList,
+        colData = sampleData
     )
     
-    # TODO: Automate ArchR cell-metadata to sample-level metadata
-    # Adding this sample-metadata as colData to the MultiAssayExperiment 
-    # necessary for downstream steps
     return(results)
 }
