@@ -20,7 +20,7 @@
 getSampleTileMatrix <- function(tileResults,
                                 cellPopulation,
                                 reproducibleTiles,
-                                NAtoZero = TRUE) {
+                                NAtoZero = FALSE) {
 
   # Get the RaggedExperiment for this cellPopulation
   peaksExperiment <- tileResults[[cellPopulation]]

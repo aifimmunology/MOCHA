@@ -67,9 +67,9 @@ splitFragsByCellPop <- function(frags) {
 }
 
 
-### This function converst scMACS DAPs data table to a Summarized Experiment 
-## for use with ArchR's functions
-## This functions expects a DAPs data.table, with a column named 'Peak'
+# This function converst scMACS DAPs data table to a Summarized Experiment 
+# for use with ArchR's functions
+# This functions expects a DAPs data.table, with a column named 'Peak'
 DAPsToSE <- function(daps){
     
     #Generate a GRanges from the character strings found in the peaks column
@@ -98,9 +98,9 @@ DAPsToSE <- function(daps){
 
 
 
-### This function converst scMACS sample-specific peak calls, raw fragments by sample, 
-## the sample-specific peak matrix, and sample metadata into one Summarized Experiment Object
-## It expects a column in the peak matrix called 'tileID', and a column in the metadata called 'Sample'
+# This function converst scMACS sample-specific peak calls, raw fragments by sample, 
+# the sample-specific peak matrix, and sample metadata into one Summarized Experiment Object
+# It expects a column in the peak matrix called 'tileID', and a column in the metadata called 'Sample'
 
 PeakMatToSE <- function(sample_peak_matrix, metadata, sampleSpecific){
     
@@ -121,9 +121,9 @@ PeakMatToSE <- function(sample_peak_matrix, metadata, sampleSpecific){
     
 
 
-### Quick support functions
-##Strings to GRanges
+# Quick support functions
 
+#Strings to GRanges
 StringsToGRanges <- function(regionString){
   
   chrom <- gsub(":.*","",regionString)
@@ -136,7 +136,7 @@ StringsToGRanges <- function(regionString){
   
 }
 
-### Reverse function. Converst a GRanges object to a string in the format 'chr1:100-200'
+# Reverse function. Converst a GRanges object to a string in the format 'chr1:100-200'
 GRangesToString <- function(GR_obj){
   
   paste(seqnames(GR_obj), ":",start(GR_obj),"-",end(GR_obj),sep="")
@@ -144,8 +144,9 @@ GRangesToString <- function(GR_obj){
 }
 
 
-##### This functions takes the output of coaccessibility, filters by a correlation threshold,
-#### and then returns a data.frame
+# This functions takes the output of coaccessibility, filters by a 
+# correlation threshold, and then returns a data.frame
+#
 # tielCorrelations = output of coaccessibility
 # nearbyTiles - data.table of peaks within the correlation
 # threshold - Absolute correlation threshold
