@@ -26,8 +26,16 @@
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
 #'
-getPopFrags <- function(ArchRProj, metaColumn, cellSubsets = "ALL", region = NULL, numCores = 1, sampleSpecific = TRUE,
-                        NormMethod = "nfrags", blackList = NULL, overlapList = 50) {
+
+getPopFrags <- function(ArchRProj,
+                        metaColumn,
+                        cellSubsets = "ALL",
+                        region = NULL,
+                        numCores = 1,
+                        sampleSpecific = TRUE,
+                        NormMethod = "nfrags",
+                        blackList = NULL,
+                        overlapList = 50) {
   # Extract metadata
   metadf <- getCellColData(ArchRProj)
 
