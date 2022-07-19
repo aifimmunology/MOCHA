@@ -48,9 +48,9 @@ splitFragsByCellPop <- function(frags) {
             x <- frags[y]
             print(names(x))
             celltype_sample <- names(x)
-            splits <- unlist(str_split(celltype_sample, "#"))
+            splits <- unlist(stringr::str_split(celltype_sample, "#"))
             celltype <- splits[1]
-            sample <- unlist(str_split(splits[2], "__"))[1]
+            sample <- unlist(stringr::str_split(splits[2], "__"))[1]
             # Rename the fragments with just the sample
             names(x) <- sample
             # Return as a list named for celltype
