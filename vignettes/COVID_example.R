@@ -11,21 +11,30 @@ library(ArchR)
 # Load the ArchR Project 
 covidArchR <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
 
-# For example: filter ArchR Project to three samples
-samplesToKeep <- c("B011-AP0C1W3", "B011-AP0C1W8", "B011-AP0C2W1")
+# For example: filter ArchR Project to three samples from each Covid Status
+samplesToKeep <- c(
+  "B011-AP0C1W3", 
+  "B011-AP0C1W8", 
+  "B011-AP0C2W1",
+  "B025_FSQAAZ0BZZS-01", 
+  "B025_FSQAAZ0C00P-07",
+  "B025_FSQAAZ0C0YJ-01"
+)
 idxSample <- BiocGenerics::which(covidArchR$Sample %in% samplesToKeep)
 cellsSample <- covidArchR$cellNames[idxSample]
 covidArchR <- covidArchR[cellsSample, ]
 
 # Parameters for calling open tiles
 sampleLabel <- "Sample"
-cellPopulations <- c("DC", "MAIT")
 cellPopLabel <- "CellSubsets"
+cellPopulations <- c("DC", "MAIT")
 numCores <- 20
 
 # Parameters for downstream analysis
 cellPopulation <- "DC"
-reproducibility <- 0
+threshold <- 0.4
+groupColumn <- "COVID_status"
+join <- "union"
 
 ####################################################
 # 2. Call open tiles (main peak calling step)
@@ -48,7 +57,9 @@ tileResults <- scMACS::callOpenTiles(
 reproducibleTiles <- scMACS::getReproducibleTiles(
     tileResults,
     cellPopulation = cellPopulation,
-    reproducibility = reproducibility
+    threshold = threshold,
+    groupColumn = groupColumn,
+    join = join
 )
 
 sampleTileMatrix <- scMACS::getSampleTileMatrix(
