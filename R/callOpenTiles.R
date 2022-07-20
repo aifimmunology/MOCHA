@@ -106,7 +106,9 @@ callOpenTiles <- function(ArchRProj,
   }
 
   # Create sample metadata from cellColData using util function
-  sampleData <- scMACS:::sampleDataFromCellColData(cellColData, sampleLabel)
+  sampleData <- suppressWarnings(
+    scMACS:::sampleDataFromCellColData(cellColData, sampleLabel)
+  )
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags) # DC MAIT

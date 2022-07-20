@@ -1,35 +1,21 @@
 # Function to get sample-level metadata,
 # from an ArchR project's colData
 sampleDataFromCellColData <- function(cellColData, sampleLabel){
-    
+  
     # Drop columns where all values are NA
     cellColDataNoNA <- Filter(function(x){!all(is.na(x))}, cellColData)
-    
+
     # Convert to data.table
     cellColDT <- data.table::as.data.table(cellColDataNoNA)
 
-    # Custom function to keep only repeated values
-    keepRepeated <- function(values){
-        uniqueVals <- unique(values)
-        if (length(uniqueVals) > 1 || length(values) == 0) {
-            return(NA)
-        } else {
-            return(uniqueVals)
-        }
-    }
-                              
-    # Group by sample and use custom function to keep only 
-    # values that are repeated for all cells in this sample, 
-    # setting cell-unique values to NA
-    sampleDT <- cellColDT[, lapply(.SD, keepRepeated), by = c(sampleLabel)]
-    
-    # Drop columns with ANY NA
-    sampleData <- as.data.frame(sampleDT)
-    sampleData <- Filter(function(x){!all(is.na(x))}, sampleData)
-    
+    BoolDT <- cellColDT[, lapply(.SD, function(x) length(unique(x)) == 1), by = c(sampleLabel)]
+    trueCols <- apply(BoolDT, 2, all)
+    trueCols[[sampleLabel]] <- TRUE
+    sampleDT <- dplyr::distinct(cellColDT[,.SD, .SDcols = which(unlist(trueCols))])
+
     # Set sampleIDs as rownames
+    sampleData <- as.data.frame(sampleDT)
     rownames(sampleData) <- sampleData[[sampleLabel]]
-    
     return(sampleData)
 }
 
