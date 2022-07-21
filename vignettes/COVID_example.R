@@ -25,7 +25,6 @@ cellsSample <- covidArchR$cellNames[idxSample]
 covidArchR <- covidArchR[cellsSample, ]
 
 # Parameters for calling open tiles
-sampleLabel <- "Sample"
 cellPopLabel <- "CellSubsets"
 cellPopulations <- c("DC", "MAIT")
 numCores <- 20
@@ -45,7 +44,6 @@ tileResults <- scMACS::callOpenTiles(
     covidArchR,
     cellPopLabel = cellPopLabel,
     cellPopulations = cellPopulations,
-    sampleLabel = sampleLabel,
     numCores = numCores
 )
 
