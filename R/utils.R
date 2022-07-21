@@ -2,6 +2,13 @@
 # from an ArchR project's colData
 sampleDataFromCellColData <- function(cellColData, sampleLabel){
   
+    if (!(sampleLabel %in% colnames(cellColData))){
+      stop(paste(
+          "`sampleLabel` must present in your ArchR Project's cellColData",
+          "Check `names(getCellColData(ArchRProj)` for possible sample columns."
+      ))
+    }
+  
     # Drop columns where all values are NA
     cellColDataNoNA <- Filter(function(x){!all(is.na(x))}, cellColData)
 
