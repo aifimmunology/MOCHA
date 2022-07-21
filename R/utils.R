@@ -10,7 +10,7 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel){
     }
   
     # Drop columns where all values are NA
-    cellColDataNoNA <- Filter(function(x){!all(is.na(x))}, cellColData)
+    cellColDataNoNA <- BiocGenerics::Filter(function(x){!all(is.na(x))}, cellColData)
 
     # Convert to data.table
     cellColDT <- data.table::as.data.table(cellColDataNoNA)
@@ -18,10 +18,11 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel){
     BoolDT <- cellColDT[, lapply(.SD, function(x) length(unique(x)) == 1), by = c(sampleLabel)]
     trueCols <- apply(BoolDT, 2, all)
     trueCols[[sampleLabel]] <- TRUE
-    sampleDT <- dplyr::distinct(cellColDT[,.SD, .SDcols = which(unlist(trueCols))])
+    cellColDF <- as.data.frame(cellColDT)                             
+
+    sampleData <- dplyr::distinct(cellColDF[,names(which(trueCols))])
 
     # Set sampleIDs as rownames
-    sampleData <- as.data.frame(sampleDT)
     rownames(sampleData) <- sampleData[[sampleLabel]]
     return(sampleData)
 }
