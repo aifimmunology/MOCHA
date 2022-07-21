@@ -98,7 +98,7 @@ callOpenTiles <- function(ArchRProj,
     
     # Cannot make peak calls with < 5 cells (see make_predictoin.R) 
     # so NULL will occur for those samples
-    tilesGRangesListNoNull <- Filter(Negate(is.null), tilesGRangesList)
+    tilesGRangesListNoNull <- BiocGenerics::Filter(Negate(is.null), tilesGRangesList)
     # TODO: Add warning message about removed samples for this celltype.
     
     # Package rangeList into a RaggedExperiment
