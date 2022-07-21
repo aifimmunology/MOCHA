@@ -13,8 +13,6 @@
 #'   Default is 'ALL'.
 #' @param cellPopLabel string indicating which column in the ArchRProject
 #'   metadata contains the cell population label.
-#' @param sampleLabel string indicating which column in the ArchRProject
-#'   metadata contains the sample IDs.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #'
@@ -29,7 +27,6 @@
 callOpenTiles <- function(ArchRProj,
                           cellPopLabel,
                           cellPopulations = "ALL",
-                          sampleLabel,
                           numCores = 30) {
 
   # Get cell metadata and blacklisted regions from ArchR Project
@@ -96,7 +93,7 @@ callOpenTiles <- function(ArchRProj,
 
     names(tilesGRangesList) <- sampleNames
     
-    # Cannot make peak calls with < 5 cells (see make_predictoin.R) 
+    # Cannot make peak calls with < 5 cells (see make_prediction.R) 
     # so NULL will occur for those samples
     tilesGRangesListNoNull <- BiocGenerics::Filter(Negate(is.null), tilesGRangesList)
     # TODO: Add warning message about removed samples for this celltype.
@@ -111,8 +108,12 @@ callOpenTiles <- function(ArchRProj,
   }
 
   # Create sample metadata from cellColData using util function
+  # "Sample" is the enforced col in ArchR containing the 
+  # sample IDs which correspond to the arrow files.
+  # We are assuming samples are synonymous to wells
+  # (If hashed, samples were un-hashed during ArchR project generation)
   sampleData <- suppressWarnings(
-    scMACS:::sampleDataFromCellColData(cellColData, sampleLabel)
+    scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
   # Add experimentList to MultiAssayExperiment
