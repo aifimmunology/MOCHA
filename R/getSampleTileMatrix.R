@@ -20,7 +20,9 @@
 getSampleTileMatrix <- function(tileResults,
                                 cellPopulation,
                                 reproducibleTiles,
-                                NAtoZero = FALSE) {
+                                NAtoZero = FALSE,
+                                log2Intensity = TRUE
+                               ) {
 
   # Get the RaggedExperiment for this cellPopulation
   peaksExperiment <- tileResults[[cellPopulation]]
@@ -30,10 +32,14 @@ getSampleTileMatrix <- function(tileResults,
     peaksExperiment,
     i = "TotalIntensity"
   )
-
+  
   if (NAtoZero) {
     # Replace NAs with zeroes for zero-inflated hypothesis testing
     sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
+  }
+  
+  if (log2Intensity) {
+    sampleTileIntensityMat <- log2(sampleTileIntensityMat+1)
   }
 
   # Filter to just peaks in the given reproducibleTiles

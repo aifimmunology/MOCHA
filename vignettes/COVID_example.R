@@ -66,5 +66,6 @@ sampleTileMatrix <- scMACS::getSampleTileMatrix(
     tileResults,
     cellPopulation = cellPopulation,
     reproducibleTiles,
-    NAtoZero = TRUE
+    NAtoZero = TRUE,
+    log2Intensity = TRUE
 )
