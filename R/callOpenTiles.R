@@ -95,10 +95,16 @@ callOpenTiles <- function(ArchRProj,
     )
 
     names(tilesGRangesList) <- sampleNames
-
+    browser()
+    
+    # Cannot make peak calls with < 5 cells (see make_predictoin.R) 
+    # so NULL will occur for those samples
+    tilesGRangesListNoNull <- dplyr::Filter(Negate(is.null), tilesGRangesList)
+    # TODO: Add warning message about removed samples for this celltype.
+    
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
-      tilesGRangesList
+      tilesGRangesListNoNull
     )
 
     # And add it to the experimentList for this cell population
@@ -111,7 +117,7 @@ callOpenTiles <- function(ArchRProj,
   )
 
   # Add experimentList to MultiAssayExperiment
-  names(experimentList) <- names(splitFrags) # DC MAIT
+  names(experimentList) <- names(splitFrags)
   results <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData
