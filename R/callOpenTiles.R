@@ -95,7 +95,6 @@ callOpenTiles <- function(ArchRProj,
     )
 
     names(tilesGRangesList) <- sampleNames
-    browser()
     
     # Cannot make peak calls with < 5 cells (see make_predictoin.R) 
     # so NULL will occur for those samples
