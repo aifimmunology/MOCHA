@@ -40,31 +40,28 @@ plot_bipartite_graph <- function(g, circleLayout=T, directed=F, tname=NULL){
 #' @export
 
 
-plot_tripartite_graph <- function(g, directed=F, tname='Ligand-Motif-Gene'){
+plot_tripartite_graph <- function(df, directed=T, tname='Ligand-Motif-Gene'){
   
   ## create graphs from data frame
   g <- igraph::graph.data.frame(df, directed=directed)
   
-  ## modify colors and shapes
-  V(g)$type <- igraph::bipartite_mapping(g)$type
-  V(g)$color <- ifelse(igraph::V(g)$type, "lightblue", "salmon")
-  V(g)$shape <- ifelse(igraph::V(g)$type, "circle", "square")
-  E(g)$color <- "lightgray"
-  
   ## Specify Order of Layers
   layer = rep(3, length(V(g)$name))
-  layer[grep("L",V(g)$name)]=1
-  layer[grep("M",V(g)$name)]=2
+  layer[grep("L_",V(g)$name)]=1
+  layer[grep("M_",V(g)$name)]=2
+  
+  names = V(g)$name
+  names = sub("G_|L_|M_","", names)
+  V(g)$name = names
   
   ## Create Layout 
-  layout = layout_with_sugiyama(g, layers=layer, hgap =2, vgap = 2)
+  layout = layout_with_sugiyama(g, layers=layer)
     ## plot graph
   plot(g,
-       layout=layout,
+       layout=cbind(layer, layout$layout[,1]),
        vertex.shape=c("circle","circle","circle")[layer],
-       vertex.size=c(15,15,15)[layer],
-       vertex.label.dist=c(0,0,0)[layer],
+       vertex.size=c(0,0,0)[layer],
+       vertex.label.dist=c(-3,0,3)[layer],
        vertex.label.degree=0, 
        main=tname)
 }
-

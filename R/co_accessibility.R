@@ -38,15 +38,8 @@ co_accessibility <- function(subMat, filterPairs = NULL, index = NULL, numCores=
   #mat1 <- subMat[,-c('tileID','chr', 'start', 'end')]
   #rownames(mat1) = subMat$tileID
   pairwise_combos = RcppAlgos::comboGrid(rownames(subMat),rownames(subMat), repetition = FALSE)
-  
-  ## Filter out any pairs that have already been tested
-  if(!is.null(filterPairs)){
-    
-    pairwise_combos <- pairwise_combos[!(pairwise_combos[,'Var1'] %in% filterPairs$Peak1 &
-                                           pairwise_combos[,'Var2'] %in% filterPairs$Peak2),]
-    
-  }
-  
+
+  ##Pull out only combinations that involve the peak of interest
   if(!is.null(index) & class(index) =='integer'){
     
     pairwise_combos <- pairwise_combos[pairwise_combos[,'Var1'] %in% rownames(subMat)[index] | 
@@ -55,16 +48,39 @@ co_accessibility <- function(subMat, filterPairs = NULL, index = NULL, numCores=
   }else if(verbose){ print('No valid index given. Testing all peaks within range.')}
   
   
+  ## Filter out any pairs that have already been tested, and see if anything remains.
+  if(!is.null(filterPairs) & length(pairwise_combos) > 2){
+    
+    #If there's more than one pair of peaks, filter out all the previously tested ones. 
+    pairwise_combos <- pairwise_combos[!(pairwise_combos[,'Var1'] %in% filterPairs$Peak1 &
+                                           pairwise_combos[,'Var2'] %in% filterPairs$Peak2),]
+    
+  }else if(!is.null(filterPairs) & length(pairwise_combos) > 0){
+    
+    #If only one pair of peaks is left, and that pair has already been tested, then return NULL
+    if(pairwise_combos[1] %in% filterPairs$Peak1 & pairwise_combos[2] %in% filterPairs$Peak2){
+      return(NULL)
+    }
+
+  }
+  
+  
   ### Loop through all pairwise 
   ### combinations of peaks 
   
   
-  ## nrows hits an error when there's only one pair of peaks that needs to be tested. 
+  ## if only one pair of peaks left, then nrows will hit an error. length works whether there is one pair or many left.  
+  #If no peaks 
   if(length(pairwise_combos) == 0 & verbose){
+    
     print('Warning: No peaks found in neighborhood of region of interest')
     return(NULL)
-  }else if(length(pairwise_combos) == 0) { return(NULL)}
-  else if(length(pairwise_combos) == 2) { 
+  
+  }else if(length(pairwise_combos) == 0) { 
+  
+      return(NULL)
+    
+  }else if(length(pairwise_combos) == 2) { 
     
     #If only one pair of peaks to test, then it's no longer a data.frame, but a vector.
     zero_inflated_spearman <- weightedZISpearman(x= subMat[pairwise_combos[1],],
@@ -103,7 +119,7 @@ co_accessibility <- function(subMat, filterPairs = NULL, index = NULL, numCores=
 
 
 
-FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores = 1,  verbose = FALSE){
+FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 1*10^6, numCores = 1,  verbose = FALSE){
   
   peakDF <- as.data.frame(peakDT[,-'tileID'])
   rownames(peakDF) <- peakDT$tileID
@@ -116,15 +132,15 @@ FindCoAccessibleLinks <- function(peakDT,regions, windowSize = 2*10^6, numCores 
  
   #Initialize Correlation Datatable. 
   PeakCorr <- NULL
-  pb = txtProgressBar(min = 0, max = length(wideList), initial = 0)  
+  pb = txtProgressBar(min = 0, max = length(regions), initial = 0)  
   
   for(i in 1:length(regions)){
-      print(i)
+      #print(i)
       setTxtProgressBar(pb,i)
       
       ## Find all peaks in the next window
-      window_tmp <- which(start > regionDF$start[i] - 2*10^6 &
-                           end < regionDF$end[i] + 2*10^6 & 
+      window_tmp <- which(start > regionDF$start[i] - windowSize/2 &
+                           end < regionDF$end[i] + windowSize/2 & 
                            chr == regionDF$seqnames[i])
       
       if(length(window_tmp) > 1){

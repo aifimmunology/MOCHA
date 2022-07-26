@@ -34,30 +34,21 @@ estimate_differential_accessibility <- function(peak_mat,tileID,group,
     test_vec = as.numeric(peak_mat[idx,2:ncol(peak_mat)])
 
     ## log-transform the values 
-    data=log2(test_vec+1)
+    data_vec=log2(test_vec+1)
    
     ## conduct two part test
-    two_part_results <- TwoPart(test_vec, group=group, test='wilcoxon', point.mass=0)
-
-    ## permutation test
-    n_a = sum(group)
-    n_b = length(group) - n_a
-
-    sampled_test_vec <- sample(test_vec, size=n_a+n_b, replace=F)
-    permuted_pval = TwoPart(sampled_test_vec, group=group, test='wilcoxon', 
-                                   point.mass=0)$pvalue
-
+    two_part_results <- TwoPart(data_vec, group=group, test='wilcoxon', point.mass=0)
 
     ## filter non-zero values for group1
-    nonzero_dx <- data[group==1]
+    nonzero_dx <- data_vec[group==1]
     nonzero_dx=nonzero_dx[nonzero_dx!=0]
     
     ## filter non-zero values for group0
-    nonzero_control <- data[group==0]
+    nonzero_control <- data_vec[group==0]
     nonzero_control=nonzero_control[nonzero_control!=0]
     
     df = data.frame(
-        Vals = data,
+        Vals = data_vec,
         Group= group,
         Group_label=ifelse(group==1, 'case','Control')
     )
@@ -67,34 +58,39 @@ estimate_differential_accessibility <- function(peak_mat,tileID,group,
     pairwise_matrix$diff <- pairwise_matrix[,1] - pairwise_matrix[,2]
     
     hodges_lehmann <- median(pairwise_matrix$diff)
-    
+    meanDiff = calculateMeanDiff(peak_mat[idx,] , group)
     ## Create Final Results Matrix
     res = data.frame(
         Peak=tileID,
         P_value=two_part_results$pvalue,
         TestStatistic=two_part_results$statistic,
-        HL_EffectSize=hodges_lehmann,
+        Log2FC_C=hodges_lehmann,
+        MeanDiff=meanDiff,
         Case_mu=median(nonzero_dx),
-        Case_rho=mean(data[group==1]==0),
+        Case_rho=mean(data_vec[group==1]==0),
         Control_mu=median(nonzero_control),
-        Control_rho=mean(data[group==0]==0)   ,
-        Permuted_Pvalue=permuted_pval
-        )
+        Control_rho=mean(data_vec[group==0]==0)
+    )
     
     if(providePermutation){
-        nPerm = 5
+        nPerm = 10
+        set.seed(seed)
         permuted_pvals <- t(data.frame(sapply(1:nPerm, function(x){
             
             ## permutation test
             n_a = sum(group)
             n_b = length(group) - n_a
-
-            sampled_test_vec <- sample(test_vec, size=n_a+n_b, replace=F)
-            TwoPart(sampled_test_vec, group=group, test='wilcoxon', 
+            
+            ## shuffle observations
+            sampled_data <- sample(data_vec, size=n_a+n_b, replace=F)
+            
+            ## calculate hypothesis test 
+            ## based on shuffled values
+            TwoPart(sampled_data, group=group, test='wilcoxon', 
                                        point.mass=0)$pvalue
             }
                )))
-        colnames(permuted_pvals) <- paste('Permute',1:10, sep='_')
+        colnames(permuted_pvals) <- paste('Permute',1:nPerm, sep='_')
         res = cbind(res, (permuted_pvals))
         
     }
@@ -104,3 +100,11 @@ estimate_differential_accessibility <- function(peak_mat,tileID,group,
 
 }
 
+calculateMeanDiff <- function(peak_mat, group){
+
+        a = log2(peak_mat[, which(group==1)+1, with=F]+1)
+        b = log2(peak_mat[, which(group==0)+1, with=F]+1)
+
+        mean_diff = rowMeans(a) - rowMeans(b)
+        mean_diff
+}

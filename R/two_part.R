@@ -15,9 +15,10 @@
 #'
 #' @references Taylor, Sandra, and Katherine Pollard. "Hypothesis tests for point-mass mixture data #' with application toomics data with many zero values." Statistical applications in genetics and #' molecular biology 8.1 (2009).
 #'
+#' @export
 
 # Function for calculating two-part statistics
-TwoPart <- function(data, group, test="t.test", point.mass=0){
+TwoPart <- function(data, group, test="wilcoxon", point.mass=0){
     Index1 <- c(group==1)
     Group1 <- data[Index1]
     Group0 <- data[!Index1]
