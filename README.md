@@ -8,6 +8,7 @@ Table of Contents
 
 * [Introduction](#introduction)
 * [Install package and load library](#library)
+* [Package Vignette on COVID PASC dataset](#vignette)
 * [Tutorials](#example-main)
     * [Tutorial-1: Peak-calling on Entire Cell Populations](#example1)
     * [Tutorial-2: Sample-specific Peak-calling](#example2)
@@ -28,18 +29,16 @@ scATAC processing and overview of the **scMACS** algorithm.
 
 # <a name="library"></a> Install package and load library
 
-To install library, simply run the following lines of code to install either from source
-   
-   
-    install.packages("scMACS_0.1.0.tar.gz", repos = NULL, type ="source")
+To install library, run the following lines of code to install directly from GitHub
+
+    devtools::install_github("aifimmunology/scMACS", ref="package-details")
     library("scMACS")
 
-or directly from GitHub
+# <a name="vignette"></a> Usage
+Example usage can be found in this [vignette](vignettes/COVID_example.R).
 
-    devtools::install_github("aifimmunology/scMACS")
-    library("scMACS")
-    
-# <a name="example-main"></a> Tutorials
+
+# <a name="example-main"></a> Tutorials - deprecated
 ## <a name="example1"></a> Tutorial-1: Peak-calling on Entire Cell Populations
 
 This tutorial demonstrates how to call peaks for a given cell population. This process
