@@ -18,33 +18,90 @@
 #' @export
 
 getSampleTileMatrix <- function(tileResults,
-                                cellPopulation,
-                                reproducibleTiles,
+                                cellPopulations,
+                                groupColumn,
+                                threshold = 0.2,
+                                join = "union",
                                 NAtoZero = FALSE,
                                 log2Intensity = TRUE
                                ) {
 
-  # Get the RaggedExperiment for this cellPopulation
-  peaksExperiment <- tileResults[[cellPopulation]]
+  if (!(join %in% c("union", "intersect"))){
+    stop("`join` must be either 'union' or 'intersect'")
+  }
+  
+  # Any column can be used to group samples
+  # Note that these are case-sensitive
+  sampleData <- colData(tileResults)
+  validGroups <- colnames(sampleData)
+  if (!is.null(groupColumn)){
+    if (!(groupColumn %in% validGroups)){
+      stop("`groupColumn` not found in the column data of tileResults.")
+    }
+  }
+  
+  for (cellPop in cellPopulations){
+      if (!(cellPop %in% names(tileResults))){
+        stop(paste(
+          "All of `cellPopulations` must present in tileResults.",
+          "Check `names(tileResults)` for possible cell populations."
+        ))
+      }
+  }
+  
+  experimentList <- list()
+  idx <- 1
+  for (cellPop in cellPopulations){
+    
+    message(str_interp("Extracting sampleTileMatrix for ${cellPop} population"))
+    # Get the RaggedExperiment for this cellPopulation
+    peaksExperiment <- tileResults[[cellPopulation]]
 
-  # Extract matrices of samples by peak tileIDs with TotalIntensity
-  sampleTileIntensityMat <- RaggedExperiment::compactAssay(
-    peaksExperiment,
-    i = "TotalIntensity"
+    # Extract matrices of samples by peak tileIDs with TotalIntensity
+    sampleTileIntensityMat <- RaggedExperiment::compactAssay(
+      peaksExperiment,
+      i = "TotalIntensity"
+    )
+    if (NAtoZero) {
+      # Replace NAs with zeroes for zero-inflated hypothesis testing
+      sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
+    }
+    if (log2Intensity) {
+      sampleTileIntensityMat <- log2(sampleTileIntensityMat+1)
+    }
+
+    # Extract matrices of samples by peak tileIDs with peak status
+    # and set NA to FALSE (no peak here)
+    samplePeakMat <- RaggedExperiment::compactAssay(
+      peaksExperiment,
+      i = "peak"
+    )
+    samplePeakMat[is.na(samplePeakMat)] <- FALSE
+    
+    # Get reproducible tiles for this cell population for filtering
+    reproducibleTiles <- scMACS:::getReproducibleTiles(
+      peaksExperiment,
+      cellPopulation,
+      threshold,
+      groupColumn,
+      join
+    ) 
+
+    # Filter to just peaks in the given reproducibleTiles
+    sampleTileIntensityMat <- sampleTileIntensityMat[reproducibleTiles, ]
+    # And add it to the experimentList for this cell population
+    experimentList[[idx]] <- sampleTileIntensityMat
+    
+    idx <- idx + 1
+  }
+  
+  browser()
+
+  names(experimentList) <- cellPopulations
+  results <- MultiAssayExperiment::MultiAssayExperiment(
+    experiments = experimentList,
+    colData = sampleData
   )
-  
-  if (NAtoZero) {
-    # Replace NAs with zeroes for zero-inflated hypothesis testing
-    sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
-  }
-  
-  if (log2Intensity) {
-    sampleTileIntensityMat <- log2(sampleTileIntensityMat+1)
-  }
 
-  # Filter to just peaks in the given reproducibleTiles
-  sampleTileIntensityMat <- sampleTileIntensityMat[reproducibleTiles, ]
-
-  return(sampleTileIntensityMat)
-
+  return(results)
 }

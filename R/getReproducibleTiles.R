@@ -3,13 +3,13 @@
 #' @description \code{get_reproducible_peaks} is an R helper function, part of
 #'   the single-cell peak
 #'
-#' @export
+#' @noRd
 
-getReproducibleTiles <- function(tileResults,
+getReproducibleTiles <- function(peaksExperiment,
                                  cellPopulation,
-                                 threshold = 0.2,
-                                 groupColumn = NULL,
-                                 join = "union") {
+                                 threshold,
+                                 groupColumn,
+                                 join) {
   
   if (!(join %in% c("union", "intersect"))){
     stop("`join` must be either 'union' or 'intersect'")
@@ -32,10 +32,6 @@ getReproducibleTiles <- function(tileResults,
     ))
   }
 
-  # Get the RaggedExperiment for this cellPopulation
-  peaksExperiment <- tileResults[[cellPopulation]]
-  nSamples <- length(colnames(peaksExperiment))
-
   # Extract matrices of samples by peak tileIDs with peak status
   # and set NA to FALSE (no peak here)
   samplePeakMat <- RaggedExperiment::compactAssay(
@@ -43,8 +39,8 @@ getReproducibleTiles <- function(tileResults,
     i = "peak"
   )
   samplePeakMat[is.na(samplePeakMat)] <- FALSE
+  nSamples <- length(colnames(peaksExperiment))
   
-
   if (is.null(groupColumn)) {
 
     # Count the number of TRUE peaks in each row and divide by nSamples
