@@ -6,7 +6,7 @@
 #' @export
 
 getReproducibleTiles <- function(tileResults,
-                                 cellPopulation,
+                                 cellPopulation = 'ALL',
                                  threshold = 0.2,
                                  groupColumn = NULL,
                                  join = "union") {
@@ -24,6 +24,17 @@ getReproducibleTiles <- function(tileResults,
       stop("`groupColumn` not found in the column data of tileResults.")
     }
   }
+  
+  if(class(tileResults)[1] != 'MultiAssayExperiment'){
+    
+      stop('tileResults is not a MultiAssayExperiment')  
+    
+  }else if(cellPopulation == 'ALL'){
+    
+      cellPopulation = names(tileResults)
+    
+  }
+  
   
   if (!(cellPopulation %in% names(tileResults))){
     stop(paste(
