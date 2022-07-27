@@ -7,7 +7,7 @@
 getSampleTileMatrix(
   tileResults,
   cellPopulations = "ALL",
-  groupColumn,
+  groupColumn = NULL,
   threshold = 0.2,
   join = "union",
   NAtoZero = FALSE,
