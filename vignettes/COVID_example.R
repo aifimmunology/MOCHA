@@ -26,7 +26,7 @@ covidArchR <- covidArchR[cellsSample, ]
 
 # Parameters for calling open tiles
 cellPopLabel <- "CellSubsets"
-cellPopulations <- c("DC", "MAIT")
+cellPopulations <- c("CD16 Mono", "DC", "MAIT")
 numCores <- 20
 
 # Parameters for downstream analysis
@@ -40,7 +40,6 @@ join <- "union"
 #    for all specified cell populations
 ####################################################
 
-# Intermediate results, peaks + coverage can be saved to disk
 tileResults <- scMACS::callOpenTiles( 
     covidArchR,
     cellPopLabel = cellPopLabel,
@@ -48,18 +47,18 @@ tileResults <- scMACS::callOpenTiles(
     numCores = numCores
 )
 
-# # One threshold decided for all celltypes
-# # Return facet-wrap plot, colors for each group
-# # If no groupColumn, one plot with colors for celltype
-# plotReproducibility(
-#     tileResults,
-#     groupColumn = groupColumn,
-#     join = join
-# )
+
+####################################################
+# 3. Get consensus sample-tile matrices
+#    for all cell populations.
+#    These matrices are organized by cell population
+#    MultiAssayExperiment object and are the primary 
+#    input to downstream analyses.
+####################################################
 
 SampleTileMatrices <- scMACS::getSampleTileMatrix( 
     tileResults,
-    cellPopulations,
+    cellPopulations = 'ALL',
     groupColumn = groupColumn,
     threshold = threshold,
     join = join,

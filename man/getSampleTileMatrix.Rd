@@ -6,16 +6,16 @@
 \usage{
 getSampleTileMatrix(
   tileResults,
-  cellPopulation,
-  reproducibleTiles,
-  NAtoZero = TRUE
+  cellPopulations = "ALL",
+  groupColumn,
+  threshold = 0.2,
+  join = "union",
+  NAtoZero = FALSE,
+  log2Intensity = TRUE
 )
 }
 \arguments{
 \item{tileResults}{output of callOpenTiles}
-
-\item{reproducibleTiles}{a vector containing the tileIDs to subset the
-sample-tile matrix}
 }
 \value{
 sampleTileIntensityMat a sample X peak matrix containing observed

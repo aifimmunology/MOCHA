@@ -5,7 +5,8 @@
 \title{\code{get_differential_accessible_Regions}}
 \usage{
 getDifferentialAccessibleTiles(
-  sampleTileMatrix,
+  SampleTileMatrices,
+  cellPopulation,
   tileResults,
   fdr_control = 0.2,
   numCores = 2

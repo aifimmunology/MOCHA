@@ -4,7 +4,7 @@
 \alias{TwoPart}
 \title{\code{TwoPart}}
 \usage{
-TwoPart(data, group, test = "t.test", point.mass = 0)
+TwoPart(data, group, test = "wilcoxon", point.mass = 0)
 }
 \arguments{
 \item{data}{is a vector containing the values for the 2-part test}

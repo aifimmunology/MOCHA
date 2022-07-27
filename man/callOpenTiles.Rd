@@ -4,13 +4,7 @@
 \alias{callOpenTiles}
 \title{\code{callOpenTiles}}
 \usage{
-callOpenTiles(
-  ArchRProj,
-  cellPopLabel,
-  cellPopulations = "ALL",
-  sampleLabel,
-  numCores = 30
-)
+callOpenTiles(ArchRProj, cellPopLabel, cellPopulations = "ALL", numCores = 30)
 }
 \arguments{
 \item{ArchRProj}{an ArchR Project}
@@ -24,14 +18,8 @@ the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 calling is done on all cell populations in the ArchR project metadata.
 Default is 'ALL'.}
 
-\item{sampleLabel}{string indicating which column in the ArchRProject
-metadata contains the sample IDs.}
-
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populations}
-}
-\value{
-
 }
 \description{
 \code{callOpenTiles} is the main peak-calling function in scMACS
