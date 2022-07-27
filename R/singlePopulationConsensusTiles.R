@@ -1,11 +1,11 @@
-#' @title \code{get_reproducible_peaks}
+#' @title \code{singlePopulationConsensusTiles}
 #'
-#' @description \code{get_reproducible_peaks} is an R helper function, part of
+#' @description \code{singlePopulationConsensusTiles} is an R helper function, part of
 #'   the single-cell peak
 #'
-#' @noRd
+#' @keywords internal
 
-getReproducibleTiles <- function(peaksExperiment,
+singlePopulationConsensusTiles <- function(peaksExperiment,
                                  cellPopulation,
                                  threshold,
                                  groupColumn,
@@ -47,8 +47,8 @@ getReproducibleTiles <- function(peaksExperiment,
     percentTruePeaks <- rowSums(samplePeakMat) / nSamples
 
     # Keep only peaks with reproducibility above specified threshold
-    reproduciblePeaks <- percentTruePeaks[percentTruePeaks >= threshold]
-    reproduciblePeaks <- names(reproduciblePeaks)
+    consensusPeaks <- percentTruePeaks[percentTruePeaks >= threshold]
+    consensusPeaks <- names(consensusPeaks)
     
   } else {
     
@@ -63,20 +63,20 @@ getReproducibleTiles <- function(peaksExperiment,
 
       # Keep only peaks with reproducibility above specified threshold
       percentTruePeaks <- rowSums(groupSamplePeakMat) / nSamples
-      reproduciblePeaks <- percentTruePeaks[percentTruePeaks >= threshold]
-      reproduciblePeaks <- names(reproduciblePeaks)
+      consensusPeaks <- percentTruePeaks[percentTruePeaks >= threshold]
+      consensusPeaks <- names(consensusPeaks)
       
-      consensusPeaksByGroup <- append(consensusPeaksByGroup, list(reproduciblePeaks))
+      consensusPeaksByGroup <- append(consensusPeaksByGroup, list(consensusPeaks))
       
     }
     names(consensusPeaksByGroup) <- groups
     
     if (join=="union"){
-      reproduciblePeaks <- Reduce(union, consensusPeaksByGroup)
+      consensusPeaks <- Reduce(union, consensusPeaksByGroup)
     } else if (join=="intersect"){
-      reproduciblePeaks <- Reduce(intersect, consensusPeaksByGroup)
+      consensusPeaks <- Reduce(intersect, consensusPeaksByGroup)
     }
 
   }
-  return(reproduciblePeaks)
+  return(consensusPeaks)
 }

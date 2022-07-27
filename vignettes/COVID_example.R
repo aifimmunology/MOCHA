@@ -1,8 +1,8 @@
 # Load libraries
+library(ArchR)
 library(devtools)
 install("/home/jupyter/scMACS")
 library(scMACS)
-library(ArchR)
 
 ####################################################
 # 1. Setting Parameters
@@ -16,9 +16,9 @@ samplesToKeep <- c(
   "B011-AP0C1W3", 
   "B011-AP0C1W8", 
   "B011-AP0C2W1",
-  "B025_FSQAAZ0BZZS-01", 
-  "B025_FSQAAZ0C00P-07",
-  "B025_FSQAAZ0C0YJ-01"
+  "B025_FSQAAZ0BZZS-01",
+  "B025_FSQAAZ0C0YJ-01",
+  "B025_FSQAAZ0C00P-07"
 )
 idxSample <- BiocGenerics::which(covidArchR$Sample %in% samplesToKeep)
 cellsSample <- covidArchR$cellNames[idxSample]
@@ -30,40 +30,39 @@ cellPopulations <- c("DC", "MAIT")
 numCores <- 20
 
 # Parameters for downstream analysis
-cellPopulation <- "DC"
-threshold <- 0.4
+threshold <- 0.2
 groupColumn <- "COVID_status"
 join <- "union"
 
 ####################################################
 # 2. Call open tiles (main peak calling step)
-#    Done once for all specified cell populations
+#    and get sample-tile matrices
+#    for all specified cell populations
 ####################################################
 
-tileResults <- scMACS::callOpenTiles(
+# Intermediate results, peaks + coverage can be saved to disk
+tileResults <- scMACS::callOpenTiles( 
     covidArchR,
     cellPopLabel = cellPopLabel,
     cellPopulations = cellPopulations,
     numCores = numCores
 )
 
-####################################################
-# 3. Get reproducible sample-peak matrix
-#    Done for each cell population individually
-####################################################
+# # One threshold decided for all celltypes
+# # Return facet-wrap plot, colors for each group
+# # If no groupColumn, one plot with colors for celltype
+# plotReproducibility(
+#     tileResults,
+#     groupColumn = groupColumn,
+#     join = join
+# )
 
-reproducibleTiles <- scMACS::getReproducibleTiles(
+SampleTileMatrices <- scMACS::getSampleTileMatrix( 
     tileResults,
-    cellPopulation = cellPopulation,
-    threshold = threshold,
+    cellPopulations,
     groupColumn = groupColumn,
-    join = join
-)
-
-sampleTileMatrix <- scMACS::getSampleTileMatrix(
-    tileResults,
-    cellPopulation = cellPopulation,
-    reproducibleTiles,
-    NAtoZero = TRUE,
+    threshold = threshold,
+    join = join,
+    NAtoZero = FALSE,
     log2Intensity = TRUE
 )

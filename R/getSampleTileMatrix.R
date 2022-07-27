@@ -1,63 +1,11 @@
 #' @title \code{create_peak_sampleMatrix}
 #'
 #' @description \code{create_peak_sampleMatrix} is a function that can transform
-#'   a set of tile intensities into peak X sample matrix for a custom set of tiles
-#'
-#'
-#' @param tileResults custom input tile set
-#' @param reproducibleTiles a vector containing the tileIDs to subset the
-#'   sample-tile matrix
-#' @return sampleTileIntensityMat a sample X peak matrix containing observed
-#'   measurements for each sample at each peak.
-#'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
-#'
-#' @export
-
-getManualSampleTileMatrix <- function(tileResults,
-                                cellPopulation,
-                                reproducibleTiles,
-                                NAtoZero = FALSE,
-                                log2Intensity = TRUE
-                               ) {
-
-  # Get the RaggedExperiment for this cellPopulation
-  peaksExperiment <- tileResults[[cellPopulation]]
-
-  # Extract matrices of samples by peak tileIDs with TotalIntensity
-  sampleTileIntensityMat <- RaggedExperiment::compactAssay(
-    peaksExperiment,
-    i = "TotalIntensity"
-  )
-  
-  if (NAtoZero) {
-    # Replace NAs with zeroes for zero-inflated hypothesis testing
-    sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
-  }
-  
-  if (log2Intensity) {
-    sampleTileIntensityMat <- log2(sampleTileIntensityMat+1)
-  }
-
-  # Filter to just peaks in the given reproducibleTiles
-  sampleTileIntensityMat <- sampleTileIntensityMat[reproducibleTiles, ]
-
-  return(sampleTileIntensityMat)
-
-}
-
-#' @title \code{create_peak_sampleMatrix}
-#'
-#' @description \code{create_peak_sampleMatrix} is a function that can transform
 #'   a set of sample-specific peak calls into peak X sample matrix containing
 #'   lambda1 measurements for each sample.
 #'
 #'
 #' @param tileResults output of callOpenTiles
-#' @param reproducibleTiles a vector containing the tileIDs to subset the
-#'   sample-tile matrix
 #' @return sampleTileIntensityMat a sample X peak matrix containing observed
 #'   measurements for each sample at each peak.
 #'
@@ -69,7 +17,7 @@ getManualSampleTileMatrix <- function(tileResults,
 
 getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
-                                groupColumn,
+                                groupColumn = NULL,
                                 threshold = 0.2,
                                 join = "union",
                                 NAtoZero = FALSE,
@@ -81,11 +29,7 @@ getSampleTileMatrix <- function(tileResults,
   }
   
   if(class(tileResults)[1] != 'MultiAssayExperiment'){
-      stop('tileResults is not a MultiAssayExperiment')  
-  }
-  
-  if(cellPopulations == 'ALL'){
-      cellPopulations = names(tileResults)
+    stop('tileResults is not a MultiAssayExperiment')  
   }
   
   # Any column can be used to group samples
@@ -107,54 +51,42 @@ getSampleTileMatrix <- function(tileResults,
       }
   }
   
+  if(length(cellPopulations) == 1){
+    if (cellPopulations == 'ALL'){
+      cellPopulations <- names(tileResults)
+    }
+  }
+  
   experimentList <- list()
   idx <- 1
-  for (cellPop in cellPopulations){
+  for (cellPopulation in cellPopulations){
     
-    message(str_interp("Extracting sampleTileMatrix for ${cellPop} population"))
+    message(str_interp("Extracting sampleTileMatrix for ${cellPopulation} population"))
     # Get the RaggedExperiment for this cellPopulation
     peaksExperiment <- tileResults[[cellPopulation]]
-
-    # Extract matrices of samples by peak tileIDs with TotalIntensity
-    sampleTileIntensityMat <- RaggedExperiment::compactAssay(
-      peaksExperiment,
-      i = "TotalIntensity"
-    )
-    if (NAtoZero) {
-      # Replace NAs with zeroes for zero-inflated hypothesis testing
-      sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
-    }
-    if (log2Intensity) {
-      sampleTileIntensityMat <- log2(sampleTileIntensityMat+1)
-    }
-
-    # Extract matrices of samples by peak tileIDs with peak status
-    # and set NA to FALSE (no peak here)
-    samplePeakMat <- RaggedExperiment::compactAssay(
-      peaksExperiment,
-      i = "peak"
-    )
-    samplePeakMat[is.na(samplePeakMat)] <- FALSE
     
-    # Get reproducible tiles for this cell population for filtering
-    reproducibleTiles <- scMACS:::getReproducibleTiles(
+    # Get consensus tiles for this cell population for filtering
+    consensusTiles <- scMACS:::singlePopulationConsensusTiles(
       peaksExperiment,
       cellPopulation,
       threshold,
       groupColumn,
       join
-    ) 
-
-    # Filter to just peaks in the given reproducibleTiles
-    sampleTileIntensityMat <- sampleTileIntensityMat[reproducibleTiles, ]
-    # And add it to the experimentList for this cell population
+    )
+    
+    # consensusTiles is used to filter rows (tiles) from this matrix
+    sampleTileIntensityMat <- scMACS:::singlePopulationSampleTileMatrix(
+      peaksExperiment,
+      consensusTiles,
+      NAtoZero,
+      log2Intensity
+    )
+    
     experimentList[[idx]] <- sampleTileIntensityMat
     
     idx <- idx + 1
   }
   
-  browser()
-
   names(experimentList) <- cellPopulations
   results <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
