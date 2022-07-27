@@ -1,7 +1,6 @@
 # Load libraries
 library(ArchR)
 library(devtools)
-install("/home/jupyter/scMACS")
 library(scMACS)
 
 ####################################################

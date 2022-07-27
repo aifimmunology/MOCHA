@@ -6,17 +6,18 @@
 #'
 #'
 #' @param ArchRProj an ArchR Project
+#' @param cellPopLabel string indicating which column in the ArchRProject
+#'   metadata contains the cell population label.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
-#' @param cellPopLabel string indicating which column in the ArchRProject
-#'   metadata contains the cell population label.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
-#'   multiple cell populations
+#'   multiple cell populations.
 #'
-#' @return
+#' @return tileResults A MultiAssayExperiment object containing ranged data
+#'   for each tile 
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
@@ -118,10 +119,10 @@ callOpenTiles <- function(ArchRProj,
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)
-  results <- MultiAssayExperiment::MultiAssayExperiment(
+  tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData
   )
 
-  return(results)
+  return(tileResults)
 }

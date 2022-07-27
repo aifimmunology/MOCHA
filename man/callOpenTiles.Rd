@@ -21,6 +21,10 @@ Default is 'ALL'.}
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populations}
 }
+\value{
+tileResults A MultiAssayExperiment object containing ranged data
+  for each tile
+}
 \description{
 \code{callOpenTiles} is the main peak-calling function in scMACS
   that serves as a wrapper function to call peaks provided a set of fragment

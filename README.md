@@ -29,8 +29,9 @@ scATAC processing and overview of the **scMACS** algorithm.
 
 # <a name="library"></a> Install package and load library
 
-To install library, run the following lines of code to install directly from GitHub
-
+To install, run the following lines of code to install directly from GitHub replacing 'your_token' with your Github Personal Access Token. 
+    
+    Sys.setenv(GITHUB_PAT='your_token') 
     devtools::install_github("aifimmunology/scMACS", ref="package-details")
     library("scMACS")
 
