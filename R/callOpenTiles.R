@@ -50,10 +50,34 @@ callOpenTiles <- function(ArchRProj,
 
   # Check for and remove celltype-sample groups for which there are no fragments.
   fragsNoNull <- frags[lengths(frags) != 0]
-
+  emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
+  emptyGroups <- names(frags)[emptyFragsBool]
+  emptyGroups <- gsub("__.*", "", emptyGroups)
+  
+  if (length(emptyGroups)==0){
+    warning("The following celltype#sample groupings have no fragments",
+            "and will be ignored: ", emptyGroups)
+  }
+  
+  prefilterCellPops <- unique(sapply(strsplit(names(frags),"#"), `[`, 1))
+  if (any(prefilterCellPops != cellPopulations)){
+    # Removed cell populations must be filtered from cellPopulations
+    postfilterCellPops <- unique(sapply(strsplit(names(fragsNoNull),"#"), `[`, 1))
+    # Match these labels by index to the original cellPopulatoins
+    retainedPopsBool <- (prefilterCellPops %in% postfilterCellPops)
+    finalCellPopulations <- cellPopulations[retainedPopsBool]
+  } else {
+    finalCellPopulations <- cellPopulations
+  }
+  
   # Split the fragments list into a list of lists per cell population
-  splitFrags <- splitFragsByCellPop(fragsNoNull)
-  print(paste(c("Cell populations for peak calling: ", names(splitFrags)), collapse = " "))
+  splitFrags <- scMACS:::splitFragsByCellPop(fragsNoNull)
+  
+  # getPopFrags needs to replace spaces for underscores, so
+  # here we rename the fragments with the original cell populations labels.
+  # Fragments maintain their order by cell population.
+  names(splitFrags) <- finalCellPopulations
+  message("Cell populations for peak calling: ", paste(names(splitFrags), sep=", "))
 
   # Main loop over all cell populations
   experimentList <- list()

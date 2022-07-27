@@ -3,14 +3,12 @@ library(ArchR)
 library(devtools)
 library(scMACS)
 
-####################################################
-# 1. Setting Parameters
-####################################################
 
-# Load the ArchR Project 
+# Load the ArchR Project
+# You should substitute this with your own ArchR project
 covidArchR <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
 
-# For example: filter ArchR Project to three samples from each Covid Status
+# For our example: filter ArchR Project to three samples from each Covid Status
 samplesToKeep <- c(
   "B011-AP0C1W3", 
   "B011-AP0C1W8", 
@@ -23,9 +21,16 @@ idxSample <- BiocGenerics::which(covidArchR$Sample %in% samplesToKeep)
 cellsSample <- covidArchR$cellNames[idxSample]
 covidArchR <- covidArchR[cellsSample, ]
 
+####################################################
+# 1. Setting Parameters
+#    For more details on each of these parameters, 
+#    view the help pages for each function using 
+#    ?callOpenTiles and ?getSampleTileMatrix
+####################################################
+
 # Parameters for calling open tiles
 cellPopLabel <- "CellSubsets"
-cellPopulations <- c("CD16 Mono", "DC", "MAIT")
+cellPopulations <- c("MAIT", "CD16 Mono", "DC")
 numCores <- 20
 
 # Parameters for downstream analysis
@@ -57,7 +62,7 @@ tileResults <- scMACS::callOpenTiles(
 
 SampleTileMatrices <- scMACS::getSampleTileMatrix( 
     tileResults,
-    cellPopulations = 'ALL',
+    cellPopulations = cellPopulations,
     groupColumn = groupColumn,
     threshold = threshold,
     join = join,
