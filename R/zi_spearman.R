@@ -59,11 +59,16 @@ weightedZISpearman <- function(x, y, w = 1) {
   p_01 = sum(w * (!posx & posy))/sum(w)
   p_10 = sum(w * (posx & !posy))/sum(w)
   
-  if(any(pospos)){
+
+  if(any(pospos) & p_11 > 0){
       rho_11 = wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
   }else{
-      stop('Error: All values are zero. No signal in this region. Upstream analysis error likely.')    
+      print("Zero inflated Spearman correlation is undefined,
+          returning NA")
+      rho =NA
+      return(rho)    
   }
+  
   rho_star = p_11 * (p_01 + p_11) * (p_10 + p_11) * rho_11 +
     3*(p_00 * p_11 - p_10 * p_01)
 
@@ -73,6 +78,8 @@ weightedZISpearman <- function(x, y, w = 1) {
     rho =NA
     return(rho)
   }
+  
+
 
   return(rho_star)
 }
