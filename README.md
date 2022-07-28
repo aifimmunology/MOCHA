@@ -9,12 +9,6 @@ Table of Contents
 * [Introduction](#introduction)
 * [Install package and load library](#library)
 * [Package Vignette on COVID PASC dataset](#vignette)
-* [Tutorials](#example-main)
-    * [Tutorial-1: Peak-calling on Entire Cell Populations](#example1)
-    * [Tutorial-2: Sample-specific Peak-calling](#example2)
-    * [Tutorial-3: Differential Accessibility](#example3)
-    * [Tutorial-4: Sample X Peak Matrix](#example4)
-
 
 * [Contact](#contact)
 * [License](#license)
