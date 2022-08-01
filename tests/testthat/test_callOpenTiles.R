@@ -9,10 +9,14 @@ test_that("We can call peaks by sample", {
   # subsequent runs load the object itself
   testProj <- ArchR::getTestProject()
 
-  tileResults <- scMACS::callOpenTiles(
-    testProj,
-    cellPopLabel = "Clusters",
-    cellPopulations = c("C1", "C2"),
-    numCores = 10
-  )
+  capture.output(expect_snapshot_value(
+    scMACS::callOpenTiles(
+      testProj,
+      cellPopLabel = "Clusters",
+      cellPopulations = c("C1", "C2"),
+      numCores = 10
+    ),
+    style = "json2"
+  ))
+  
 })

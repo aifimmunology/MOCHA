@@ -17,7 +17,7 @@ addArchRVerbose(verbose = FALSE)
 
 
 # Download (first time only) and load ArchR project
-testProj <- getTestProject() # Requires an internet connection
+testProj <- ArchR::getTestProject() # Requires an internet connection
 metaColumn <- "Clusters" # Column with cell population groups
 
 # Test getPopFrags with full genome and all normalization methods
@@ -45,7 +45,7 @@ for (sampleSpecific in c(TRUE, FALSE)) {
 
         if (sampleSpecific) {
           samples <- unique(testProj$Sample)
-          combinations <- cross2(populations, samples) %>% map(lift(paste))
+          combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
           expected_names <- gsub(" ", "#", combinations)
         } else {
           expected_names <- populations
@@ -82,7 +82,8 @@ test_that(
         metaColumn = metaColumn,
         numCores = 10,
         region = "chr2:1-187350807",
-        NormMethod = "Raw"
+        NormMethod = "Raw",
+        sampleSpecific = FALSE
       )
     )
 
@@ -104,7 +105,8 @@ for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
           metaColumn = metaColumn,
           numCores = 10,
           region = "chr2:1-187350807",
-          NormMethod = NormMethod
+          NormMethod = NormMethod,
+          sampleSpecific = FALSE
         )),
         "Wrong NormMethod"
       )
@@ -116,11 +118,11 @@ for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
 test_that(
   "validRegionString works on edge cases",
   {
-    expect_true(validRegionString("chr1:1-123412"))
-    expect_true(validRegionString("chr20:12300-12400"))
-    expect_true(validRegionString("4:145-146"))
-    expect_false(validRegionString("chr20_12300-12400"))
-    expect_false(validRegionString("chr20:12300-12200"))
+    expect_true(scMACS:::validRegionString("chr1:1-123412"))
+    expect_true(scMACS:::validRegionString("chr20:12300-12400"))
+    expect_true(scMACS:::validRegionString("4:145-146"))
+    expect_false(scMACS:::validRegionString("chr20_12300-12400"))
+    expect_false(scMACS:::validRegionString("chr20:12300-12200"))
   }
 )
 
@@ -135,7 +137,8 @@ test_that(
           metaColumn = metaColumn,
           numCores = 10,
           region = "chr2_1-187350807",
-          NormMethod = "Raw"
+          NormMethod = "Raw",
+          sampleSpecific = FALSE
         )
       ),
       "Invalid region input."
@@ -148,7 +151,8 @@ test_that(
           metaColumn = metaColumn,
           numCores = 10,
           region = list("chr1:1-2", "chr2:1-2"),
-          NormMethod = "Raw"
+          NormMethod = "Raw",
+          sampleSpecific = FALSE
         )
       ),
       "Invalid region input."
@@ -166,7 +170,8 @@ test_that(
         popFrags <- getPopFrags(
           testProj,
           metaColumn = "IDoNotExist",
-          numCores = 10
+          numCores = 10,
+          sampleSpecific = FALSE
         )
       ),
       "does not exist in the cellColData of your ArchRProj"
@@ -184,7 +189,8 @@ test_that(
           testProj,
           metaColumn = "Clusters",
           cellSubsets = c("C1", "IDoNotExist", "C3", "C5"),
-          numCores = 10
+          numCores = 10,
+          sampleSpecific = FALSE
         )
       ),
       "cellSubsets with NA cell counts: IDoNotExist"
