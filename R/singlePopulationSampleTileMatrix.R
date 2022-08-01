@@ -39,7 +39,7 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
 
   # Filter to just peaks in the given consensusTiles
   prevDims <- dim(sampleTileIntensityMat)
-  sampleTileIntensityMat <- sampleTileIntensityMat[consensusTiles, ]
+  sampleTileIntensityMat <- sampleTileIntensityMat[consensusTiles, , drop=FALSE]
   currDims <- dim(sampleTileIntensityMat)
   message("\tDimensions of sample-tile matrix\n",
           "\tbefore and after consensus tile filtering:\n",
