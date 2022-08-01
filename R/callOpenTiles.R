@@ -77,12 +77,12 @@ callOpenTiles <- function(ArchRProj,
   # here we rename the fragments with the original cell populations labels.
   # Fragments maintain their order by cell population.
   names(splitFrags) <- finalCellPopulations
-  message("Cell populations for peak calling: ", paste(names(splitFrags), sep=", "))
+  message("Cell populations for peak calling: ", paste(names(splitFrags), ""))
 
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in names(splitFrags)) {
-    print(str_interp("Calling open tiles for cell population ${cellPop}"))
+    message(str_interp("Calling open tiles for cell population ${cellPop}"))
 
     # Get our fragments for this cellPop
     popFrags <- unlist(splitFrags[[cellPop]])

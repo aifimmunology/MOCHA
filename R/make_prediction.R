@@ -35,8 +35,7 @@ make_prediction <- function(X, finalModelObject){
     ### We do not make predictions 
     
     if(cell_model  < 5){
-        print('Cannot make peak calls with < 5 cells, returning NULL object')
-        return(NULL)
+        stop('Cannot make peak calls with < 5 cells, returning NULL object')
     } else {
     
        ### Apply model fit based on the 

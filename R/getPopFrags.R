@@ -104,8 +104,8 @@ getPopFrags <- function(ArchRProj,
 
     # Extract fragments from a given region only
     # Validate region and interpret as string or GRanges
-    if (validRegionString(region) & tolower(NormMethod) == "raw") {
-      regionGRanges <- StringsToGRanges(region)
+    if (scMACS:::validRegionString(region) & tolower(NormMethod) == "raw") {
+      regionGRanges <- scMACS:::StringsToGRanges(region)
     } else if (class(region)[1] == "GRanges" & tolower(NormMethod) == "raw") {
       regionGRanges <- region
     } else if (tolower(NormMethod) != "raw") {
@@ -164,8 +164,7 @@ getPopFrags <- function(ArchRProj,
 
     # Verify expected cellPopulations have corresponding nFrags
     if (!all(nFragsNorm[, 1] == cellPopulations)) {
-      print(nFragsNorm[, 1])
-      stop("Names of nFrags don't match the cell populations.")
+      stop("Names of nFrags don't match the cell populations.", nFragsNorm[, 1])
     }
     names(barcodesByCellPop) <- paste(gsub("#", "_", gsub(" |_", "_", cellPopulations)), nFragsNorm$nFrags / 10^6, sep = "__")
   } else if (tolower(NormMethod) == "median") {
@@ -196,7 +195,7 @@ getPopFrags <- function(ArchRProj,
   # Sort fragments into a list by cell population
 
   popFrags <- lapply(seq_along(barcodesByCellPop), function(x) {
-    print(paste("Sorting ", names(barcodesByCellPop)[x], sep = ""))
+    message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
     if (sum(fragsListIndex[[x]]) > 1) {
       tmp <- parallel::mclapply(which(fragsListIndex[[x]]), function(y) {
         subset_Frag(barcodesByCellPop[[x]], fragsList[[y]])
