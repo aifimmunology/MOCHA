@@ -7,7 +7,7 @@ Table of Contents
 -----------------
 
 * [Introduction](#introduction)
-* [Install package and load library](#library)
+* [Installation](#library)
 * [Package Vignette on COVID PASC dataset](#vignette)
 
 * [Contact](#contact)
@@ -18,16 +18,12 @@ Table of Contents
 # <a name="introduction"></a> Introduction
 scMACS is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model. 
 
-<br> ![img](vignettes/scMACS_overview.png) <br>
-scATAC processing and overview of the **scMACS** algorithm. 
-
 # <a name="library"></a> Install package and load library
 
-To install, run the following lines of code to install directly from GitHub replacing 'your_token' with your Github Personal Access Token. 
+To install in a HISE IDE, run the following lines of code to install directly from GitHub replacing 'your_token' with your Github Personal Access Token. 
     
     Sys.setenv(GITHUB_PAT='your_token') 
-    devtools::install_github("aifimmunology/scMACS", ref="package-details")
-    library("scMACS")
+    devtools::install_github("aifimmunology/scMACS")
 
 # <a name="vignette"></a> Usage
 Example usage can be found in this [vignette](vignettes/COVID_example.R) copied below:
@@ -107,6 +103,37 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     log2Intensity = TRUE
 )
 ```
+
+The output of each function is a [MultiAssayExperiment](https://www.bioconductor.org/packages/devel/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html#overview-of-the-multiassayexperiment-class) organizing your results (either open tiles or sample-tile matrices) by cell population.
+
+Sample-level metadata can be accessed using `colData(yourResults)`. 
+
+Individual results for each cell population can be accessed as follows:
+```R
+# Get the sample-tile matrix for DC cells
+DCcellsMatrix <- SampleTileMatrices[["DC"]]
+# Get the sample-tile matrix for MAIT cells
+MAITcellsMatrix <- SampleTileMatrices[["MAIT"]]
+
+```
+
+The results of a specific cell population from `scMACS::callOpenTiles` (as above) are stored as a [RaggedExperiment](https://bioconductor.org/packages/release/bioc/vignettes/RaggedExperiment/inst/doc/RaggedExperiment.html).
+
+This object stores ranged data alongside the sample-level metadata.
+
+```R
+# Get open tiles for DC cells
+DCcellRaggedExp <- tileResults[["DC"]]
+
+# DCcellTileResults is a RaggedExperiment
+# You can get the sample-level metadata (same as above)
+sampleData <- colData(DCcellRaggedExp)
+
+# You can access the underlying GRanges object containing ranges for all samples
+tilesGRanges <- rowRanges(DCcellRaggedExp)
+
+```
+
 
 # <a name="contact"></a> Contact
 
