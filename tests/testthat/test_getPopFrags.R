@@ -11,13 +11,13 @@
 
 
 # Check for existence of ArchR test data first:
-addArchRThreads(threads = 10)
-options(timeout = 600) # 10 minute timeout for download
-addArchRVerbose(verbose = FALSE)
+capture.output(ArchR::addArchRThreads(threads = 10), type = "message")
+withr::local_options(timeout = 600) # 10 minute timeout for download
+capture.output(ArchR::addArchRVerbose(verbose = FALSE), type = "message")
 
 
 # Download (first time only) and load ArchR project
-testProj <- ArchR::getTestProject() # Requires an internet connection
+capture.output(testProj <- ArchR::getTestProject(), type = "message") # Requires an internet connection
 metaColumn <- "Clusters" # Column with cell population groups
 
 # Test getPopFrags with full genome and all normalization methods
@@ -37,7 +37,8 @@ for (sampleSpecific in c(TRUE, FALSE)) {
             numCores = 10,
             NormMethod = NormMethod,
             sampleSpecific = sampleSpecific
-          )
+          ),
+          type = "message"
         )
 
         # Test population+sample names are as expected
@@ -84,7 +85,8 @@ test_that(
         region = "chr2:1-187350807",
         NormMethod = "Raw",
         sampleSpecific = FALSE
-      )
+      ),
+      type = "message"
     )
 
     # Test population names are as expected
@@ -107,7 +109,7 @@ for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
           region = "chr2:1-187350807",
           NormMethod = NormMethod,
           sampleSpecific = FALSE
-        )),
+        ), type = "message"),
         "Wrong NormMethod"
       )
     }
@@ -139,7 +141,8 @@ test_that(
           region = "chr2_1-187350807",
           NormMethod = "Raw",
           sampleSpecific = FALSE
-        )
+        ),
+        type = "message"
       ),
       "Invalid region input."
     )
@@ -153,7 +156,8 @@ test_that(
           region = list("chr1:1-2", "chr2:1-2"),
           NormMethod = "Raw",
           sampleSpecific = FALSE
-        )
+        ),
+        type = "message"
       ),
       "Invalid region input."
     )
@@ -172,7 +176,8 @@ test_that(
           metaColumn = "IDoNotExist",
           numCores = 10,
           sampleSpecific = FALSE
-        )
+        ),
+        type = "message"
       ),
       "does not exist in the cellColData of your ArchRProj"
     )
@@ -191,7 +196,8 @@ test_that(
           cellSubsets = c("C1", "IDoNotExist", "C3", "C5"),
           numCores = 10,
           sampleSpecific = FALSE
-        )
+        ),
+        type = "message"
       ),
       "cellSubsets with NA cell counts: IDoNotExist"
     )
