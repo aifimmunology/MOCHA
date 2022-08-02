@@ -1,11 +1,68 @@
+# Function to get sample-level metadata,
+# from an ArchR project's colData
+sampleDataFromCellColData <- function(cellColData, sampleLabel){
+  
+    if (!(sampleLabel %in% colnames(cellColData))){
+      stop(paste(
+          "`sampleLabel` must present in your ArchR Project's cellColData",
+          "Check `names(getCellColData(ArchRProj)` for possible sample columns."
+      ))
+    }
+  
+    # Drop columns where all values are NA
+    cellColDataNoNA <- BiocGenerics::Filter(function(x){!all(is.na(x))}, cellColData)
+
+    # Convert to data.table
+    cellColDT <- data.table::as.data.table(cellColDataNoNA)
+
+    BoolDT <- cellColDT[, lapply(.SD, function(x){length(unique(x)) == 1}), by = c(sampleLabel)]
+    trueCols <- apply(BoolDT, 2, all)
+    trueCols[[sampleLabel]] <- TRUE
+    cellColDF <- as.data.frame(cellColDT)                             
+
+    sampleData <- dplyr::distinct(cellColDF[,names(which(trueCols))])
+
+    # Set sampleIDs as rownames
+    rownames(sampleData) <- sampleData[[sampleLabel]]
+    return(sampleData)
+}
 
 
+# Function to split the output of getPopFrags into a list 
+# of lists of GRanges, one named for each celltype.
+# Resulting in a list containing each celltype, and each 
+# celltype has a list of GRanges name for each sample.
+splitFragsByCellPop <- function(frags) {
+    
+    # Rename frags by cell population
+    renamedFrags <- lapply(
+        1:length(frags),
+        function(y){
+            # Split out celltype and sample from the name
+            x <- frags[y]
+            celltype_sample <- names(x)
+            splits <- unlist(stringr::str_split(celltype_sample, "#"))
+            celltype <- splits[1]
+            sample <- unlist(stringr::str_split(splits[2], "__"))[1]
+            # Rename the fragments with just the sample
+            names(x) <- sample
+            # Return as a list named for celltype
+            output <- list(x)
+            names(output) <- celltype
+            output
+        }
+    )
+    
+    # Group frags by cell population
+    renamedFrags <- unlist(renamedFrags, recursive=FALSE)
+    splitFrags <- split(renamedFrags, f=names(renamedFrags))
+    return(splitFrags)
+}
 
 
-
-### This function converst scMACS DAPs data table to a Summarized Experiment 
-## for use with ArchR's functions
-## This functions expects a DAPs data.table, with a column named 'Peak'
+# This function converst scMACS DAPs data table to a Summarized Experiment 
+# for use with ArchR's functions
+# This functions expects a DAPs data.table, with a column named 'Peak'
 DAPsToSE <- function(daps){
     
     #Generate a GRanges from the character strings found in the peaks column
@@ -34,9 +91,9 @@ DAPsToSE <- function(daps){
 
 
 
-### This function converst scMACS sample-specific peak calls, raw fragments by sample, 
-## the sample-specific peak matrix, and sample metadata into one Summarized Experiment Object
-## It expects a column in the peak matrix called 'tileID', and a column in the metadata called 'Sample'
+# This function converst scMACS sample-specific peak calls, raw fragments by sample, 
+# the sample-specific peak matrix, and sample metadata into one Summarized Experiment Object
+# It expects a column in the peak matrix called 'tileID', and a column in the metadata called 'Sample'
 
 PeakMatToSE <- function(sample_peak_matrix, metadata, sampleSpecific){
     
@@ -57,31 +114,59 @@ PeakMatToSE <- function(sample_peak_matrix, metadata, sampleSpecific){
     
 
 
-### Quick support functions
-##Strings to GRanges
+# Tests if a string is a in the correct format to convert to GRanges 
+validRegionString <- function(regionString) {
+  if (!is.character(regionString)) {
+    return(FALSE)
+  }
 
-StringsToGRanges <- function(regionString){
-  
-  chrom <- gsub(":.*","",regionString)
-  startSite <- gsub(".*:","",regionString) %>% gsub("-.*", "",.) %>% as.numeric()
-  endSite <- gsub(".*-","",regionString) %>% as.numeric()
-  
-  regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite,end = endSite), strand = "*")
-  
-  return(regionGRanges)
-  
+  pattern <- "([0-9]{1,2}|chr[0-9]{1,2}):[0-9]*-[0-9]*"
+  matchedPattern <- str_extract(regionString, pattern)
+
+  if (is.na(matchedPattern)) {
+    return(FALSE)
+  } else if (!matchedPattern == regionString) {
+    return(FALSE)
+  }
+
+  splits <- str_split(regionString, "[:-]")[[1]]
+  start <- splits[2]
+  end <- splits[3]
+  if (start > end) {
+    return(FALSE)
+  }
+
+  # All conditions satisfied
+  return(TRUE)
 }
 
-### Reverse function. Converst a GRanges object to a string in the format 'chr1:100-200'
+# Strings to GRanges
+StringsToGRanges <- function(regionString) {
+  if (!validRegionString(regionString)) {
+    stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
+  }
+
+  chrom <- gsub(":.*", "", regionString)
+  startSite <- gsub(".*:", "", regionString) %>%
+    gsub("-.*", "", .) %>%
+    as.numeric()
+  endSite <- gsub(".*-", "", regionString) %>% as.numeric()
+
+
+  regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
+  return(regionGRanges)
+}                    
+
+# Converts a GRanges object to a string in the format 'chr1:100-200'
 GRangesToString <- function(GR_obj){
   
   paste(seqnames(GR_obj), ":",start(GR_obj),"-",end(GR_obj),sep="")
   
 }
 
-
-##### This functions takes the output of coaccessibility, filters by a correlation threshold,
-#### and then returns a data.frame
+# This functions takes the output of coaccessibility, filters by a 
+# correlation threshold, and then returns a data.frame
+#
 # tielCorrelations = output of coaccessibility
 # nearbyTiles - data.table of peaks within the correlation
 # threshold - Absolute correlation threshold

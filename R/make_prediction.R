@@ -18,7 +18,8 @@
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
-#' @keywords internal 
+#' @noRd
+#'
 
 make_prediction <- function(X, finalModelObject){
 
@@ -34,8 +35,7 @@ make_prediction <- function(X, finalModelObject){
     ### We do not make predictions 
     
     if(cell_model  < 5){
-        print('Cannot make peak calls with < 5 cells, returning NULL object')
-        return(NULL)
+        stop('Cannot make peak calls with < 5 cells, returning NULL object')
     } else {
     
        ### Apply model fit based on the 
@@ -112,8 +112,7 @@ make_prediction <- function(X, finalModelObject){
     ### Identify cutoff based on 
     ### different abundances 
     newdata = data.frame(Ncells = cell_model)
-    adaptiveThreshold = as.numeric(predict(scMACS::youden_threshold, 
-                                            newdata=newdata))
+    adaptiveThreshold = as.numeric(predict(scMACS::youden_threshold, newdata=newdata))
     
    
     ### Boolean indicating whether 

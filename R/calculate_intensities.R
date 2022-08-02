@@ -17,14 +17,16 @@
 #'
 #' @references XX
 #' 
-#' @export
+#' @import data.table
+#' 
+#' @noRd
+#' 
 
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
                                   totalFrags
                                   )
 {
-  print("calculating intensities!")
 
   if(class(fragMat) != 'GRanges'){
     stop('fragMat user-input must be a Genomic Ranges (GRanges) object')
@@ -33,13 +35,13 @@ calculate_intensities <- function(fragMat,
   if(class(candidatePeaks) != 'GRanges'){
     stop('candidatePeaks user-input must be a Genomic Ranges (GRanges) object')
   }
-  if(class(totalFrags) != 'numeric'){
+  if(!is.integer(totalFrags)){
     stop('totalFrags user-input must be an integer denoting the total # of frags')
   }    
 
   ### set normalization 
   ### scale for fragment counts
-  normScale=10^9
+  normScale <- 10^9
   
   ## transform fragments into data.table
   fragMat_dt <- data.table::as.data.table(fragMat)
@@ -76,14 +78,13 @@ calculate_intensities <- function(fragMat,
 
   ### Convert frags per bin matrix into 
   ### a data.table for obtaining cell counts 
-  fragsPerBin = data.table::as.data.table(fragsPerBin)
+  fragsPerBin <- data.table::as.data.table(fragsPerBin)
   
   ### get cell count matrix
-  cell_counts = fragsPerBin[,list(N=.N),
-                            by=list(bin,cell)]
+  cell_counts <- fragsPerBin[, .N, by=list(bin,cell)]
 
   ### include normalized counts 
-  cell_counts$normedFrags= cell_counts$N / (totalFrags / normScale)
+  cell_counts$normedFrags <- cell_counts$N / (totalFrags / normScale)
         
   #### doing bin-level summaries
   setkey(cell_counts, bin)
@@ -128,7 +129,7 @@ calculate_intensities <- function(fragMat,
 
   ### Rename "bin" identifier as "tileID"
   colnames(countsByBin)[1] <- 'tileID'
-  print(paste('Analysis finished on ', numCells, 'cells'))
+  message(' ---> Analysis finished on ', numCells, ' cells')
 
   return(countsByBin)
 }
