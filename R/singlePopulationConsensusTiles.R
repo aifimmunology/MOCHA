@@ -6,15 +6,13 @@
 #' @keywords internal
 
 singlePopulationConsensusTiles <- function(peaksExperiment,
-                                 cellPopulation,
                                  threshold,
-                                 groupColumn,
-                                 join) {
+                                 groupColumn = NULL,
+                                 join = 'union') {
   
   if (!(join %in% c("union", "intersect"))){
     stop("`join` must be either 'union' or 'intersect'")
   }
-  
   # Any column can be used to group samples
   # Note that these are case-sensitive
   sampleData <- colData(tileResults)
@@ -23,13 +21,6 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
     if (!(groupColumn %in% validGroups)){
       stop("`groupColumn` not found in the column data of tileResults.")
     }
-  }
-  
-  if (!(cellPopulation %in% names(tileResults))){
-    stop(paste(
-      "`cellPopulation` must present in tileResults.",
-      "Check `names(tileResults)` for possible cell populations."
-    ))
   }
 
   # Extract matrices of samples by peak tileIDs with peak status

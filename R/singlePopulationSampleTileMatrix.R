@@ -37,13 +37,26 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
     sampleTileIntensityMat <- log2(sampleTileIntensityMat+1)
   }
 
-  # Filter to just peaks in the given consensusTiles
+  # Filter to just peaks in the given consensusTiles. 
   prevDims <- dim(sampleTileIntensityMat)
-  sampleTileIntensityMat <- sampleTileIntensityMat[consensusTiles, ]
+  sampleTileIntensityMat <- sampleTileIntensityMat[rownames(sampleTileIntensityMat) %in% consensusTiles, ]
+
+  #If the tiles you are pulling don't exist in the peakExperiment, add a matrix of NAs or Zeros to represent those tiles
+  if(any(!consensusTiles %in% rownames(sampleTileIntensityMat))){
+
+	filler <- ifelse(NAtoZero, 0, NA)
+	rowList <- consensusTiles[!consensusTiles %in% rownames(sampleTileIntensityMat)]
+	emptyMat <- matrix(filler, nrow = length(rowList), ncol = ncol(sampleTileIntensityMat),
+				dimnames = list(rowList, colnames(sampleTileIntensityMat)))
+	sampleTileIntensityMat <- rbind(sampleTileIntensityMat, emptyMat)
+	
+  }
   currDims <- dim(sampleTileIntensityMat)
   message("\tDimensions of sample-tile matrix\n",
-          "\tbefore and after consensus tile filtering:\n",
+          "\tbefore and after consensus tiles:\n",
           str_interp("\t${prevDims} before to ${currDims} after"))
+
+  sampleTileIntensityMat <- sampleTileIntensityMat[ order(rownames(sampleTileIntensityMat)), ]
 
   return(sampleTileIntensityMat)
 

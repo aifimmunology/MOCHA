@@ -21,7 +21,9 @@ getSampleTileMatrix <- function(tileResults,
                                 threshold = 0.2,
                                 join = "union",
                                 NAtoZero = FALSE,
-                                log2Intensity = TRUE
+                                log2Intensity = TRUE,
+				numCores = 1,
+				verbose = FALSE
                                ) {
 
   if (!(join %in% c("union", "intersect"))){
@@ -42,55 +44,62 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
   
-  for (cellPop in cellPopulations){
-      if (!(cellPop %in% names(tileResults))){
-        stop(paste(
+  if (!(all(cellPopulations %in% names(tileResults))) & toLower(cellPop) != 'all'){
+       stop(paste(
           "All of `cellPopulations` must present in tileResults.",
           "Check `names(tileResults)` for possible cell populations."
         ))
-      }
   }
   
   if(length(cellPopulations) == 1){
     if (cellPopulations == 'ALL'){
-      cellPopulations <- names(tileResults)
+      subTileResults <- tileResults
     }
+  }else{
+
+    subTileResults <- tileResults[names(tileResults) %in% cellPopulations]
+
   }
   
-  experimentList <- list()
-  idx <- 1
-  for (cellPopulation in cellPopulations){
-    
-    message(str_interp("Extracting sampleTileMatrix for ${cellPopulation} population"))
-    # Get the RaggedExperiment for this cellPopulation
-    peaksExperiment <- tileResults[[cellPopulation]]
+  
+
+  peakList <- lapply(subTileResults, function(x){
+
+    if(verbose){message(str_interp("Extracting sampleTileMatrix for ${cellPopulation} population"))}
     
     # Get consensus tiles for this cell population for filtering
-    consensusTiles <- scMACS:::singlePopulationConsensusTiles(
-      peaksExperiment,
-      cellPopulation,
+    scMACS:::singlePopulationConsensusTiles(
+      x,
       threshold,
       groupColumn,
       join
     )
-    
-    # consensusTiles is used to filter rows (tiles) from this matrix
-    sampleTileIntensityMat <- scMACS:::singlePopulationSampleTileMatrix(
-      peaksExperiment,
-      consensusTiles,
-      NAtoZero,
-      log2Intensity
-    )
-    
-    experimentList[[idx]] <- sampleTileIntensityMat
-    
-    idx <- idx + 1
-  }
-  
-  names(experimentList) <- cellPopulations
-  results <- MultiAssayExperiment::MultiAssayExperiment(
-    experiments = experimentList,
-    colData = sampleData
+
+  })
+
+  allPeaks <- sort(unique(do.call('c',peakList)))
+
+  # consensusTiles is used to filter rows (tiles) from this matrix
+  sampleTileIntensityMatList <- lapply(experiments(tileResults), function(x){
+
+		scMACS:::singlePopulationSampleTileMatrix(
+      				x,
+      				allPeaks,
+      				NAtoZero,
+      				log2Intensity
+    		)
+   })
+
+  peakPresence <- lapply(peakList, function(x) (allPeaks %in% x)) %>% do.call('cbind', .) %>% as.data.frame()
+
+  allPeakGR <- StringsToGRanges(sort(allPeaks))
+  mcols(allPeakGR) <- peakPresence
+
+  #names(experimentList) <- cellPopulations
+  results <- SummarizedExperiment::SummarizedExperiment(
+  		sampleTileIntensityMatList,
+    		rowRanges = allPeakGR,
+		colData = sampleData
   )
 
   return(results)
