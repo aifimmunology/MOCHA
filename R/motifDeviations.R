@@ -37,7 +37,7 @@ matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL
 
 	if(class(ForegroundPeakset)[1] == "Character"){
 
-		ForegroundPeakSet = StringsToGRanges(ForegroundPeakset)
+		ForegroundPeakSet = scMACS::StringsToGRanges(ForegroundPeakset)
 
 	}else if(class(ForegroundPeakset)[1] != "GRanges"){
 
@@ -47,11 +47,11 @@ matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL
 
 	if(is.null(BackgroundSet)){
 
-		BackgroundSet = plyranges::filter_by_non_overlaps(StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
+		BackgroundSet = plyranges::filter_by_non_overlaps(scMACS::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
 
 	}else if(!is.null(BackgroundSet) & class(BackgroundSet)[1] == "Character"){
 
-		BackgroundSet = StringsToGranges(BackgrounfSet)
+		BackgroundSet = scMACS::StringsToGranges(BackgrounfSet)
 
 	}else if(!is.null(BackgroundSet) & class(BackgroundSet)[1] != "GRanges"){
 
@@ -59,8 +59,8 @@ matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL
 
 	}
 
-	Count1 <- findOverlaps(StringsToGRanges(SampleTileMatrix$tileID),ForegroundPeakset)
-	Count2 <- findOverlaps(StringsToGRanges(SampleTileMatrix$tileID),BackgroundSet)
+	Count1 <- findOverlaps(scMACS::StringsToGRanges(SampleTileMatrix$tileID),ForegroundPeakset)
+	Count2 <- findOverlaps(scMACS::StringsToGRanges(SampleTileMatrix$tileID),BackgroundSet)
 
 	#Check if the background and foreground set overlap with any tiles in common. 
 	if(any(queryHits(Count1) %in% queryHits(Count2))){stop('Error: Background & Foreground set overlap for Sample-Tile matrix')}

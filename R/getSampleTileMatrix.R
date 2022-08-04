@@ -44,7 +44,7 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
   
-  if (!(all(cellPopulations %in% names(tileResults))) & toLower(cellPop) != 'all'){
+  if (!(all(cellPopulations %in% names(tileResults))) & tolower(cellPopulations) != 'all'){
        stop(paste(
           "All of `cellPopulations` must present in tileResults.",
           "Check `names(tileResults)` for possible cell populations."
@@ -54,6 +54,7 @@ getSampleTileMatrix <- function(tileResults,
   if(length(cellPopulations) == 1){
     if (cellPopulations == 'ALL'){
       subTileResults <- tileResults
+      cellPopulations = names(tileResults)
     }
   }else{
 
@@ -61,11 +62,10 @@ getSampleTileMatrix <- function(tileResults,
 
   }
   
-  
 
-  peakList <- lapply(subTileResults, function(x){
+  if(verbose){message(str_interp("Extracting consensus tile set within each population:  ${cellPopulations} "))}
 
-    if(verbose){message(str_interp("Extracting sampleTileMatrix for ${cellPopulation} population"))}
+  peakList <- mclapply(experiments(subTileResults), function(x){
     
     # Get consensus tiles for this cell population for filtering
     scMACS:::singlePopulationConsensusTiles(
@@ -75,12 +75,14 @@ getSampleTileMatrix <- function(tileResults,
       join
     )
 
-  })
+  }, mc.cores = numCores)
 
   allPeaks <- sort(unique(do.call('c',peakList)))
 
-  # consensusTiles is used to filter rows (tiles) from this matrix
-  sampleTileIntensityMatList <- lapply(experiments(tileResults), function(x){
+  if(verbose){message(str_interp("Generating Sample Tile Matrix Across All Populations: ${cellPopulations} "))}
+
+  # consensusTiles is used to  extract rows (tiles) from this matrix
+  sampleTileIntensityMatList <- mclapply(experiments(tileResults), function(x){
 
 		scMACS:::singlePopulationSampleTileMatrix(
       				x,
@@ -88,11 +90,11 @@ getSampleTileMatrix <- function(tileResults,
       				NAtoZero,
       				log2Intensity
     		)
-   })
+   }, mc.cores = numCores)
 
   peakPresence <- lapply(peakList, function(x) (allPeaks %in% x)) %>% do.call('cbind', .) %>% as.data.frame()
 
-  allPeakGR <- StringsToGRanges(sort(allPeaks))
+  allPeakGR <- scMACS::StringsToGRanges(sort(allPeaks))
   mcols(allPeakGR) <- peakPresence
 
   #names(experimentList) <- cellPopulations
