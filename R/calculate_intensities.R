@@ -27,7 +27,6 @@ calculate_intensities <- function(fragMat,
                                   totalFrags
                                   )
 {
-  print("calculating intensities!")
 
   if(class(fragMat) != 'GRanges'){
     stop('fragMat user-input must be a Genomic Ranges (GRanges) object')
@@ -130,7 +129,7 @@ calculate_intensities <- function(fragMat,
 
   ### Rename "bin" identifier as "tileID"
   colnames(countsByBin)[1] <- 'tileID'
-  print(paste('Analysis finished on ', numCells, 'cells'))
+  message(' ---> Analysis finished on ', numCells, ' cells')
 
   return(countsByBin)
 }

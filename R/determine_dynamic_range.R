@@ -67,5 +67,4 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize=500, do
 
   return(FinalBins)
 
-  print('fragments loaded')
 }

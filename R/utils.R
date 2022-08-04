@@ -15,7 +15,7 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel){
     # Convert to data.table
     cellColDT <- data.table::as.data.table(cellColDataNoNA)
 
-    BoolDT <- cellColDT[, lapply(.SD, function(x) length(unique(x)) == 1), by = c(sampleLabel)]
+    BoolDT <- cellColDT[, lapply(.SD, function(x){length(unique(x)) == 1}), by = c(sampleLabel)]
     trueCols <- apply(BoolDT, 2, all)
     trueCols[[sampleLabel]] <- TRUE
     cellColDF <- as.data.frame(cellColDT)                             
@@ -40,7 +40,6 @@ splitFragsByCellPop <- function(frags) {
         function(y){
             # Split out celltype and sample from the name
             x <- frags[y]
-            print(names(x))
             celltype_sample <- names(x)
             splits <- unlist(stringr::str_split(celltype_sample, "#"))
             celltype <- splits[1]
@@ -115,28 +114,55 @@ PeakMatToSE <- function(sample_peak_matrix, metadata, sampleSpecific){
     
 
 
-# Quick support functions
+# Tests if a string is a in the correct format to convert to GRanges 
+validRegionString <- function(regionString) {
+  if (!is.character(regionString)) {
+    return(FALSE)
+  }
 
-#Strings to GRanges
-StringsToGRanges <- function(regionString){
-  
-  chrom <- gsub(":.*","",regionString)
-  startSite <- gsub(".*:","",regionString) %>% gsub("-.*", "",.) %>% as.numeric()
-  endSite <- gsub(".*-","",regionString) %>% as.numeric()
-  
-  regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite,end = endSite), strand = "*")
-  
-  return(regionGRanges)
-  
+  pattern <- "([0-9]{1,2}|chr[0-9]{1,2}):[0-9]*-[0-9]*"
+  matchedPattern <- str_extract(regionString, pattern)
+
+  if (is.na(matchedPattern)) {
+    return(FALSE)
+  } else if (!matchedPattern == regionString) {
+    return(FALSE)
+  }
+
+  splits <- str_split(regionString, "[:-]")[[1]]
+  start <- splits[2]
+  end <- splits[3]
+  if (start > end) {
+    return(FALSE)
+  }
+
+  # All conditions satisfied
+  return(TRUE)
 }
 
-# Reverse function. Converst a GRanges object to a string in the format 'chr1:100-200'
+# Strings to GRanges
+StringsToGRanges <- function(regionString) {
+  if (!validRegionString(regionString)) {
+    stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
+  }
+
+  chrom <- gsub(":.*", "", regionString)
+  startSite <- gsub(".*:", "", regionString) %>%
+    gsub("-.*", "", .) %>%
+    as.numeric()
+  endSite <- gsub(".*-", "", regionString) %>% as.numeric()
+
+
+  regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
+  return(regionGRanges)
+}                    
+
+# Converts a GRanges object to a string in the format 'chr1:100-200'
 GRangesToString <- function(GR_obj){
   
   paste(seqnames(GR_obj), ":",start(GR_obj),"-",end(GR_obj),sep="")
   
 }
-
 
 # This functions takes the output of coaccessibility, filters by a 
 # correlation threshold, and then returns a data.frame

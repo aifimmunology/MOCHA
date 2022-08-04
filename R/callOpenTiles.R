@@ -6,17 +6,18 @@
 #'
 #'
 #' @param ArchRProj an ArchR Project
+#' @param cellPopLabel string indicating which column in the ArchRProject
+#'   metadata contains the cell population label.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
-#' @param cellPopLabel string indicating which column in the ArchRProject
-#'   metadata contains the cell population label.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
-#'   multiple cell populations
+#'   multiple cell populations.
 #'
-#' @return
+#' @return tileResults A MultiAssayExperiment object containing ranged data
+#'   for each tile 
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
@@ -49,15 +50,39 @@ callOpenTiles <- function(ArchRProj,
 
   # Check for and remove celltype-sample groups for which there are no fragments.
   fragsNoNull <- frags[lengths(frags) != 0]
-
+  emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
+  emptyGroups <- names(frags)[emptyFragsBool]
+  emptyGroups <- gsub("__.*", "", emptyGroups)
+  
+  if (length(emptyGroups)==0){
+    warning("The following celltype#sample groupings have no fragments",
+            "and will be ignored: ", emptyGroups)
+  }
+  
+  prefilterCellPops <- unique(sapply(strsplit(names(frags),"#"), `[`, 1))
+  if (any(prefilterCellPops != cellPopulations)){
+    # Removed cell populations must be filtered from cellPopulations
+    postfilterCellPops <- unique(sapply(strsplit(names(fragsNoNull),"#"), `[`, 1))
+    # Match these labels by index to the original cellPopulatoins
+    retainedPopsBool <- (prefilterCellPops %in% postfilterCellPops)
+    finalCellPopulations <- cellPopulations[retainedPopsBool]
+  } else {
+    finalCellPopulations <- cellPopulations
+  }
+  
   # Split the fragments list into a list of lists per cell population
-  splitFrags <- splitFragsByCellPop(fragsNoNull)
-  print(paste(c("Cell populations for peak calling: ", names(splitFrags)), collapse = " "))
+  splitFrags <- scMACS:::splitFragsByCellPop(fragsNoNull)
+  
+  # getPopFrags needs to replace spaces for underscores, so
+  # here we rename the fragments with the original cell populations labels.
+  # Fragments maintain their order by cell population.
+  names(splitFrags) <- finalCellPopulations
+  message("Cell populations for peak calling: ", paste(names(splitFrags), ""))
 
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in names(splitFrags)) {
-    print(str_interp("Calling open tiles for cell population ${cellPop}"))
+    message(str_interp("Calling open tiles for cell population ${cellPop}"))
 
     # Get our fragments for this cellPop
     popFrags <- unlist(splitFrags[[cellPop]])
@@ -118,10 +143,10 @@ callOpenTiles <- function(ArchRProj,
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)
-  results <- MultiAssayExperiment::MultiAssayExperiment(
+  tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData
   )
 
-  return(results)
+  return(tileResults)
 }

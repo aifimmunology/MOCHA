@@ -2,29 +2,45 @@
 % Please edit documentation in R/getSampleTileMatrix.R
 \name{getSampleTileMatrix}
 \alias{getSampleTileMatrix}
-\title{\code{create_peak_sampleMatrix}}
+\title{\code{getSampleTileMatrix}}
 \usage{
 getSampleTileMatrix(
   tileResults,
-  cellPopulation,
-  reproducibleTiles,
-  NAtoZero = TRUE
+  cellPopulations = "ALL",
+  groupColumn = NULL,
+  threshold = 0.2,
+  join = "union",
+  NAtoZero = FALSE,
+  log2Intensity = TRUE
 )
 }
 \arguments{
-\item{tileResults}{output of callOpenTiles}
+\item{tileResults}{a MultiAssayExperiment returned by callOpenTiles containing
+containing peak calling results.}
 
-\item{reproducibleTiles}{a vector containing the tileIDs to subset the
-sample-tile matrix}
+\item{cellPopulations}{vector of strings. Cell subsets in TileResults for which to generate sample-tile matrices. This list of group names must be identical to names that appear in
+the ArchRProject metadata.  If cellPopulations='ALL', then peak
+calling is done on all cell populations in the ArchR project metadata.
+Default is 'ALL'.}
+
+\item{groupColumn}{Optional, the column containing sample group labels for determining consensus tiles within sample groups. Default is NULL, all samples will be used for determining consensus tiles.}
+
+\item{threshold}{Threshold for consensus tiles, the minimum % of samples (within a sample group) that a peak must be called in to be retained.}
+
+\item{join}{The join method to combine consensus tiles across sample groups. Can be "union" (default) or "intersect".}
+
+\item{NAtoZero}{Boolean, set to TRUE to convert NA intensities from peak calling (tiles with too low signal) to zeroes. Optional, default is FALSE.}
+
+\item{log2Intensity}{Boolean, set to TRUE to return the log2 of the sample-tile intensity matrix. Optional, default is FALSE.}
 }
 \value{
-sampleTileIntensityMat a sample X peak matrix containing observed
-  measurements for each sample at each peak.
+SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix 
+  for each cell population
 }
 \description{
-\code{create_peak_sampleMatrix} is a function that can transform
-  a set of sample-specific peak calls into peak X sample matrix containing
-  lambda1 measurements for each sample.
+\code{getSampleTileMatrix} takes the output of peak calling with 
+  callOpenTiles and creates sample-tile matrices containing the signal intensity
+  at each tile.
 }
 \details{
 The technical details of the algorithm are found in XX.

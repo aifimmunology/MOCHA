@@ -12,8 +12,8 @@ Description: scMACS is a novel peak-calling algorithm that captures and leverage
 License: LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.0
-Imports: data.table, ArchR, plyranges, dplyr, GenomicRanges, RaggedExperiment, MultiAssayExperiment
+RoxygenNote: 7.2.1
+Imports: data.table, ArchR, plyranges, dplyr, GenomicRanges, RaggedExperiment, MultiAssayExperiment, stringr
 Suggests: 
     knitr,
     rmarkdown,

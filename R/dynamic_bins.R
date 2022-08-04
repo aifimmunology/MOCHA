@@ -35,7 +35,7 @@ dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, c
   AllFrags <- plyranges::bind_ranges(AllFragsList) %>% plyranges::reduce_ranges(counts = sum(counts))
 
   if(doBin){
-    print("01 - Fragments bound into one set of non-overlapping ranges")
+    message("01 - Fragments bound into one set of non-overlapping ranges")
 
     SmallFrags <- AllFrags[width(AllFrags) <= GeneralWindowSize + WindowSizeRange]
 
@@ -44,7 +44,7 @@ dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, c
       anchor_end() %>% mutate(partition = (as.character(partition))) %>%
       mutate(width = ifelse(width <= WindowSizeRange,width + 2,width-1)) %>% group_by(partition) %>%
       plyranges::reduce_ranges(minoverlap = 2) %>% mutate(width = width +1)
-    print("02 - Longer fragments broken into sliding windows")
+    message("02 - Longer fragments broken into sliding windows")
     FinalBins <- bind_ranges(BigFrags, SmallFrags)
   }else{
     FinalBins <- AllFrags
