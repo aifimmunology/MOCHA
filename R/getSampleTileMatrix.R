@@ -97,9 +97,16 @@ getSampleTileMatrix <- function(tileResults,
   allPeakGR <- scMACS::StringsToGRanges(sort(allPeaks))
   mcols(allPeakGR) <- peakPresence
 
+
+   sampleTileIntensityMatList2 <- lapply(sampleTileIntensityMatList, function(x){
+					rownames(x) = NULL
+					x
+
+   })
+
   #names(experimentList) <- cellPopulations
   results <- SummarizedExperiment::SummarizedExperiment(
-  		sampleTileIntensityMatList,
+  		sampleTileIntensityMatList2,
     		rowRanges = allPeakGR,
 		colData = sampleData
   )
