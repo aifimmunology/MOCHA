@@ -36,7 +36,7 @@ getSampleTileMatrix <- function(tileResults,
   
   # Any column can be used to group samples
   # Note that these are case-sensitive
-  sampleData <- colData(tileResults)
+  sampleData <- MultiAssayExperiment::colData(tileResults)
   validGroups <- colnames(sampleData)
   if (!is.null(groupColumn)){
     if (!(groupColumn %in% validGroups)){
@@ -97,16 +97,9 @@ getSampleTileMatrix <- function(tileResults,
   allPeakGR <- scMACS::StringsToGRanges(sort(allPeaks))
   mcols(allPeakGR) <- peakPresence
 
-
-   sampleTileIntensityMatList2 <- lapply(sampleTileIntensityMatList, function(x){
-					rownames(x) = NULL
-					x
-
-   })
-
   #names(experimentList) <- cellPopulations
   results <- SummarizedExperiment::SummarizedExperiment(
-  		sampleTileIntensityMatList2,
+  		sampleTileIntensityMatList,
     		rowRanges = allPeakGR,
 		colData = sampleData
   )
