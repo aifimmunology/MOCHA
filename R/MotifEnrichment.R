@@ -8,7 +8,7 @@
 ## @p.cutoff - p.value cutoff to pass to motifmatchr
 ## @w - 
 
-getMotifSet <- function(SE_Object, pwms = human_pwms_v2, 
+getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE,
                         genome =  BSgenome.Hsapiens.UCSC.hg38, p.cutoff =  5e-05, w = 7){
 
     TotalPeakSet <- rowRanges(SE_Object)

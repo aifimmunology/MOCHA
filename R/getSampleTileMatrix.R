@@ -101,8 +101,56 @@ getSampleTileMatrix <- function(tileResults,
   results <- SummarizedExperiment::SummarizedExperiment(
   		sampleTileIntensityMatList,
     		rowRanges = allPeakGR,
-		colData = sampleData
+		colData = sampleData,
+		metadata = list('Log2Intensity' =log2Intensity )
   )
 
   return(results)
 }
+
+
+
+##### function for annotating the peaks for the Sample Tile Matrix.
+## Returns a sample tile matrix with the transcript Db annotated and peak annotations. 
+
+
+annotateSampleTileMatrix <- function(SampleTileMatrix,
+			  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+			   Org = org.Hs.eg.db, 
+                          promoterRegion = c(2000, 100)){
+
+	peakList <- rowRanges(SampleTileMatrix)
+
+	metadata(SampleTileMatrix) = append(metadata(SampleTileMatrix), 
+					list('Transcripts' = TxDb,
+						'Org' = Org))
+
+	tss_list <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ('gene')))
+
+        names(tss_list) <- suppressWarnings(MariaDB::mapIds(Org, names(tss_list), "SYMBOL", "ENTREZID"))
+
+    	promoterList <- stack(tss_list) %>% GenomicRanges::trim(.) %>% 
+		GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]) 
+
+	
+
+    tpeaks <- plyranges::join_overlap_intersect(allT, GRanges)
+
+	
+
+
+}
+
+#################################### getCellTypeMatrix pulls out the SampleTileMatrix of peaks called in one given cell type
+## @SampleTileObj - output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk intensitys across all peaks & cell types
+## @CellType - The cell type you want to pull out.
+
+getCellTypeMatrix <- function(SampleTileObj, CellType){
+    
+        peaksCalled <- SummarizedExperiment::mcols(rowRanges(SampleTileObj))[,CellType]
+    
+        sampleTileMatrix <- SummarizedExperiment::assays(SampleTileObj)[[CellType]][peaksCalled,]
+    
+        return(sampleTileMatrix)
+    }
+

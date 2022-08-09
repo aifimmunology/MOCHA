@@ -26,12 +26,10 @@
 #'
 #' @export
 
-estimate_differential_accessibility <- function(peak_mat,tileID,group, 
+estimate_differential_accessibility <- function(peak_values, group, 
                                                providePermutation=F){
-    ## Filter out 
-    ## 'tileID' column
-    idx = which(peak_mat$tileID == tileID)
-    test_vec = as.numeric(peak_mat[idx,2:ncol(peak_mat)])
+
+    test_vec = as.numeric(peak_values)
 
     ## log-transform the values 
     data_vec=log2(test_vec+1)
@@ -52,16 +50,15 @@ estimate_differential_accessibility <- function(peak_mat,tileID,group,
         Group= group,
         Group_label=ifelse(group==1, 'case','Control')
     )
-    
+
     ## create all pairwise combinations 
     pairwise_matrix <- data.table::as.data.table(expand.grid(nonzero_dx, nonzero_control))
     pairwise_matrix$diff <- pairwise_matrix[,1] - pairwise_matrix[,2]
     
     hodges_lehmann <- median(pairwise_matrix$diff)
-    meanDiff = calculateMeanDiff(peak_mat[idx,] , group)
+    meanDiff = calculateMeanDiff(peak_values, group)
     ## Create Final Results Matrix
     res = data.frame(
-        Peak=tileID,
         P_value=two_part_results$pvalue,
         TestStatistic=two_part_results$statistic,
         Log2FC_C=hodges_lehmann,
@@ -100,11 +97,11 @@ estimate_differential_accessibility <- function(peak_mat,tileID,group,
 
 }
 
-calculateMeanDiff <- function(peak_mat, group){
+calculateMeanDiff <- function(peak_values, group){
 
-        a = log2(peak_mat[, which(group==1)+1, with=F]+1)
-        b = log2(peak_mat[, which(group==0)+1, with=F]+1)
+        a = log2(peak_values[which(group==1)]+1)
+        b = log2(peak_values[which(group==0)]+1)
 
-        mean_diff = rowMeans(a) - rowMeans(b)
+        mean_diff = mean(a) - mean(b)
         mean_diff
 }

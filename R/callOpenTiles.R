@@ -141,11 +141,14 @@ callOpenTiles <- function(ArchRProj,
     scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
+ 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData
+    metadata = list('Genome' = genome)
   )
 
   return(tileResults)
