@@ -20,7 +20,3 @@ export(plot_tripartite_graph)
 export(weightedZISpearman)
 import(data.table)
 export(StringsToGRanges)
-export(getTSS)
-export(getAltTSS)
-export(EnrichedRanges)
-
