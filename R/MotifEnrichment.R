@@ -4,9 +4,10 @@
 
 
 ### Identify motifs within peakset
-## @SE_Object - Any SummarizedExperiment-class object for which rowRanges works. 
+## @SE_Object - scMACS SummarizedExperiment. Requires Genome AnnotationDbi object within the metadata
+## @pwms - pwms object for the motif database. Used for matching. Standard is drawn from chromVarMotifs database- data(human_pwms_v2)
 ## @p.cutoff - p.value cutoff to pass to motifmatchr
-## @w - 
+## @w - width settings for motifmatchr
 
 getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE, motifSetName = 'Motifs', p.cutoff =  5e-05, w = 7){
 
