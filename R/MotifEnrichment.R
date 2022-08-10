@@ -8,7 +8,7 @@
 ## @p.cutoff - p.value cutoff to pass to motifmatchr
 ## @w - 
 
-getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE,
+getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE, motifSetName = 'Motifs',
                         genome =  BSgenome.Hsapiens.UCSC.hg38, p.cutoff =  5e-05, w = 7){
 
     TotalPeakSet <- rowRanges(SE_Object)
@@ -19,8 +19,13 @@ getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE,
     names(motif_ix) <- sub("_D_.*|_I_.*","", names(motif_ix)) %>% sub("_I$|_D$","", .) %>%
                     sub(".*_LINE","",.) %>% sub(".*_","",.)
 
-
+    metadata(SE_Object) = append(metadata(SE_Object), list(motifSetName = motif_ix))
+   if(returnObj){ 
+     metadata(SE_Object) = append(metadata(SE_Object), list(motifSetName = motif_ix))
+     return(SE_Object)
+   }else{
     return(motif_ix)
+   }
 
 }
 
