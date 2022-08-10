@@ -42,7 +42,7 @@ getTSS <- function(peakSet,
 ## @nuancedTSS - True/False flag to determine if alternative TSS genes should be filtered out 
 ##                if all their differential TSS usage falls within too small of a range. Default is TRUE
 ## @threshold -  Basepair distance Threshold for filtering out genes who's differential TSS sites all falls very close together,
-		   and thus likely too close to be able to distinguish TSS behavior clearly. 
+##		   and thus likely too close to be able to distinguish TSS behavior clearly. 
 ## @effectSize - name of the metadata column with effect size measurements 
 ##              (used to ensure differential TSS sites are not all differential in the same direction). 
 ## @TxDb - Transcript Db object for organism. Default is Hg38. 
