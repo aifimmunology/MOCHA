@@ -147,7 +147,7 @@ callOpenTiles <- function(ArchRProj,
   names(experimentList) <- names(splitFrags)
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
-    colData = sampleData
+    colData = sampleData,
     metadata = list('Genome' = genome)
   )
 
