@@ -113,7 +113,7 @@ getSampleTileMatrix <- function(tileResults,
   		sampleTileIntensityMatList,
     		rowRanges = allTilesGR,
 		colData = sampleData,
-		metadata = append(list('Log2Intensity' = log2Intensity ), MultiAssayExperiment::metadata(tileResults))
+		metadata = append(list('Log2Intensity' = log2Intensity, 'NAtoZero' = NAtoZero ), MultiAssayExperiment::metadata(tileResults))
   )
 
   results
