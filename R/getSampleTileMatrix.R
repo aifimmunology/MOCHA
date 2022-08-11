@@ -1,6 +1,6 @@
-#' @title \code{create_peak_sampleMatrix}
+#' @title \code{getSampleTileMatrix}
 #'
-#' @description \code{create_peak_sampleMatrix} is a function that can transform
+#' @description \code{getSampleTileMatrix} is a function that can transform
 #'   a set of sample-specific peak calls into peak X sample matrix containing
 #'   lambda1 measurements for each sample.
 #'
@@ -94,15 +94,14 @@ getSampleTileMatrix <- function(tileResults,
 
   peakPresence <- lapply(peakList, function(x) (allPeaks %in% x)) %>% do.call('cbind', .) %>% as.data.frame()
 
-  allPeakGR <- scMACS::StringsToGRanges(sort(allPeaks))
+  allPeakGR <- scMACS::StringsToGRanges(allPeaks)
   mcols(allPeakGR) <- peakPresence
 
-  #names(experimentList) <- cellPopulations
   results <- SummarizedExperiment::SummarizedExperiment(
   		sampleTileIntensityMatList,
     		rowRanges = allPeakGR,
 		colData = sampleData,
-		metadata = list('Log2Intensity' =log2Intensity )
+		metadata = append(list('Log2Intensity' = log2Intensity ), MultiAssayExperiment::metadata(tileResults))
   )
 
   return(results)
@@ -121,7 +120,7 @@ annotateSampleTileMatrix <- function(SampleTileMatrix,
 
 	peakList <- rowRanges(SampleTileMatrix)
 
-	metadata(SampleTileMatrix) = append(metadata(SampleTileMatrix), 
+	metadata(SampleTileMatrix) = append(SummarizedExperiment::metadata(SampleTileMatrix), 
 					list('Transcripts' = TxDb,
 						'Org' = Org))
 
