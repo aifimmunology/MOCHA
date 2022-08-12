@@ -1,12 +1,12 @@
 
 
 ##################################################################################################
-### getTSS pulls out all peaks that fall in TSS sites and annotates them with the name of gene. 
+### getStartWSites pulls out all peaks that fall in TSS sites and annotates them with the name of gene. 
 ## @peakSet - GRanges object that contains all the peaks you want annotated
 ## @TxDb - Transcript Db object for organism. Default is Hg38. 
 ## @Org - Organism Db for annotating gene names across databases. Must match TxDb. 
 
-getTSS <- function(peakSet,
+getStartSites <- function(peakSet,
                       TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, 
                       Org = org.Hs.eg.db){
     

@@ -140,7 +140,16 @@ validRegionString <- function(regionString) {
   return(TRUE)
 }
 
-# Strings to GRanges
+#' @title \code{StringsToGRanges}
+#'
+#' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200 
+#'   into GRanges
+#'
+#'
+#'
+#' @export
+
+
 StringsToGRanges <- function(regionString) {
   if (!validRegionString(regionString)) {
     stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
@@ -155,14 +164,22 @@ StringsToGRanges <- function(regionString) {
 
   regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
   return(regionGRanges)
-}                    
+}        
+
+#' @title \code{GRangesToString}
+#'
+#' @description \code{GRangesToStrin} Turns a GRanges Object into
+#' 	a list of strings in the format chr1:100-200
+#'
+#'
+#' @export            
 
 # Converts a GRanges object to a string in the format 'chr1:100-200'
 GRangesToString <- function(GR_obj){
   
   paste(seqnames(GR_obj), ":",start(GR_obj),"-",end(GR_obj),sep="")
   
-}
+}    
 
 # This functions takes the output of coaccessibility, filters by a 
 # correlation threshold, and then returns a data.frame
