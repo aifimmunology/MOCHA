@@ -1,14 +1,26 @@
-#' @title \code{create_peak_sampleMatrix}
+#' @title \code{getSampleTileMatrix}
 #'
-#' @description \code{create_peak_sampleMatrix} is a function that can transform
-#'   a set of sample-specific peak calls into peak X sample matrix containing
-#'   lambda1 measurements for each sample.
+#' @description \code{getSampleTileMatrix} takes the output of peak calling with 
+#'   callOpenTiles and creates sample-tile matrices containing the signal intensity
+#'   at each tile. 
 #'
 #'
-#' @param tileResults output of callOpenTiles
-#' @return sampleTileIntensityMat a sample X peak matrix containing observed
-#'   measurements for each sample at each peak.
-#'
+#' @param tileResults a MultiAssayExperiment returned by callOpenTiles containing
+#'   containing peak calling results.
+#' @param cellPopulations vector of strings. Cell subsets in TileResults for which to generate sample-tile matrices. This list of group names must be identical to names that appear in
+#'   the ArchRProject metadata.  If cellPopulations='ALL', then peak
+#'   calling is done on all cell populations in the ArchR project metadata.
+#'   Default is 'ALL'.
+#' @param groupColumn Optional, the column containing sample group labels for determining consensus tiles within sample groups. Default is NULL, all samples will be used for determining consensus tiles.
+#' @param threshold Threshold for consensus tiles, the minimum % of samples (within a sample group) that a peak must be called in to be retained.
+#' @param join The join method to combine consensus tiles across sample groups. Can be "union" (default) or "intersect". 
+#' @param NAtoZero Boolean, set to TRUE to convert NA intensities from peak calling (tiles with too low signal) to zeroes. Optional, default is FALSE.
+#' @param log2Intensity Boolean, set to TRUE to return the log2 of the sample-tile intensity matrix. Optional, default is FALSE.
+#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' 
+#' @return SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix 
+#'   for each cell population
+#'   
 #' @details The technical details of the algorithm are found in XX.
 #'
 #' @references XX
@@ -63,9 +75,9 @@ getSampleTileMatrix <- function(tileResults,
   }
   
 
-  if(verbose){message(str_interp("Extracting consensus tile set within each population:  ${cellPopulations} "))}
+  if(verbose){message(str_interp("Extracting consensus tile set for each population:  ${cellPopulations} "))}
 
-  peakList <- mclapply(experiments(subTileResults), function(x){
+  tilesByCellPop <- mclapply(experiments(subTileResults), function(x){
     
     # Get consensus tiles for this cell population for filtering
     scMACS:::singlePopulationConsensusTiles(
@@ -77,41 +89,40 @@ getSampleTileMatrix <- function(tileResults,
 
   }, mc.cores = numCores)
 
-  allPeaks <- sort(unique(do.call('c',peakList)))
+  allTiles <- sort(unique(do.call('c',tilesByCellPop)))
 
-  if(verbose){message(str_interp("Generating Sample Tile Matrix Across All Populations: ${cellPopulations} "))}
+  if(verbose){message(str_interp("Generating sample-tile matrix across all populations: ${cellPopulations} "))}
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- mclapply(experiments(tileResults), function(x){
 
 		scMACS:::singlePopulationSampleTileMatrix(
       				x,
-      				allPeaks,
+      				allTiles,
       				NAtoZero,
       				log2Intensity
     		)
    }, mc.cores = numCores)
 
-  peakPresence <- lapply(peakList, function(x) (allPeaks %in% x)) %>% do.call('cbind', .) %>% as.data.frame()
+  tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>% do.call('cbind', .) %>% as.data.frame()
 
-  allPeakGR <- scMACS::StringsToGRanges(sort(allPeaks))
-  mcols(allPeakGR) <- peakPresence
+  allTilesGR <- scMACS::StringsToGRanges(allTiles)
+  mcols(allTilesGR) <- tilePresence
 
-  #names(experimentList) <- cellPopulations
   results <- SummarizedExperiment::SummarizedExperiment(
   		sampleTileIntensityMatList,
-    		rowRanges = allPeakGR,
+    		rowRanges = allTilesGR,
 		colData = sampleData,
-		metadata = list('Log2Intensity' =log2Intensity )
+		metadata = append(list('Log2Intensity' = log2Intensity, 'NAtoZero' = NAtoZero ), MultiAssayExperiment::metadata(tileResults))
   )
 
-  return(results)
+  results
 }
 
 
 
-##### function for annotating the peaks for the Sample Tile Matrix.
-## Returns a sample tile matrix with the transcript Db annotated and peak annotations. 
+##### function for annotating the tiles for the Sample Tile Matrix.
+## Returns a sample tile matrix with the transcript Db annotated and tile annotations. 
 
 
 annotateSampleTileMatrix <- function(SampleTileMatrix,
@@ -119,9 +130,9 @@ annotateSampleTileMatrix <- function(SampleTileMatrix,
 			   Org = org.Hs.eg.db, 
                           promoterRegion = c(2000, 100)){
 
-	peakList <- rowRanges(SampleTileMatrix)
+	tileList <- rowRanges(SampleTileMatrix)
 
-	metadata(SampleTileMatrix) = append(metadata(SampleTileMatrix), 
+	metadata(SampleTileMatrix) = append(SummarizedExperiment::metadata(SampleTileMatrix), 
 					list('Transcripts' = TxDb,
 						'Org' = Org))
 
@@ -134,22 +145,22 @@ annotateSampleTileMatrix <- function(SampleTileMatrix,
 
 	
 
-    tpeaks <- plyranges::join_overlap_intersect(allT, GRanges)
+    ttiles <- plyranges::join_overlap_intersect(allT, GRanges)
 
 	
 
 
 }
 
-#################################### getCellTypeMatrix pulls out the SampleTileMatrix of peaks called in one given cell type
-## @SampleTileObj - output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk intensitys across all peaks & cell types
+#################################### getCellTypeMatrix pulls out the SampleTileMatrix of tiles called in one given cell type
+## @SampleTileObj - output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk intensitys across all tiles & cell types
 ## @CellType - The cell type you want to pull out.
 
 getCellTypeMatrix <- function(SampleTileObj, CellType){
     
-        peaksCalled <- SummarizedExperiment::mcols(rowRanges(SampleTileObj))[,CellType]
+        tilesCalled <- SummarizedExperiment::mcols(rowRanges(SampleTileObj))[,CellType]
     
-        sampleTileMatrix <- SummarizedExperiment::assays(SampleTileObj)[[CellType]][peaksCalled,]
+        sampleTileMatrix <- SummarizedExperiment::assays(SampleTileObj)[[CellType]][tilesCalled,]
     
         return(sampleTileMatrix)
     }
