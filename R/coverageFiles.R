@@ -21,7 +21,7 @@ getCoverage <- function(popFrags, normFactor, filterEmpty = FALSE, numCores = 1,
 	    Num <- normFactor[x]
 	    tmp <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score/Num) 
 
-	    seqinfo(tmp) <- seqinfo(TxDb)[seqnames(seqinfo(tmp))]
+	    GenomeInfoDb::seqinfo(tmp) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(tmp))]
 
 	    if(filterEmpty) {plyranges::filter(tmp, score > 0)}else{tmp}
 
