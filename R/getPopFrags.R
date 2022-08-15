@@ -36,13 +36,17 @@ getPopFrags <- function(ArchRProj,
                         NormMethod = "nfrags",
                         blackList = NULL,
                         overlapList = 50) {
+  
+  #Turn off ArchR logging messages
+  ArchR::addArchRVerbose(verbose = FALSE)
+
   # Extract metadata
   metadf <- getCellColData(ArchRProj)
 
   if (!any(colnames(metadf) %in% metaColumn)) {
     stop(paste(
-      str_interp("Provided metaColumn ${metaColumn} does not exist in the cellColData of your ArchRProj."),
-      str_interp("Available columns are: ${colnames(metadf)}")
+      stringr::str_interp("Provided metaColumn ${metaColumn} does not exist in the cellColData of your ArchRProj."),
+      stringr::str_interp("Available columns are: ${colnames(metadf)}")
     ))
   }
 
@@ -74,7 +78,7 @@ getPopFrags <- function(ArchRProj,
 
 
   #### Up to here, the above is only specific to sampleSpecific=False
-  allArrows <- getArrowFiles(ArchRProj)
+  allArrows <- ArchR::getArrowFiles(ArchRProj)
   # Get sample names from our populations of interest
   samplesToExtract <- paste(
     unique(metadf$Sample[which(metadf[, metaColumn] %in% cellPopulations)]),
@@ -94,7 +98,9 @@ getPopFrags <- function(ArchRProj,
 
     # Extract fragments from all available regions
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-      getFragmentsFromArrow(
+
+      print(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
+      ArchR::getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = NULL,
         verbose = FALSE
@@ -126,7 +132,9 @@ getPopFrags <- function(ArchRProj,
       as.data.frame() %>%
       dplyr::select(seqnames)
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-      fragsGRanges <- getFragmentsFromArrow(
+	
+	print(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
+     	fragsGRanges <- getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = NULL,
         chr = as.character(chrom[, 1]),
@@ -257,5 +265,10 @@ getPopFrags <- function(ArchRProj,
   } else {
     names(popFrags) <- names(barcodesByCellPop)
   }
+   
+  #Turn off ArchR logging messages
+  ArchR::addArchRVerbose(verbose = TRUE)
+
   return(popFrags)
+
 }

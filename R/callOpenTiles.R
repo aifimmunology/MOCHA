@@ -51,7 +51,8 @@ callOpenTiles <- function(ArchRProj,
     sampleSpecific = TRUE,
     NormMethod = "nfrags",
     blackList = NULL,
-    overlapList = 50
+    overlapList = 50, 
+    verbose = FALSE
   )
 
   # Check for and remove celltype-sample groups for which there are no fragments.
