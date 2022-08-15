@@ -140,7 +140,6 @@ callOpenTiles <- function(ArchRProj,
       mc.cores = numCores
     )
 
-    return(tilesGRangesList)
     names(tilesGRangesList) <- sampleNames
     
     # Cannot make peak calls with < 5 cells (see make_prediction.R) 
