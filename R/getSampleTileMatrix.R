@@ -126,11 +126,11 @@ getSampleTileMatrix <- function(tileResults,
 
 
 annotateSampleTileMatrix <- function(SampleTileMatrix,
-			  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
 			   Org = org.Hs.eg.db, 
                           promoterRegion = c(2000, 100)){
 
 	tileList <- rowRanges(SampleTileMatrix)
+	TxDb <- metadata(SampleTileMatrix)$TxDb
 
 	metadata(SampleTileMatrix) = append(SummarizedExperiment::metadata(SampleTileMatrix), 
 					list('Transcripts' = TxDb,
