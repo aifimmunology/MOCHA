@@ -80,7 +80,6 @@ callOpenTiles <- function(ArchRProj,
   names(splitFrags) <- finalCellPopulations
   message("Cell populations for peak calling: ", paste(names(splitFrags), ""))
 
-
   ## Generate folder within ArchR for outputting results 
   outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
   dir.create(outDir)
