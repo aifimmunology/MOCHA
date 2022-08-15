@@ -27,7 +27,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   
   if(!any(names(assays(SampleTileObj)) %in% cellPopulation)){
 
-	  stop('cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.')
+	stop('cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.')
   }
 
   metaFile <- SummarizedExperiment::colData(SampleTileObj)

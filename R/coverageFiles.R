@@ -5,24 +5,29 @@
 # @filterEmpty - True/False flag on whether or not to carry forward regions without coverage. 
 # @numCores - number of cores to parallelize over
 
-getCoverage <- function(popFrags, filterEmpty = FALSE, numCores = 1, TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, verbose = FALSE){
-  #Extract cell counts for each group   
-  groups <- gsub("__.*","",names(popFrags))
-  Norm <- gsub(".*__","", names(popFrags))
-  names(Norm) = groups
-     
-	#Summarize the coverage ove the region window at a single basepair resolution
-	tmpCounts <- mclapply(seq_along(groups), function(x){
+getCoverage <- function(popFrags, normFactor, filterEmpty = FALSE, numCores = 1, TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, verbose = FALSE){
+
+  if(length(normFactor) == 1){
+
+	normFactor = rep(normFactor, length(popFrags))
+
+  }  
+
+  #Summarize the coverage ove the region window at a single basepair resolution
+  tmpCounts <- mclapply(seq_along(popFrags), function(x){
+
 	    if(verbose){print(paste("Counting", names(popFrags)[x], sep=" "))}
 	  
-	    Num <- as.numeric(Norm[groups[x]])
+	    Num <- normFactor[x]
 	    tmp <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score/Num) 
 
 	    seqinfo(tmp) <- seqinfo(TxDb)[seqnames(seqinfo(tmp))]
 
 	    if(filterEmpty) {plyranges::filter(tmp, score > 0)}else{tmp}
+
 	}, mc.cores = numCores)
-	names(tmpCounts) = groups
+
+   names(tmpCounts) = names(popFrags)
     
    return(tmpCounts)
 }

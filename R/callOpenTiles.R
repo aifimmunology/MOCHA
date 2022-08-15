@@ -13,6 +13,10 @@
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
+#' @TxDb TxDb is an AnnotationDbi object with transcript info for the organism. UCSC Hg38 Refgene is the default.
+#' @outDir outDir is a string describing the output directory for coverage files per sample/celltype. 
+#' Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR 
+#' and make a new fold named MOCHA for saving files. 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations.
 #'
@@ -29,6 +33,7 @@ callOpenTiles <- function(ArchRProj,
                           cellPopLabel,
                           cellPopulations = "ALL",
 			  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+ 		 	  outDir = NULL,
                           numCores = 30, force = FALSE) {
 
   # Get cell metadata and blacklisted regions from ArchR Project
@@ -80,8 +85,11 @@ callOpenTiles <- function(ArchRProj,
   names(splitFrags) <- finalCellPopulations
   message("Cell populations for peak calling: ", paste(names(splitFrags), ""))
 
-  ## Generate folder within ArchR for outputting results 
-  outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
+
+  if(is.null(outDir)){
+  	## Generate folder within ArchR for outputting results 
+  	outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
+  }
   dir.create(outDir)
 
   # Main loop over all cell populations
@@ -96,14 +104,19 @@ callOpenTiles <- function(ArchRProj,
     sampleNames <- gsub("^([^.]+).", "", names(popFrags))
     names(popFrags) <- sampleNames
     
-    if(! file.exists(paste(outDir,'/',cellPop, '_CoverageFiles.RDS', sep ='')) | force){ 
-   	 covFiles <- scMACS::getCoverage(popFrags, numCores = numCores, TxDb=TxDb)
+    # Calculate normalization factors as the number of fragments for each celltype_samples
+    normalization_factors <- as.integer(sapply(popFrags, length))
+
+    #save coverage files to folder. 
+    if(!file.exists(paste(outDir,'/',cellPop, '_CoverageFiles.RDS', sep ='')) | force){ 
+   	covFiles <- scMACS::getCoverage(popFrags = popFrags,
+					normFactor = normalization_factors/10^6,
+					filterEmpty = FALSE,
+					numCores = numCores, TxDb=TxDb)
     	saveRDS(covFiles, paste(outDir,'/',cellPop,'_CoverageFiles.RDS', sep =''))
     	rm(covFiles)
     }
 
-    # Calculate normalization factors as the number of fragments for each celltype_samples
-    normalization_factors <- as.integer(sapply(popFrags, length))
 
     # Add prefactor multiplier across datasets
     curr_frags_median <- median(cellColData$nFrags)
@@ -127,7 +140,7 @@ callOpenTiles <- function(ArchRProj,
       mc.cores = numCores
     )
 
-
+    return(tilesGRangesList)
     names(tilesGRangesList) <- sampleNames
     
     # Cannot make peak calls with < 5 cells (see make_prediction.R) 
@@ -160,7 +173,7 @@ callOpenTiles <- function(ArchRProj,
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list('Genome' = genome, 'TxDb' = TxDb)
+    metadata = list('Genome' = genome, 'TxDb' = TxDb, 'Directory' = outDir)
   )
 
   return(tileResults)
