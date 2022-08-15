@@ -181,6 +181,17 @@ GRangesToString <- function(GR_obj){
   
 }    
 
+
+### Function to set seqinfo for GRanges objects.
+### This makes them easier to merge and export to BWs by setting the standard
+### chromosome lengths and names to a standard, as defined by TxDb.
+
+setSeqInfo <- function(GRangesObj, TxDb = TxDb.Hsapiens.UCSC.hg38.refGene) {
+  seqinfo(GRangesObj) <- seqinfo(TxDb)[seqnames(seqinfo(GRangesObj))]
+  return(GRangesObj)
+}
+
+
 # This functions takes the output of coaccessibility, filters by a 
 # correlation threshold, and then returns a data.frame
 #

@@ -28,7 +28,8 @@
 callOpenTiles <- function(ArchRProj,
                           cellPopLabel,
                           cellPopulations = "ALL",
-                          numCores = 30) {
+			  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+                          numCores = 30, force = FALSE) {
 
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
@@ -36,7 +37,7 @@ callOpenTiles <- function(ArchRProj,
 
   # Get frags grouped by cell population and sample
   # This will also validate the input cellPopulations
-  frags <- getPopFrags(
+  frags <- scMACS::getPopFrags(
     ArchRProj = ArchRProj,
     metaColumn = cellPopLabel,
     cellSubsets = cellPopulations,
@@ -79,6 +80,11 @@ callOpenTiles <- function(ArchRProj,
   names(splitFrags) <- finalCellPopulations
   message("Cell populations for peak calling: ", paste(names(splitFrags), ""))
 
+
+  ## Generate folder within ArchR for outputting results 
+  outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
+  dir.create(outDir)
+
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in names(splitFrags)) {
@@ -90,6 +96,12 @@ callOpenTiles <- function(ArchRProj,
     # Simplify sample names to remove everything before the first "."
     sampleNames <- gsub("^([^.]+).", "", names(popFrags))
     names(popFrags) <- sampleNames
+    
+    if(! file.exists(paste(outDir,'/',cellPop, '_CoverageFiles.RDS', sep ='')) | force){ 
+   	 covFiles <- scMACS::getCoverage(popFrags, numCores = numCores, TxDb=TxDb)
+    	saveRDS(covFiles, paste(outDir,'/',cellPop,'_CoverageFiles.RDS', sep =''))
+    	rm(covFiles)
+    }
 
     # Calculate normalization factors as the number of fragments for each celltype_samples
     normalization_factors <- as.integer(sapply(popFrags, length))
@@ -115,6 +127,7 @@ callOpenTiles <- function(ArchRProj,
       },
       mc.cores = numCores
     )
+
 
     names(tilesGRangesList) <- sampleNames
     
@@ -148,7 +161,7 @@ callOpenTiles <- function(ArchRProj,
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list('Genome' = genome)
+    metadata = list('Genome' = genome, 'TxDb' = TxDb)
   )
 
   return(tileResults)

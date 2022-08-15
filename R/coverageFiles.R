@@ -5,7 +5,7 @@
 # @filterEmpty - True/False flag on whether or not to carry forward regions without coverage. 
 # @numCores - number of cores to parallelize over
 
-getCoverage <- function(popFrags, filterEmpty = FALSE, numCores = 1, verbose = FALSE){
+getCoverage <- function(popFrags, filterEmpty = FALSE, numCores = 1, TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, verbose = FALSE){
   #Extract cell counts for each group   
   groups <- gsub("__.*","",names(popFrags))
   Norm <- gsub(".*__","", names(popFrags))
@@ -17,6 +17,9 @@ getCoverage <- function(popFrags, filterEmpty = FALSE, numCores = 1, verbose = F
 	  
 	    Num <- as.numeric(Norm[groups[x]])
 	    tmp <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score/Num) 
+
+	    seqinfo(tmp) <- seqinfo(TxDb)[seqnames(seqinfo(tmp))]
+
 	    if(filterEmpty) {plyranges::filter(tmp, score > 0)}else{tmp}
 	}, mc.cores = numCores)
 	names(tmpCounts) = groups
