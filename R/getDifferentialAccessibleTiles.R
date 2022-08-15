@@ -53,7 +53,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     
   # We need to enforce that NAs were set to zeros in getSampleTileMatrix
   miscMetadata <- SummarizedExperiment::metadata(SampleTileObj)
-  if (!all([miscMetadata]["NAtoZero"]])){
+  if (!miscMetadata$NAtoZero){
     stop("The provided SampleTileObj was generated with NAtoZero=FALSE. Please run getSampleTileMatrix with NAtoZero=TRUE For differential analysis.")
   }
   group <- as.numeric(colnames(sampleTileMatrix) %in% positive_samples)
