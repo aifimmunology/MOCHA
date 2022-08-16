@@ -123,16 +123,16 @@ validRegionString <- function(regionString) {
   pattern <- "([0-9]{1,2}|chr[0-9]{1,2}):[0-9]*-[0-9]*"
   matchedPattern <- str_extract(regionString, pattern)
 
-  if (is.na(matchedPattern)) {
+  if (any(is.na(matchedPattern))) {
     return(FALSE)
-  } else if (!matchedPattern == regionString) {
+  } else if (any(!matchedPattern == regionString)) {
     return(FALSE)
   }
 
   splits <- str_split(regionString, "[:-]")[[1]]
   start <- splits[2]
   end <- splits[3]
-  if (start > end) {
+  if (any(start > end)) {
     return(FALSE)
   }
 

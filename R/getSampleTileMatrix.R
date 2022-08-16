@@ -63,11 +63,11 @@ getSampleTileMatrix <- function(tileResults,
         ))
   }
   
-  if(length(cellPopulations) == 1){
-    if (cellPopulations == 'ALL'){
+  if(length(cellPopulations) == 1 & any(cellPopulations == 'ALL')){
+  
       subTileResults <- tileResults
       cellPopulations = names(tileResults)
-    }
+  
   }else{
 
     subTileResults <- tileResults[names(tileResults) %in% cellPopulations]
@@ -77,7 +77,7 @@ getSampleTileMatrix <- function(tileResults,
 
   if(verbose){message(str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))}
 
-  tilesByCellPop <- mclapply(experiments(subTileResults), function(x){
+  tilesByCellPop <- mclapply(MultiAssayExperiment::experiments(subTileResults), function(x){
     
     # Get consensus tiles for this cell population for filtering
     scMACS:::singlePopulationConsensusTiles(
@@ -94,7 +94,7 @@ getSampleTileMatrix <- function(tileResults,
   if(verbose){message(str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))}
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
-  sampleTileIntensityMatList <- mclapply(experiments(tileResults), function(x){
+  sampleTileIntensityMatList <- mclapply(MultiAssayExperiment::experiments(tileResults), function(x){
 
 		scMACS:::singlePopulationSampleTileMatrix(
       				x,
@@ -136,17 +136,23 @@ annotateSampleTileMatrix <- function(SampleTileMatrix,
 					list('Transcripts' = TxDb,
 						'Org' = Org))
 
-	tss_list <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ('gene')))
+	txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ('gene')))
+        names(txList) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(txList), "SYMBOL", "ENTREZID"))
+	exonList <-  suppressWarnings(GenomicFeatures::exonsBy(TxDb, by = "gene"))
+	#Same TxDb, same gene names in same order. 
+	names(exonList) <-  names(txList) 
 
-        names(tss_list) <- suppressWarnings(MariaDB::mapIds(Org, names(tss_list), "SYMBOL", "ENTREZID"))
+	txs <- stack(txList) %>% GenomicRanges::trim()
+	exonSet <- stack(exonList)
 
-    	promoterList <- stack(tss_list) %>% GenomicRanges::trim(.) %>% 
-		GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]) 
+    	promoterSet <- txs %>% GenomicRanges::trim(.) %>% 
+		GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]) %>% plyranges::reduce_ranges()
 
-	
+	txs_overlaps <- GenomicRanges::findOverlaps(tileList, txs)
+	exon_overlaps <- GenomicRanges::findOverlaps(tileList, exonSet)
+	promo_overlaps <- GenomicRanges::findOverlaps(tileList, promoterSet)
 
-    ttiles <- plyranges::join_overlap_intersect(allT, GRanges)
-
+	rowMeta <- mcols(tileList) %>% 
 	
 
 
