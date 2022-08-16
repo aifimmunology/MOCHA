@@ -49,12 +49,13 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   tilesCalled <- mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
   sampleTileMatrix <- scMACS:::getCellTypeMatrix(SampleTileObj, cellPopulation)
-  sampleTileMatrix <- sampleTileMatrix[tilesCalled, colnames(SampleTileObj) %in% c(positive_samples, negative_samples)]
+  sampleTileMatrix <- sampleTileMatrix[, which(colnames(SampleTileObj) %in% c(positive_samples, negative_samples))]
     
   # We need to enforce that NAs were set to zeros in getSampleTileMatrix
-  miscMetadata <- SummarizedExperiment::metadata(SampleTileObj)
+  miscMetadata <- S4Vectors::metadata(SampleTileObj)
   if (!miscMetadata$NAtoZero){
-    stop("The provided SampleTileObj was generated with NAtoZero=FALSE. Please run getSampleTileMatrix with NAtoZero=TRUE For differential analysis.")
+    #stop("The provided SampleTileObj was generated with NAtoZero=FALSE. Please run getSampleTileMatrix with NAtoZero=TRUE For differential analysis.")
+    sampleTileMatrix[is.na(sampleTileMatrix)] = 0
   }
   group <- as.numeric(colnames(sampleTileMatrix) %in% positive_samples)
 
@@ -69,7 +70,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   diff0s = abs(zero_A-zero_B)
 
-  Log2Intensity = metadata(SampleTileMatrices)$Log2Intensity
+  Log2Intensity = metadata(SampleTileObj)$Log2Intensity
   log2FC_filter = ifelse(Log2Intensity, 12, 2^12)
   idx = which(medians_a > log2FC_filter| medians_b > log2FC_filter | diff0s >= 0.5)
 
@@ -128,7 +129,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   discoveries <- sum(full_results$FDR <= 0.2, na.rm = TRUE)
   message(
-    discoveries, " differential regions found at FDR",
+    discoveries, " differential regions found at FDR ",
     fdrToDisplay
   )
   
