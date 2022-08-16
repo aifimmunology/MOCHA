@@ -47,7 +47,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   negative_samples <- metaFile[metaFile[,groupColumn] == background, 'Sample']
 
 
-  tilesCalled <- mcols(MultiAssayExperiment::rowRanges(SampleTileObj))[,cellPopulation]
+  tilesCalled <- mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
   sampleTileMatrix <- scMACS:::getCellTypeMatrix(SampleTileObj, cellPopulation)
   sampleTileMatrix <- sampleTileMatrix[tilesCalled, colnames(SampleTileObj) %in% c(positive_samples, negative_samples)]
     

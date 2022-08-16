@@ -821,6 +821,126 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
 }
 
 
+extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL, subGroups = NULL, sampleSpecific = FALSE,
+				numCores = 1){
+
+		cellNames <- names(assays(SampleTileObj))
+		metaFile <- SummarizedExperiment::colData(SampleTileObj)
+		outDir <- metadata(SampleTileObj)$Directory
+
+		if(is.na(outDir)){
+
+			stop('Error: Missing coverage file directory.')
+
+		}
+
+		if(is.character(region)){
+    
+    			# Convert to GRanges
+    			regionGRanges <- scMACS::StringsToGRanges(region)
+
+  		}else if(class(region)[1] == "GRanges"){
+    
+    			regionGRanges = region
+    
+  		}else{
+    
+    			stop('Wrong region input type. Input must either be a string, or a GRanges location.')
+    
+  		}
+
+
+		if(!all(cellTypes %in% cellNames)){
+
+			stop('Some or all cell types provided are not found.')
+
+		}
+
+
+		#Pull out a list of samples by group. 
+		
+		if(!is.null(subGroups) & !is.null(groupColumn)){
+			#If the user defined a list of subgroup(s) within the groupColumn from the metadata, then it subsets to just those samples
+			subSamples <- lapply(subGroups, function(x) metaFile[metaFile[,groupColumn] %in% x, 'Sample'])
+
+		}else if(!is.null(groupColumn)){
+
+			#If no subGroup defined, then it'll form a list of samples across all lables within the groupColumn
+			subGroups = unique(metaFile[,groupColumn])
+			subSamples <- lapply(subGroups, function(x) metaFile[metaFile[,groupColumn] %in% x, 'Sample'])
+
+		}else{
+
+			#If neither groupColumn nor subGroup is defined, then it forms one list of all sample names
+			subSamples = list('All' = metaFile[,'Sample'])
+			
+		}
+
+		#Pull up the cell types of interest, and filter for samples and subset down to region of interest
+		cellType_Files <- mclapply(cellTypes, function(x){
+
+			tmp <- readRDS(paste(outDir,'/',x,'_CoverageFiles.RDS', sep =''))
+
+			lapply(subSamples, function(x){
+
+				sampleNames = names(tmp)
+				keepSamples <- grepl(paste(x, collapse="|"), sampleNames)
+				subSampleList <- tmp[keepSamples]
+
+				#If we don't want sample-specific, then average and get a dataframe out. 
+				#else, get a sample-specific count dataframe out. 
+				if(!sampleSpecific){
+					sampleCount <- sum(keepSamples)
+					filterCounts <- lapply(tmp99, function(x) {
+							   plyranges::join_overlap_intersect(x, scMACS::StringsToGRanges('chr1:100037500-100038000'))
+							})
+
+					stack(as(filterCounts, "GRangesList")) %>%
+							plyranges::join_overlap_intersect(regionGRanges) %>%
+							plyranges::compute_coverage(weight = .$score / sampleCount) %>%
+							plyranges::join_overlap_intersect(regionGRanges)
+					
+					 
+
+				}else{
+			
+					tmpCounts <- lapply(subSampleList, function(x) {
+     				 	
+						x %>%  plyranges::filter_by_overlaps(regionGRanges)
+    					})
+					
+					names(tmpCounts) <- paste(x, names(tmpCounts), sep = "#")
+		
+				}
+				unlist(tmpCounts)
+
+			}, mc.cores = numCores)
+
+		})		
+
+	allGroups <- unlist(cellType_Files)
+
+	 ## Generate a data.frame for export.
+  	allTmp <- mclapply(seq_along(allGroups), function(x) {
+
+			tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
+      			tmp$score <- allGroups[[x]]$score[tmp$partition]
+      			tmp$Groups <- rep(names(allGroups)[x], length(tmp))
+
+      			covdf <- as.data.frame(tmp) %>% dplyr::select(seqnames, start, score, Groups)
+      			colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
+
+			covdf
+
+  	}), mc.cores = numCores)		
+
+
+      tmpCountsdf <- as.data.frame(data.table::rbindlist(allTmp))
+
+      return(tmpCountsdf)	
+
+}
+
 ##### plotRegion: Plots the region that you've summarized across all cell groupings.
 
 # Preformatting for Motif Overlay:
@@ -921,7 +1041,6 @@ plotRegion <- function(countdf,
                        motif_line_size = 0.75,
                        # Genes plot args
                        showGene = TRUE,
-                       TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, #
                        whichGene = NULL, # for plotting specific gene in region
                        orgdb = org.Hs.eg.db, 
                        db_id_col = "REFSEQ",
@@ -956,12 +1075,17 @@ plotRegion <- function(countdf,
     }
   }
   
+  # Extract region from region string as granges
+  regionGRanges <- countdf_to_region(countdf = assays(countdf))
+
   # Variables
   chrom <- toString(unique(countdf$chr))
   .relativeHeights_default <- c(`Chr` = 0.9, `Normalized Counts` = 7, `Genes` = 2, `AdditionalGRanges` = 4.5,  `Links` = 1.5) # retain in case any missing
   
-  # Extract region from countdf as granges
-  regionGRanges <- countdf_to_region(countdf = countdf)
+  TxDb = metadata(countdf)$TxDb
+
+
+
   
   # Base Plot of Sample Counts
   p1 <- verbf(

@@ -75,7 +75,7 @@ getSampleTileMatrix <- function(tileResults,
   }
   
 
-  if(verbose){message(str_interp("Extracting consensus tile set for each population:  ${cellPopulations} "))}
+  if(verbose){message(str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))}
 
   tilesByCellPop <- mclapply(experiments(subTileResults), function(x){
     
@@ -91,7 +91,7 @@ getSampleTileMatrix <- function(tileResults,
 
   allTiles <- sort(unique(do.call('c',tilesByCellPop)))
 
-  if(verbose){message(str_interp("Generating sample-tile matrix across all populations: ${cellPopulations} "))}
+  if(verbose){message(str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))}
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- mclapply(experiments(tileResults), function(x){
@@ -116,7 +116,7 @@ getSampleTileMatrix <- function(tileResults,
 		metadata = append(list('Log2Intensity' = log2Intensity, 'NAtoZero' = NAtoZero ), MultiAssayExperiment::metadata(tileResults))
   )
 
-  results
+  return(results)
 }
 
 
