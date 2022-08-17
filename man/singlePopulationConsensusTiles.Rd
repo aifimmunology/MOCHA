@@ -6,10 +6,9 @@
 \usage{
 singlePopulationConsensusTiles(
   peaksExperiment,
-  cellPopulation,
   threshold,
-  groupColumn,
-  join
+  groupColumn = NULL,
+  join = "union"
 )
 }
 \description{

@@ -2,17 +2,38 @@
 % Please edit documentation in R/getDifferentialAccessibleTiles.R
 \name{getDifferentialAccessibleTiles}
 \alias{getDifferentialAccessibleTiles}
-\title{\code{get_differential_accessible_Regions}}
+\title{\code{getDifferentialAccessibleTiles}}
 \usage{
 getDifferentialAccessibleTiles(
-  sampleTileMatrix,
-  tileResults,
-  fdr_control = 0.2,
+  SampleTileObj,
+  cellPopulation,
+  groupColumn,
+  foreground,
+  background,
+  fdrToDisplay = 0.2,
   numCores = 2
 )
 }
+\arguments{
+\item{SampleTileObj}{The SummarizedExperiment object output from getSampleTileMatrix}
+
+\item{cellPopulation}{A string denoting the cell population of interest}
+
+\item{groupColumn}{The column containing sample group labels}
+
+\item{foreground}{The foreground group of samples for differential comparison}
+
+\item{background}{The background group of samples for differential comparison}
+
+\item{fdrToDisplay}{Optional false-discovery rate used only for standard output messaging}
+
+\item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+}
+\value{
+
+}
 \description{
-\code{get_differential_accessible_Regions} allows you to
+\code{getDifferentialAccessibleTiles} allows you to
   determine whether regions of chromatin are differentially accessible
   between groups by conducting a test
 }

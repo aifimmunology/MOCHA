@@ -59,8 +59,8 @@ tileResults <- scMACS::callOpenTiles(
 # 3. Get consensus sample-tile matrices
 #    for all cell populations.
 #    These matrices are organized by cell population
-#    MultiAssayExperiment object and are the primary 
-#    input to downstream analyses.
+#    RangedSummarizedExperiment object and are the 
+#    primary input to downstream analyses.
 ####################################################
 
 SampleTileMatrices <- scMACS::getSampleTileMatrix( 
@@ -72,3 +72,8 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     NAtoZero = FALSE,
     log2Intensity = TRUE
 )
+
+####################################################
+# 3. Get DAPs for specific cell populations.
+#    
+####################################################

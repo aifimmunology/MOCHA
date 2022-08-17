@@ -119,45 +119,6 @@ getSampleTileMatrix <- function(tileResults,
   return(results)
 }
 
-
-
-##### function for annotating the tiles for the Sample Tile Matrix.
-## Returns a sample tile matrix with the transcript Db annotated and tile annotations. 
-
-
-annotateSampleTileMatrix <- function(SampleTileMatrix,
-			   Org = org.Hs.eg.db, 
-                          promoterRegion = c(2000, 100)){
-
-	tileList <- rowRanges(SampleTileMatrix)
-	TxDb <- metadata(SampleTileMatrix)$TxDb
-
-	metadata(SampleTileMatrix) = append(SummarizedExperiment::metadata(SampleTileMatrix), 
-					list('Transcripts' = TxDb,
-						'Org' = Org))
-
-	txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ('gene')))
-        names(txList) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(txList), "SYMBOL", "ENTREZID"))
-	exonList <-  suppressWarnings(GenomicFeatures::exonsBy(TxDb, by = "gene"))
-	#Same TxDb, same gene names in same order. 
-	names(exonList) <-  names(txList) 
-
-	txs <- stack(txList) %>% GenomicRanges::trim()
-	exonSet <- stack(exonList)
-
-    	promoterSet <- txs %>% GenomicRanges::trim(.) %>% 
-		GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]) %>% plyranges::reduce_ranges()
-
-	txs_overlaps <- GenomicRanges::findOverlaps(tileList, txs)
-	exon_overlaps <- GenomicRanges::findOverlaps(tileList, exonSet)
-	promo_overlaps <- GenomicRanges::findOverlaps(tileList, promoterSet)
-
-	rowMeta <- mcols(tileList) %>% 
-	
-
-
-}
-
 #################################### getCellTypeMatrix pulls out the SampleTileMatrix of tiles called in one given cell type
 ## @SampleTileObj - output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk intensitys across all tiles & cell types
 ## @CellType - The cell type you want to pull out.

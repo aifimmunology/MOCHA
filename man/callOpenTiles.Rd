@@ -4,7 +4,15 @@
 \alias{callOpenTiles}
 \title{\code{callOpenTiles}}
 \usage{
-callOpenTiles(ArchRProj, cellPopLabel, cellPopulations = "ALL", numCores = 30)
+callOpenTiles(
+  ArchRProj,
+  cellPopLabel,
+  cellPopulations = "ALL",
+  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+  outDir = NULL,
+  numCores = 30,
+  force = FALSE
+)
 }
 \arguments{
 \item{ArchRProj}{an ArchR Project}
@@ -19,7 +27,7 @@ calling is done on all cell populations in the ArchR project metadata.
 Default is 'ALL'.}
 
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
-multiple cell populations}
+multiple cell populations.}
 }
 \value{
 tileResults A MultiAssayExperiment object containing ranged data
