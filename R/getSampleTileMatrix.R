@@ -116,7 +116,9 @@ getSampleTileMatrix <- function(tileResults,
 		metadata = append(list('Log2Intensity' = log2Intensity, 'NAtoZero' = NAtoZero ), MultiAssayExperiment::metadata(tileResults))
   )
 
-  return(results)
+  annotResults <- annotateTiles(results)
+
+  return( annotResults)
 }
 
 
@@ -125,37 +127,76 @@ getSampleTileMatrix <- function(tileResults,
 ## Returns a sample tile matrix with the transcript Db annotated and tile annotations. 
 
 
-annotateSampleTileMatrix <- function(SampleTileMatrix,
-			   Org = org.Hs.eg.db, 
+annotateTiles <- function(obj,
+			  TxDb = NULL,
+			   Org = NULL, 
                           promoterRegion = c(2000, 100)){
 
-	tileList <- rowRanges(SampleTileMatrix)
-	TxDb <- metadata(SampleTileMatrix)$TxDb
+	if(class(obj)[1] == "RangedSummarizedExperiment" & is.null(TxDb) & is.null(Org)){
+	
+		if(!all(c('TxDb', 'Org') %in% names(S4Vectors::metadata(obj)))){
+			
+			stop('Error: Wrong input. Obj must either be an RangedSummarizedExperiment with a TxDb and Org, or a GRanges obj')
 
-	metadata(SampleTileMatrix) = append(SummarizedExperiment::metadata(SampleTileMatrix), 
-					list('Transcripts' = TxDb,
-						'Org' = Org))
+		}
+		tileGRanges <- SummarizedExperiment::rowRanges(obj)
+		TxDb = GenomicFeatures::loadDb(S4Vectors::metadata(obj)$TxDb)
+		Org = GenomicFeatures::loadDb(S4Vectors::metadata(obj)$Org)
+
+	}else if(class(tileList)[[1]] == 'GRanges' & !is.null(TxDb) & !is.null(Org)){
+
+		tileGRanges = obj		
+
+	}else{
+
+		stop('Error: Wrong inputs. Verify proper inputs for obj, TxDb, and/or Org')
+
+	}
 
 	txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ('gene')))
         names(txList) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(txList), "SYMBOL", "ENTREZID"))
-	exonList <-  suppressWarnings(GenomicFeatures::exonsBy(TxDb, by = "gene"))
+	exonList <-  suppressWarnings(AnnotationDbi::exonsBy(TxDb, by = "gene"))
 	#Same TxDb, same gene names in same order. 
 	names(exonList) <-  names(txList) 
 
-	txs <- stack(txList) %>% GenomicRanges::trim()
+	txs <- stack(txList) %>% GenomicRanges::trim() %>% S4Vectors::unique(.) %>% plyranges::group_by(name) %>% plyranges::reduce_ranges()
 	exonSet <- stack(exonList)
 
     	promoterSet <- txs %>% GenomicRanges::trim(.) %>% 
-		GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]) %>% plyranges::reduce_ranges()
+		suppressWarnings(GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])) %>% 
+		plyranges::reduce_ranges(name = unique(name))
 
-	txs_overlaps <- GenomicRanges::findOverlaps(tileList, txs)
-	exon_overlaps <- GenomicRanges::findOverlaps(tileList, exonSet)
-	promo_overlaps <- GenomicRanges::findOverlaps(tileList, promoterSet)
+	txs_overlaps <- plyranges::join_overlap_left(tileGRanges, txs) %>% plyranges::reduce_ranges(name = unique(name))
+	exon_overlaps <- plyranges::join_overlap_left(tileGRanges, exonSet) %>% plyranges::reduce_ranges(name = unique(name))
+	promo_overlaps <- plyranges::join_overlap_left(tileGRanges, promoterSet) %>% plyranges::reduce_ranges(name = unique(name))
 
-	rowMeta <- mcols(tileList) %>% 
+
+	tileType <- data.frame(promo = promo_overlap$name, txs = txs_overlap$name, exon = exon_overlap$name) %>% 
+				dplyr::mutate(Type = dplyr::case_when(!is.na(promo) ~ 'Promoter',
+				!is.na(txs) & !is.na(exon) ~ 'Exonic',
+				!is.na(txs) & is.na(exon) ~ 'Intronic',
+				TRUE ~ 'Distal')) %>%
+				dplyr::mutate(Gene = 
+					dplyr::case_when(Type == 'Promoter' ~ promo,
+						Type == 'Exonic' ~ exon,
+						Type == 'Intronic' ~ txs,
+						TRUE ~ NA))
+				
+	tileGRanges$tileType = tileType$Type
+	tileGRanges$Gene = tileType$Gene
+
+	#If input was as Ranged SE, then edit the rowRanges for the SE and return it. 
+	#Else, return the annotated tile GRanges object. 
+	if(class(obj)[1] == "RangedSummarizedExperiment"){
+
+		SummarizedExperiment::rowRanges(obj) <- tileGRanges
+		return(obj)		
+
+	}else{
+		return(tileGRanges)
+
+	}
 	
-
-
 }
 
 #################################### getCellTypeMatrix pulls out the SampleTileMatrix of tiles called in one given cell type

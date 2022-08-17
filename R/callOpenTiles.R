@@ -33,6 +33,7 @@ callOpenTiles <- function(ArchRProj,
                           cellPopLabel,
                           cellPopulations = "ALL",
 			  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+			  Org = org.Hs.eg.db, 
  		 	  outDir = NULL,
                           numCores = 30, force = FALSE) {
 
@@ -83,14 +84,20 @@ callOpenTiles <- function(ArchRProj,
   # here we rename the fragments with the original cell populations labels.
   # Fragments maintain their order by cell population.
   names(splitFrags) <- finalCellPopulations
-  message("Cell populations for peak calling: ", paste(names(splitFrags), ""))
+  message("Cell populations for peak calling: ", paste(names(splitFrags), collapse = ", "))
 
 
   if(is.null(outDir)){
   	## Generate folder within ArchR for outputting results 
   	outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
   }
-  dir.create(outDir)
+
+  if(!file.exists(outDir)) {
+	
+	message(str_interp("Creating directory for MOCHA at ${outDir}"))
+	dir.create(outDir)
+
+  }
 
   # Main loop over all cell populations
   experimentList <- list()
@@ -109,7 +116,7 @@ callOpenTiles <- function(ArchRProj,
 
     #save coverage files to folder. 
     if(!file.exists(paste(outDir,'/',cellPop, '_CoverageFiles.RDS', sep ='')) | force){ 
-   	covFiles <- scMACS::getCoverage(popFrags = popFrags,
+   	covFiles <- scMACS:::getCoverage(popFrags = popFrags,
 					normFactor = normalization_factors/10^6,
 					filterEmpty = FALSE,
 					numCores = numCores, TxDb=TxDb)
@@ -128,7 +135,7 @@ callOpenTiles <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(popFrags),
       function(x) {
-        callTilesBySample(
+         scMACS:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
@@ -146,12 +153,11 @@ callOpenTiles <- function(ArchRProj,
     # so NULL will occur for those samples
     tilesGRangesListNoNull <- BiocGenerics::Filter(Negate(is.null), tilesGRangesList)
     # TODO: Add warning message about removed samples for this celltype.
-    
+
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesListNoNull
     )
-
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
@@ -166,13 +172,16 @@ callOpenTiles <- function(ArchRProj,
   )
 
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
- 
+  saveDb(TxDb, paste(outDir, '/TxDb.sqlite',sep=''))
+  saveDb(Org, paste(outDir, '/Org.sqlite',sep=''))
+
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list('Genome' = genome, 'TxDb' = TxDb, 'Directory' = outDir)
+    metadata = list('Genome' = genome, 'TxDb' = paste(outDir, '/TxDb.sqlite',sep=''), 
+			'Org' =  paste(outDir, '/Org.sqlite',sep=''), 'Directory' = outDir)
   )
 
   return(tileResults)

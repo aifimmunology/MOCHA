@@ -80,7 +80,22 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   res_pvals <- mclapply(rownames(sampleTileMatrix),
     function(x) {
-      cbind(Tile= x, estimate_differential_accessibility(sampleTileMatrix[x,], group, F))
+	if(which(rownames(sampleTileMatrix) == x) %in% idx){
+      		cbind(Tile= x, estimate_differential_accessibility(sampleTileMatrix[x,], group, F))
+	}else{
+
+		 data.frame(Tile = x,
+        		P_value=NA,
+        		TestStatistic=NA,
+        		Log2FC_C=NA,
+        		MeanDiff=NA,
+        		Case_mu=NA,
+        		Case_rho=NA,
+        		Control_mu=NA,
+        		Control_rho=NA
+		)
+
+	}
     },
     mc.cores = numCores
   )
@@ -125,7 +140,6 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   full_results = full_results[, c('Tile','CellPopulation','Foreground','Background', 'P_value','Test-Statistic','FDR','Log2FC_C',
                                     'MeanDiff','Avg_Intensity_Case','Pct0_Case',
                                     'Avg_Intensity_Control','Pct0_Control')]
-  
 
   discoveries <- sum(full_results$FDR <= 0.2, na.rm = TRUE)
   message(
