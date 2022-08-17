@@ -932,7 +932,7 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 
 			covdf
 
-  	}), mc.cores = numCores)		
+  	}, mc.cores = numCores)		
 
 
       tmpCountsdf <- as.data.frame(data.table::rbindlist(allTmp))
