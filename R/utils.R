@@ -120,7 +120,7 @@ validRegionString <- function(regionString) {
     return(FALSE)
   }
 
-  pattern <- "([0-9]{1,2}|chr[0-9]{1,2}):[0-9]*-[0-9]*"
+  pattern <- "([0-9]{1,2}|chr[0-9]{1,2}|chr[X-Y]{1,1}):[0-9]*-[0-9]*"
   matchedPattern <- str_extract(regionString, pattern)
 
   if (any(is.na(matchedPattern))) {

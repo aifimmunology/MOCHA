@@ -116,7 +116,7 @@ getSampleTileMatrix <- function(tileResults,
 		metadata = append(list('Log2Intensity' = log2Intensity, 'NAtoZero' = NAtoZero ), MultiAssayExperiment::metadata(tileResults))
   )
 
-  annotResults <- annotateTiles(results)
+  annotResults <- scMACS::annotateTiles(results)
 
   return( annotResults)
 }
