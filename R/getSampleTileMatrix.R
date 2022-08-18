@@ -53,7 +53,7 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
   
-  if (!(all(cellPopulations %in% names(tileResults))) & toLower(cellPop) != 'all'){
+  if (!(all(cellPopulations %in% names(tileResults))) & tolower(cellPop) != 'all'){
        stop(paste(
           "All of `cellPopulations` must present in tileResults.",
           "Check `names(tileResults)` for possible cell populations."
