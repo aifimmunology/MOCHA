@@ -155,7 +155,7 @@ annotateTiles <- function(obj,
 
 	txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ('gene')))
         names(txList) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(txList), "SYMBOL", "ENTREZID"))
-	exonList <-  suppressWarnings(AnnotationDbi::exonsBy(TxDb, by = "gene"))
+	exonList <-  suppressWarnings(ensembldb::exonsBy(TxDb, by = "gene"))
 	#Same TxDb, same gene names in same order. 
 	names(exonList) <-  names(txList) 
 
