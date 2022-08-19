@@ -39,33 +39,45 @@ getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE, motif
 ## genome is the reference genome we use
 
 
-runChromVar <- function(Obj, motifGRangesList,
+runChromVar <- function(Obj, motifs,
                        genome =  BSgenome.Hsapiens.UCSC.hg38){
     
-    if(class(Obj) == "RaggedSummarizedExperiment"){
+    if(class(Obj)[1] == "RaggedSummarizedExperiment" & class(motifs)[1]=='GRangesList'){
         
         Obj1 <- RaggedExperiment::compactSummarizedExperiment(RepTiles, i = 'TotalIntensity')
         tmp <- SummarizedExperiment::assays(Obj1)
         tmp[[1]][is.na(tmp[[1]])] = 0
         names(tmp) <- "counts"
         assays(Obj1) <- tmp
+
+	motifGRangesList = motifs
         
-    }else if(class(Obj) == "RangedSummarizedExperiment"){
+    }else if(class(Obj)[1] == "RangedSummarizedExperiment"){
         
         if( !names(assays(Obj)) %in% 'counts'){
         
-            stop("Error: Assay names must include an assay named 'counts'")
+		
             
-        }else{
+        }else if(class(motifs)[1] == 'GRangesList'){
             
             Obj1 = Obj
-        }
+	    motifGRangesList = motifs
+	    
+        }else if(class(motifs)[1] == 'character' & any(names(metadata(Obj)) %in% motifs)){
+            
+            Obj1 = Obj
+	    motifGRangesList = metadata(Obj)[[motifs]]
+	    
+        }else{
+
+	    stop('Error: No motifset found. Check input')
+	}
         
     }else{
     
         stop('Error: Wrong Input Object. Must be either a RaggedExperiment or a RangedSummarizedExperiment')
-    }
-    
+    }     
+
     CisbpAnno <- chromVAR::getAnnotations(motifGRangesList, rowRanges = rowRanges(Obj1))
 
     Obj1 <- chromVAR::addGCBias(Obj1, genome = genome)
@@ -94,11 +106,11 @@ runChromVar <- function(Obj, motifGRangesList,
 ###           entries in column 'type'
 EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = FALSE){
     
-    Group1Cat <- filter_by_overlaps(Group1, Category) 
-    Group2Cat <- filter_by_overlaps(Group2, Category)
+    Group1Cat <- plyranges::filter_by_overlaps(Group1, Category) 
+    Group2Cat <- plyranges::filter_by_overlaps(Group2, Category)
    
-    OnlyGroup1 <- filter_by_non_overlaps(Group1, Category)
-    OnlyGroup2 <- filter_by_non_overlaps(Group2, Category)
+    OnlyGroup1 <- plyranges::filter_by_non_overlaps(Group1, Category)
+    OnlyGroup2 <- plyranges::filter_by_non_overlaps(Group2, Category)
     
     if(returnTable & is.null(type)){
 
@@ -112,10 +124,10 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
              sum(c(colnames(mcols(Group1)),colnames(mcols(Group2))) %in% type) == 2 &
              length(type) == 1){
         
-       dt_table <- data.frame(Group1 = c(length(unique(mcols(Group1Cat)[,type])), 
-                                          length(unique(mcols(OnlyGroup1)[,type]))), 
-                               Group2 = c(length(unique(mcols(Group2Cat)[,type])), 
-                                         length(unique(mcols(OnlyGroup2)[,type]))), 
+       dt_table <- data.frame(Group1 = c(length(unique(GenomicRanges::mcols(Group1Cat)[,type])), 
+                                          length(unique(GenomicRanges::mcols(OnlyGroup1)[,type]))), 
+                               Group2 = c(length(unique(GenomicRanges::mcols(Group2Cat)[,type])), 
+                                         length(unique(GenomicRanges::mcols(OnlyGroup2)[,type]))), 
                        row.names = c('In Category', 'Not in Category')) 
     
         return(t(dt_table))
@@ -160,7 +172,7 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
 ######## Test all motifs for enrichment.
     
 
-MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores = 1, returnTable = FALSE){
+MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores = 1){
     
     
     allEnrichmentList <- mclapply(motifPosList, function(x){
@@ -171,7 +183,7 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores 
     df_final <- do.call('rbind',  allEnrichmentList)
 
     df_final$adjp_val <- p.adjust(df_final$p_value)
-    df_final$mlog10Padj <- -log10(adjp_val)
+    df_final$mlog10Padj <- -log10(df_final$adjp_val)
     
     return(df_final)
 
