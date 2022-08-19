@@ -58,13 +58,13 @@ getPopFrags <- function(ArchRProj,
     cellPopulations <- names(cellCounts)
   } else {
 
-    # Take our cell populations from given cellSubsets
-    cellPopulations <- unique(cellSubsets[!is.na(cellSubsets)][order(cellSubsets)])
+  # Take our cell populations from given cellSubsets
+  cellPopulations <- unique(cellSubsets[!is.na(cellSubsets)][order(cellSubsets)])
 
-    # Filter cellCounts to selected cell subsets (populations)
-    cellCounts <- cellCounts[cellPopulations]
-    if (any(is.na(cellCounts))) {
-      stop(paste(
+  # Filter cellCounts to selected cell subsets (populations)
+  cellCounts <- cellCounts[cellPopulations]
+  if (any(is.na(cellCounts))) {
+     stop(paste(
         "Some cell populations have NA cell counts.",
         "Please verify that all given cellSubsets exist for the given metaColumn.",
         str_interp("cellSubsets with NA cell counts: ${cellPopulations[is.na(names(cellCounts))]}")
@@ -76,6 +76,7 @@ getPopFrags <- function(ArchRProj,
     stop("No cells were found for the given cellSubsets and/or metaColumn.")
   }
 
+  cellNames = rownames(metadf)[metadf[,metaColumn] %in% cellPopulations]
 
   #### Up to here, the above is only specific to sampleSpecific=False
   allArrows <- ArchR::getArrowFiles(ArchRProj)
@@ -102,7 +103,7 @@ getPopFrags <- function(ArchRProj,
       print(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
       ArchR::getFragmentsFromArrow(
         ArrowFile = arrows[x],
-        cellNames = NULL,
+        cellNames = cellNames,
         verbose = FALSE
       )
     }, mc.cores = numCores)
@@ -136,7 +137,7 @@ getPopFrags <- function(ArchRProj,
 	print(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
      	fragsGRanges <- getFragmentsFromArrow(
         ArrowFile = arrows[x],
-        cellNames = NULL,
+        cellNames = cellNames,
         chr = as.character(chrom[, 1]),
         verbose = FALSE
       ) %>% plyranges::join_overlap_intersect(regionGRanges)

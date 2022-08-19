@@ -937,7 +937,7 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 
       tmpCountsdf <- as.data.frame(data.table::rbindlist(allTmp))
 
-      return(tmpCountsdf)	
+      return(tmpCountsdf)
 
 }
 

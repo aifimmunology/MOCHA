@@ -49,12 +49,13 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   tilesCalled <- mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
   sampleTileMatrix <- scMACS:::getCellTypeMatrix(SampleTileObj, cellPopulation)
-  sampleTileMatrix <- sampleTileMatrix[tilesCalled, colnames(SampleTileObj) %in% c(positive_samples, negative_samples)]
+  sampleTileMatrix <- sampleTileMatrix[, which(colnames(SampleTileObj) %in% c(positive_samples, negative_samples))]
     
   # We need to enforce that NAs were set to zeros in getSampleTileMatrix
-  miscMetadata <- SummarizedExperiment::metadata(SampleTileObj)
+  miscMetadata <- S4Vectors::metadata(SampleTileObj)
   if (!miscMetadata$NAtoZero){
-    stop("The provided SampleTileObj was generated with NAtoZero=FALSE. Please run getSampleTileMatrix with NAtoZero=TRUE For differential analysis.")
+    #stop("The provided SampleTileObj was generated with NAtoZero=FALSE. Please run getSampleTileMatrix with NAtoZero=TRUE For differential analysis.")
+    sampleTileMatrix[is.na(sampleTileMatrix)] = 0
   }
   group <- as.numeric(colnames(sampleTileMatrix) %in% positive_samples)
 
@@ -69,7 +70,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   diff0s = abs(zero_A-zero_B)
 
-  Log2Intensity = metadata(SampleTileMatrices)$Log2Intensity
+  Log2Intensity = metadata(SampleTileObj)$Log2Intensity
   log2FC_filter = ifelse(Log2Intensity, 12, 2^12)
   idx = which(medians_a > log2FC_filter| medians_b > log2FC_filter | diff0s >= 0.5)
 
@@ -79,7 +80,22 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   res_pvals <- mclapply(rownames(sampleTileMatrix),
     function(x) {
-      cbind(Tile= x, estimate_differential_accessibility(sampleTileMatrix[x,], group, F))
+	if(which(rownames(sampleTileMatrix) == x) %in% idx){
+      		cbind(Tile= x, estimate_differential_accessibility(sampleTileMatrix[x,], group, F))
+	}else{
+
+		 data.frame(Tile = x,
+        		P_value=NA,
+        		TestStatistic=NA,
+        		Log2FC_C=NA,
+        		MeanDiff=NA,
+        		Case_mu=NA,
+        		Case_rho=NA,
+        		Control_mu=NA,
+        		Control_rho=NA
+		)
+
+	}
     },
     mc.cores = numCores
   )
@@ -124,11 +140,10 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   full_results = full_results[, c('Tile','CellPopulation','Foreground','Background', 'P_value','Test-Statistic','FDR','Log2FC_C',
                                     'MeanDiff','Avg_Intensity_Case','Pct0_Case',
                                     'Avg_Intensity_Control','Pct0_Control')]
-  
 
   discoveries <- sum(full_results$FDR <= 0.2, na.rm = TRUE)
   message(
-    discoveries, " differential regions found at FDR",
+    discoveries, " differential regions found at FDR ",
     fdrToDisplay
   )
   
