@@ -140,8 +140,8 @@ annotateTiles <- function(obj,
 
 		}
 		tileGRanges <- SummarizedExperiment::rowRanges(obj)
-		TxDb = GenomicFeatures::loadDb(S4Vectors::metadata(obj)$TxDb)
-		Org = GenomicFeatures::loadDb(S4Vectors::metadata(obj)$Org)
+		TxDb = AnnotationDbi::loadDb(S4Vectors::metadata(obj)$TxDb)
+		Org = AnnotationDbi::loadDb(S4Vectors::metadata(obj)$Org)
 
 	}else if(class(tileList)[[1]] == 'GRanges' & !is.null(TxDb) & !is.null(Org)){
 
