@@ -20,9 +20,11 @@ getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE, motif
     names(motif_ix) <- sub("_D_.*|_I_.*","", names(motif_ix)) %>% sub("_I$|_D$","", .) %>%
                     sub(".*_LINE","",.) %>% sub(".*_","",.)
 
-    metadata(SE_Object) = append(metadata(SE_Object), list(motifSetName = motif_ix))
+    motifList <- list(motif_ix)
+    names(motifList) <- motifSetName
+
    if(returnObj){ 
-     metadata(SE_Object) = append(metadata(SE_Object), list(motifSetName = motif_ix))
+     metadata(SE_Object) = append(metadata(SE_Object), motifList)
      return(SE_Object)
    }else{
     return(motif_ix)
