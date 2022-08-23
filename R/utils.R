@@ -166,7 +166,7 @@ StringsToGRanges <- function(regionString) {
     as.numeric()
   endSite <- gsub(".*-", "", regionString) %>% as.numeric()
 
-  if(startSite >= endSite){stop('Error in region string: Make sure the start of the genomic range occurs before the end') }
+  if(any(startSite >= endSite)){stop('Error in region string: Make sure the start of the genomic range occurs before the end') }
   regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
   return(regionGRanges)
 }        

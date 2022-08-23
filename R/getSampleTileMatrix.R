@@ -121,10 +121,7 @@ getSampleTileMatrix <- function(tileResults,
       MultiAssayExperiment::metadata(tileResults)
     )
   )
-
-  annotResults <- scMACS::annotateTiles(results)
-
-  return( annotResults)
+  return(results)
 }
 
 
@@ -145,8 +142,8 @@ annotateTiles <- function(obj,
 
 		}
 		tileGRanges <- SummarizedExperiment::rowRanges(obj)
-		TxDb = GenomicFeatures::loadDb(S4Vectors::metadata(obj)$TxDb)
-		Org = GenomicFeatures::loadDb(S4Vectors::metadata(obj)$Org)
+		TxDb = AnnotationDbi::loadDb(S4Vectors::metadata(obj)$TxDb)
+		Org = AnnotationDbi::loadDb(S4Vectors::metadata(obj)$Org)
 
 	}else if(class(tileList)[[1]] == 'GRanges' & !is.null(TxDb) & !is.null(Org)){
 
@@ -160,35 +157,47 @@ annotateTiles <- function(obj,
 
 	txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ('gene')))
         names(txList) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(txList), "SYMBOL", "ENTREZID"))
-	exonList <-  suppressWarnings(AnnotationDbi::exonsBy(TxDb, by = "gene"))
+	exonList <-  suppressWarnings(ensembldb::exonsBy(TxDb, by = "gene"))
 	#Same TxDb, same gene names in same order. 
 	names(exonList) <-  names(txList) 
 
-	txs <- stack(txList) %>% GenomicRanges::trim() %>% S4Vectors::unique(.) %>% plyranges::group_by(name) %>% plyranges::reduce_ranges()
-	exonSet <- stack(exonList)
+	txs <- stack(txList) %>% GenomicRanges::trim() %>% S4Vectors::unique(.)
+	exonSet <- stack(exonList) 
 
-    	promoterSet <- txs %>% GenomicRanges::trim(.) %>% 
-		suppressWarnings(GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])) %>% 
-		plyranges::reduce_ranges(name = unique(name))
+    	promoterSet <- stack(txList) %>% GenomicRanges::trim(.) %>% S4Vectors::unique(.) %>% 
+		suppressWarnings(GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]))
 
-	txs_overlaps <- plyranges::join_overlap_left(tileGRanges, txs) %>% plyranges::reduce_ranges(name = unique(name))
-	exon_overlaps <- plyranges::join_overlap_left(tileGRanges, exonSet) %>% plyranges::reduce_ranges(name = unique(name))
-	promo_overlaps <- plyranges::join_overlap_left(tileGRanges, promoterSet) %>% plyranges::reduce_ranges(name = unique(name))
+	getOverlapNameList <- function(rowTiles, annotGR){
+    
+    		overlapGroup <- findOverlaps(rowTiles, annotGR) %>% as.data.frame() 
+    		overlapGroup$Genes = as.character(annotGR$name[overlapGroup$subjectHits])
+    		last <- overlapGroup %>% dplyr::group_by(subjectHits) %>% 
+                dplyr::summarize(Genes = paste(unique(Genes), collapse =", "))
+    		return(last)
 
+	}
 
-	tileType <- data.frame(promo = promo_overlap$name, txs = txs_overlap$name, exon = exon_overlap$name) %>% 
-				dplyr::mutate(Type = dplyr::case_when(!is.na(promo) ~ 'Promoter',
-				!is.na(txs) & !is.na(exon) ~ 'Exonic',
-				!is.na(txs) & is.na(exon) ~ 'Intronic',
-				TRUE ~ 'Distal')) %>%
-				dplyr::mutate(Gene = 
-					dplyr::case_when(Type == 'Promoter' ~ promo,
-						Type == 'Exonic' ~ exon,
-						Type == 'Intronic' ~ txs,
-						TRUE ~ NA))
-				
+	txs_overlaps <- getOverlapNameList(tileGRanges, txs)
+	exon_overlaps <- getOverlapNameList(tileGRanges, exonSet) 
+	promo_overlaps <- getOverlapNameList(tileGRanges, promoterSet) 
+
+	tileType <- as.data.frame(mcols(rowTiles)) %>% dplyr::mutate(Index = 1:nrow(.)) %>%   
+            dplyr::mutate(Type = dplyr::case_when(Index %in% promo_overlaps$subjectHits ~ 'Promoter',
+               Index %in% exon_overlaps$subjectHits ~ 'Exonic',
+                Index %in% txs_overlaps$subjectHits ~ 'Intronic',
+                TRUE ~ 'Distal')) %>% 
+            dplyr::left_join(promo_overlaps, by = c('Index' = 'subjectHits')) %>%
+            dplyr::rename('Promo' = Genes)%>% 
+            dplyr::left_join(exon_overlaps, by = c('Index' = 'subjectHits')) %>%
+            dplyr::rename('Exons' = Genes)%>% 
+            dplyr::left_join(txs_overlaps, by = c('Index' = 'subjectHits')) %>%
+            dplyr::rename('Txs' = Genes)%>% 
+            dplyr::mutate(Genes = ifelse(Type == 'Promoter',Promo, NA)) %>%
+            dplyr::mutate(Genes = ifelse(Type == 'Exonic',Exons, Genes)) %>%
+            dplyr::mutate(Genes = ifelse(Type == 'Intronic',Txs, Genes)) 
+
 	tileGRanges$tileType = tileType$Type
-	tileGRanges$Gene = tileType$Gene
+	tileGRanges$Gene = tileType$Genes
 
 	#If input was as Ranged SE, then edit the rowRanges for the SE and return it. 
 	#Else, return the annotated tile GRanges object. 
