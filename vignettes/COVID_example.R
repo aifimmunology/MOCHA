@@ -69,7 +69,7 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     groupColumn = groupColumn,
     threshold = threshold,
     join = join,
-    NAtoZero = FALSE,
+    NAtoZero = TRUE,
     log2Intensity = TRUE
 )
 
@@ -77,3 +77,13 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 # 3. Get DAPs for specific cell populations.
 #    
 ####################################################
+
+differentials <- getDifferentialAccessibleTiles(
+    SampleTileObj = SampleTileMatrices,
+    cellPopulation = "MAIT",
+    groupColumn = "COVID_status",
+    foreground = "Positive",
+    background = "Negative",
+    fdrToDisplay = 0.2,
+    numCores = 20
+)

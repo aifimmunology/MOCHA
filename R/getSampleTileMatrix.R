@@ -34,8 +34,8 @@ getSampleTileMatrix <- function(tileResults,
                                 join = "union",
                                 NAtoZero = FALSE,
                                 log2Intensity = TRUE,
-				numCores = 1,
-				verbose = FALSE
+                                numCores = 1,
+                                verbose = FALSE
                                ) {
 
   if (!(join %in% c("union", "intersect"))){
@@ -56,32 +56,35 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
   
-  if (!(all(cellPopulations %in% names(tileResults))) & tolower(cellPopulations) != 'all'){
-       stop(paste(
-          "All of `cellPopulations` must present in tileResults.",
-          "Check `names(tileResults)` for possible cell populations."
-        ))
-  }
-  
   if(length(cellPopulations) == 1 & any(cellPopulations == 'ALL')){
   
       subTileResults <- tileResults
-      cellPopulations = names(tileResults)
+      cellPopulations <- names(tileResults)
   
   }else{
-
-    subTileResults <- tileResults[names(tileResults) %in% cellPopulations]
-
+    
+    if (all(cellPopulations %in% names(tileResults))){
+       subTileResults <- tileResults[names(tileResults) %in% cellPopulations]
+    }else{
+      stop(paste(
+          "All of `cellPopulations` must present in tileResults.",
+          "Check `names(tileResults)` for possible cell populations."
+      ))
+    }
+    
   }
   
 
-  if(verbose){message(str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))}
+  if(verbose){
+    message(str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))
+  }
 
   tilesByCellPop <- mclapply(MultiAssayExperiment::experiments(subTileResults), function(x){
     
     # Get consensus tiles for this cell population for filtering
     scMACS:::singlePopulationConsensusTiles(
       x,
+      sampleData,
       threshold,
       groupColumn,
       join
@@ -91,29 +94,32 @@ getSampleTileMatrix <- function(tileResults,
 
   allTiles <- sort(unique(do.call('c',tilesByCellPop)))
 
-  if(verbose){message(str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))}
+  if(verbose){
+    message(str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
+  }
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- mclapply(MultiAssayExperiment::experiments(tileResults), function(x){
-
-		scMACS:::singlePopulationSampleTileMatrix(
-      				x,
-      				allTiles,
-      				NAtoZero,
-      				log2Intensity
-    		)
-   }, mc.cores = numCores)
+    scMACS:::singlePopulationSampleTileMatrix(
+      x,
+      allTiles,
+      NAtoZero,
+      log2Intensity
+    )
+  }, mc.cores = numCores)
 
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>% do.call('cbind', .) %>% as.data.frame()
-
   allTilesGR <- scMACS::StringsToGRanges(allTiles)
   mcols(allTilesGR) <- tilePresence
 
   results <- SummarizedExperiment::SummarizedExperiment(
-  		sampleTileIntensityMatList,
-    		rowRanges = allTilesGR,
-		colData = sampleData,
-		metadata = append(list('Log2Intensity' = log2Intensity, 'NAtoZero' = NAtoZero ), MultiAssayExperiment::metadata(tileResults))
+    sampleTileIntensityMatList,
+    rowRanges = allTilesGR,
+    colData = sampleData,
+    metadata = append(
+      list('Log2Intensity' = log2Intensity, 'NAtoZero' = NAtoZero ),
+      MultiAssayExperiment::metadata(tileResults)
+    )
   )
 
   annotResults <- scMACS::annotateTiles(results)

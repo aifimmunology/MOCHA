@@ -13,10 +13,10 @@
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
-#' @TxDb TxDb is an AnnotationDbi object with transcript info for the organism. UCSC Hg38 Refgene is the default.
-#' @outDir outDir is a string describing the output directory for coverage files per sample/celltype. 
-#' Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR 
-#' and make a new fold named MOCHA for saving files. 
+#' @param TxDb is an AnnotationDbi object with transcript info for the organism. UCSC Hg38 Refgene is the default.
+#' @param outDir is a string describing the output directory for coverage files per sample/celltype. 
+#'   Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR 
+#'   and make a new fold named MOCHA for saving files. 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations.
 #'
@@ -272,8 +272,11 @@ callOpenTilesFast <- function(ArchRProj,
 
 
   if(is.null(outDir)){
-  	## Generate folder within ArchR for outputting results 
-  	outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
+      # Generate folder within ArchR project for outputting results 
+      outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
+  }
+  if(!dir.exists(outDir)){
+      dir.create(outDir)
   }
 
   if(!file.exists(outDir)) {

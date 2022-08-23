@@ -18,16 +18,15 @@
 
 
 getDifferentialAccessibleTiles <- function(SampleTileObj,
-					   cellPopulation,
-					   groupColumn,
-					   foreground,
-					   background,
+                                           cellPopulation,
+                                           groupColumn,
+                                           foreground,
+                                           background,
                                            fdrToDisplay = 0.2,
                                            numCores = 2) {
   
   if(!any(names(assays(SampleTileObj)) %in% cellPopulation)){
-
-	stop('cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.')
+    stop('cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.')
   }
 
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
@@ -43,13 +42,14 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   }
 
   # Get group labels
-  positive_samples <- metaFile[metaFile[,groupColumn] == foreground, 'Sample']
-  negative_samples <- metaFile[metaFile[,groupColumn] == background, 'Sample']
+  foreground_samples <- metaFile[metaFile[,groupColumn] == foreground, 'Sample']
+  background_samples <- metaFile[metaFile[,groupColumn] == background, 'Sample']
 
-
+  browser()
   tilesCalled <- mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
   sampleTileMatrix <- scMACS:::getCellTypeMatrix(SampleTileObj, cellPopulation)
-  sampleTileMatrix <- sampleTileMatrix[, which(colnames(SampleTileObj) %in% c(positive_samples, negative_samples))]
+
+  sampleTileMatrix <- sampleTileMatrix[tilesCalled, colnames(SampleTileObj) %in% c(foreground_samples, background_samples)]
     
   # We need to enforce that NAs were set to zeros in getSampleTileMatrix
   miscMetadata <- S4Vectors::metadata(SampleTileObj)
@@ -57,7 +57,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     #stop("The provided SampleTileObj was generated with NAtoZero=FALSE. Please run getSampleTileMatrix with NAtoZero=TRUE For differential analysis.")
     sampleTileMatrix[is.na(sampleTileMatrix)] = 0
   }
-  group <- as.numeric(colnames(sampleTileMatrix) %in% positive_samples)
+  group <- as.numeric(colnames(sampleTileMatrix) %in% foreground_samples)
 
   #############################################################################
   # Prioritize high-signal tiles
