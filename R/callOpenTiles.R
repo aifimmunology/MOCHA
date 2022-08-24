@@ -14,42 +14,51 @@
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
 #' @param TxDb is an AnnotationDbi object with transcript info for the organism. UCSC Hg38 Refgene is the default.
-#' @param outDir is a string describing the output directory for coverage files per sample/celltype. 
-#'   Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR 
-#'   and make a new fold named MOCHA for saving files. 
+#' @param outDir is a string describing the output directory for coverage files per sample/celltype.
+#'   Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR
+#'   and make a new fold named MOCHA for saving files.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations.
 #'
 #' @return tileResults A MultiAssayExperiment object containing ranged data
-#'   for each tile 
+#'   for each tile
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
 #' @references XX
 #'
 #' @export
-
 callOpenTiles <- function(ArchRProj,
                           cellPopLabel,
                           cellPopulations = "ALL",
-                          # TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-                          # Org = org.Hs.eg.db, 
+                          TxDb = NULL,
+                          Org = NULL,
                           outDir = NULL,
                           fast = FALSE,
-                          numCores = 30, 
+                          numCores = 30,
                           force = FALSE) {
+  
+  if (is.null(outDir)) {
+    ## Generate folder within ArchR for outputting results
+    outDir <- paste(ArchR::getOutputDirectory(ArchRProj), "/MOCHA", sep = "")
+  }
 
-  if(fast){
+  if (!file.exists(outDir)) {
+    message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    dir.create(outDir)
+  }
+  
+  if (fast) {
     tileResults <- callOpenTilesFast(
       ArchRProj,
       cellPopLabel,
       cellPopulations,
-      # TxDb,
-      # Org,
+      TxDb,
+      Org,
       outDir,
       numCores,
       force
-    ) 
+    )
     return(tileResults)
   }
 
@@ -63,26 +72,19 @@ callOpenTiles <- function(ArchRProj,
 
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- names(cellCounts)
-  }else if(!all(cellPopulations %in% names(cellCounts))){
-    stop('Error: cellPopulations not all found in ArchR project.')
+  } else if (!all(cellPopulations %in% names(cellCounts))) {
+    stop("Error: cellPopulations not all found in ArchR project.")
   }
-
-
-  if(is.null(outDir)){
-    ## Generate folder within ArchR for outputting results 
-    outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
-  }
-
-  if(!file.exists(outDir)) {
-    message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
-    dir.create(outDir)
-  }
-    
+  
+  # Genome and TxDb annotation info is added to the metadata of 
+  # the final MultiAssayExperiment for downstream analysis
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
+  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
+  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
 
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in cellPopulations) {
-
     message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
 
     # Get our fragments for this cellPop
@@ -103,30 +105,34 @@ callOpenTiles <- function(ArchRProj,
     emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
     emptyGroups <- names(frags)[emptyFragsBool]
     emptyGroups <- gsub("__.*", "", emptyGroups)
-  
-    if (length(emptyGroups)==0){
-      warning("The following celltype#sample groupings have no fragments",
-            "and will be ignored: ", emptyGroups)
+
+    if (length(emptyGroups) == 0) {
+      warning(
+        "The following celltype#sample groupings have no fragments",
+        "and will be ignored: ", emptyGroups
+      )
     }
 
-    #Remove frags
+    # Remove frags
     rm(frags)
 
     # Simplify sample names to remove everything before the first "#"
-    sampleNames <- gsub("__.*","",gsub(".*#", "", names(fragsNoNull)))
+    sampleNames <- gsub("__.*", "", gsub(".*#", "", names(fragsNoNull)))
     names(fragsNoNull) <- sampleNames
-    
+
     # Calculate normalization factors as the number of fragments for each celltype_samples
     normalization_factors <- as.integer(sapply(fragsNoNull, length))
 
-    #save coverage files to folder. 
-    if(!file.exists(paste(outDir,'/',cellPop, '_CoverageFiles.RDS', sep ='')) | force){ 
-   	covFiles <- scMACS:::getCoverage(popFrags = fragsNoNull,
-					normFactor = normalization_factors/10^6,
-					filterEmpty = FALSE,
-					numCores = numCores, TxDb=TxDb)
-    	saveRDS(covFiles, paste(outDir,'/',cellPop,'_CoverageFiles.RDS', sep =''))
-    	rm(covFiles)
+    # save coverage files to folder.
+    if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
+      covFiles <- scMACS:::getCoverage(
+        popFrags = fragsNoNull,
+        normFactor = normalization_factors / 10^6,
+        filterEmpty = FALSE,
+        numCores = numCores, TxDb = TxDb
+      )
+      saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
+      rm(covFiles)
     }
 
 
@@ -140,7 +146,7 @@ callOpenTiles <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(fragsNoNull),
       function(x) {
-         scMACS:::callTilesBySample(
+        scMACS:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
@@ -153,26 +159,26 @@ callOpenTiles <- function(ArchRProj,
     )
 
     names(tilesGRangesList) <- sampleNames
-    rm(fragsNoNull)    
+    rm(fragsNoNull)
 
-    # Cannot make peak calls with < 5 cells (see make_prediction.R) 
+    # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples
     tilesGRangesListNoNull <- BiocGenerics::Filter(Negate(is.null), tilesGRangesList)
     # TODO: Add warning message about removed samples for this celltype.
 
     rm(tilesGRangesList)
-    
+
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesListNoNull
     )
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
-    #experimentList <- append(experimentList, tilesGRangesListNoNull)
+    # experimentList <- append(experimentList, tilesGRangesListNoNull)
   }
 
   # Create sample metadata from cellColData using util function
-  # "Sample" is the enforced col in ArchR containing the 
+  # "Sample" is the enforced col in ArchR containing the
   # sample IDs which correspond to the arrow files.
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
@@ -186,23 +192,31 @@ callOpenTiles <- function(ArchRProj,
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list('Genome' = genome, 'TxDb' = paste(outDir, '/TxDb.sqlite',sep=''), 
-			'Org' =  paste(outDir, '/Org.sqlite',sep=''), 'Directory' = outDir)
+    metadata = list(
+      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
+      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
+    )
   )
 
   return(tileResults)
 }
 
-##### Same function, but runs faster with much, much more RAM usage. 
+##### Same function, but runs faster with much, much more RAM usage.
 callOpenTilesFast <- function(ArchRProj,
                               cellPopLabel,
                               cellPopulations = "ALL",
-                              # TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-                              # Org = org.Hs.eg.db, 
+                              TxDb = NULL,
+                              Org = NULL,
                               outDir = NULL,
                               numCores = 30,
                               force = FALSE) {
-
+  
+  # Genome and TxDb annotation info is added to the metadata of 
+  # the final MultiAssayExperiment for downstream analysis
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
+  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
+  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
+  
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
   blackList <- ArchR::getBlacklist(ArchRProj)
@@ -226,26 +240,28 @@ callOpenTilesFast <- function(ArchRProj,
   emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
   emptyGroups <- names(frags)[emptyFragsBool]
   emptyGroups <- gsub("__.*", "", emptyGroups)
-  
-  if (length(emptyGroups)==0){
-    warning("The following celltype#sample groupings have no fragments",
-            "and will be ignored: ", emptyGroups)
+
+  if (length(emptyGroups) == 0) {
+    warning(
+      "The following celltype#sample groupings have no fragments",
+      "and will be ignored: ", emptyGroups
+    )
   }
-  
-  prefilterCellPops <- unique(sapply(strsplit(names(frags),"#"), `[`, 1))
-  if (any(prefilterCellPops != cellPopulations)){
+
+  prefilterCellPops <- unique(sapply(strsplit(names(frags), "#"), `[`, 1))
+  if (any(prefilterCellPops != cellPopulations)) {
     # Removed cell populations must be filtered from cellPopulations
-    postfilterCellPops <- unique(sapply(strsplit(names(fragsNoNull),"#"), `[`, 1))
+    postfilterCellPops <- unique(sapply(strsplit(names(fragsNoNull), "#"), `[`, 1))
     # Match these labels by index to the original cellPopulatoins
     retainedPopsBool <- (prefilterCellPops %in% postfilterCellPops)
     finalCellPopulations <- cellPopulations[retainedPopsBool]
   } else {
     finalCellPopulations <- cellPopulations
   }
-  
+
   # Split the fragments list into a list of lists per cell population
   splitFrags <- scMACS:::splitFragsByCellPop(fragsNoNull)
-  
+
   # getPopFrags needs to replace spaces for underscores, so
   # here we rename the fragments with the original cell populations labels.
   # Fragments maintain their order by cell population.
@@ -253,19 +269,17 @@ callOpenTilesFast <- function(ArchRProj,
   message("Cell populations for peak calling: ", paste(names(splitFrags), collapse = ", "))
 
 
-  if(is.null(outDir)){
-      # Generate folder within ArchR project for outputting results 
-      outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
+  if (is.null(outDir)) {
+    # Generate folder within ArchR project for outputting results
+    outDir <- paste(ArchR::getOutputDirectory(ArchRProj), "/MOCHA", sep = "")
   }
-  if(!dir.exists(outDir)){
-      dir.create(outDir)
+  if (!dir.exists(outDir)) {
+    dir.create(outDir)
   }
 
-  if(!file.exists(outDir)) {
-	
-	message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
-	dir.create(outDir)
-
+  if (!file.exists(outDir)) {
+    message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    dir.create(outDir)
   }
 
   # Main loop over all cell populations
@@ -279,18 +293,20 @@ callOpenTilesFast <- function(ArchRProj,
     # Simplify sample names to remove everything before the first "."
     sampleNames <- gsub("^([^.]+).", "", names(popFrags))
     names(popFrags) <- sampleNames
-    
+
     # Calculate normalization factors as the number of fragments for each celltype_samples
     normalization_factors <- as.integer(sapply(popFrags, length))
 
-    #save coverage files to folder. 
-    if(!file.exists(paste(outDir,'/',cellPop, '_CoverageFiles.RDS', sep ='')) | force){ 
-   	covFiles <- scMACS:::getCoverage(popFrags = popFrags,
-					normFactor = normalization_factors/10^6,
-					filterEmpty = FALSE,
-					numCores = numCores, TxDb=TxDb)
-    	saveRDS(covFiles, paste(outDir,'/',cellPop,'_CoverageFiles.RDS', sep =''))
-    	rm(covFiles)
+    # save coverage files to folder.
+    if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
+      covFiles <- scMACS:::getCoverage(
+        popFrags = popFrags,
+        normFactor = normalization_factors / 10^6,
+        filterEmpty = FALSE,
+        numCores = numCores, TxDb = TxDb
+      )
+      saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
+      rm(covFiles)
     }
 
 
@@ -304,7 +320,7 @@ callOpenTilesFast <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(popFrags),
       function(x) {
-         scMACS:::callTilesBySample(
+        scMACS:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
@@ -317,8 +333,8 @@ callOpenTilesFast <- function(ArchRProj,
     )
 
     names(tilesGRangesList) <- sampleNames
-    
-    # Cannot make peak calls with < 5 cells (see make_prediction.R) 
+
+    # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples
     tilesGRangesListNoNull <- BiocGenerics::Filter(Negate(is.null), tilesGRangesList)
     # TODO: Add warning message about removed samples for this celltype.
@@ -332,7 +348,7 @@ callOpenTilesFast <- function(ArchRProj,
   }
 
   # Create sample metadata from cellColData using util function
-  # "Sample" is the enforced col in ArchR containing the 
+  # "Sample" is the enforced col in ArchR containing the
   # sample IDs which correspond to the arrow files.
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
@@ -340,17 +356,16 @@ callOpenTilesFast <- function(ArchRProj,
     scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
-  # AnnotationDbi::saveDb(TxDb, paste(outDir, '/TxDb.sqlite',sep=''))
-  # AnnotationDbi::saveDb(Org, paste(outDir, '/Org.sqlite',sep=''))
-
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)
+  
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list('Genome' = genome, 'TxDb' = paste(outDir, '/TxDb.sqlite',sep=''), 
-			'Org' =  paste(outDir, '/Org.sqlite',sep=''), 'Directory' = outDir)
+    metadata = list(
+      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
+      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
+    )
   )
 
   return(tileResults)
