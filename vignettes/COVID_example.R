@@ -11,8 +11,18 @@ library(scMACS)
 # You must have completed cell labeling with your ArchR project.
 myArchRProj <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
 
-# For our example: filter ArchR Project to three samples from each Covid Status
-# This is not strictly necessary for your ArchR Project 
+# Define your annotation package for TxDb object(s)
+# and genome-wide annotation
+# Here our samples are human using hg38 as a reference.
+# For more info: https://bioconductor.org/packages/3.15/data/annotation/
+library(TxDb.Hsapiens.UCSC.hg38.refGene)
+library(org.Hs.eg.db)
+TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
+Org <- org.Hs.eg.db
+
+# Optional: Filter your ArchR project by sample.
+# For our example we filter ArchR Project to three samples from 
+# each Covid Status (3 Positive, 3 Negative).
 samplesToKeep <- c(
   "B011-AP0C1W3", 
   "B011-AP0C1W8", 
@@ -27,15 +37,15 @@ myArchRProj <- myArchRProj[cellsSample, ]
 
 ####################################################
 # 1. Setting Parameters
-#    These should be set according to your ArchR project
-#    and investgative question.
+#    These should be set according to your ArchR 
+#    project and investgative question.
 #
 #    For more details on each of these parameters, 
 #    view the help pages for each function using 
 #    ?callOpenTiles and ?getSampleTileMatrix
 ####################################################
 
-# Parameters for calling open tiles
+# Parameters for calling open tiles.
 cellPopLabel <- "CellSubsets" 
 cellPopulations <- c("MAIT", "CD16 Mono", "DC")
 numCores <- 20
@@ -55,6 +65,8 @@ tileResults <- scMACS::callOpenTiles(
     myArchRProj,
     cellPopLabel = cellPopLabel,
     cellPopulations = cellPopulations,
+    TxDb = TxDb,
+    Org = Org,
     numCores = numCores
 )
 
@@ -65,9 +77,7 @@ tileResults <- scMACS::callOpenTiles(
 #    RangedSummarizedExperiment object and are the 
 #    primary input to downstream analyses.
 ####################################################
-install()
 
-library(scMACS)
 SampleTileMatrices <- scMACS::getSampleTileMatrix( 
     tileResults,
     cellPopulations = cellPopulations,
@@ -77,20 +87,35 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     NAtoZero = TRUE,
     log2Intensity = TRUE
 )
-traceback()
+
+
 ####################################################
-# 3. Get DAPs for specific cell populations.
-#    
+# 4. Add gene annotations to our SampleTileMatrices.
 ####################################################
 
+SampleTileMatricesAnnotated <- scMACS::annotateTiles( 
+  SampleTileMatrices
+)
+
+####################################################
+# 5. Get DAPs for specific cell populations.
+#    Here we are comparing samples where 
+#    "COVID_status" is Positive (our foreground) to 
+#    Negative samples (our background).
+####################################################
+install()
+
+library(scMACS)
 differentials <- getDifferentialAccessibleTiles(
     SampleTileObj = SampleTileMatrices,
     cellPopulation = "MAIT",
     groupColumn = "COVID_status",
     foreground = "Positive",
     background = "Negative",
-    fdrToDisplay = 0.2,
-    numCores = 20
+    fdrToDisplay = 0.4,
+    numCores = 10
 )
 traceback()
 print("Done!")
+
+#

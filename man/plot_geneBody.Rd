@@ -18,6 +18,8 @@ plot_geneBody(
 
 \item{geneBody_gr}{A GRanges object containing the gene, for example an output of `get_grange_genebody()`}
 
+\item{x_lim}{Optional, list of (min, max) x_lim values}
+
 \item{base_size}{Numeric, default 12. Global plot base text size parameter}
 
 \item{collapseGenes}{Logical value, default FALSE. If TRUE will collapse all genes into one line.

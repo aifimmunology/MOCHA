@@ -8,8 +8,8 @@ callOpenTiles(
   ArchRProj,
   cellPopLabel,
   cellPopulations = "ALL",
-  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-  Org = org.Hs.eg.db,
+  TxDb = NULL,
+  Org = NULL,
   outDir = NULL,
   fast = FALSE,
   numCores = 30,
@@ -30,8 +30,8 @@ Default is 'ALL'.}
 
 \item{TxDb}{is an AnnotationDbi object with transcript info for the organism. UCSC Hg38 Refgene is the default.}
 
-\item{outDir}{is a string describing the output directory for coverage files per sample/celltype. 
-Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR 
+\item{outDir}{is a string describing the output directory for coverage files per sample/celltype.
+Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR
 and make a new fold named MOCHA for saving files.}
 
 \item{numCores}{integer. Number of cores to parallelize peak-calling across

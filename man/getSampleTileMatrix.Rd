@@ -38,11 +38,11 @@ Default is 'ALL'.}
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
 }
 \value{
-SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix 
+SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix
   for each cell population
 }
 \description{
-\code{getSampleTileMatrix} takes the output of peak calling with 
+\code{getSampleTileMatrix} takes the output of peak calling with
   callOpenTiles and creates sample-tile matrices containing the signal intensity
   at each tile.
 }

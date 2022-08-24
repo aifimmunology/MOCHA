@@ -25,7 +25,7 @@ getDifferentialAccessibleTiles(
 
 \item{background}{The background group of samples for differential comparison}
 
-\item{fdrToDisplay}{Optional false-discovery rate used only for standard output messaging}
+\item{fdrToDisplay}{Optional, false-discovery rate used only for standard output messaging}
 
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
 }
