@@ -32,21 +32,26 @@
 callOpenTiles <- function(ArchRProj,
                           cellPopLabel,
                           cellPopulations = "ALL",
-			  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-			  Org = org.Hs.eg.db, 
- 		 	  outDir = NULL,
-			  fast = FALSE,
-                          numCores = 30, force = FALSE) {
+                          # TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+                          # Org = org.Hs.eg.db, 
+                          outDir = NULL,
+                          fast = FALSE,
+                          numCores = 30, 
+                          force = FALSE) {
 
   if(fast){
-
-	tileResults <- callOpenTilesFast(ArchRProj,
-                          cellPopLabel, cellPopulations,
-			  TxD, Org, outDir,
-                          numCores, force) 
-	return(tileResults)
-
-   }
+    tileResults <- callOpenTilesFast(
+      ArchRProj,
+      cellPopLabel,
+      cellPopulations,
+      # TxDb,
+      # Org,
+      outDir,
+      numCores,
+      force
+    ) 
+    return(tileResults)
+  }
 
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
@@ -59,28 +64,26 @@ callOpenTiles <- function(ArchRProj,
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- names(cellCounts)
   }else if(!all(cellPopulations %in% names(cellCounts))){
-
     stop('Error: cellPopulations not all found in ArchR project.')
   }
 
 
   if(is.null(outDir)){
-  	## Generate folder within ArchR for outputting results 
-  	outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
+    ## Generate folder within ArchR for outputting results 
+    outDir <- paste(ArchR::getOutputDirectory(ArchRProj),'/MOCHA',sep = '')
   }
 
   if(!file.exists(outDir)) {
-	
-	message(str_interp("Creating directory for MOCHA at ${outDir}"))
-	dir.create(outDir)
-
+    message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    dir.create(outDir)
   }
+    
 
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in cellPopulations) {
 
-    message(str_interp("Calling open tiles for cell population ${cellPop}"))
+    message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
 
     # Get our fragments for this cellPop
     frags <- scMACS::getPopFrags(
@@ -177,10 +180,6 @@ callOpenTiles <- function(ArchRProj,
     scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
-  AnnotationDbi::saveDb(TxDb, paste(outDir, '/TxDb.sqlite',sep=''))
-  AnnotationDbi::saveDb(Org, paste(outDir, '/Org.sqlite',sep=''))
-
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
 
@@ -194,32 +193,15 @@ callOpenTiles <- function(ArchRProj,
   return(tileResults)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ##### Same function, but runs faster with much, much more RAM usage. 
 callOpenTilesFast <- function(ArchRProj,
-                          cellPopLabel,
-                          cellPopulations = "ALL",
-			  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-			  Org = org.Hs.eg.db, 
- 		 	  outDir = NULL,
-                          numCores = 30, force = FALSE) {
+                              cellPopLabel,
+                              cellPopulations = "ALL",
+                              # TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+                              # Org = org.Hs.eg.db, 
+                              outDir = NULL,
+                              numCores = 30,
+                              force = FALSE) {
 
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
@@ -281,7 +263,7 @@ callOpenTilesFast <- function(ArchRProj,
 
   if(!file.exists(outDir)) {
 	
-	message(str_interp("Creating directory for MOCHA at ${outDir}"))
+	message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
 	dir.create(outDir)
 
   }
@@ -289,7 +271,7 @@ callOpenTilesFast <- function(ArchRProj,
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in names(splitFrags)) {
-    message(str_interp("Calling open tiles for cell population ${cellPop}"))
+    message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
 
     # Get our fragments for this cellPop
     popFrags <- unlist(splitFrags[[cellPop]])
@@ -359,8 +341,8 @@ callOpenTilesFast <- function(ArchRProj,
   )
 
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
-  AnnotationDbi::saveDb(TxDb, paste(outDir, '/TxDb.sqlite',sep=''))
-  AnnotationDbi::saveDb(Org, paste(outDir, '/Org.sqlite',sep=''))
+  # AnnotationDbi::saveDb(TxDb, paste(outDir, '/TxDb.sqlite',sep=''))
+  # AnnotationDbi::saveDb(Org, paste(outDir, '/Org.sqlite',sep=''))
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)

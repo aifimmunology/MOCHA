@@ -25,7 +25,8 @@
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
-#'
+#' 
+#' @export
 
 getPopFrags <- function(ArchRProj,
                         metaColumn,

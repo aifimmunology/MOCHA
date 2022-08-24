@@ -45,11 +45,14 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   foreground_samples <- metaFile[metaFile[,groupColumn] == foreground, 'Sample']
   background_samples <- metaFile[metaFile[,groupColumn] == background, 'Sample']
 
-  browser()
-  tilesCalled <- mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
-  sampleTileMatrix <- scMACS:::getCellTypeMatrix(SampleTileObj, cellPopulation)
-
-  sampleTileMatrix <- sampleTileMatrix[tilesCalled, colnames(SampleTileObj) %in% c(foreground_samples, background_samples)]
+  # Get boolean of called tiles for this cell population
+  tilesCalled <- SummarizedExperiment::mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
+  # Get the matrix for this population and filter it to just tiles called
+  sampleTileMatrix <- SummarizedExperiment::assays(SampleTileObj)[[cellPopulation]][tilesCalled,]
+  
+  # Enforce that the samples included are in foreground and background groups - 
+  # this can onl be an A vs B comparison. ie this ignores other groups in groupCol
+  sampleTileMatrix <- sampleTileMatrix[, colnames(SampleTileObj) %in% c(foreground_samples, background_samples)]
     
   # We need to enforce that NAs were set to zeros in getSampleTileMatrix
   miscMetadata <- S4Vectors::metadata(SampleTileObj)

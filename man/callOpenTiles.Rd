@@ -9,7 +9,9 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+  Org = org.Hs.eg.db,
   outDir = NULL,
+  fast = FALSE,
   numCores = 30,
   force = FALSE
 )

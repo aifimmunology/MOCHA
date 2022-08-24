@@ -1,6 +1,9 @@
 # Load libraries
 library(ArchR)
 library(devtools)
+setwd("scMACS")
+install()
+
 library(scMACS)
 
 # Load the ArchR Project
@@ -62,7 +65,9 @@ tileResults <- scMACS::callOpenTiles(
 #    RangedSummarizedExperiment object and are the 
 #    primary input to downstream analyses.
 ####################################################
+install()
 
+library(scMACS)
 SampleTileMatrices <- scMACS::getSampleTileMatrix( 
     tileResults,
     cellPopulations = cellPopulations,
@@ -72,7 +77,7 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     NAtoZero = TRUE,
     log2Intensity = TRUE
 )
-
+traceback()
 ####################################################
 # 3. Get DAPs for specific cell populations.
 #    
@@ -87,3 +92,5 @@ differentials <- getDifferentialAccessibleTiles(
     fdrToDisplay = 0.2,
     numCores = 20
 )
+traceback()
+print("Done!")

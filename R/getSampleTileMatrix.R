@@ -76,10 +76,10 @@ getSampleTileMatrix <- function(tileResults,
   
 
   if(verbose){
-    message(str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))
+    message(stringr::str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))
   }
 
-  tilesByCellPop <- mclapply(MultiAssayExperiment::experiments(subTileResults), function(x){
+  tilesByCellPop <- parallel::mclapply(MultiAssayExperiment::experiments(subTileResults), function(x){
     
     # Get consensus tiles for this cell population for filtering
     scMACS:::singlePopulationConsensusTiles(
@@ -95,11 +95,11 @@ getSampleTileMatrix <- function(tileResults,
   allTiles <- sort(unique(do.call('c',tilesByCellPop)))
 
   if(verbose){
-    message(str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
+    message(stringr::str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
   }
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
-  sampleTileIntensityMatList <- mclapply(MultiAssayExperiment::experiments(tileResults), function(x){
+  sampleTileIntensityMatList <- parallel::mclapply(MultiAssayExperiment::experiments(tileResults), function(x){
     scMACS:::singlePopulationSampleTileMatrix(
       x,
       allTiles,
@@ -212,17 +212,3 @@ annotateTiles <- function(obj,
 	}
 	
 }
-
-#################################### getCellTypeMatrix pulls out the SampleTileMatrix of tiles called in one given cell type
-## @SampleTileObj - output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk intensitys across all tiles & cell types
-## @CellType - The cell type you want to pull out.
-
-getCellTypeMatrix <- function(SampleTileObj, CellType){
-    
-        tilesCalled <- SummarizedExperiment::mcols(rowRanges(SampleTileObj))[,CellType]
-    
-        sampleTileMatrix <- SummarizedExperiment::assays(SampleTileObj)[[CellType]][tilesCalled,]
-    
-        return(sampleTileMatrix)
-    }
-
