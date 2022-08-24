@@ -1,15 +1,28 @@
-# Load libraries
+####################################################
+# 0. Load libraries, ArchR project, and annotation
+#    databases. Optionally filter the ArchR project
+#    to a subset of samples.
+####################################################
+
 library(ArchR)
-library(devtools)
 library(scMACS)
 
-# Load the ArchR Project
 # You should substitute this with your own ArchR project.
 # You must have completed cell labeling with your ArchR project.
 myArchRProj <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
 
-# For our example: filter ArchR Project to three samples from each Covid Status
-# This is not strictly necessary for your ArchR Project 
+# Define your annotation package for TxDb object(s)
+# and genome-wide annotation
+# Here our samples are human using hg38 as a reference.
+# For more info: https://bioconductor.org/packages/3.15/data/annotation/
+library(TxDb.Hsapiens.UCSC.hg38.refGene)
+library(org.Hs.eg.db)
+TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
+Org <- org.Hs.eg.db
+
+# Optional: Filter your ArchR project by sample.
+# For our example we filter ArchR Project to three samples from 
+# each Covid Status (3 Positive, 3 Negative).
 samplesToKeep <- c(
   "B011-AP0C1W3", 
   "B011-AP0C1W8", 
@@ -24,15 +37,15 @@ myArchRProj <- myArchRProj[cellsSample, ]
 
 ####################################################
 # 1. Setting Parameters
-#    These should be set according to your ArchR project
-#    and investgative question.
+#    These should be set according to your ArchR 
+#    project and investgative question.
 #
 #    For more details on each of these parameters, 
 #    view the help pages for each function using 
 #    ?callOpenTiles and ?getSampleTileMatrix
 ####################################################
 
-# Parameters for calling open tiles
+# Parameters for calling open tiles.
 cellPopLabel <- "CellSubsets" 
 cellPopulations <- c("MAIT", "CD16 Mono", "DC")
 numCores <- 20
@@ -52,6 +65,8 @@ tileResults <- scMACS::callOpenTiles(
     myArchRProj,
     cellPopLabel = cellPopLabel,
     cellPopulations = cellPopulations,
+    TxDb = TxDb,
+    Org = Org,
     numCores = numCores
 )
 
@@ -59,8 +74,8 @@ tileResults <- scMACS::callOpenTiles(
 # 3. Get consensus sample-tile matrices
 #    for all cell populations.
 #    These matrices are organized by cell population
-#    MultiAssayExperiment object and are the primary 
-#    input to downstream analyses.
+#    RangedSummarizedExperiment object and are the 
+#    primary input to downstream analyses.
 ####################################################
 
 SampleTileMatrices <- scMACS::getSampleTileMatrix( 
@@ -69,6 +84,37 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     groupColumn = groupColumn,
     threshold = threshold,
     join = join,
-    NAtoZero = FALSE,
+    NAtoZero = TRUE,
     log2Intensity = TRUE
+)
+
+####################################################
+# 4. Add gene annotations to our SampleTileMatrices.
+#    This info will aid further downstream analyses
+#    but is not required for differential 
+#    accessibility.
+#    This function can also take any GRanges object
+#    and add annotations to its metadata.
+####################################################
+
+SampleTileMatricesAnnotated <- scMACS::annotateTiles( 
+  SampleTileMatrices
+)
+
+####################################################
+# 5. Get differential accessibility for specific 
+#    cell populations. Here we are comparing MAIT  
+#    cells between samples where our groupColumn 
+#    "COVID_status" is Positive (our foreground) 
+#    to Negative samples (our background).
+####################################################
+
+differentials <- scMACS::getDifferentialAccessibleTiles(
+    SampleTileObj = SampleTileMatrices,
+    cellPopulation = "MAIT",
+    groupColumn = groupColumn,
+    foreground = "Positive",
+    background = "Negative",
+    fdrToDisplay = 0.4,
+    numCores = numCores
 )

@@ -4,7 +4,17 @@
 \alias{callOpenTiles}
 \title{\code{callOpenTiles}}
 \usage{
-callOpenTiles(ArchRProj, cellPopLabel, cellPopulations = "ALL", numCores = 30)
+callOpenTiles(
+  ArchRProj,
+  cellPopLabel,
+  cellPopulations = "ALL",
+  TxDb = NULL,
+  Org = NULL,
+  outDir = NULL,
+  fast = FALSE,
+  numCores = 30,
+  force = FALSE
+)
 }
 \arguments{
 \item{ArchRProj}{an ArchR Project}
@@ -18,8 +28,14 @@ the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 calling is done on all cell populations in the ArchR project metadata.
 Default is 'ALL'.}
 
+\item{TxDb}{is an AnnotationDbi object with transcript info for the organism. UCSC Hg38 Refgene is the default.}
+
+\item{outDir}{is a string describing the output directory for coverage files per sample/celltype.
+Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR
+and make a new fold named MOCHA for saving files.}
+
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
-multiple cell populations}
+multiple cell populations.}
 }
 \value{
 tileResults A MultiAssayExperiment object containing ranged data

@@ -120,19 +120,19 @@ validRegionString <- function(regionString) {
     return(FALSE)
   }
 
-  pattern <- "([0-9]{1,2}|chr[0-9]{1,2}):[0-9]*-[0-9]*"
+  pattern <- "([0-9]{1,2}|chr[0-9]{1,2}|chr[X-Y]{1,1}):[0-9]*-[0-9]*"
   matchedPattern <- str_extract(regionString, pattern)
 
-  if (is.na(matchedPattern)) {
+  if (any(is.na(matchedPattern))) {
     return(FALSE)
-  } else if (!matchedPattern == regionString) {
+  } else if (any(!matchedPattern == regionString)) {
     return(FALSE)
   }
 
   splits <- str_split(regionString, "[:-]")[[1]]
   start <- splits[2]
   end <- splits[3]
-  if (start > end) {
+  if (any(start > end)) {
     return(FALSE)
   }
 
@@ -140,11 +140,25 @@ validRegionString <- function(regionString) {
   return(TRUE)
 }
 
-# Strings to GRanges
+#' @title \code{StringsToGRanges}
+#'
+#' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200 
+#'   into GRanges
+#'
+#'
+#'
+#' @export
+
+
 StringsToGRanges <- function(regionString) {
-  if (!validRegionString(regionString)) {
-    stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
-  }
+  # if (length(regionString)>1){
+  #   boolList <- lapply(regionString, function(x){validRegionString(x)})
+  #   if (!all(boolList)){
+  #     stop("Some region strings are invalid. Given regions must all be strings matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
+  #   }
+  # } else if(!validRegionString(regionString)) {
+  #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
+  # }
 
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
@@ -152,17 +166,36 @@ StringsToGRanges <- function(regionString) {
     as.numeric()
   endSite <- gsub(".*-", "", regionString) %>% as.numeric()
 
-
+  if(any(startSite >= endSite)){stop('Error in region string: Make sure the start of the genomic range occurs before the end') }
   regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
   return(regionGRanges)
-}                    
+}        
+
+#' @title \code{GRangesToString}
+#'
+#' @description \code{GRangesToStrin} Turns a GRanges Object into
+#' 	a list of strings in the format chr1:100-200
+#'
+#'
+#' @export            
 
 # Converts a GRanges object to a string in the format 'chr1:100-200'
 GRangesToString <- function(GR_obj){
   
   paste(seqnames(GR_obj), ":",start(GR_obj),"-",end(GR_obj),sep="")
   
+}    
+
+
+### Function to set seqinfo for GRanges objects.
+### This makes them easier to merge and export to BWs by setting the standard
+### chromosome lengths and names to a standard, as defined by TxDb.
+
+setSeqInfo <- function(GRangesObj, TxDb = TxDb.Hsapiens.UCSC.hg38.refGene) {
+  seqinfo(GRangesObj) <- seqinfo(TxDb)[seqnames(seqinfo(GRangesObj))]
+  return(GRangesObj)
 }
+
 
 # This functions takes the output of coaccessibility, filters by a 
 # correlation threshold, and then returns a data.frame

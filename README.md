@@ -102,6 +102,10 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     NAtoZero = FALSE,
     log2Intensity = TRUE
 )
+
+#Annotate your open chromatin regions as either a promoter, exonic, intronic, or distal region. Gene names are given for all but distal. 
+SampleTileMatrices <- annotateTiles(SampleTilesMatrices)
+
 ```
 
 The output of each function is a [MultiAssayExperiment](https://www.bioconductor.org/packages/devel/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html#overview-of-the-multiassayexperiment-class) organizing your results (either open tiles or sample-tile matrices) by cell population.
@@ -111,9 +115,9 @@ Sample-level metadata can be accessed using `colData(yourResults)`.
 Individual results for each cell population can be accessed as follows:
 ```R
 # Get the sample-tile matrix for DC cells
-DCcellsMatrix <- SampleTileMatrices[["DC"]]
+DCcellsMatrix <- getCellTypeMatrix(SampleTileMatrices, 'DC')
 # Get the sample-tile matrix for MAIT cells
-MAITcellsMatrix <- SampleTileMatrices[["MAIT"]]
+MAITcellsMatrix <- getCellTypeMatrix(SampleTileMatrices, 'MAIT')
 
 ```
 

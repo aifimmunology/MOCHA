@@ -34,7 +34,8 @@ of the ZI spearman and tau rank correlations.
 scMACS implements a slight modification of 
 scHOT's zero-inflated correlation measure, by
 returning NAs in the cases where the correlation
-is undefined. Both references are provided below and are
+is undefined, and modifying it to use a C-backed correlation program. 
+Both references are provided below and are
 referenced in all documentations to indicate
 their work in implementing these methods.
 }

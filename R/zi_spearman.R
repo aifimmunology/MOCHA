@@ -5,7 +5,8 @@
 #' scMACS implements a slight modification of 
 #' scHOT's zero-inflated correlation measure, by
 #' returning NAs in the cases where the correlation
-#' is undefined. Both references are provided below and are
+#' is undefined, and modifying it to use a C-backed correlation program. 
+#' Both references are provided below and are
 #' referenced in all documentations to indicate
 #' their work in implementing these methods. 
 #'
@@ -57,7 +58,17 @@ weightedZISpearman <- function(x, y, w = 1) {
   p_00 = sum(w * (!posx & !posy))/sum(w)
   p_01 = sum(w * (!posx & posy))/sum(w)
   p_10 = sum(w * (posx & !posy))/sum(w)
-  rho_11 = wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
+  
+
+  if(any(pospos) & p_11 > 0){
+      rho_11 = wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
+  }else{
+      print("Zero inflated Spearman correlation is undefined,
+          returning NA")
+      rho =NA
+      return(rho)    
+  }
+  
   rho_star = p_11 * (p_01 + p_11) * (p_10 + p_11) * rho_11 +
     3*(p_00 * p_11 - p_10 * p_01)
 
@@ -67,12 +78,14 @@ weightedZISpearman <- function(x, y, w = 1) {
     rho =NA
     return(rho)
   }
+  
+
 
   return(rho_star)
 }
 
 
-
+##' scHOT functions, supersceded by used of wCorr's weighted correlation function, which backends to C for faster calculations.
 weightedSpearman = function(x, y, w = 1) {
 
   if (length(x) != length(y)) {

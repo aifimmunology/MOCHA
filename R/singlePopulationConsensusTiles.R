@@ -6,13 +6,12 @@
 #' @keywords internal
 
 singlePopulationConsensusTiles <- function(peaksExperiment,
-                                 cellPopulation,
-                                 threshold,
-                                 groupColumn,
-                                 join) {
+                                           sampleData,
+                                           threshold,
+                                           groupColumn = NULL,
+                                           join = 'union') {
+    
   
-  sampleData <- colData(peaksExperiment)
-
   # Extract matrices of samples by peak tileIDs with peak status
   # and set NA to FALSE (no peak here)
   samplePeakMat <- RaggedExperiment::compactAssay(
