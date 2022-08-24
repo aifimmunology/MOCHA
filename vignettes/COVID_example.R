@@ -1,12 +1,12 @@
-# Load libraries
-library(ArchR)
-library(devtools)
-setwd("scMACS")
-install()
+####################################################
+# 0. Load libraries, ArchR project, and annotation
+#    databases. Optionally filter the ArchR project
+#    to a subset of samples.
+####################################################
 
+library(ArchR)
 library(scMACS)
 
-# Load the ArchR Project
 # You should substitute this with your own ArchR project.
 # You must have completed cell labeling with your ArchR project.
 myArchRProj <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
@@ -88,9 +88,13 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
     log2Intensity = TRUE
 )
 
-
 ####################################################
 # 4. Add gene annotations to our SampleTileMatrices.
+#    This info will aid further downstream analyses
+#    but is not required for differential 
+#    accessibility.
+#    This function can also take any GRanges object
+#    and add annotations to its metadata.
 ####################################################
 
 SampleTileMatricesAnnotated <- scMACS::annotateTiles( 
@@ -98,24 +102,19 @@ SampleTileMatricesAnnotated <- scMACS::annotateTiles(
 )
 
 ####################################################
-# 5. Get DAPs for specific cell populations.
-#    Here we are comparing samples where 
-#    "COVID_status" is Positive (our foreground) to 
-#    Negative samples (our background).
+# 5. Get differential accessibility for specific 
+#    cell populations. Here we are comparing MAIT  
+#    cells between samples where our groupColumn 
+#    "COVID_status" is Positive (our foreground) 
+#    to Negative samples (our background).
 ####################################################
-install()
 
-library(scMACS)
 differentials <- getDifferentialAccessibleTiles(
     SampleTileObj = SampleTileMatrices,
     cellPopulation = "MAIT",
-    groupColumn = "COVID_status",
+    groupColumn = groupColumn,
     foreground = "Positive",
     background = "Negative",
     fdrToDisplay = 0.4,
-    numCores = 10
+    numCores = numCores
 )
-traceback()
-print("Done!")
-
-#
