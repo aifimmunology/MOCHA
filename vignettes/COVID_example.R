@@ -89,10 +89,12 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 )
 
 ####################################################
-# 4. Add gene annotations to our SampleTileMatrices.
-#    This info will aid further downstream analyses
-#    but is not required for differential 
-#    accessibility.
+# 4. Add gene annotations to our SampleTileMatrices,
+#    labelling tiles as either a promoter, exonic,
+#    intronic, or distal region. Gene names are 
+#    given for all but distal. This info will aid 
+#    further downstream analyses but is not required 
+#    for differential accessibility.
 #    This function can also take any GRanges object
 #    and add annotations to its metadata.
 ####################################################
