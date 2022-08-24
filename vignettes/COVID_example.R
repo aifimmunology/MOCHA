@@ -109,7 +109,7 @@ SampleTileMatricesAnnotated <- scMACS::annotateTiles(
 #    to Negative samples (our background).
 ####################################################
 
-differentials <- getDifferentialAccessibleTiles(
+differentials <- scMACS::getDifferentialAccessibleTiles(
     SampleTileObj = SampleTileMatrices,
     cellPopulation = "MAIT",
     groupColumn = groupColumn,
