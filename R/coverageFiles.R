@@ -13,8 +13,8 @@ getCoverage <- function(popFrags, normFactor, filterEmpty = FALSE, numCores = 1,
 
   }  
 
-  #Summarize the coverage ove the region window at a single basepair resolution
-  tmpCounts <- mclapply(seq_along(popFrags), function(x){
+  #Summarize the coverage over the region window at a single basepair resolution
+  tmpCounts <- parallel::mclapply(seq_along(popFrags), function(x){
 
 	    if(verbose){print(paste("Counting", names(popFrags)[x], sep=" "))}
 	  
@@ -41,7 +41,7 @@ getCoverage <- function(popFrags, normFactor, filterEmpty = FALSE, numCores = 1,
 ## @numCores: number of cores to parallelize over. 
 getSpecificCoverage <- function(covFiles, regions, numCores=1){
 
-	counts <- mclapply(covFiles, function(x){ 
+	counts <- parallel::mclapply(covFiles, function(x){ 
                 	x %>% plyranges::mutate(NewScore = score) %>%
                     plyranges::join_overlap_intersect(regions) %>%
                     plyranges::mutate(WeightedScore = NewScore*width(.)) %>%
