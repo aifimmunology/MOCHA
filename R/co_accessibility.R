@@ -4,8 +4,8 @@
 #'              are co-accessible using a zero-inflated spearman correlation.
 #'
 #'
-#' @param mat: sample-peak matrix with regions to analyze
-#' @param numCores: integer to determine # of paralell cores
+#' @param mat sample-peak matrix with regions to analyze
+#' @param numCores integer to determine # of paralell cores
 #'
 #' @return a 3-column data.frame containing
 #'         - Correlation= Zero-inflated Spearman Correlation
@@ -28,7 +28,9 @@
 #' row.names(mat1) <- paste("A", 1:10, sep = "_")
 #' ziSpear_mat <- co_accessibility(mat1, numCores = 5)
 #' head(ziSpear_mat)
-#' @export
+#'
+#' @internal
+#' @noRd
 
 co_accessibility <- function(subMat, filterPairs = NULL, index = NULL, numCores = 40, verbose = FALSE) {
 
@@ -78,7 +80,7 @@ co_accessibility <- function(subMat, filterPairs = NULL, index = NULL, numCores 
   } else if (length(pairwise_combos) == 2) {
 
     # If only one pair of peaks to test, then it's no longer a data.frame, but a vector.
-    zero_inflated_spearman <- weightedZISpearman(
+    zero_inflated_spearman <- scMACS:::weightedZISpearman(
       x = subMat[pairwise_combos[1], ],
       y = subMat[pairwise_combos[2], ]
     )
@@ -91,7 +93,7 @@ co_accessibility <- function(subMat, filterPairs = NULL, index = NULL, numCores 
   } else {
     zero_inflated_spearman <- unlist(mclapply(1:nrow(pairwise_combos),
       function(x) {
-        weightedZISpearman(
+        scMACS:::weightedZISpearman(
           x = subMat[pairwise_combos[x, "Var1"], ],
           y = subMat[pairwise_combos[x, "Var2"], ]
         )
@@ -113,77 +115,3 @@ co_accessibility <- function(subMat, filterPairs = NULL, index = NULL, numCores 
   return(zi_spear_mat)
 }
 
-
-
-
-FindCoAccessibleLinks <- function(peakDT, regions, windowSize = 1 * 10^6, numCores = 1, verbose = FALSE) {
-  peakDF <- as.data.frame(peakDT[, -"tileID"])
-  rownames(peakDF) <- peakDT$tileID
-
-  start <- as.numeric(gsub("chr.*\\:|\\-.*", "", peakDT$tileID))
-  end <- as.numeric(gsub("chr.*\\:|.*\\-", "", peakDT$tileID))
-  chr <- gsub("\\:.*", "", peakDT$tileID)
-
-  regionDF <- as.data.frame(regions)
-
-  # Initialize Correlation Datatable.
-  PeakCorr <- NULL
-  pb <- txtProgressBar(min = 0, max = length(regions), initial = 0)
-
-  for (i in 1:length(regions)) {
-    # print(i)
-    setTxtProgressBar(pb, i)
-
-    ## Find all peaks in the next window
-    window_tmp <- which(start > regionDF$start[i] - windowSize / 2 &
-      end < regionDF$end[i] + windowSize / 2 &
-      chr == regionDF$seqnames[i])
-
-    if (length(window_tmp) > 1) {
-
-      # The region of interest should overlap with the peak at least partially.
-      keyPeak <- which(
-        window_tmp == which(
-          ((start <= regionDF$start[i] & end >= regionDF$start[i]) |
-            (start >= regionDF$start[i] & end <= regionDF$end[i]) |
-            (start <= regionDF$end[i] & end >= regionDF$end[i])) &
-            chr %in% regionDF$seqnames[i]
-        )
-      )
-
-      nextCorr <- co_accessibility(peakDF[window_tmp, ],
-        filterPairs = PeakCorr, numCores = numCores,
-        index = keyPeak, verbose = verbose
-      )
-      PeakCorr <- rbind(PeakCorr, nextCorr)
-    } else if (verbose) {
-      print("Warning: No correlations found for given region.")
-    }
-  }
-
-  close(pb)
-  gc()
-  return(PeakCorr)
-}
-
-FilterCoAccessibleLinks <- function(PeakCorr, threshold = 0.5) {
-  if (!any(abs(PeakCorr$Correlation) > threshold)) {
-    stop("Error: There are no values above the threshold.")
-  }
-
-  PeakCorr1 <- PeakCorr[abs(PeakCorr$Correlation) > threshold, ]
-  start1 <- as.numeric(gsub("chr.*\\:|\\-.*", "", PeakCorr1$Peak1))
-  end1 <- as.numeric(gsub("chr.*\\:|.*\\-", "", PeakCorr1$Peak1))
-
-  start2 <- as.numeric(gsub("chr.*\\:|\\-.*", "", PeakCorr1$Peak2))
-  end2 <- as.numeric(gsub("chr.*\\:|.*\\-", "", PeakCorr1$Peak2))
-
-  PeakCorr1$chr <- gsub("\\:.*", "", PeakCorr1$Peak2)
-  PeakCorr1$start <- apply(data.table(start1, start2), 1, min)
-  PeakCorr1$end <- apply(data.table(end1, end2), 1, max)
-
-  return(PeakCorr1)
-}
-
-
-#############################################

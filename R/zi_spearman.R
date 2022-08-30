@@ -24,7 +24,7 @@
 #' @return \code{numeric} weighted rho* association value between x and y
 #'
 #'
-#' scHOT
+#' @references scHOT
 #' Ghazanfar, S., Lin, Y., Su, X. et al. Investigating higher-order interactions in
 #'   single-cell data with scHOT. Nat Methods 17, 799–806 (2020).
 #'   https://doi.org/10.1038/s41592-020-0885-x
@@ -34,7 +34,8 @@
 #'   Zero-Inflated Data" (2009). Dissertations. 721.
 #'   https://scholarworks.wmich.edu/dissertations/721
 #'
-#' @export
+#' @internal
+#' @noRd
 
 weightedZISpearman <- function(x, y, w = 1) {
 

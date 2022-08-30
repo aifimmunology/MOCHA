@@ -29,9 +29,6 @@ getDifferentialAccessibleTiles(
 
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
 }
-\value{
-
-}
 \description{
 \code{getDifferentialAccessibleTiles} allows you to
   determine whether regions of chromatin are differentially accessible
