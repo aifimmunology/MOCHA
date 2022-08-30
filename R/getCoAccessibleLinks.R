@@ -22,13 +22,12 @@
 #'
 #'
 #' @export
-getCoAccessibleLinks <- function(peakDT, regions, windowSize = 1 * 10^6, numCores = 1, verbose = FALSE) {
-  peakDF <- as.data.frame(peakDT[, -"tileID"])
-  rownames(peakDF) <- peakDT$tileID
+getCoAccessibleLinks <- function(SampleTileObj, cellPopulation, regions, windowSize = 1 * 10^6, numCores = 1, verbose = FALSE) {
   
-  start <- as.numeric(gsub("chr.*\\:|\\-.*", "", peakDT$tileID))
-  end <- as.numeric(gsub("chr.*\\:|.*\\-", "", peakDT$tileID))
-  chr <- gsub("\\:.*", "", peakDT$tileID)
+  tileDF <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation)
+  start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
+  end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
+  chr <- gsub("\\:.*", "", rownames(tileDF))
   
   regionDF <- as.data.frame(regions)
   
@@ -56,8 +55,7 @@ getCoAccessibleLinks <- function(peakDT, regions, windowSize = 1 * 10^6, numCore
             chr %in% regionDF$seqnames[i]
         )
       )
-      
-      nextCorr <- scMACS:::co_accessibility(peakDF[window_tmp, ],
+      nextCorr <- scMACS:::co_accessibility(tileDF[window_tmp, , drop=FALSE],
                                    filterPairs = PeakCorr, numCores = numCores,
                                    index = keyPeak, verbose = verbose
       )
