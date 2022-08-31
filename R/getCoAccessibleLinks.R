@@ -44,8 +44,6 @@ getCoAccessibleLinks <- function(SampleTileObj,
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
   chr <- gsub("\\:.*", "", rownames(tileDF))
   
-  regionDF <- as.data.frame(regions)
-  
   # Initialize correlation datatable
   TileCorr <- NULL
   pb <- txtProgressBar(min = 0, max = length(regions), initial = 0, style = 3)
@@ -53,7 +51,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   for (i in 1:length(regions)) {
     setTxtProgressBar(pb, i)
     
-    ## Find all tiles in the next window
+    # Find all neighboring tiles in the window
     windowIndexBool <- which(start > regionDF$start[i] - windowSize / 2 &
                           end < regionDF$end[i] + windowSize / 2 &
                           chr == regionDF$seqnames[i])
@@ -76,7 +74,13 @@ getCoAccessibleLinks <- function(SampleTileObj,
       # For first iteration, TileCorr is NULL so it will be ignored
       TileCorr <- rbind(TileCorr, nextCorr)
     } else if (verbose) {
-      warning("Warning: No correlations found for given region.")
+      warning(
+        "No neighboring tiles found for given region: ",
+        stringr::str_interp(
+         "${regionDF$seqnames[i]}:${regionDF$start[i]}-${regionDF$end[i]}"
+        ),
+        stringr::str_interp(" with windowSize ${windowSize} basepairs")
+      )
     }
   }
   

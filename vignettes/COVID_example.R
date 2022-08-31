@@ -139,9 +139,19 @@ differentials <- scMACS::getDifferentialAccessibleTiles(
 # 5. Get co-accessible links between input regions
 #    (tiles) and their neighboring regions within
 #    a window. Here we give the first ten.
-#   differential tiles as our input regions.
+#    differential tiles as our input regions.
 ####################################################
+
 regions <- head(differentials, 10)
+
+# Alternatively, define regions as a character vector 
+# of region strings in the format "chr:start-end"
+# regions <- c(
+#   "chrY:7326500-7326999",
+#   "chrY:7327000-7327499",
+#   "chrY:7339500-7339999",
+#   "chrY:7344500-7344999"
+# )
 
 links <- scMACS::getCoAccessibleLinks(
     SampleTileObj = SampleTileMatricesAnnotated,
