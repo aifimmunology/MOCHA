@@ -822,6 +822,7 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
 
 
 extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL, subGroups = NULL, sampleSpecific = FALSE,
+				  approxLimit = 100000, binSize = 250,
 				numCores = 1){
 
 		cellNames <- names(assays(SampleTileObj))
@@ -872,28 +873,47 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 		}else{
 
 			#If neither groupColumn nor subGroup is defined, then it forms one list of all sample names
+			subGroups = 'All'
 			subSamples = list('All' = metaFile[,'Sample'])
 			
 		}
 
+		 # Determine if binning is needed to simplify things
+  		if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+   			 print(str_interp("Size of region exceeds ${approxLimit}bp. Binning data over ${binSize}bp windows."))
+    				binnedData <- regionGRanges %>%
+      					tile_ranges(., binSize) %>%
+      					mutate(idx = c(1:length(.)))
+ 		 }
+
 		#Pull up the cell types of interest, and filter for samples and subset down to region of interest
-		cellType_Files <- mclapply(cellTypes, function(x){
+		cellType_Files <- lapply(cellTypes, function(x){
 
 			tmp <- readRDS(paste(outDir,'/',x,'_CoverageFiles.RDS', sep =''))
 
-			lapply(subSamples, function(x){
+			tmp2 <- mclapply(subSamples, function(y){
 
 				sampleNames = names(tmp)
-				keepSamples <- grepl(paste(x, collapse="|"), sampleNames)
+				keepSamples <- grepl(paste(y, collapse="|"), sampleNames)
 				subSampleList <- tmp[keepSamples]
 
 				#If we don't want sample-specific, then average and get a dataframe out. 
 				#else, get a sample-specific count dataframe out. 
 				if(!sampleSpecific){
 					sampleCount <- sum(keepSamples)
-					filterCounts <- lapply(tmp99, function(x) {
-							   plyranges::join_overlap_intersect(x, scMACS::StringsToGRanges('chr1:100037500-100038000'))
+					filterCounts <- lapply(subSampleList, function(x) {
+							   tmpGR <- plyranges::join_overlap_intersect(x, regionGRanges)
+							
+							    if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+     						 			tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
+       							 				plyranges::group_by(idx) %>%
+       											plyranges::reduce_ranges(score = mean(score)) %>%
+       							 				ungroup()
+    							    }
+							    tmpGR
 							})
+
+					
 
 					stack(as(filterCounts, "GRangesList")) %>%
 							plyranges::join_overlap_intersect(regionGRanges) %>%
@@ -906,21 +926,26 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 			
 					tmpCounts <- lapply(subSampleList, function(x) {
      				 	
-						x %>%  plyranges::filter_by_overlaps(regionGRanges)
+						tmpGR <-  x %>%  plyranges::join_overlap_intersect(regionGRanges) 
+						if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+     						 	tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
+       									plyranges::group_by(idx) %>%
+       									plyranges::reduce_ranges(score = mean(score)) %>%
+       									ungroup()
+    						}
+								
     					})
-					
-					names(tmpCounts) <- paste(x, names(tmpCounts), sep = "#")
-		
+					unlist(tmpCounts)
 				}
-				unlist(tmpCounts)
 
 			}, mc.cores = numCores)
+			names(tmp2) <- subGroups
 
-		})		
-
+		})	
+	names(cellType_Files) = cellTypes
 	allGroups <- unlist(cellType_Files)
 
-	 ## Generate a data.frame for export.
+	## Generate a data.frame for export.
   	allTmp <- mclapply(seq_along(allGroups), function(x) {
 
 			tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
@@ -932,9 +957,9 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 
 			covdf
 
-  	}, mc.cores = numCores)		
-
-
+  	}, mc.cores = numCores)	
+	
+      return(allTmp)
       tmpCountsdf <- as.data.frame(data.table::rbindlist(allTmp))
 
       return(tmpCountsdf)	
