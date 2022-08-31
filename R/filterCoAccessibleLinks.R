@@ -1,12 +1,17 @@
-#' @title \code{FilterCoAccessibleLinks}
+#' @title \code{filterCoAccessibleLinks}
 #'
-#' @description \code{FilterCoAccessibleLinks} does stuff 
+#' @description \code{filterCoAccessibleLinks} will filter the output from 
+#'   getCoAccessibleLinks by a threshold, retaining links with a
+#'   absolute correlation greater than the threshold.
+#'   This function also adds the chr, start, and end site of each link to
+#'   the output table.
 #'
 #'
-#' @param PeakCorr 
-#' @param threshold 
+#' @param TileCorr The correlation table output from getCoAccessibleLinks
+#' @param threshold Keep 
 #'
-#' @return 
+#' @return FilteredTileCorr The filtered correlation table with chr, 
+#'   start, and end site of each link
 #' 
 #' @details The technical details of the zero-inflated correlation can be
 #'          found here:
@@ -19,24 +24,21 @@
 #'
 #'
 #' @export
-FilterCoAccessibleLinks <- function(PeakCorr, threshold = 0.5) {
-  if (!any(abs(PeakCorr$Correlation) > threshold)) {
+filterCoAccessibleLinks <- function(TileCorr, threshold = 0.5) {
+  if (!any(abs(TileCorr$Correlation) > threshold)) {
     stop("Error: There are no values above the threshold.")
   }
   
-  PeakCorr1 <- PeakCorr[abs(PeakCorr$Correlation) > threshold, ]
-  start1 <- as.numeric(gsub("chr.*\\:|\\-.*", "", PeakCorr1$Peak1))
-  end1 <- as.numeric(gsub("chr.*\\:|.*\\-", "", PeakCorr1$Peak1))
+  FilteredTileCorr <- TileCorr[abs(TileCorr$Correlation) > threshold, ]
+  start1 <- as.numeric(gsub("chr.*\\:|\\-.*", "", FilteredTileCorr$Tile1))
+  end1 <- as.numeric(gsub("chr.*\\:|.*\\-", "", FilteredTileCorr$Tile1))
   
-  start2 <- as.numeric(gsub("chr.*\\:|\\-.*", "", PeakCorr1$Peak2))
-  end2 <- as.numeric(gsub("chr.*\\:|.*\\-", "", PeakCorr1$Peak2))
+  start2 <- as.numeric(gsub("chr.*\\:|\\-.*", "", FilteredTileCorr$Tile2))
+  end2 <- as.numeric(gsub("chr.*\\:|.*\\-", "", FilteredTileCorr$Tile2))
   
-  PeakCorr1$chr <- gsub("\\:.*", "", PeakCorr1$Peak2)
-  PeakCorr1$start <- apply(data.table(start1, start2), 1, min)
-  PeakCorr1$end <- apply(data.table(end1, end2), 1, max)
+  FilteredTileCorr$chr <- gsub("\\:.*", "", FilteredTileCorr$Tile2)
+  FilteredTileCorr$start <- apply(data.table(start1, start2), 1, min)
+  FilteredTileCorr$end <- apply(data.table(end1, end2), 1, max)
   
-  return(PeakCorr1)
+  return(FilteredTileCorr)
 }
-
-
-#############################################
