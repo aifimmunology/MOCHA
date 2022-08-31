@@ -46,8 +46,8 @@ test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   expect_false(any((links$Peak1 == links$Peak2)))
   expect_snapshot_output(
     links,
-    variant = "basic"
-  )
+    variant = "tiles"
+  ) # change variant to "basic" to compare with previous co_accessibility.R
   expect_snapshot_output(
     nrow(links),
     variant = "nrows"
