@@ -11,6 +11,7 @@ getDifferentialAccessibleTiles(
   foreground,
   background,
   fdrToDisplay = 0.2,
+  outputGRanges = TRUE,
   numCores = 2
 )
 }
@@ -27,7 +28,14 @@ getDifferentialAccessibleTiles(
 
 \item{fdrToDisplay}{Optional, false-discovery rate used only for standard output messaging}
 
+\item{outputGRanges}{Optional, outputs a GRanges if TRUE and a data.frame if FALSE.
+Default is TRUE.}
+
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+}
+\value{
+full_results The differential accessibility results as a GRanges or matrix
+  data.frame depending on the flag `outputGRanges`.
 }
 \description{
 \code{getDifferentialAccessibleTiles} allows you to

@@ -10,17 +10,22 @@
 #' @param foreground The foreground group of samples for differential comparison
 #' @param background The background group of samples for differential comparison
 #' @param fdrToDisplay Optional, false-discovery rate used only for standard output messaging
+#' @param outputGRanges Optional, outputs a GRanges if TRUE and a data.frame if FALSE.
+#'   Default is TRUE.
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #'
-#' @return
+#' @return full_results The differential accessibility results as a GRanges or matrix
+#'   data.frame depending on the flag `outputGRanges`.
 #'
 #' @export
+
 getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            cellPopulation,
                                            groupColumn,
                                            foreground,
                                            background,
                                            fdrToDisplay = 0.2,
+                                           outputGRanges = TRUE,
                                            numCores = 2) {
   if (!any(names(assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
@@ -147,6 +152,10 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     discoveries, " differential regions found at FDR ",
     fdrToDisplay
   )
+  
+  if (outputGRanges){
+    full_results <- scMACS::differentialsToGRanges(full_results)
+  }
 
   full_results
 }

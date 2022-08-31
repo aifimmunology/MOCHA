@@ -5,7 +5,8 @@
 \title{\code{getCoAccessibleLinks}}
 \usage{
 getCoAccessibleLinks(
-  peakDT,
+  SampleTileObj,
+  cellPopulation,
   regions,
   windowSize = 1 * 10^6,
   numCores = 1,
@@ -13,17 +14,22 @@ getCoAccessibleLinks(
 )
 }
 \arguments{
-\item{regions}{a GRanges containing the regions to compute co-accessible links for. 
+\item{SampleTileObj}{The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices}
+
+\item{cellPopulation}{A string denoting the cell population of interest, which must be present in SampleTileObj}
+
+\item{regions}{a GRanges object or vector or strings containing the regions on which to compute co-accessible links. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
 Can be the output from getDifferentialAccessibleTiles.}
 
+\item{windowSize}{the size of the window, in basepairs, around each input region to search for co-accessible links}
+
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+}
+\value{
 
-\item{SampleTileObj}{The SummarizedExperiment object output from getSampleTileMatrix}
-
-\item{cellPopulation}{A string denoting the cell population of interest}
 }
 \description{
-\code{getCoAccessibleLinks} does stuff
+\code{getCoAccessibleLinks} takes an input set of regions (tiles) and finds co-accessible neighboring regions within a window. Co-accessibility is defined as the correlation between two region intensity (openness) across samples.
 }
 \details{
 The technical details of the zero-inflated correlation can be
