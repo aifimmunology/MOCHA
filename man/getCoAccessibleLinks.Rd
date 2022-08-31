@@ -25,9 +25,6 @@ Can be the output from getDifferentialAccessibleTiles.}
 
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
 }
-\value{
-
-}
 \description{
 \code{getCoAccessibleLinks} takes an input set of regions (tiles) and finds co-accessible neighboring regions within a window. Co-accessibility is defined as the correlation between two region intensity (openness) across samples.
 }
