@@ -145,11 +145,7 @@ validRegionString <- function(regionString) {
 #' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200 
 #'   into GRanges
 #'
-#'
-#'
 #' @export
-
-
 StringsToGRanges <- function(regionString) {
   # if (length(regionString)>1){
   #   boolList <- lapply(regionString, function(x){validRegionString(x)})
@@ -171,21 +167,33 @@ StringsToGRanges <- function(regionString) {
   return(regionGRanges)
 }        
 
-#' @title \code{GRangesToString}
+#' @title \code{GRangesToString} Converts a GRanges object to a string in the format 'chr1:100-200'
 #'
 #' @description \code{GRangesToStrin} Turns a GRanges Object into
 #' 	a list of strings in the format chr1:100-200
 #'
 #'
 #' @export            
-
-# Converts a GRanges object to a string in the format 'chr1:100-200'
 GRangesToString <- function(GR_obj){
   
   paste(seqnames(GR_obj), ":",start(GR_obj),"-",end(GR_obj),sep="")
   
-}    
+}
 
+#' @title \code{differentialsToGRanges} Converts a data.frame matrix to a GRanges,
+#'   preserving additional columns as GRanges metadata
+#'
+#' @param differentials a matrix/data.frame with a column tileColumn containing 
+#'   region strings in the format "chr:start-end"
+#' @param tileColumn name of column containing region strings. Default is "Tile".
+#'
+#' @return a GRanges containing all original information 
+#' @export 
+differentialsToGRanges <- function(differentials, tileColumn = "Tile"){
+  regions <- scMACS::StringsToGRanges(differentials[[tileColumn]])
+  GenomicRanges::mcols(regions) <- differentials
+  regions
+}
 
 ### Function to set seqinfo for GRanges objects.
 ### This makes them easier to merge and export to BWs by setting the standard

@@ -17,47 +17,50 @@
 #' @keywords internal
 
 singlePopulationSampleTileMatrix <- function(peaksExperiment,
-                                consensusTiles,
-                                NAtoZero = FALSE,
-                                log2Intensity = TRUE
-                               ) {
+                                             consensusTiles,
+                                             NAtoZero = FALSE,
+                                             log2Intensity = TRUE) {
 
   # Extract matrices of samples by peak tileIDs with TotalIntensity
   sampleTileIntensityMat <- RaggedExperiment::compactAssay(
     peaksExperiment,
     i = "TotalIntensity"
   )
-  
+
   if (NAtoZero) {
     # Replace NAs with zeroes for zero-inflated hypothesis testing
     sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
   }
-  
+
   if (log2Intensity) {
-    sampleTileIntensityMat <- log2(sampleTileIntensityMat+1)
+    sampleTileIntensityMat <- log2(sampleTileIntensityMat + 1)
   }
 
-  # Filter to just peaks in the given consensusTiles. 
+  # Filter to just peaks in the given consensusTiles.
   prevDims <- dim(sampleTileIntensityMat)
-  sampleTileIntensityMat <- sampleTileIntensityMat[rownames(sampleTileIntensityMat) %in% consensusTiles, ]
+  sampleTileIntensityMat <- sampleTileIntensityMat[rownames(sampleTileIntensityMat) %in% consensusTiles, , drop = FALSE]
 
-  #If the tiles you are pulling don't exist in the peakExperiment, add a matrix of NAs or Zeros to represent those tiles
-  if(any(!consensusTiles %in% rownames(sampleTileIntensityMat))){
-
-	filler <- ifelse(NAtoZero, 0, NA)
-	rowList <- consensusTiles[!consensusTiles %in% rownames(sampleTileIntensityMat)]
-	emptyMat <- matrix(filler, nrow = length(rowList), ncol = ncol(sampleTileIntensityMat),
-				dimnames = list(rowList, colnames(sampleTileIntensityMat)))
-	sampleTileIntensityMat <- rbind(sampleTileIntensityMat, emptyMat)
-	
+  # If the tiles you are pulling don't exist in the peakExperiment, add a matrix of NAs or Zeros to represent those tiles
+  if (any(!consensusTiles %in% rownames(sampleTileIntensityMat))) {
+    filler <- ifelse(NAtoZero, 0, NA)
+    rowList <- consensusTiles[!consensusTiles %in% rownames(sampleTileIntensityMat), drop = FALSE]
+    emptyMat <- matrix(filler,
+      nrow = length(rowList), ncol = ncol(sampleTileIntensityMat),
+      dimnames = list(rowList, colnames(sampleTileIntensityMat))
+    )
+    sampleTileIntensityMat <- rbind(sampleTileIntensityMat, emptyMat)
   }
   currDims <- dim(sampleTileIntensityMat)
-  message("\tDimensions of sample-tile matrix\n",
-          "\tbefore and after consensus tiles:\n",
-          stringr::str_interp("\t${prevDims} before to ${currDims} after"))
-
-  sampleTileIntensityMat <- sampleTileIntensityMat[order(rownames(sampleTileIntensityMat)), order(colnames(sampleTileIntensityMat)) ]
+  message(
+    "\tDimensions of sample-tile matrix\n",
+    "\tbefore and after consensus tiles:\n",
+    stringr::str_interp("\t${prevDims} before to ${currDims} after")
+  )
+  sampleTileIntensityMat <- sampleTileIntensityMat[
+    order(rownames(sampleTileIntensityMat)), 
+    order(colnames(sampleTileIntensityMat)), 
+    drop = FALSE
+  ]
 
   return(sampleTileIntensityMat)
-
 }
