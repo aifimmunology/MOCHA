@@ -11,6 +11,9 @@ FilterCoAccessibleLinks(PeakCorr, threshold = 0.5)
 
 \item{threshold}{}
 }
+\value{
+
+}
 \description{
 \code{FilterCoAccessibleLinks} does stuff
 }
