@@ -11,7 +11,9 @@ getSampleTileMatrix(
   threshold = 0.2,
   join = "union",
   NAtoZero = FALSE,
-  log2Intensity = TRUE
+  log2Intensity = TRUE,
+  numCores = 1,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -32,13 +34,15 @@ Default is 'ALL'.}
 \item{NAtoZero}{Boolean, set to TRUE to convert NA intensities from peak calling (tiles with too low signal) to zeroes. Optional, default is FALSE.}
 
 \item{log2Intensity}{Boolean, set to TRUE to return the log2 of the sample-tile intensity matrix. Optional, default is FALSE.}
+
+\item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
 }
 \value{
-SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix 
+SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix
   for each cell population
 }
 \description{
-\code{getSampleTileMatrix} takes the output of peak calling with 
+\code{getSampleTileMatrix} takes the output of peak calling with
   callOpenTiles and creates sample-tile matrices containing the signal intensity
   at each tile.
 }

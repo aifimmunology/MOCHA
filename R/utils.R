@@ -151,9 +151,14 @@ validRegionString <- function(regionString) {
 
 
 StringsToGRanges <- function(regionString) {
-  if (!validRegionString(regionString)) {
-    stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
-  }
+  # if (length(regionString)>1){
+  #   boolList <- lapply(regionString, function(x){validRegionString(x)})
+  #   if (!all(boolList)){
+  #     stop("Some region strings are invalid. Given regions must all be strings matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
+  #   }
+  # } else if(!validRegionString(regionString)) {
+  #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
+  # }
 
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%

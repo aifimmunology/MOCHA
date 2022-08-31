@@ -222,4 +222,3 @@ getMotifDev <- function(MotifCoverage, ForegroundPeaks, BackgroundPeaks,
 
     return(motifDev)
 }
-

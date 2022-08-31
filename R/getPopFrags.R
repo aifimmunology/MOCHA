@@ -25,7 +25,8 @@
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
-#'
+#' 
+#' @export
 
 getPopFrags <- function(ArchRProj,
                         metaColumn,
@@ -100,7 +101,7 @@ getPopFrags <- function(ArchRProj,
     # Extract fragments from all available regions
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
 
-      print(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
+      message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
       ArchR::getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = cellNames,
@@ -134,7 +135,7 @@ getPopFrags <- function(ArchRProj,
       dplyr::select(seqnames)
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
 	
-	print(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
+	message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
      	fragsGRanges <- getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = cellNames,

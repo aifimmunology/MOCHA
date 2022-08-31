@@ -105,4 +105,3 @@ getAltTSS <- function(completeDAPs,
     return(altTSS)
     
 }
-
