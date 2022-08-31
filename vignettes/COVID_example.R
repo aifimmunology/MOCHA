@@ -4,8 +4,12 @@
 #    to a subset of samples.
 ####################################################
 
-library(ArchR)
+library(devtools)
+setwd("scMACS")
+install()
+
 library(scMACS)
+library(ArchR)
 
 # You should substitute this with your own ArchR project.
 # You must have completed cell labeling with your ArchR project.
@@ -89,10 +93,10 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 )
 
 ####################################################
-# 4. Add gene annotations to our SampleTileMatrices.
-#    This info will aid further downstream analyses
-#    but is not required for differential 
-#    accessibility.
+# 4. (Optional) Add gene annotations to our 
+#    SampleTileMatrices.. This info will aid further 
+#    downstream analyses but is not required for 
+#    differential accessibility nor coaccessibility.
 #    This function can also take any GRanges object
 #    and add annotations to its metadata.
 ####################################################
@@ -108,13 +112,42 @@ SampleTileMatricesAnnotated <- scMACS::annotateTiles(
 #    "COVID_status" is Positive (our foreground) 
 #    to Negative samples (our background).
 ####################################################
+cellPopulation <- "MAIT"
+foreground <- "Positive"
+background <- "Negative"
+# Standard output will display the number of tiles
+# found below a false-discovery rate threshold.
+# This does not filter results and only affects
+# this message.
+fdrToDisplay <- 0.2
+# Choose to output a GRanges or data.frame. 
+# Default is TRUE.
+outputGRanges <- TRUE
 
 differentials <- scMACS::getDifferentialAccessibleTiles(
-    SampleTileObj = SampleTileMatrices,
-    cellPopulation = "MAIT",
+    SampleTileObj = SampleTileMatricesAnnotated,
+    cellPopulation = cellPopulation,
     groupColumn = groupColumn,
-    foreground = "Positive",
-    background = "Negative",
-    fdrToDisplay = 0.4,
+    foreground = foreground,
+    background = background,
+    fdrToDisplay = fdrToDisplay,
+    outputGRanges = outputGRanges,
     numCores = numCores
+)
+
+####################################################
+# 5. Get co-accessible links between input regions
+#    (tiles) and their neighboring regions within
+#    a window. Here we give the first ten.
+#   differential tiles as our input regions.
+####################################################
+regions <- head(differentials, 10)
+
+links <- scMACS::getCoAccessibleLinks(
+    SampleTileObj = SampleTileMatricesAnnotated,
+    cellPopulation = cellPopulation,
+    regions = regions,
+    windowSize = 1 * 10^6,
+    numCores = numCores,
+    verbose = TRUE
 )
