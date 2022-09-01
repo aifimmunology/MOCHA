@@ -1272,7 +1272,7 @@ plotRegion <- function(countSE,
   
   if (showIdeogram) {
     # Show Ideogram
-    p3 <- verbf(Ideogram(genome = ideogram_genome, subchr = chrom))
+    p3 <- verbf(ggbio::Ideogram(genome = ideogram_genome, subchr = chrom))
     
     track_list <- c(track_list, list("Chr" = p3))
   }
