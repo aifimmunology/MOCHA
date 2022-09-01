@@ -106,6 +106,21 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 #Annotate your open chromatin regions as either a promoter, exonic, intronic, or distal region. Gene names are given for all but distal. 
 SampleTileMatrices <- annotateTiles(SampleTilesMatrices)
 
+##########################################
+
+## 4. Plot region 
+
+##########################################
+
+countdf <- extractRegionDF(SampleTileObj, cellTypes = 'CD16 Mono',
+                           region = 'chr3:38137866-38139912', 
+                           groupColumn = 'InfectionStages',
+                           numCores = 30,
+                           sampleSpecific = FALSE)
+pdf('ExamplePlot.pdf')
+plotRegion(countSE = countdf, whichGene = 'MYD88')
+dev.off()
+
 ```
 
 The output of each function is a [MultiAssayExperiment](https://www.bioconductor.org/packages/devel/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html#overview-of-the-multiassayexperiment-class) organizing your results (either open tiles or sample-tile matrices) by cell population.
