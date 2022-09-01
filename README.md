@@ -112,7 +112,7 @@ SampleTileObj <- annotateTiles(SampleTileObj)
 
 ##########################################
 
-countSE <- extractRegionDF(SampleTileObj, cellTypes = 'CD16 Mono',
+countSE <- extractRegion(SampleTileObj, cellTypes = 'CD16 Mono',
                            region = 'chr3:38137866-38139912', 
                            groupColumn = 'InfectionStages',
                            numCores = 30,
