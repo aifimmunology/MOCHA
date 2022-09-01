@@ -655,8 +655,8 @@ plot_whichGene <- function(newModel,
     theme_ls <- c(theme_ls, default_theme[unspec_param])
   }
   
-  p_gene <- ggbio() +
-    geom_alignment(newModel,
+  p_gene <- ggbio::ggbio() +
+    ggbio::geom_alignment(newModel,
                    aes(type = model),
                    cds.rect.h = 0.25,
                    rect.height = 0.25 / 4
