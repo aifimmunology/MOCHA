@@ -825,7 +825,7 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 				  approxLimit = 100000, binSize = 250,
 				numCores = 1){
 
-		cellNames <- names(assays(SampleTileObj))
+		cellNames <- names(SummarizedExperiment::assays(SampleTileObj))
 		metaFile <- SummarizedExperiment::colData(SampleTileObj)
 		outDir <- metadata(SampleTileObj)$Directory
 
@@ -953,7 +953,7 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
       			tmp$score <- allGroups[[x]]$score[tmp$partition]
       			tmp$Groups <- rep(names(allGroups)[x], length(tmp))
 
-      			covdf <- as.data.frame(tmp) %>% dplyr::select(seqnames, start, score, Groups)
+      			covdf <- as.data.frame(tmp)[,c('seqnames', 'start', 'score', 'Groups')]
       			colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
 			covdf
@@ -1101,7 +1101,7 @@ plotRegion <- function(countdf,
   }
   
   # Extract region from region string as granges
-  regionGRanges <- countdf_to_region(countdf = assays(countdf))
+  regionGRanges <- countdf_to_region(countdf = countdf)
 
   # Variables
   chrom <- toString(unique(countdf$chr))
