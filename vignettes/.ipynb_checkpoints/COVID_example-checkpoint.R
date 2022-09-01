@@ -106,19 +106,7 @@ SampleTileMatricesAnnotated <- scMACS::annotateTiles(
 )
 
 ####################################################
-# 5. (Optional) Plotting
-####################################################
-countSE <- extractRegion(SampleTileObj, cellTypes = 'CD16 Mono',
-                         region = 'chr3:38137866-38139912', 
-                         groupColumn = 'InfectionStages',
-                         numCores = 30,
-                         sampleSpecific = FALSE)
-pdf('ExamplePlot.pdf')
-plotRegion(countSE = countSE, whichGene = 'MYD88')
-dev.off()
-
-####################################################
-# 6. Get differential accessibility for specific 
+# 5. Get differential accessibility for specific 
 #    cell populations. Here we are comparing MAIT  
 #    cells between samples where our groupColumn 
 #    "COVID_status" is Positive (our foreground) 
@@ -148,7 +136,7 @@ differentials <- scMACS::getDifferentialAccessibleTiles(
 )
 
 ####################################################
-# 7. Get co-accessible links between input regions
+# 5. Get co-accessible links between input regions
 #    (tiles) and their neighboring regions within
 #    a window. Here we give the first ten.
 #    differential tiles as our input regions.

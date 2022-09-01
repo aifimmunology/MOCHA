@@ -6,11 +6,6 @@
 \usage{
 breaks_to_scaledbreaks(breaks, x)
 }
-\arguments{
-\item{breaks}{custom breaks}
-
-\item{x}{vector of values}
-}
 \description{
 Get scaled values for custom breaks in a given value vector for use
 defining breaks in scale_gradientn(), for example

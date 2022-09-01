@@ -7,8 +7,7 @@
 counts_plot_motif_overlay(
   p1,
   countdf,
-  ArchRProj,
-  motifSetName,
+  motifsList,
   motif_y_space_factor = 4,
   motif_stagger_labels_y = FALSE,
   motif_weights = NULL,
@@ -24,10 +23,6 @@ counts_plot_motif_overlay(
 \item{p1}{The output of `counts_plot_samples()`}
 
 \item{countdf}{A dataframe that comes from `getbpCounts()` or `getbpInserts()`}
-
-\item{ArchRProj}{An archR project containing motif annotations}
-
-\item{motifSetName}{The name of the motif set in ArchRProj to use for annotation}
 
 \item{motif_y_space_factor}{A factor for vertical spacing between motif labels. Default 4. Increase to make labels farther apart, decrease to make labels closer.}
 
@@ -46,6 +41,10 @@ a specific group/sample then global motif enrichment results for that group: `-l
 \item{motif_line_size}{Numeric value, default 1. Size of motif lines.}
 
 \item{motif_line_alpha}{Numeric value, default 0.25. Alpha for motif lines.}
+
+\item{ArchRProj}{An archR project containing motif annotations}
+
+\item{motifSetName}{The name of the motif set in ArchRProj to use for annotation}
 
 \item{weight_colors}{Named numeric vector. Names should be color values and breaks should be the corresponding values of motif_weights. Values outside the
 highest and lowest value will appear as max or min defined color value.}
