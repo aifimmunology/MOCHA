@@ -334,17 +334,14 @@ cleanup_breaks <- function(breaks, x) {
 #' @param ArchRProj The archr project containing motif annotations
 #' @param motifSetName The name of the motif annotations in the ArchR project
 #' @param countdf A counts data frame object from getPop
-get_motifs_in_region <- function(ArchRProj, motifSetName, countdf = NULL, regionString = NULL, numCores = 1, metaColumn = NULL, cellSubsets = "ALL") {
-  if (is.null(countdf) & !is.null(regionString)) {
-    popFrags <- getPopFrags(ArchRProj = ArchRProj, metaColumn = metaColumn, region = regionString, numCores = numCores, cellSubsets = cellSubsets)
-    countdf <- getbpCounts(regionString = regionString, popFrags = popFrags, numCores = numCores, returnGRanges = FALSE)
-  }
+get_motifs_in_region <- function(motifsList, countdf = NULL, regionString = NULL, numCores = 1, metaColumn = NULL, cellSubsets = "ALL") {
+  
   chrom <- toString(unique(countdf$chr))
   startSite <- min(countdf$Locus)
   endSite <- max(countdf$Locus)
   regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
   
-  specMotifs <- unlist(getPositions(ArchRProj, name = motifSetName)) %>%
+  specMotifs <- unlist(motifsList) %>%
     plyranges::mutate(name = gsub("_.*", "", names(.))) %>%
     plyranges::join_overlap_intersect(regionGRanges) %>%
     mutate(type = "exon") %>%
@@ -379,8 +376,7 @@ get_motifs_in_region <- function(ArchRProj, motifSetName, countdf = NULL, region
 #' @return The input ggplot object with motif labels overlaid
 counts_plot_motif_overlay <- function(p1,
                                       countdf,
-                                      ArchRProj,
-                                      motifSetName,
+                                      motifsList,
                                       motif_y_space_factor = 4,
                                       motif_stagger_labels_y = FALSE,
                                       motif_weights = NULL,
@@ -394,8 +390,7 @@ counts_plot_motif_overlay <- function(p1,
   # Retrieve annotations in region and format
   specMotifs <- get_motifs_in_region(
     countdf = countdf,
-    ArchRProj = ArchRProj,
-    motifSetName = motifSetName
+    motifsList = motifsList,
   )
   reduceMotifs <- plyranges::reduce_ranges(specMotifs, count = plyranges::n(), names = paste(labels, collapse = ","))
   splitMotifs <- strsplit(reduceMotifs$names, split = ",")
@@ -959,10 +954,13 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 			covdf
 
   	}, mc.cores = numCores)	
-	
-      tmpCountsdf <- as.data.frame(data.table::rbindlist(allTmp))
 
-      return(tmpCountsdf)	
+      names(allTmp) <- names(allGroups)
+      
+      tmpCounts <- SummarizedExperiment::SummarizedExperiment(allTmp,
+				metadata = SampleTileObj@metadata)
+
+      return(tmpCounts)	
 
 }
 
@@ -1041,7 +1039,7 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 #'   motif_line_alpha = 1, motif_weights = my_enrichment_weights
 #' )
 #'
-plotRegion <- function(countdf,
+plotRegion <- function(countSE,
                        # base count plot args
                        plotType = 'area',
                        base_size = 12,
@@ -1052,8 +1050,7 @@ plotRegion <- function(countdf,
                        counts_color_var = "Groups",
                        counts_group_colors = NULL,
                        counts_theme_ls = NULL,
-                       # Motif args
-                       ArchRProj = NULL, # For overlaying motifs only
+		       #For plotting motifs
                        motifSetName = NULL,
                        motif_y_space_factor = 4,
                        motif_stagger_labels_y = FALSE,
@@ -1100,6 +1097,9 @@ plotRegion <- function(countdf,
     }
   }
   
+
+  countdf <- do.call('rbind', SummarizedExperiment::assays(countSE))
+
   # Extract region from region string as granges
   regionGRanges <- countdf_to_region(countdf = countdf)
 
@@ -1107,10 +1107,7 @@ plotRegion <- function(countdf,
   chrom <- toString(unique(countdf$chr))
   .relativeHeights_default <- c(`Chr` = 0.9, `Normalized Counts` = 7, `Genes` = 2, `AdditionalGRanges` = 4.5,  `Links` = 1.5) # retain in case any missing
   
-  TxDb = metadata(countdf)$TxDb
-
-
-
+  TxDb = countSE@metadata$TxDb
   
   # Base Plot of Sample Counts
   p1 <- verbf(
@@ -1128,16 +1125,15 @@ plotRegion <- function(countdf,
   )
   
   # Add Motifs to Base Plot if Requested
-  if (!is.null(motifSetName) & !is.null(ArchRProj)) {
-    assertthat::assert_that(motifSetName %in% names(ArchRProj@peakAnnotation),
-                            msg = sprintf("%s not found in ArchRProj", motifSetName)
+  if (!is.null(motifSetName)) {
+    assertthat::assert_that(motifSetName %in% names(countSE@metadata),
+                            msg = sprintf("%s not found in Summarized Experiment", motifSetName)
     )
     p1 <- verbf(
       counts_plot_motif_overlay(
         p1 = p1,
         countdf = countdf,
-        ArchRProj = ArchRProj,
-        motifSetName = motifSetName,
+	motifsList = countSE@metadata[[motifSetName]],
         motif_y_space_factor = motif_y_space_factor,
         motif_stagger_labels_y = motif_stagger_labels_y,
         motif_weights = motif_weights,
@@ -1149,8 +1145,6 @@ plotRegion <- function(countdf,
         motif_line_size = motif_line_size
       )
     )
-  } else if (!is.null(motifSetName) & is.null(ArchRProj)) {
-    stop("No ArchR Project found. If you wish to plot motif positions overlaid, please provide an ArchR project along with your motifSetName.")
   } else {
     p1 <- verbf(
       p1 + xlim(min(countdf$Locus), max(countdf$Locus))
