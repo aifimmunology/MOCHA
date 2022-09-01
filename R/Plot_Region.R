@@ -816,7 +816,7 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
 }
 
 
-extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL, subGroups = NULL, sampleSpecific = FALSE,
+extractRegion <- function(SampleTileObj, region, cellTypes, groupColumn = NULL, subGroups = NULL, sampleSpecific = FALSE,
 				  approxLimit = 100000, binSize = 250,
 				numCores = 1){
 
