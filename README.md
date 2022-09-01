@@ -93,7 +93,7 @@ tileResults <- scMACS::callOpenTiles(
 #    input to downstream analyses.
 ####################################################
 
-SampleTileMatrices <- scMACS::getSampleTileMatrix( 
+SampleTileObj <- scMACS::getSampleTileMatrix( 
     tileResults,
     cellPopulations = cellPopulations,
     groupColumn = groupColumn,
@@ -104,7 +104,22 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 )
 
 #Annotate your open chromatin regions as either a promoter, exonic, intronic, or distal region. Gene names are given for all but distal. 
-SampleTileMatrices <- annotateTiles(SampleTilesMatrices)
+SampleTileObj <- annotateTiles(SampleTileObj)
+
+##########################################
+
+## 4. Plot region 
+
+##########################################
+
+countSE <- extractRegion(SampleTileObj, cellTypes = 'CD16 Mono',
+                           region = 'chr3:38137866-38139912', 
+                           groupColumn = 'InfectionStages',
+                           numCores = 30,
+                           sampleSpecific = FALSE)
+pdf('ExamplePlot.pdf')
+plotRegion(countSE = countSE, whichGene = 'MYD88')
+dev.off()
 
 ```
 
