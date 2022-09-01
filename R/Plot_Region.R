@@ -940,6 +940,7 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 
 			}, mc.cores = numCores)
 			names(tmp2) <- subGroups
+			tmp2
 
 		})	
 	names(cellType_Files) = cellTypes
@@ -959,7 +960,6 @@ extractRegionDF <- function(SampleTileObj, region, cellTypes, groupColumn = NULL
 
   	}, mc.cores = numCores)	
 	
-      return(allTmp)
       tmpCountsdf <- as.data.frame(data.table::rbindlist(allTmp))
 
       return(tmpCountsdf)	
