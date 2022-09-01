@@ -1064,7 +1064,6 @@ plotRegion <- function(countSE,
                        # Genes plot args
                        showGene = TRUE,
                        whichGene = NULL, # for plotting specific gene in region
-                       orgdb = org.Hs.eg.db, 
                        db_id_col = "REFSEQ",
                        collapseGenes = 'None',
                        gene_theme_ls = NULL,
@@ -1101,17 +1100,18 @@ plotRegion <- function(countSE,
   countdf <- do.call('rbind', as.list(SummarizedExperiment::assays(countSE)))
 
   # Extract region from region string as granges
-  regionGRanges <- countdf_to_region(countdf = countdf)
+  regionGRanges <- scMACS:::countdf_to_region(countdf = countdf)
 
   # Variables
   chrom <- toString(unique(countdf$chr))
   .relativeHeights_default <- c(`Chr` = 0.9, `Normalized Counts` = 7, `Genes` = 2, `AdditionalGRanges` = 4.5,  `Links` = 1.5) # retain in case any missing
   
   TxDb = AnnotationDbi::loadDb(countSE@metadata$TxDb)
-  
+  orgdb = AnnotationDbi::loadDb(countSE@metadata$Org)  
+
   # Base Plot of Sample Counts
   p1 <- verbf(
-    counts_plot_samples(countdf,
+    scMACS:::counts_plot_samples(countdf,
                         plotType = plotType,
                         base_size = base_size,
                         counts_color_var = counts_color_var,
@@ -1130,7 +1130,7 @@ plotRegion <- function(countSE,
                             msg = sprintf("%s not found in Summarized Experiment", motifSetName)
     )
     p1 <- verbf(
-      counts_plot_motif_overlay(
+      scMACS:::counts_plot_motif_overlay(
         p1 = p1,
         countdf = countdf,
 	motifsList = countSE@metadata[[motifSetName]],
@@ -1156,7 +1156,7 @@ plotRegion <- function(countSE,
     # If user provided a specific gene symbol(s), pull new granges from database and format models
     if (!is.null(whichGene)) {
       newModel <- verbf(
-        get_gene_body_model(
+        scMACS:::get_gene_body_model(
           whichGene = whichGene,
           countdf = countdf,
           regionGRanges = regionGRanges,
@@ -1172,7 +1172,7 @@ plotRegion <- function(countSE,
     if (!is.null(whichGene) & !is.null(newModel)) {
       # Successful newmodel generated
       p2 <- verbf(
-        plot_whichGene(newModel,
+        scMACS:::plot_whichGene(newModel,
                        base_size = base_size,
                        x_lim = range(countdf$Locus),
                        theme_ls = gene_theme_ls
@@ -1190,11 +1190,11 @@ plotRegion <- function(countSE,
         Homo.sapiens.hg38 <- verbf(OrganismDbi::makeOrganismDbFromTxDb(TxDb, orgdb = orgdb))
       }
       
-      geneBody <- verbf(get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
+      geneBody <- verbf(scMACS:::get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
       
       if (length(geneBody) > 0) {
         p2 <- verbf(
-          plot_geneBody(
+          scMACS:::plot_geneBody(
             organismdb = Homo.sapiens.hg38,
             geneBody_gr = geneBody,
             collapseGenes = tolower(collapseGenes) == 'collapseall',
@@ -1214,7 +1214,7 @@ plotRegion <- function(countSE,
     }
   }else{
     #If user wishes to hide genes
-    p2 <- autoplot(regionGRanges,label.color = "white", color = "white", fill = "white")
+    p2 <- ggbio::autoplot(regionGRanges,label.color = "white", color = "white", fill = "white")
     relativeHeights['Genes'] = 0.1
   }
   
@@ -1252,7 +1252,7 @@ plotRegion <- function(countSE,
           linkdf$end-250 < end(regionGRanges))){
     
     
-    p5 <- get_link_plot(regionGRanges, legend.position,
+    p5 <- scMACS:::get_link_plot(regionGRanges, legend.position,
                         relativeHeights, linkdf)
   }
   
