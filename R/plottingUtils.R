@@ -305,8 +305,8 @@ counts_plot_samples <- function(countdf,
 #'
 #' Get scaled values for custom breaks in a given value vector for use
 #' defining breaks in scale_gradientn(), for example
-#' @param breaks
-#' @param x
+#' @param vector of breaks
+#' @param x vector of weights
 breaks_to_scaledbreaks <- function(breaks, x) {
   rescaled_weights <- scales::rescale(x)
   rescaled_breaks <- quantile(rescaled_weights, probs = ecdf(x)(breaks))
@@ -683,8 +683,7 @@ plot_whichGene <- function(newModel,
 #'
 #' @param organismdb Database object, for example the output of `OrganismDbi::makeOrganismDbFromTxDb()`
 #' @param geneBody_gr A GRanges object containing the gene, for example an output of `get_grange_genebody()`
-#' @param xmin
-#' @param xmax
+#' @param xlim vector of (x_min, x_max)
 #' @param base_size Numeric, default 12. Global plot base text size parameter
 #' @param plot_theme Named list of `ggplot2::theme()` parameters.
 #' @param collapseGenes Logical value, default FALSE. If TRUE will collapse all genes into one line.
