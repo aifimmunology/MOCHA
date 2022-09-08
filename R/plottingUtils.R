@@ -346,7 +346,7 @@ get_motifs_in_region <- function(motifsList, countdf = NULL, regionString = NULL
   specMotifs <- unlist(motifsList) %>%
     plyranges::mutate(name = gsub("_.*", "", names(.))) %>%
     plyranges::join_overlap_intersect(regionGRanges) %>%
-    mutate(type = "exon") %>%
+    plyranges::mutate(type = "exon") %>%
     plyranges::mutate(index = seq(1, length(.), by = 1)) %>%
     plyranges::mutate(labels = paste(name, index, sep = "_"))
 
@@ -421,7 +421,7 @@ counts_plot_motif_overlay <- function(p1,
   ) %>%
     pivot_longer(cols = c("x1", "x2"), names_to = NULL, values_to = "x") %>%
     group_by(name) %>%
-    mutate(labels = ifelse(max(x) == x, gsub("_.*", "", name), NA))
+    dplyr::mutate(labels = ifelse(max(x) == x, gsub("_.*", "", name), NA))
 
   # Incorprate Weights
   if (!is.null(motif_weights)) {
@@ -434,9 +434,9 @@ counts_plot_motif_overlay <- function(p1,
       ))
     }
     tmp_motifdf <- tmp_motifdf %>%
-      mutate(mweight = ifelse(labels %in% names(motif_weights), motif_weights[labels], NA)) %>%
-      mutate(mweight = ifelse(!all(is.na(mweight)), max(mweight, na.rm = T), NA)) %>% # still grouped by name. this ensures weights are applied to each row of same motif
-      mutate(mweight = case_when( # clip ends within color range
+      dplyr::mutate(mweight = ifelse(labels %in% names(motif_weights), motif_weights[labels], NA)) %>%
+      dplyr::mutate(mweight = ifelse(!all(is.na(mweight)), max(mweight, na.rm = T), NA)) %>% # still grouped by name. this ensures weights are applied to each row of same motif
+      dplyr::mutate(mweight = case_when( # clip ends within color range
         mweight > max(motif_weight_colors) ~ max(motif_weight_colors),
         mweight < min(motif_weight_colors) ~ min(motif_weight_colors),
         is.na(mweight) ~ as.numeric(NA),
@@ -534,8 +534,12 @@ get_gene_body_model <- function(whichGene,
                                 orgdb,
                                 db_id_col = "REFSEQ",
                                 verbose = TRUE) {
+  # Check for dependency RMariaDB needed for GenomicFeatures::makeTxDbFromUCSC
+  if (!requireNamespace("RMariaDB", quietly=TRUE)) {
+    stop("Couldn't load the package RMariaDB. RMariaDB must be installed to plot specific genes.")
+  }
+  
   # Get REFSEQ values for gene symbol
-  # this requires package "RMariaDB" available on CRAN and corresponding linux library "libmariadb-dev"
   txList <- tryCatch(
     unlist(AnnotationDbi::mapIds(
       x = orgdb,
@@ -553,7 +557,8 @@ get_gene_body_model <- function(whichGene,
     }
   )
 
-  # Pull specified database and table for the transcripts by
+  # Pull specified database and table for the transcripts
+  # This requires package "RMariaDB" available on CRAN and corresponding linux library "libmariadb-dev"
   newTxDB <- GenomicFeatures::makeTxDbFromUCSC(genome = "hg38", tablename = "refGene", transcript_ids = txList)
   if (verbose) {
     print(txList)
@@ -602,7 +607,7 @@ get_gene_body_model <- function(whichGene,
     }
 
     newModel <- rbind(newGRangesf, beginexon, endexon) %>%
-      mutate(nameList = paste(whichGene, tx_name, sep = ": ")) %>%
+      plyranges::mutate(nameList = paste(whichGene, tx_name, sep = ": ")) %>%
       makeGRangesListFromDataFrame(., split.field = "nameList", keep.extra.columns = TRUE)
 
     # check for transcripts that are identical within the window

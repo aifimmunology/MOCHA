@@ -15,6 +15,7 @@ LazyData: true
 RoxygenNote: 7.2.1
 Imports: data.table, ArchR, plyranges, dplyr, GenomicRanges, RaggedExperiment, MultiAssayExperiment, stringr, ggbio, wCorr, TxDb.Hsapiens.UCSC.hg38.refGene, ggplot2
 Suggests: 
+    RMariaDB,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)

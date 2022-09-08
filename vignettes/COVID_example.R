@@ -118,7 +118,11 @@ countSE <- scMACS::extractRegion(
   numCores = 30,
   sampleSpecific = FALSE
 )
+dev.off() 
 pdf('ExamplePlot.pdf')
+# Note that to show specific genes with the option 
+# 'whichGene' you must have the package RMariaDB
+# installed
 scMACS::plotRegion(countSE = countSE, whichGene = 'MYD88')
 dev.off()
 
@@ -142,7 +146,7 @@ fdrToDisplay <- 0.2
 outputGRanges <- TRUE
 
 differentials <- scMACS::getDifferentialAccessibleTiles(
-    SampleTileObj = SampleTileMatricesAnnotated,
+    SampleTileObj = SampleTileMatrices,
     cellPopulation = cellPopulation,
     groupColumn = groupColumn,
     foreground = foreground,
