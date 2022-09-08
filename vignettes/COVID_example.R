@@ -110,12 +110,14 @@ SampleTileMatricesAnnotated <- scMACS::annotateTiles(
 #    Here we plot coverage at a specific region and 
 #    gene by infection stage.
 ####################################################
-countSE <- scMACS::extractRegion(SampleTileMatrices, 
-                         cellPopulations = 'CD16 Mono',
-                         region = 'chr3:38137866-38139912', 
-                         groupColumn = 'COVID_status',
-                         numCores = 30,
-                         sampleSpecific = FALSE)
+countSE <- scMACS::extractRegion(
+  SampleTileObj = SampleTileMatrices, 
+  cellPopulations = 'CD16 Mono',
+  region = 'chr3:38137866-38139912', 
+  groupColumn = 'COVID_status',
+  numCores = 30,
+  sampleSpecific = FALSE
+)
 pdf('ExamplePlot.pdf')
 scMACS::plotRegion(countSE = countSE, whichGene = 'MYD88')
 dev.off()

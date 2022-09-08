@@ -76,16 +76,16 @@ get_grange_genebody <- function(regionGRanges, TxDb, single.strand.genes.only = 
 
 #' Default ggplot theme for counts plot
 .counts_plot_default_theme <- list(
-  panel.grid = element_blank(),
-  plot.margin = unit(c(0, 0, 0, 0), "cm"),
-  legend.title = element_text(size = 12),
-  legend.text = element_text(size = 10),
-  axis.text.y = element_blank(),
-  axis.ticks.y = element_blank(),
-  panel.border = element_blank(),
-  strip.background = element_blank(),
-  strip.text.x = element_text(size = 10, angle = 0),
-  strip.text.y = element_text(size = 10, angle = 0)
+  panel.grid = ggplot2::element_blank(),
+  plot.margin = grid::unit(c(0, 0, 0, 0), "cm"),
+  legend.title = ggplot2::element_text(size = 12),
+  legend.text = ggplot2::element_text(size = 10),
+  axis.text.y = ggplot2::element_blank(),
+  axis.ticks.y = ggplot2::element_blank(),
+  panel.border = ggplot2::element_blank(),
+  strip.background = ggplot2::element_blank(),
+  strip.text.x = ggplot2::element_text(size = 10, angle = 0),
+  strip.text.y = ggplot2::element_text(size = 10, angle = 0)
 )
 
 
@@ -107,7 +107,7 @@ get_grange_genebody <- function(regionGRanges, TxDb, single.strand.genes.only = 
 #' using `scale_color_manual()`
 #' @param counts_color_var Character value, default "Groups". Column name from countdf to use to color counts plots.
 #' Only used if counts_group_colors provided
-#' @param theme_ls A list of named theme arguments passed to theme(), defaults to `.counts_plot_default_theme`. For example, `list(axis.ticks = element_blank())`
+#' @param theme_ls A list of named theme arguments passed to theme(), defaults to `.counts_plot_default_theme`. For example, `list(axis.ticks = ggplot2::element_blank())`
 #' @return A ggplot object of count histograms by sample.
 
 counts_plot_samples <- function(countdf,
@@ -459,7 +459,7 @@ counts_plot_motif_overlay <- function(p1,
       data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
       aes(x = x, y = y, label = labels, color = mweight),
       direction = "x",
-      arrow = arrow(length = unit(0.5, "mm")),
+      arrow = arrow(length = grid::unit(0.5, "mm")),
       alpha = motif_lab_alpha,
       size = motif_lab_size,
       segment.size = 0.25,
@@ -470,7 +470,7 @@ counts_plot_motif_overlay <- function(p1,
     ggrepel::geom_text_repel(
       data = tmp_motifdf[tmp_motifdf$y == 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
       aes(x = x, y = y, label = labels, color = mweight),
-      arrow = arrow(length = unit(0.5, "mm")),
+      arrow = arrow(length = grid::unit(0.5, "mm")),
       alpha = motif_lab_alpha,
       size = motif_lab_size,
       direction = "y",
@@ -624,11 +624,11 @@ get_gene_body_model <- function(whichGene,
 
 #' Common theme for gene plots
 .gene_plot_theme <- list(
-  panel.grid = element_blank(),
-  panel.border = element_blank(),
-  axis.ticks = element_blank(),
-  axis.text.y = element_blank(),
-  plot.margin = unit(c(.5, .5, .5, .5), "cm")
+  panel.grid = ggplot2::element_blank(),
+  panel.border = ggplot2::element_blank(),
+  axis.ticks = ggplot2::element_blank(),
+  axis.text.y = ggplot2::element_blank(),
+  plot.margin = grid::unit(c(.5, .5, .5, .5), "cm")
 )
 
 
@@ -805,9 +805,9 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
     )) +
     coord_cartesian(clip = "off", ylim = c(-0.75, 0)) +
     theme(
-      panel.grid = element_blank(), panel.border = element_blank(),
-      axis.text.x = element_blank(), axis.ticks.x = element_blank(),
-      axis.text.y = element_blank(), axis.ticks.y = element_blank()
+      panel.grid = ggplot2::element_blank(), panel.border = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank(),
+      axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank()
     )
 
   return(p5)
