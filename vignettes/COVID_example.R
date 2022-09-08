@@ -106,15 +106,18 @@ SampleTileMatricesAnnotated <- scMACS::annotateTiles(
 )
 
 ####################################################
-# 5. (Optional) Plotting
+# 5. (Optional) Plot a specific region's coverage. 
+#    Here we plot coverage at a specific region and 
+#    gene by infection stage.
 ####################################################
-countSE <- extractRegion(SampleTileObj, cellTypes = 'CD16 Mono',
+countSE <- scMACS::extractRegion(SampleTileMatrices, 
+                         cellPopulations = 'CD16 Mono',
                          region = 'chr3:38137866-38139912', 
-                         groupColumn = 'InfectionStages',
+                         groupColumn = 'COVID_status',
                          numCores = 30,
                          sampleSpecific = FALSE)
 pdf('ExamplePlot.pdf')
-plotRegion(countSE = countSE, whichGene = 'MYD88')
+scMACS::plotRegion(countSE = countSE, whichGene = 'MYD88')
 dev.off()
 
 ####################################################
@@ -158,12 +161,12 @@ regions <- head(differentials, 10)
 
 # Alternatively, define regions as a character vector 
 # of region strings in the format "chr:start-end"
-# regions <- c(
-#   "chrY:7326500-7326999",
-#   "chrY:7327000-7327499",
-#   "chrY:7339500-7339999",
-#   "chrY:7344500-7344999"
-# )
+regions <- c(
+  "chrY:7326500-7326999",
+  "chrY:7327000-7327499",
+  "chrY:7339500-7339999",
+  "chrY:7344500-7344999"
+)
 
 links <- scMACS::getCoAccessibleLinks(
     SampleTileObj = SampleTileMatricesAnnotated,
@@ -177,4 +180,4 @@ links <- scMACS::getCoAccessibleLinks(
 # Optionally filter these links by their absolute 
 # correlation - this output also adds the chromosome,
 # start, and end site of each link to the table.
-scMACS::filterCoAccessibleLinks(links, threshold = 0.5)
+scMACS::filterCoAccessibleLinks(links, threshold = 0.7)
