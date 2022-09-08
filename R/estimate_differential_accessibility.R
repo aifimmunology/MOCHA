@@ -28,10 +28,7 @@
 estimate_differential_accessibility <- function(tile_values, group, 
                                                providePermutation=FALSE){
 
-    test_vec <- as.numeric(tile_values)
-
-    ## log-transform the values 
-    data_vec<-log2(test_vec+1)
+    data_vec <- as.numeric(tile_values)
    
     ## conduct two part test
     two_part_results <- TwoPart(data_vec, group=group, test='wilcoxon', point.mass=0)
@@ -55,7 +52,7 @@ estimate_differential_accessibility <- function(tile_values, group,
     pairwise_matrix$diff <- pairwise_matrix[,1] - pairwise_matrix[,2]
     
     hodges_lehmann <- median(pairwise_matrix$diff)
-    meanDiff <- calculateMeanDiff(tile_values, group)
+    meanDiff <- calculateMeanDiff(data_vec, group)
     ## Create Final Results Matrix
     res <- data.frame(
         P_value=two_part_results$pvalue,
