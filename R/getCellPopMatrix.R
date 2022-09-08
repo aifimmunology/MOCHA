@@ -12,7 +12,7 @@
 #' @export
 getCellPopMatrix <- function(SampleTileObj, cellPopulation){
     
-        tilesCalled <- SummarizedExperiment::mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
+        tilesCalled <- GenomicRanges::mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
         
         sampleTileMatrix <- SummarizedExperiment::assays(SampleTileObj)[[cellPopulation]][tilesCalled, , drop = FALSE]
     
