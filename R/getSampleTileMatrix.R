@@ -21,9 +21,18 @@
 #' @return SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix
 #'   for each cell population
 #'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
+#' @examples
+#' \dontrun{
+#' SampleTileMatrices <- scMACS::getSampleTileMatrix(
+#'   tileResults,
+#'   cellPopulations = cellPopulations,
+#'   groupColumn = groupColumn,
+#'   threshold = threshold,
+#'   join = join,
+#'   NAtoZero = TRUE,
+#'   log2Intensity = TRUE
+#' )
+#' }
 #'
 #' @export
 

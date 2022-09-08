@@ -25,11 +25,11 @@ TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
 Org <- org.Hs.eg.db
 
 # Optional: Filter your ArchR project by sample.
-# For our example we filter ArchR Project to three samples from 
+# For our example we filter ArchR Project to three samples from
 # each Covid Status (3 Positive, 3 Negative).
 samplesToKeep <- c(
-  "B011-AP0C1W3", 
-  "B011-AP0C1W8", 
+  "B011-AP0C1W3",
+  "B011-AP0C1W8",
   "B011-AP0C2W1",
   "B025_FSQAAZ0BZZS-01",
   "B025_FSQAAZ0C0YJ-01",
@@ -41,16 +41,16 @@ myArchRProj <- myArchRProj[cellsSample, ]
 
 ####################################################
 # 1. Setting Parameters
-#    These should be set according to your ArchR 
+#    These should be set according to your ArchR
 #    project and investgative question.
 #
-#    For more details on each of these parameters, 
-#    view the help pages for each function using 
+#    For more details on each of these parameters,
+#    view the help pages for each function using
 #    ?callOpenTiles and ?getSampleTileMatrix
 ####################################################
 
 # Parameters for calling open tiles.
-cellPopLabel <- "CellSubsets" 
+cellPopLabel <- "CellSubsets"
 cellPopulations <- c("MAIT", "CD16 Mono", "DC")
 numCores <- 20
 
@@ -65,51 +65,51 @@ join <- "union"
 #    for all specified cell populations
 ####################################################
 
-tileResults <- scMACS::callOpenTiles( 
-    myArchRProj,
-    cellPopLabel = cellPopLabel,
-    cellPopulations = cellPopulations,
-    TxDb = TxDb,
-    Org = Org,
-    numCores = numCores
+tileResults <- scMACS::callOpenTiles(
+  myArchRProj,
+  cellPopLabel = cellPopLabel,
+  cellPopulations = cellPopulations,
+  TxDb = TxDb,
+  Org = Org,
+  numCores = numCores
 )
 
 ####################################################
 # 3. Get consensus sample-tile matrices
 #    for all cell populations.
 #    These matrices are organized by cell population
-#    RangedSummarizedExperiment object and are the 
+#    RangedSummarizedExperiment object and are the
 #    primary input to downstream analyses.
 ####################################################
 
-SampleTileMatrices <- scMACS::getSampleTileMatrix( 
-    tileResults,
-    cellPopulations = cellPopulations,
-    groupColumn = groupColumn,
-    threshold = threshold,
-    join = join,
-    NAtoZero = TRUE,
-    log2Intensity = TRUE
+SampleTileMatrices <- scMACS::getSampleTileMatrix(
+  tileResults,
+  cellPopulations = cellPopulations,
+  groupColumn = groupColumn,
+  threshold = threshold,
+  join = join,
+  NAtoZero = TRUE,
+  log2Intensity = TRUE
 )
 
 ####################################################
-# 4. (Optional) Add gene annotations to our 
-#    SampleTileMatrices.. This info will aid further 
-#    downstream analyses but is not required for 
+# 4. (Optional) Add gene annotations to our
+#    SampleTileMatrices.. This info will aid further
+#    downstream analyses but is not required for
 #    differential accessibility nor coaccessibility.
 #    This function can also take any GRanges object
 #    and add annotations to its metadata.
 ####################################################
 
-SampleTileMatricesAnnotated <- scMACS::annotateTiles( 
+SampleTileMatricesAnnotated <- scMACS::annotateTiles(
   SampleTileMatrices
 )
 
 ####################################################
-# 5. Get differential accessibility for specific 
-#    cell populations. Here we are comparing MAIT  
-#    cells between samples where our groupColumn 
-#    "COVID_status" is Positive (our foreground) 
+# 5. Get differential accessibility for specific
+#    cell populations. Here we are comparing MAIT
+#    cells between samples where our groupColumn
+#    "COVID_status" is Positive (our foreground)
 #    to Negative samples (our background).
 ####################################################
 cellPopulation <- "MAIT"
@@ -120,19 +120,19 @@ background <- "Negative"
 # This does not filter results and only affects
 # this message.
 fdrToDisplay <- 0.2
-# Choose to output a GRanges or data.frame. 
+# Choose to output a GRanges or data.frame.
 # Default is TRUE.
 outputGRanges <- TRUE
 
 differentials <- scMACS::getDifferentialAccessibleTiles(
-    SampleTileObj = SampleTileMatricesAnnotated,
-    cellPopulation = cellPopulation,
-    groupColumn = groupColumn,
-    foreground = foreground,
-    background = background,
-    fdrToDisplay = fdrToDisplay,
-    outputGRanges = outputGRanges,
-    numCores = numCores
+  SampleTileObj = SampleTileMatricesAnnotated,
+  cellPopulation = cellPopulation,
+  groupColumn = groupColumn,
+  foreground = foreground,
+  background = background,
+  fdrToDisplay = fdrToDisplay,
+  outputGRanges = outputGRanges,
+  numCores = numCores
 )
 
 ####################################################
@@ -144,7 +144,7 @@ differentials <- scMACS::getDifferentialAccessibleTiles(
 
 regions <- head(differentials, 10)
 
-# Alternatively, define regions as a character vector 
+# Alternatively, define regions as a character vector
 # of region strings in the format "chr:start-end"
 # regions <- c(
 #   "chrY:7326500-7326999",
@@ -154,15 +154,15 @@ regions <- head(differentials, 10)
 # )
 
 links <- scMACS::getCoAccessibleLinks(
-    SampleTileObj = SampleTileMatricesAnnotated,
-    cellPopulation = cellPopulation,
-    regions = regions,
-    windowSize = 1 * 10^6,
-    numCores = numCores,
-    verbose = TRUE
+  SampleTileObj = SampleTileMatricesAnnotated,
+  cellPopulation = cellPopulation,
+  regions = regions,
+  windowSize = 1 * 10^6,
+  numCores = numCores,
+  verbose = TRUE
 )
 
-# Optionally filter these links by their absolute 
+# Optionally filter these links by their absolute
 # correlation - this output also adds the chromosome,
 # start, and end site of each link to the table.
 scMACS::filterCoAccessibleLinks(links, threshold = 0.5)

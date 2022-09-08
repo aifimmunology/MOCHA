@@ -23,9 +23,17 @@
 #' @return tileResults A MultiAssayExperiment object containing ranged data
 #'   for each tile
 #'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
+#' @examples
+#' \dontrun{
+#' tileResults <- scMACS::callOpenTiles(
+#'   myArchRProj,
+#'   cellPopLabel = cellPopLabel,
+#'   cellPopulations = cellPopulations,
+#'   TxDb = TxDb,
+#'   Org = Org,
+#'   numCores = numCores
+#' )
+#' }
 #'
 #' @export
 callOpenTiles <- function(ArchRProj,
@@ -37,7 +45,6 @@ callOpenTiles <- function(ArchRProj,
                           fast = FALSE,
                           numCores = 30,
                           force = FALSE) {
-  
   if (is.null(outDir)) {
     ## Generate folder within ArchR for outputting results
     outDir <- paste(ArchR::getOutputDirectory(ArchRProj), "/MOCHA", sep = "")
@@ -47,7 +54,7 @@ callOpenTiles <- function(ArchRProj,
     message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
     dir.create(outDir)
   }
-  
+
   if (fast) {
     tileResults <- callOpenTilesFast(
       ArchRProj,
@@ -75,8 +82,8 @@ callOpenTiles <- function(ArchRProj,
   } else if (!all(cellPopulations %in% names(cellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   }
-  
-  # Genome and TxDb annotation info is added to the metadata of 
+
+  # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
   AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
@@ -210,13 +217,13 @@ callOpenTilesFast <- function(ArchRProj,
                               outDir = NULL,
                               numCores = 30,
                               force = FALSE) {
-  
-  # Genome and TxDb annotation info is added to the metadata of 
+
+  # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
   AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
   AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
-  
+
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
   blackList <- ArchR::getBlacklist(ArchRProj)
@@ -358,7 +365,7 @@ callOpenTilesFast <- function(ArchRProj,
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)
-  
+
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,

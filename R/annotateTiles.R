@@ -2,21 +2,27 @@
 #'
 #' @description \code{annotateTiles} annotates a set of sample-tile matrices
 #'   given with gene annotations. Details on TxDb and Org annotation packages
-#'   and available annotations can be found at Bioconductor: 
+#'   and available annotations can be found at Bioconductor:
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
-#' @param SampleTileObj A RangedSummarizedExperment generated from getSampleTileMatrix, 
+#' @param SampleTileObj A RangedSummarizedExperment generated from getSampleTileMatrix,
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
-#' @param TxDb The annotation package for TxDb object for your genome. 
+#' @param TxDb The annotation package for TxDb object for your genome.
 #'   Optional, only required if SampleTileObj is a GRanges.
-#' @param Org The genome-wide annotation for your organism. 
+#' @param Org The genome-wide annotation for your organism.
 #'   Optional, only required if SampleTileObj is a GRanges.
-#' @param promoterRegion Optional list containing the window size in basepairs 
-#' defining the promoter region. The format is (upstream, downstream). 
+#' @param promoterRegion Optional list containing the window size in basepairs
+#' defining the promoter region. The format is (upstream, downstream).
 #' Default is (2000, 100).
 #'
 #' @return SampleTileObj the input data structure with added gene annotations.
 #'
+#' @examples
+#' \dontrun{
+#' SampleTileMatricesAnnotated <- scMACS::annotateTiles(
+#'   SampleTileMatrices
+#' )
+#' }
 #'
 #' @export
 annotateTiles <- function(SampleTileObj,

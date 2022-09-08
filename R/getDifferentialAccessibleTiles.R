@@ -17,6 +17,27 @@
 #' @return full_results The differential accessibility results as a GRanges or matrix
 #'   data.frame depending on the flag `outputGRanges`.
 #'
+#' @examples
+#' \dontrun{
+#' regions <- head(differentials, 10)
+#'
+#' # Alternatively, define regions as a character vector
+#' # of region strings in the format "chr:start-end"
+#' regions <- c(
+#'   "chrY:7326500-7326999",
+#'   "chrY:7327000-7327499",
+#'   "chrY:7339500-7339999",
+#'   "chrY:7344500-7344999"
+#' )
+#' links <- scMACS::getCoAccessibleLinks(
+#'   SampleTileObj = SampleTileMatricesAnnotated,
+#'   cellPopulation = cellPopulation,
+#'   regions = regions,
+#'   windowSize = 1 * 10^6,
+#'   numCores = numCores,
+#'   verbose = TRUE
+#' )
+#' }
 #' @export
 
 getDifferentialAccessibleTiles <- function(SampleTileObj,
@@ -49,7 +70,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   # This will only include called tiles
   sampleTileMatrix <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation)
-  
+
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
   sampleTileMatrix <- sampleTileMatrix[, colnames(SampleTileObj) %in% c(foreground_samples, background_samples)]
@@ -152,8 +173,8 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     discoveries, " differential regions found at FDR ",
     fdrToDisplay
   )
-  
-  if (outputGRanges){
+
+  if (outputGRanges) {
     full_results <- scMACS::differentialsToGRanges(full_results)
   }
 
