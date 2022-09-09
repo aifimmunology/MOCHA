@@ -26,6 +26,7 @@ To install in a HISE IDE, run the following lines of code to install directly fr
     devtools::install_github("aifimmunology/scMACS")
 
 # <a name="vignette"></a> Usage
+
 ## Please view the example usage found in this [vignette](vignettes/COVID_example.R).
 
 # <a name="results"></a> Tips: Result formats

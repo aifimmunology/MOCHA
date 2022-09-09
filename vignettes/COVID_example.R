@@ -93,20 +93,50 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 )
 
 ####################################################
-# 4. (Optional) Add gene annotations to our 
-#    SampleTileMatrices.. This info will aid further 
+# 4. (Optional) Add gene annotations and motifs to our 
+#    SampleTileMatrices. This info will aid further 
 #    downstream analyses but is not required for 
 #    differential accessibility nor coaccessibility.
-#    This function can also take any GRanges object
-#    and add annotations to its metadata.
 ####################################################
 
+# This function can also take any GRanges object
+# and add annotations to its metadata.
 SampleTileMatricesAnnotated <- scMACS::annotateTiles( 
   SampleTileMatrices
 )
 
+# Load a curated motif set from library(chromVARmotifs) 
+# included with ArchR installation
+data(human_pwms_v2)
+SampleTileMatricesAnnotated <- scMACS::addMotifSet(
+  SampleTileMatricesAnnotated, 
+  pwms = human_pwms_v2,  
+  w = 7 # width parameter for motifmatchr::matchMotifs()
+)
+
 ####################################################
-# 5. Get differential accessibility for specific 
+# 5. (Optional) Plot a specific region's coverage. 
+#    Here we plot coverage at a specific region and 
+#    gene by infection stage.
+####################################################
+countSE <- scMACS::extractRegion(
+  SampleTileObj = SampleTileMatrices, 
+  cellPopulations = 'CD16 Mono',
+  region = 'chr3:38137866-38139912', 
+  groupColumn = 'COVID_status',
+  numCores = numCores,
+  sampleSpecific = FALSE
+)
+dev.off() 
+pdf('ExamplePlot.pdf')
+# Note that to show specific genes with the option 
+# 'whichGene' you must have the package RMariaDB
+# installed
+scMACS::plotRegion(countSE = countSE, whichGene = 'MYD88')
+dev.off()
+
+####################################################
+# 6. Get differential accessibility for specific 
 #    cell populations. Here we are comparing MAIT  
 #    cells between samples where our groupColumn 
 #    "COVID_status" is Positive (our foreground) 
@@ -125,7 +155,7 @@ fdrToDisplay <- 0.2
 outputGRanges <- TRUE
 
 differentials <- scMACS::getDifferentialAccessibleTiles(
-    SampleTileObj = SampleTileMatricesAnnotated,
+    SampleTileObj = SampleTileMatrices,
     cellPopulation = cellPopulation,
     groupColumn = groupColumn,
     foreground = foreground,
@@ -136,7 +166,7 @@ differentials <- scMACS::getDifferentialAccessibleTiles(
 )
 
 ####################################################
-# 5. Get co-accessible links between input regions
+# 7. Get co-accessible links between input regions
 #    (tiles) and their neighboring regions within
 #    a window. Here we give the first ten.
 #    differential tiles as our input regions.
@@ -165,4 +195,4 @@ links <- scMACS::getCoAccessibleLinks(
 # Optionally filter these links by their absolute 
 # correlation - this output also adds the chromosome,
 # start, and end site of each link to the table.
-scMACS::filterCoAccessibleLinks(links, threshold = 0.5)
+scMACS::filterCoAccessibleLinks(links, threshold = 0.7)
