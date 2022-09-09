@@ -3,34 +3,6 @@
 
 
 
-### Identify motifs within peakset
-## @SE_Object - scMACS SummarizedExperiment. Requires Genome AnnotationDbi object within the metadata
-## @pwms - pwms object for the motif database. Used for matching. Standard is drawn from chromVarMotifs database- data(human_pwms_v2)
-## @p.cutoff - p.value cutoff to pass to motifmatchr
-## @w - width settings for motifmatchr
-
-getMotifSet <- function(SE_Object, pwms = human_pwms_v2, returnObj = TRUE, motifSetName = 'Motifs', p.cutoff =  5e-05, w = 7){
-
-    TotalPeakSet <- rowRanges(SE_Object)
-    genome = metadata(SE_Object)$Genome
-    motif_ix <- motifmatchr::matchMotifs(pwms = pwms, 
-                                         TotalPeakSet, 
-                                         genome = genome, 
-                                      out = "positions", w = 15)
-    names(motif_ix) <- sub("_D_.*|_I_.*","", names(motif_ix)) %>% sub("_I$|_D$","", .) %>%
-                    sub(".*_LINE","",.) %>% sub(".*_","",.)
-
-    motifList <- list(motif_ix)
-    names(motifList) <- motifSetName
-
-   if(returnObj){ 
-     metadata(SE_Object) = append(metadata(SE_Object), motifList)
-     return(SE_Object)
-   }else{
-    return(motif_ix)
-   }
-
-}
 
 
 ## runChromVar is a wrapper for chromVAR from scMACS

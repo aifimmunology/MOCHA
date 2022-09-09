@@ -93,16 +93,25 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 )
 
 ####################################################
-# 4. (Optional) Add gene annotations to our 
-#    SampleTileMatrices.. This info will aid further 
+# 4. (Optional) Add gene annotations and motifs to our 
+#    SampleTileMatrices. This info will aid further 
 #    downstream analyses but is not required for 
 #    differential accessibility nor coaccessibility.
-#    This function can also take any GRanges object
-#    and add annotations to its metadata.
 ####################################################
 
+# This function can also take any GRanges object
+# and add annotations to its metadata.
 SampleTileMatricesAnnotated <- scMACS::annotateTiles( 
   SampleTileMatrices
+)
+
+# Load a curated motif set from library(chromVARmotifs) 
+# included with ArchR installation
+data(human_pwms_v2)
+SampleTileMatricesAnnotated <- scMACS::addMotifSet(
+  SampleTileMatricesAnnotated, 
+  pwms = human_pwms_v2,  
+  w = 7 # width parameter for motifmatchr::matchMotifs()
 )
 
 ####################################################
@@ -115,7 +124,7 @@ countSE <- scMACS::extractRegion(
   cellPopulations = 'CD16 Mono',
   region = 'chr3:38137866-38139912', 
   groupColumn = 'COVID_status',
-  numCores = 30,
+  numCores = numCores,
   sampleSpecific = FALSE
 )
 dev.off() 
@@ -167,12 +176,12 @@ regions <- head(differentials, 10)
 
 # Alternatively, define regions as a character vector 
 # of region strings in the format "chr:start-end"
-regions <- c(
-  "chrY:7326500-7326999",
-  "chrY:7327000-7327499",
-  "chrY:7339500-7339999",
-  "chrY:7344500-7344999"
-)
+# regions <- c(
+#   "chrY:7326500-7326999",
+#   "chrY:7327000-7327499",
+#   "chrY:7339500-7339999",
+#   "chrY:7344500-7344999"
+# )
 
 links <- scMACS::getCoAccessibleLinks(
     SampleTileObj = SampleTileMatricesAnnotated,
