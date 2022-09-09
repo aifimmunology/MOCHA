@@ -1,8 +1,8 @@
 #' @title \code{addMotifSet}
 #'
-#' @description \code{plotRegion}Identify motifs within peakset
+#' @description \code{addMotifSet}Identify motifs within peakset
 #'
-#' @SE_Object your scMACS SummarizedExperiment. Requires Genome AnnotationDbi object within the metadata added by getSampleTileMatrix
+#' @param SE_Object your scMACS SummarizedExperiment. Requires Genome AnnotationDbi object within the metadata added by getSampleTileMatrix
 #' @param pwms a pwms object for the motif database. Either PFMatrix, PFMatrixList, PWMatrix, or PWMatrixLis'
 #' @param w the width for motifmatchr
 #' @param returnObj if TRUE, return the modified SE_Object with motif set added to metadata (default). If FALSE, return the motifs from motifmatchr.

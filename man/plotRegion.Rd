@@ -115,8 +115,9 @@ The input ggplot object with motif labels overlaid
 \description{
 \code{plotRegion} Plots the region that you've summarized across all cell groupings (groups=initial getPopFrags() split) with optional motif overlay, chromosome position
 ideogram, and additional GRanges tracks. If plotting motif overlay, ensure that motif annotations have been added
-to your project peak calls. Example: `proj<- addMotifAnnotations(ArchRProj = proj, motifSet = "JASPAR2020", name = "JasparMotifs")`.
-A basic plot can be rendered with just a counts data frame, but additional formatting arguments allow for further customization.
+to your counts SummarizedExperment.
+A basic plot can be rendered with just a counts SummarizedExperiment, but additional formatting arguments allow for further customization.
+Note that to show specific genes with the option 'whichGene' the \pkg{RMariaDB} package must be installed.
 }
 \examples{
 \dontrun{

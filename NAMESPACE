@@ -3,6 +3,7 @@
 export(GRangesToString)
 export(StringsToGRanges)
 export(TwoPart)
+export(addMotifSet)
 export(annotateTiles)
 export(calculateLambda)
 export(calculateNBDistribution)
