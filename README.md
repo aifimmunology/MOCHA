@@ -157,6 +157,33 @@ Results of `scMACS::getDifferentialAccessibleTiles` is given as a `data.table` a
 ```
 _Note that these statistics are poor due to the small # of samples in the example vignette._
 
+## getCoAccessibleLinks results
+Results of `scMACS::getCoAccessibleLinks` is given as a `data.frame` and can be filtered further according to correlation using `scMACS::filterCoAccessibleLinks`.
+```R
+> links
+     Correlation                Tile1                Tile2
+  1:   0.5481481 chrY:7326500-7326999 chrY:6964500-6964999
+  2:   0.5481481 chrY:7326500-7326999 chrY:6965000-6965499
+  3:   0.6666667 chrY:7326500-7326999 chrY:7040500-7040999
+  4:   0.7259259 chrY:7326500-7326999 chrY:7085000-7085499
+  5:   0.8444444 chrY:7326500-7326999 chrY:7085500-7085999
+ ---                                                      
+126:   0.4166667 chrY:7344500-7344999 chrY:7300000-7300499
+127:   0.6666667 chrY:7344500-7344999 chrY:7310500-7310999
+128:   0.6666667 chrY:7344500-7344999 chrY:7311000-7311499
+129:   0.6666667 chrY:7344500-7344999 chrY:7326000-7326499
+130:   0.3333333 chrY:7344500-7344999 chrY:7340000-7340499
+
+
+> scMACS::filterCoAccessibleLinks(links, threshold = 0.7)
+    Correlation                Tile1                Tile2  chr   start     end
+ 1:   0.7259259 chrY:7326500-7326999 chrY:7085000-7085499 chrY 7085000 7326999
+ 2:   0.8444444 chrY:7326500-7326999 chrY:7085500-7085999 chrY 7085500 7326999
+ 3:   0.7851852 chrY:7326500-7326999 chrY:7099500-7099999 chrY 7099500 7326999
+ 4:   0.7259259 chrY:7326500-7326999 chrY:7279500-7279999 chrY 7279500 7326999
+ 5:   0.9037037 chrY:7326500-7326999 chrY:7280000-7280499 chrY 7280000 7326999
+```
+
 
 # <a name="contact"></a> Contact
 
