@@ -13,7 +13,7 @@
 
 ------------------------------------------------------------------------
 
-# <a name="introduction"></a> Introduction
+# <a name="introduction"></a> Introduction {#introduction}
 
 MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
@@ -28,7 +28,7 @@ To install in a HISE IDE, run the following lines of code to install directly fr
 
 ## Please view the example usage found in this [vignette](vignettes/COVID_example.R).
 
-## Example usage demonstrates this workflow: ![Workflow](inst/extData/workflow.png)
+## Example usage demonstrates this workflow: ![Workflow](inst/extData/workflow.svg)
 
 # <a name="results"></a> Tips: Result formats
 
