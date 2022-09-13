@@ -1,27 +1,26 @@
-README for MOCHA
-===============
+# README for MOCHA
 
-* * *
+------------------------------------------------------------------------
 
-Table of Contents
------------------
+## Table of Contents
 
-* [Introduction](#introduction)
-* [Installation](#library)
-* [Usage: Package Vignette on COVID PASC dataset](#vignette)
-* [Tips: Result formats](#results)
-* [Contact](#contact)
-* [License](#license)
+-   [Introduction](#introduction)
+-   [Installation](#library)
+-   [Usage: Package Vignette on COVID PASC dataset](#vignette)
+-   [Tips: Result formats](#results)
+-   [Contact](#contact)
+-   [License](#license)
 
-* * *
+------------------------------------------------------------------------
 
-# <a name="introduction"></a> Introduction
-MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model. 
+# <a name="introduction"></a> Introduction {#introduction}
+
+MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
 # <a name="library"></a> Install package and load library
 
-To install in a HISE IDE, run the following lines of code to install directly from GitHub replacing 'your_token' with your [Github Personal Access Token](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). 
-    
+To install in a HISE IDE, run the following lines of code to install directly from GitHub replacing 'your_token' with your [Github Personal Access Token](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+
     Sys.setenv(GITHUB_PAT='your_token') 
     devtools::install_github("aifimmunology/MOCHA")
 
@@ -29,12 +28,17 @@ To install in a HISE IDE, run the following lines of code to install directly fr
 
 ## Please view the example usage found in this [vignette](vignettes/COVID_example.R).
 
+## Example usage demonstrates this workflow: [Workflow](data/workflow.png)
+
 # <a name="results"></a> Tips: Result formats
+
 While the pipeline can be run function-to-function, you may wish to inspect intermediate results or use end results for your own custom analyses. All MOCHA outputs use common Bioconductor data structures. We also provide some getters for accessing specific results.
 
 ## callOpenTiles results
+
 The output of the first step of the pipeline, `MOCHA::callOpenTiles` is a [MultiAssayExperiment](https://www.bioconductor.org/packages/devel/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html#overview-of-the-multiassayexperiment-class) organizing your open-tiles by cell population. This is the input to the next function, `MOCHA::getSampleTileMatrices`.
-```R
+
+``` r
 > tileResults
 A MultiAssayExperiment object of 3 listed
  experiments with user-defined names and respective classes.
@@ -51,13 +55,14 @@ Functionality:
  assays() - convert ExperimentList to a SimpleList of matrices
  exportClass() - save data to flat files
 ```
-Sample-level metadata can be accessed using `colData(tileResults)`. 
+
+Sample-level metadata can be accessed using `colData(tileResults)`.
 
 A specific cell population's results are stored as a [RaggedExperiment](https://bioconductor.org/packages/release/bioc/vignettes/RaggedExperiment/inst/doc/RaggedExperiment.html).
 
 This object stores ranged data alongside the sample-level metadata.
 
-```R
+``` r
 # Get open tiles for DC cells
 > DCcellRaggedExp <- tileResults[["DC"]]
 > DCcellRaggedExp
@@ -90,8 +95,10 @@ GRanges object with 1439585 ranges and 0 metadata columns:
 ```
 
 ## getSampleTileMatrix results
+
 The output of getSampleTileMatrix is a [SummarizedExperiment](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) organizing the sample-tile matrices by cell population. This is the input to `MOCHA::getDifferentialAccessibleTiles` and other downstream analyses.
-```R
+
+``` r
 > SampleTileMatrices
 class: RangedSummarizedExperiment 
 dim: 212445 6 
@@ -108,15 +115,19 @@ colData names(178): Sample PassQC ... ATAC_WellID AIFI.Batch
 It also holds metadata related to the genome, transcript database, and annotations: `metadata(SampleTileMatrices)`
 
 Individual sample-tile matrices for each cell population can be accessed as follows. These are filtered to only return tiles called for the given cell population.
-```R
+
+``` r
 # Get the sample-tile matrix for DC cells
 DCcellsMatrix <- MOCHA::getCellPopMatrix(SampleTileMatrices, "DC")
 # Get the sample-tile matrix for MAIT cells
 MAITcellsMatrix <- MOCHA::getCellPopMatrix(SampleTileMatrices, "MAIT")
 ```
+
 ## getDifferentialAccessibleTiles results
-Results of `MOCHA::getDifferentialAccessibleTiles` is given as a `data.table` and can be filtered using data.table syntax: 
-```R
+
+Results of `MOCHA::getDifferentialAccessibleTiles` is given as a `data.table` and can be filtered using data.table syntax:
+
+``` r
 > differentials[FDR<0.4]
                           Tile CellPopulation Foreground Background   P_value
    1:     chr1:1000000-1000499           MAIT   Positive   Negative 0.0808556
@@ -155,11 +166,14 @@ Results of `MOCHA::getDifferentialAccessibleTiles` is given as a `data.table` an
 8051:         0              3.798904            0
 8052:         0              3.755235            0
 ```
-_Note that these statistics are poor due to the small # of samples in the example vignette._
+
+*Note that these statistics are poor due to the small \# of samples in the example vignette.*
 
 ## getCoAccessibleLinks results
+
 Results of `MOCHA::getCoAccessibleLinks` is given as a `data.frame` and can be filtered further according to correlation using `MOCHA::filterCoAccessibleLinks`.
-```R
+
+``` r
 > links
      Correlation                Tile1                Tile2
   1:   0.5481481 chrY:7326500-7326999 chrY:6964500-6964999
@@ -184,11 +198,10 @@ Results of `MOCHA::getCoAccessibleLinks` is given as a `data.frame` and can be f
  5:   0.9037037 chrY:7326500-7326999 chrY:7280000-7280499 chrY 7280000 7326999
 ```
 
+# <a name="contact"></a> Contact {#contact}
 
-# <a name="contact"></a> Contact
+To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs.
 
-To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs. 
-    
-# <a name="license"></a> License
+# <a name="license"></a> License {#license}
 
-MOCHA follows the Allen Institute Software License - full information about the license can be found on the LICENSE file. 
+MOCHA follows the Allen Institute Software License - full information about the license can be found on the LICENSE file.
