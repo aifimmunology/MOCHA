@@ -22,27 +22,21 @@ library(ArchR)
 
 #################################################### 
 
-# 0. Load libraries, ArchR project, and annotation
+# 0. Load libraries, ArchR project, and annotation databases
 
-# databases. Optionally filter the ArchR project
-
-# to a subset of samples.
+Optionally filter the ArchR project to a subset of samples.
 
 #################################################### 
 
 ```{r}
 # You should substitute this with your own ArchR project.
-
 # You must have completed cell labeling with your ArchR project.
 
 myArchRProj <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
 
 # Define your annotation package for TxDb object(s)
-
-# and genome-wide annotation
-
+# and genome-wide annotation.
 # Here our samples are human using hg38 as a reference.
-
 # For more info: <https://bioconductor.org/packages/3.15/data/annotation/>
 
 library(TxDb.Hsapiens.UCSC.hg38.refGene) 
@@ -51,9 +45,7 @@ TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
 Org <- org.Hs.eg.db
 
 # Optional: Filter your ArchR project by sample.
-
 # For our example we filter ArchR Project to three samples from
-
 # each COVID Status (3 Positive, 3 Negative).
 
 samplesToKeep <- c( "B011-AP0C1W3", "B011-AP0C1W8", "B011-AP0C2W1", "B025_FSQAAZ0BZZS-01", "B025_FSQAAZ0C0YJ-01", "B025_FSQAAZ0C00P-07" )
@@ -66,17 +58,9 @@ myArchRProj <- myArchRProj[cellsSample, ]
 
 # 1. Setting Parameters
 
-# These should be set according to your ArchR
+These should be set according to your ArchR project and investigative question.
 
-# project and investigative question.
-
-# 
-
-# For more details on each of these parameters,
-
-# view the help pages for each function using
-
-# ?callOpenTiles and ?getSampleTileMatrix
+For more details on each of these parameters, view the help pages for each function using `?callOpenTiles` and `?getSampleTileMatrix`
 
 #################################################### 
 
@@ -94,11 +78,9 @@ join <- "union"
 
 #################################################### 
 
-# 2. Call open tiles (main peak calling step)
+# 2. Call open tiles
 
-# and get sample-tile matrices
-
-# for all specified cell populations
+Get sample-tile matrices for all specified cell populations.
 
 #################################################### 
 
@@ -110,13 +92,9 @@ tileResults <- MOCHA::callOpenTiles(myArchRProj, cellPopLabel = cellPopLabel, ce
 
 # 3. Get consensus sample-tile matrices
 
-# for all cell populations.
+...for all cell populations.
 
-# These matrices are organized by cell population
-
-# RangedSummarizedExperiment object and are the
-
-# primary input to downstream analyses.
+These matrices are organized by cell population RangedSummarizedExperiment object and are the primary input to downstream analyses.
 
 #################################################### 
 
@@ -126,13 +104,11 @@ SampleTileMatrices <- MOCHA::getSampleTileMatrix(tileResults, cellPopulations = 
 
 #################################################### 
 
-# 4. (Optional) Add gene annotations and motifs to our
+# 4. (Optional) Add gene annotations 
 
-# SampleTileMatrices. This info will aid further
+...and motifs to our SampleTileMatrices.
 
-# downstream analyses but is not required for
-
-# differential accessibility nor coaccessibility.
+This info will aid further downstream analyses but is not required for differential accessibility nor coaccessibility.
 
 #################################################### 
 
@@ -143,40 +119,44 @@ SampleTileMatricesAnnotated <- MOCHA::annotateTiles(SampleTileMatrices)
 
 # Load a curated motif set from library(chromVARmotifs)
 # included with ArchR installation
-data(human_pwms_v2) 
-SampleTileMatricesAnnotated <- MOCHA::addMotifSet(SampleTileMatricesAnnotated, pwms = human_pwms_v2, w = 7)
+data(human_pwms_v2)
+SampleTileMatricesAnnotated <- MOCHA::addMotifSet(
+  SampleTileMatricesAnnotated, 
+  pwms = human_pwms_v2, 
+  w = 7 # weight parameter for motifmatchr
+)
 ```
 
 #################################################### 
 
-# 5. (Optional) Plot a specific region's coverage.
+# 5. (Optional) Plot a specific region's coverage
 
-# Here we plot coverage at a specific region and
-
-# gene by infection stage.
+Here we plot coverage at a specific region and gene by infection stage.
 
 #################################################### 
 
 ```{r}
-countSE <- MOCHA::extractRegion(SampleTileObj = SampleTileMatrices, cellPopulations = "CD16 Mono", region = "chr3:38137866-38139912", groupColumn = "COVID_status", numCores = numCores, sampleSpecific = FALSE)
+countSE <- MOCHA::extractRegion(
+  SampleTileObj = SampleTileMatrices, 
+  cellPopulations = "CD16 Mono", 
+  region = "chr3:38137866-38139912", 
+  groupColumn = "COVID_status", 
+  numCores = numCores, 
+  sampleSpecific = FALSE
+)
 dev.off()
 pdf("ExamplePlot.pdf")
-# Note that to show specific genes with the option'whichGene' you must have the package RMariaDB installed 
+# Note that to show specific genes with the option' whichGene'
+# you must have the package RMariaDB installed 
 MOCHA::plotRegion(countSE = countSE, whichGene = "MYD88")
 dev.off()
 ```
 
 #################################################### 
 
-# 6. Get differential accessibility for specific
+# 6. Get differential accessibility for specific cell populations
 
-# cell populations. Here we are comparing MAIT
-
-# cells between samples where our groupColumn
-
-# "COVID_status" is Positive (our foreground)
-
-# to Negative samples (our background).
+Here we are comparing MAIT cells between samples where our groupColumn "COVID_status" is Positive (our foreground) to Negative samples (our background).
 
 #################################################### 
 
@@ -189,18 +169,25 @@ background <- "Negative"
 # Default is TRUE
 outputGRanges <- TRUE
 
-differentials <- MOCHA::getDifferentialAccessibleTiles(SampleTileObj = SampleTileMatrices, cellPopulation = cellPopulation, groupColumn = groupColumn, foreground = foreground, background = background, fdrToDisplay = fdrToDisplay, outputGRanges = outputGRanges, numCores = numCores )
+differentials <- MOCHA::getDifferentialAccessibleTiles(
+  SampleTileObj = SampleTileMatrices, 
+  cellPopulation = cellPopulation, 
+  groupColumn = groupColumn, 
+  foreground = foreground, 
+  background = background, 
+  fdrToDisplay = fdrToDisplay, 
+  outputGRanges = outputGRanges, 
+  numCores = numCores
+)
 ```
 
 #################################################### 
 
-# 7. Get co-accessible links between input regions
+# 7. Get co-accessible links
 
-# (tiles) and their neighboring regions within
+...between input regions (tiles) and their neighboring regions within a window.
 
-# a window. Here we give the first ten.
-
-# differential tiles as our input regions.
+Here we give the first ten differential tiles as our input regions.
 
 #################################################### 
 
@@ -208,29 +195,25 @@ differentials <- MOCHA::getDifferentialAccessibleTiles(SampleTileObj = SampleTil
 regions <- head(differentials, 10)
 
 # Alternatively, define regions as a character vector
-
 # of region strings in the format "chr:start-end"
-
 # regions <- c(
-
 # "chrY:7326500-7326999",
-
 # "chrY:7327000-7327499",
-
 # "chrY:7339500-7339999",
-
 # "chrY:7344500-7344999"
-
 # )
 
-links <- MOCHA::getCoAccessibleLinks( SampleTileObj =
-SampleTileMatricesAnnotated, cellPopulation = cellPopulation, regions =
-regions, windowSize = 1 * 10^6, numCores = numCores, verbose = TRUE )
+links <- MOCHA::getCoAccessibleLinks(
+  SampleTileObj = SampleTileMatricesAnnotated,
+  cellPopulation = cellPopulation,
+  regions = regions,
+  windowSize = 1 * 10^6,
+  numCores = numCores,
+  verbose = TRUE
+)
 
 # Optionally filter these links by their absolute
-
 # correlation - this output also adds the chromosome,
-
 # start, and end site of each link to the table.
 
 MOCHA::filterCoAccessibleLinks(links, threshold = 0.7)
