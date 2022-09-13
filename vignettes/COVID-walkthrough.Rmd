@@ -85,7 +85,14 @@ Get sample-tile matrices for all specified cell populations.
 #################################################### 
 
 ```{R}
-tileResults <- MOCHA::callOpenTiles(myArchRProj, cellPopLabel = cellPopLabel, cellPopulations = cellPopulations, TxDb = TxDb, Org = Org, numCores = numCores )
+tileResults <- MOCHA::callOpenTiles(
+  myArchRProj, 
+  cellPopLabel = cellPopLabel, 
+  cellPopulations = cellPopulations, 
+  TxDb = TxDb, 
+  Org = Org, 
+  numCores = numCores
+)
 ```
 
 #################################################### 

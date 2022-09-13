@@ -1,15 +1,3 @@
-library(ArchR)
-# if (!requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
-#   BiocManager::install("TxDb.Hsapiens.UCSC.hg38.refGene")
-# }
-# if (!requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
-#   BiocManager::install("org.Hs.eg.db")
-# }
-# if (!requireNamespace("ggbio", quietly = TRUE)) {
-#   BiocManager::install("ggbio")
-# }
-
-
 # Check for existence of ArchR test data first:
 capture.output(ArchR::addArchRThreads(threads = 10), type = "message")
 withr::local_options(timeout = 600) # 10 minute timeout for download
@@ -25,7 +13,7 @@ metaColumn <- "Clusters" # Column with cell population groups
 for (sampleSpecific in c(TRUE, FALSE)) {
   for (NormMethod in c("raw", "nFrags", "nCells", "Median", NULL)) {
     test_that(
-      str_interp(
+      stringr::str_interp(
         "getPopFrags works for NormMethod='${NormMethod}', sampleSpecific=${sampleSpecific}"
       ),
       {
@@ -34,7 +22,7 @@ for (sampleSpecific in c(TRUE, FALSE)) {
           popFrags <- getPopFrags(
             testProj,
             metaColumn = metaColumn,
-            numCores = 10,
+            numCores = 1,
             NormMethod = NormMethod,
             sampleSpecific = sampleSpecific
           ),
@@ -81,7 +69,7 @@ test_that(
       popFrags <- getPopFrags(
         testProj,
         metaColumn = metaColumn,
-        numCores = 10,
+        numCores = 1,
         region = "chr2:1-187350807",
         NormMethod = "Raw",
         sampleSpecific = FALSE
@@ -105,7 +93,7 @@ for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
         capture.output(popFrags <- getPopFrags(
           testProj,
           metaColumn = metaColumn,
-          numCores = 10,
+          numCores = 1,
           region = "chr2:1-187350807",
           NormMethod = NormMethod,
           sampleSpecific = FALSE
@@ -137,7 +125,7 @@ test_that(
         popFrags <- getPopFrags(
           testProj,
           metaColumn = metaColumn,
-          numCores = 10,
+          numCores = 1,
           region = "chr2_1-187350807",
           NormMethod = "Raw",
           sampleSpecific = FALSE
@@ -152,7 +140,7 @@ test_that(
         popFrags <- getPopFrags(
           testProj,
           metaColumn = metaColumn,
-          numCores = 10,
+          numCores = 1,
           region = list("chr1:1-2", "chr2:1-2"),
           NormMethod = "Raw",
           sampleSpecific = FALSE
@@ -174,7 +162,7 @@ test_that(
         popFrags <- getPopFrags(
           testProj,
           metaColumn = "IDoNotExist",
-          numCores = 10,
+          numCores = 1,
           sampleSpecific = FALSE
         ),
         type = "message"
@@ -194,7 +182,7 @@ test_that(
           testProj,
           metaColumn = "Clusters",
           cellSubsets = c("C1", "IDoNotExist", "C3", "C5"),
-          numCores = 10,
+          numCores = 1,
           sampleSpecific = FALSE
         ),
         type = "message"

@@ -9,12 +9,17 @@ test_that("We can call peaks by sample", {
   # subsequent runs load the object itself
   capture.output(testProj <- ArchR::getTestProject(), type = "message")
 
+  
+  TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene 
+  Org <- org.Hs.eg.db
   capture.output(expect_snapshot_value(
     MOCHA::callOpenTiles(
       testProj,
+      TxDb = TxDb,
+      Org = Org,
       cellPopLabel = "Clusters",
       cellPopulations = c("C1", "C2"),
-      numCores = 10
+      numCores = 1
     ),
     style = "json2"
   ), type = "message")

@@ -10,18 +10,17 @@ test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   capture.output(testProj <- ArchR::getTestProject(), type = "message")
 
   cellPopulations <- c("C1", "C2")
-  library(TxDb.Hsapiens.UCSC.hg38.refGene)
-  library(org.Hs.eg.db)
+
   TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
   Org <- org.Hs.eg.db
-
   capture.output(
     tileResults <- MOCHA::callOpenTiles(
       testProj,
+      TxDb = TxDb,
+      Org = Org,
       cellPopLabel = "Clusters",
       cellPopulations = cellPopulations,
-      TxDb = TxDb,
-      Org = Org
+      numCores = 1
     ),
     type = "message"
   )

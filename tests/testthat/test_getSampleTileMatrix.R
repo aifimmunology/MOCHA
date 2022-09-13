@@ -10,13 +10,16 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
   capture.output(testProj <- ArchR::getTestProject(), type = "message")
 
   cellPopulations <- c("C1", "C2")
-
+  TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
+  Org <- org.Hs.eg.db
   capture.output(
     tileResults <- MOCHA::callOpenTiles(
       testProj,
+      TxDb = TxDb,
+      Org = Org,
       cellPopLabel = "Clusters",
       cellPopulations = cellPopulations,
-      numCores = 10
+      numCores = 1
     ),
     type = "message"
   )
