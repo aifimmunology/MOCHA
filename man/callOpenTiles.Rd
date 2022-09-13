@@ -44,13 +44,13 @@ tileResults A MultiAssayExperiment object containing ranged data
   for each tile
 }
 \description{
-\code{callOpenTiles} is the main peak-calling function in scMACS
+\code{callOpenTiles} is the main peak-calling function in MOCHA
   that serves as a wrapper function to call peaks provided a set of fragment
   files and an ArchR Project for meta-data purposes
 }
 \examples{
 \dontrun{
-tileResults <- scMACS::callOpenTiles(
+tileResults <- MOCHA::callOpenTiles(
   myArchRProj,
   cellPopLabel = cellPopLabel,
   cellPopulations = cellPopulations,

@@ -36,7 +36,7 @@ SampleTileObj the input data structure with added gene annotations.
 }
 \examples{
 \dontrun{
-SampleTileMatricesAnnotated <- scMACS::annotateTiles(
+SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
   SampleTileMatrices
 )
 }

@@ -16,7 +16,7 @@ ans is a list containing the test statistic & p-value corresponding to the
         two-part wilcoxon test.
 }
 \description{
-\code{TwoPart} is the main peak-calling function in scMACS
+\code{TwoPart} is the main peak-calling function in MOCHA
              that serves as a wrapper function to call peaks provided a set
              of fragment files and an ArchR Project for meta-data purposes
 }

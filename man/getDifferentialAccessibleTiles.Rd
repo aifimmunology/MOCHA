@@ -54,7 +54,7 @@ regions <- c(
   "chrY:7339500-7339999",
   "chrY:7344500-7344999"
 )
-links <- scMACS::getCoAccessibleLinks(
+links <- MOCHA::getCoAccessibleLinks(
   SampleTileObj = SampleTileMatricesAnnotated,
   cellPopulation = cellPopulation,
   regions = regions,

@@ -7,7 +7,7 @@
 addMotifSet(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName = "Motifs")
 }
 \arguments{
-\item{SE_Object}{your scMACS SummarizedExperiment. Requires Genome AnnotationDbi object within the metadata added by getSampleTileMatrix}
+\item{SE_Object}{your MOCHA SummarizedExperiment. Requires Genome AnnotationDbi object within the metadata added by getSampleTileMatrix}
 
 \item{pwms}{a pwms object for the motif database. Either PFMatrix, PFMatrixList, PWMatrix, or PWMatrixLis'}
 

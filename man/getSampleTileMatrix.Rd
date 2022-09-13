@@ -56,7 +56,7 @@ SampleTileMatrices a MultiAssayExperiment containing a sample-tile
 }
 \examples{
 \dontrun{
-SampleTileMatrices <- scMACS::getSampleTileMatrix(
+SampleTileMatrices <- MOCHA::getSampleTileMatrix(
   tileResults,
   cellPopulations = cellPopulations,
   groupColumn = groupColumn,
