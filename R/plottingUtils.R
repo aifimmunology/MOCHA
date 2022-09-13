@@ -535,10 +535,10 @@ get_gene_body_model <- function(whichGene,
                                 db_id_col = "REFSEQ",
                                 verbose = TRUE) {
   # Check for dependency RMariaDB needed for GenomicFeatures::makeTxDbFromUCSC
-  if (!requireNamespace("RMariaDB", quietly=TRUE)) {
+  if (!requireNamespace("RMariaDB", quietly = TRUE)) {
     stop("Couldn't load the package RMariaDB. RMariaDB must be installed to plot specific genes.")
   }
-  
+
   # Get REFSEQ values for gene symbol
   txList <- tryCatch(
     unlist(AnnotationDbi::mapIds(

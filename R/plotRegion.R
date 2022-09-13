@@ -57,7 +57,7 @@
 #'
 #' # Motif overlay for a project (my_proj) containing "JasparMotifs" annotations:
 #' plotRegion(countSE = my_count_SE, motifSetName = "JasparMotifs", motif_lab_alpha = 1, motif_line_alpha = 1)
-#' 
+#'
 #' # Motif overlay w/ weights:
 #' plotRegion(
 #'   countSE = my_count_SE, motifSetName = "JasparMotifs", motif_lab_alpha = 1,

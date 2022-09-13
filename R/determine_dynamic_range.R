@@ -10,9 +10,9 @@
 #' @param blackList A GRanges object containing a blacklist of regions to exclude
 #' @param GeneralWindowSize: Window size for sliding window generated over longer fragments.
 #' @param WindowSizeRange: The sliding window function will generate a smaller window at the end of a longer fragment,
-#if the fragment is not evenly divisible by GeneralWindowSize. If that smaller window is less than or equal to
-#WindowSizeRange, then it will be merged with the preceding window to great a larger window. This means that
-#longer fragments will be broken up into bins that are between WindowSizeRange and WindowSizeRange+GeneralWindowSize in length.
+# if the fragment is not evenly divisible by GeneralWindowSize. If that smaller window is less than or equal to
+# WindowSizeRange, then it will be merged with the preceding window to great a larger window. This means that
+# longer fragments will be broken up into bins that are between WindowSizeRange and WindowSizeRange+GeneralWindowSize in length.
 #' @param coreNum an integer indicating the number of cores to use
 #' @param doBins is a boolean variable. When true, then it will into windows according to GeneralWindowSize and WindowSizeRange.
 
@@ -22,49 +22,55 @@
 #' @details The technical details of the algorithm are found in XX.
 #'
 #' @references XX
-#' 
+#'
 #' @noRd
-#' 
+#'
 
 
-determine_dynamic_range <- function(AllFragmentsList, blackList, binSize=500, doBin=FALSE){
+determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, doBin = FALSE) {
 
   # if(class(AllFragmentsList)!='SimpleList'){
   #   stop('AllFragmentsList must be a list of arrow files')
   # }
-    
-  TotalRange <- scMACS:::dynamic_bins(AllFragmentsList = AllFragmentsList,
-                            doBin = doBin,
-                            coreNum = 30)
 
-  if(class(binSize)!='numeric' | binSize <0){
+  TotalRange <- scMACS:::dynamic_bins(
+    AllFragmentsList = AllFragmentsList,
+    doBin = doBin,
+    coreNum = 30
+  )
+
+  if (class(binSize) != "numeric" | binSize < 0) {
     stop(paste('invalid binSize!: binSize must be an integer value > 0 indicating the width of the genomic region check "binSize=',
-               binSize,'" input', sep=''))
-
+      binSize, '" input',
+      sep = ""
+    ))
   }
 
-  if(binSize > 5000){
-    warning('binSize is > 5,000bp. Do you want to set the tile size smaller for peakcalling?')
+  if (binSize > 5000) {
+    warning("binSize is > 5,000bp. Do you want to set the tile size smaller for peakcalling?")
   }
 
-  if(class(doBin) != 'logical'){
-    stop('doBin user-input must be a TRUE/FALSE boolean input')
+  if (class(doBin) != "logical") {
+    stop("doBin user-input must be a TRUE/FALSE boolean input")
   }
 
-  #Let's subtract out areas of fragments that overlap with blacklist regions.
-  #Let's not remove the region entirely, because the regions may be long or only
+  # Let's subtract out areas of fragments that overlap with blacklist regions.
+  # Let's not remove the region entirely, because the regions may be long or only
 
-  TotalRangesFilt<- plyranges::setdiff_ranges(TotalRange, blackList)
+  TotalRangesFilt <- plyranges::setdiff_ranges(TotalRange, blackList)
 
   RangeBins <- plyranges::stretch(plyranges::anchor_end(TotalRangesFilt),
-                                  extend = GenomicRanges::start(TotalRangesFilt)%% binSize)
+    extend = GenomicRanges::start(TotalRangesFilt) %% binSize
+  )
 
   FinalBins <- plyranges::stretch(plyranges::anchor_start(RangeBins),
-                                  extend = (binSize - end(RangeBins)%% binSize)) %>%
-    plyranges::reduce_ranges() %>% plyranges::slide_ranges(width = binSize, step = binSize) %>% plyranges::filter(width(.)==binSize)
-    
-  FinalBins <- subsetByOverlaps(FinalBins, blackList, invert=T)
+    extend = (binSize - end(RangeBins) %% binSize)
+  ) %>%
+    plyranges::reduce_ranges() %>%
+    plyranges::slide_ranges(width = binSize, step = binSize) %>%
+    plyranges::filter(width(.) == binSize)
+
+  FinalBins <- subsetByOverlaps(FinalBins, blackList, invert = T)
 
   return(FinalBins)
-
 }

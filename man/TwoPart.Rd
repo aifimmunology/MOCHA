@@ -12,12 +12,12 @@ TwoPart(data, group, test = "wilcoxon", point.mass = 0)
 \item{group}{is a vector containing the two groups for comparison (in binary, 0,1)}
 }
 \value{
-ans is a list containing the test statistic & p-value corresponding to the 
+ans is a list containing the test statistic & p-value corresponding to the
         two-part wilcoxon test.
 }
 \description{
 \code{TwoPart} is the main peak-calling function in scMACS
-             that serves as a wrapper function to call peaks provided a set 
+             that serves as a wrapper function to call peaks provided a set
              of fragment files and an ArchR Project for meta-data purposes
 }
 \details{

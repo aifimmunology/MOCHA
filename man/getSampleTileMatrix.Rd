@@ -17,34 +17,42 @@ getSampleTileMatrix(
 )
 }
 \arguments{
-\item{tileResults}{a MultiAssayExperiment returned by callOpenTiles containing
-containing peak calling results.}
+\item{tileResults}{a MultiAssayExperiment returned by callOpenTiles
+containing containing peak calling results.}
 
-\item{cellPopulations}{vector of strings. Cell subsets in TileResults for which to generate sample-tile matrices. This list of group names must be identical to names that appear in
-the ArchRProject metadata.  If cellPopulations='ALL', then peak
-calling is done on all cell populations in the ArchR project metadata.
-Default is 'ALL'.}
+\item{cellPopulations}{vector of strings. Cell subsets in TileResults for
+which to generate sample-tile matrices. This list of group names must be
+identical to names that appear in the ArchRProject metadata.  If
+cellPopulations='ALL', then peak calling is done on all cell populations in
+the ArchR project metadata. Default is 'ALL'.}
 
-\item{groupColumn}{Optional, the column containing sample group labels for determining consensus tiles within sample groups. Default is NULL, all samples will be used for determining consensus tiles.}
+\item{groupColumn}{Optional, the column containing sample group labels for
+determining consensus tiles within sample groups. Default is NULL, all
+samples will be used for determining consensus tiles.}
 
-\item{threshold}{Threshold for consensus tiles, the minimum % of samples (within a sample group) that a peak must be called in to be retained.}
+\item{threshold}{Threshold for consensus tiles, the minimum \% of samples
+(within a sample group) that a peak must be called in to be retained.}
 
-\item{join}{The join method to combine consensus tiles across sample groups. Can be "union" (default) or "intersect".}
+\item{join}{The join method to combine consensus tiles across sample groups.
+Can be "union" (default) or "intersect".}
 
-\item{NAtoZero}{Boolean, set to TRUE to convert NA intensities from peak calling (tiles with too low signal) to zeroes. Optional, default is FALSE.}
+\item{NAtoZero}{Boolean, set to TRUE to convert NA intensities from peak
+calling (tiles with too low signal) to zeroes. Optional, default is FALSE.}
 
-\item{log2Intensity}{Boolean, set to TRUE to return the log2 of the sample-tile intensity matrix. Optional, default is FALSE.}
+\item{log2Intensity}{Boolean, set to TRUE to return the log2 of the
+sample-tile intensity matrix. Optional, default is FALSE.}
 
-\item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+\item{numCores}{Optional, the number of cores to use with multiprocessing.
+Default is 1.}
 }
 \value{
-SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix
-  for each cell population
+SampleTileMatrices a MultiAssayExperiment containing a sample-tile
+  intensity matrix for each cell population
 }
 \description{
 \code{getSampleTileMatrix} takes the output of peak calling with
-  callOpenTiles and creates sample-tile matrices containing the signal intensity
-  at each tile.
+  callOpenTiles and creates sample-tile matrices containing the signal
+  intensity at each tile.
 }
 \examples{
 \dontrun{

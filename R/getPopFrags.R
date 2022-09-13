@@ -25,7 +25,7 @@
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
-#' 
+#'
 #' @export
 
 getPopFrags <- function(ArchRProj,
@@ -37,8 +37,8 @@ getPopFrags <- function(ArchRProj,
                         NormMethod = "nfrags",
                         blackList = NULL,
                         overlapList = 50) {
-  
-  #Turn off ArchR logging messages
+
+  # Turn off ArchR logging messages
   ArchR::addArchRVerbose(verbose = FALSE)
 
   # Extract metadata
@@ -59,13 +59,13 @@ getPopFrags <- function(ArchRProj,
     cellPopulations <- names(cellCounts)
   } else {
 
-  # Take our cell populations from given cellSubsets
-  cellPopulations <- unique(cellSubsets[!is.na(cellSubsets)][order(cellSubsets)])
+    # Take our cell populations from given cellSubsets
+    cellPopulations <- unique(cellSubsets[!is.na(cellSubsets)][order(cellSubsets)])
 
-  # Filter cellCounts to selected cell subsets (populations)
-  cellCounts <- cellCounts[cellPopulations]
-  if (any(is.na(cellCounts))) {
-     stop(paste(
+    # Filter cellCounts to selected cell subsets (populations)
+    cellCounts <- cellCounts[cellPopulations]
+    if (any(is.na(cellCounts))) {
+      stop(paste(
         "Some cell populations have NA cell counts.",
         "Please verify that all given cellSubsets exist for the given metaColumn.",
         str_interp("cellSubsets with NA cell counts: ${cellPopulations[is.na(names(cellCounts))]}")
@@ -77,7 +77,7 @@ getPopFrags <- function(ArchRProj,
     stop("No cells were found for the given cellSubsets and/or metaColumn.")
   }
 
-  cellNames = rownames(metadf)[metadf[,metaColumn] %in% cellPopulations]
+  cellNames <- rownames(metadf)[metadf[, metaColumn] %in% cellPopulations]
 
   #### Up to here, the above is only specific to sampleSpecific=False
   allArrows <- ArchR::getArrowFiles(ArchRProj)
@@ -100,8 +100,7 @@ getPopFrags <- function(ArchRProj,
 
     # Extract fragments from all available regions
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-
-      message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
+      message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
       ArchR::getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = cellNames,
@@ -134,9 +133,8 @@ getPopFrags <- function(ArchRProj,
       as.data.frame() %>%
       dplyr::select(seqnames)
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-	
-	message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
-     	fragsGRanges <- getFragmentsFromArrow(
+      message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
+      fragsGRanges <- getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = cellNames,
         chr = as.character(chrom[, 1]),
@@ -267,10 +265,9 @@ getPopFrags <- function(ArchRProj,
   } else {
     names(popFrags) <- names(barcodesByCellPop)
   }
-   
-  #Turn off ArchR logging messages
+
+  # Turn off ArchR logging messages
   ArchR::addArchRVerbose(verbose = TRUE)
 
   return(popFrags)
-
 }

@@ -24,7 +24,7 @@ FilteredTileCorr The filtered correlation table with chr,
 }
 \examples{
 \dontrun{
- scMACS::filterCoAccessibleLinks(links, threshold = 0.5)
+scMACS::filterCoAccessibleLinks(links, threshold = 0.5)
 }
 
 }

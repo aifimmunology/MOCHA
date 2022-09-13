@@ -57,8 +57,8 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
     stringr::str_interp("\t${prevDims} before to ${currDims} after")
   )
   sampleTileIntensityMat <- sampleTileIntensityMat[
-    order(rownames(sampleTileIntensityMat)), 
-    order(colnames(sampleTileIntensityMat)), 
+    order(rownames(sampleTileIntensityMat)),
+    order(colnames(sampleTileIntensityMat)),
     drop = FALSE
   ]
 

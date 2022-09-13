@@ -7,7 +7,7 @@
 getCellPopMatrix(SampleTileObj, cellPopulation)
 }
 \arguments{
-\item{SampleTileObj}{The output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk 
+\item{SampleTileObj}{The output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk
 intensities across all tiles & cell types.}
 
 \item{@cellPopulation}{- The cell population you want to pull out.}

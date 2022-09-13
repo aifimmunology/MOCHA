@@ -99,8 +99,8 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   ############################################################################
   # Estimate differential accessibility
-  
-  sampleTileMatrix <- ifelse(Log2Intensity, sampleTileMatrix, log2(sampleTileMatrix+1))
+
+  sampleTileMatrix <- ifelse(Log2Intensity, sampleTileMatrix, log2(sampleTileMatrix + 1))
 
   res_pvals <- parallel::mclapply(rownames(sampleTileMatrix),
     function(x) {

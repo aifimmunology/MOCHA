@@ -7,6 +7,6 @@
 StringsToGRanges(regionString)
 }
 \description{
-\code{StringsToGRanges} Turns a list of strings in the format chr1:100-200 
+\code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
   into GRanges
 }

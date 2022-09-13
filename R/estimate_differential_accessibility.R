@@ -17,7 +17,7 @@
 #'         - Control_mu = Median of nonzero values in
 #'          control condition
 #'         - Control_rho = proportion of zeros in control condition ,
-#' 
+#'
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
@@ -25,77 +25,75 @@
 #'
 #' @noRd
 
-estimate_differential_accessibility <- function(tile_values, group, 
-                                               providePermutation=FALSE){
+estimate_differential_accessibility <- function(tile_values, group,
+                                                providePermutation = FALSE) {
+  data_vec <- as.numeric(tile_values)
 
-    data_vec <- as.numeric(tile_values)
-   
-    ## conduct two part test
-    two_part_results <- TwoPart(data_vec, group=group, test='wilcoxon', point.mass=0)
+  ## conduct two part test
+  two_part_results <- TwoPart(data_vec, group = group, test = "wilcoxon", point.mass = 0)
 
-    ## filter non-zero values for group1
-    nonzero_dx <- data_vec[group==1]
-    nonzero_dx <- nonzero_dx[nonzero_dx!=0]
-    
-    ## filter non-zero values for group0
-    nonzero_control <- data_vec[group==0]
-    nonzero_control <- nonzero_control[nonzero_control!=0]
-    
-    df <- data.frame(
-        Vals = data_vec,
-        Group= group,
-        Group_label=ifelse(group==1, 'case','Control')
-    )
+  ## filter non-zero values for group1
+  nonzero_dx <- data_vec[group == 1]
+  nonzero_dx <- nonzero_dx[nonzero_dx != 0]
 
-    ## create all pairwise combinations 
-    pairwise_matrix <- data.table::as.data.table(expand.grid(nonzero_dx, nonzero_control))
-    pairwise_matrix$diff <- pairwise_matrix[,1] - pairwise_matrix[,2]
-    
-    hodges_lehmann <- median(pairwise_matrix$diff)
-    meanDiff <- calculateMeanDiff(data_vec, group)
-    ## Create Final Results Matrix
-    res <- data.frame(
-        P_value=two_part_results$pvalue,
-        TestStatistic=two_part_results$statistic,
-        Log2FC_C=hodges_lehmann,
-        MeanDiff=meanDiff,
-        Case_mu=median(nonzero_dx),
-        Case_rho=mean(data_vec[group==1]==0),
-        Control_mu=median(nonzero_control),
-        Control_rho=mean(data_vec[group==0]==0)
-    )
-    
-    if(providePermutation){
-        nPerm <- 10
-        set.seed(seed)
-        permuted_pvals <- t(data.frame(sapply(1:nPerm, function(x){
-            
-            ## permutation test
-            n_a<-sum(group)
-            n_b<-length(group) - n_a
-            
-            ## shuffle observations
-            sampled_data <- sample(data_vec, size=n_a+n_b, replace=FALSE)
-            
-            ## calculate hypothesis test 
-            ## based on shuffled values
-            TwoPart(sampled_data, group=group, test='wilcoxon', 
-                                       point.mass=0)$pvalue
-            }
-               )))
-        colnames(permuted_pvals) <- paste('Permute',1:nPerm, sep='_')
-        res<-cbind(res, (permuted_pvals))
-        
-    }
+  ## filter non-zero values for group0
+  nonzero_control <- data_vec[group == 0]
+  nonzero_control <- nonzero_control[nonzero_control != 0]
 
-    res
+  df <- data.frame(
+    Vals = data_vec,
+    Group = group,
+    Group_label = ifelse(group == 1, "case", "Control")
+  )
+
+  ## create all pairwise combinations
+  pairwise_matrix <- data.table::as.data.table(expand.grid(nonzero_dx, nonzero_control))
+  pairwise_matrix$diff <- pairwise_matrix[, 1] - pairwise_matrix[, 2]
+
+  hodges_lehmann <- median(pairwise_matrix$diff)
+  meanDiff <- calculateMeanDiff(data_vec, group)
+  ## Create Final Results Matrix
+  res <- data.frame(
+    P_value = two_part_results$pvalue,
+    TestStatistic = two_part_results$statistic,
+    Log2FC_C = hodges_lehmann,
+    MeanDiff = meanDiff,
+    Case_mu = median(nonzero_dx),
+    Case_rho = mean(data_vec[group == 1] == 0),
+    Control_mu = median(nonzero_control),
+    Control_rho = mean(data_vec[group == 0] == 0)
+  )
+
+  if (providePermutation) {
+    nPerm <- 10
+    set.seed(seed)
+    permuted_pvals <- t(data.frame(sapply(1:nPerm, function(x) {
+
+      ## permutation test
+      n_a <- sum(group)
+      n_b <- length(group) - n_a
+
+      ## shuffle observations
+      sampled_data <- sample(data_vec, size = n_a + n_b, replace = FALSE)
+
+      ## calculate hypothesis test
+      ## based on shuffled values
+      TwoPart(sampled_data,
+        group = group, test = "wilcoxon",
+        point.mass = 0
+      )$pvalue
+    })))
+    colnames(permuted_pvals) <- paste("Permute", 1:nPerm, sep = "_")
+    res <- cbind(res, (permuted_pvals))
+  }
+
+  res
 }
 
-calculateMeanDiff <- function(tile_values, group){
+calculateMeanDiff <- function(tile_values, group) {
+  a <- log2(tile_values[which(group == 1)] + 1)
+  b <- log2(tile_values[which(group == 0)] + 1)
 
-        a <- log2(tile_values[which(group==1)]+1)
-        b<-log2(tile_values[which(group==0)]+1)
-
-        mean_diff<-mean(a) - mean(b)
-        mean_diff
+  mean_diff <- mean(a) - mean(b)
+  mean_diff
 }

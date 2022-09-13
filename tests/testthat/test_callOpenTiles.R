@@ -1,10 +1,10 @@
 test_that("We can call peaks by sample", {
-  
+
   # Check for existence of ArchR test data first:
   capture.output(ArchR::addArchRThreads(threads = 10), type = "message")
   withr::local_options(timeout = 600) # 10 minute timeout for download
   capture.output(ArchR::addArchRVerbose(verbose = FALSE), type = "message")
-  
+
   # This only downloads the test project the first time
   # subsequent runs load the object itself
   capture.output(testProj <- ArchR::getTestProject(), type = "message")
@@ -18,5 +18,4 @@ test_that("We can call peaks by sample", {
     ),
     style = "json2"
   ), type = "message")
-  
 })
