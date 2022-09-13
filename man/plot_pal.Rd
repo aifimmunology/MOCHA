@@ -16,7 +16,9 @@ Plots a base plot to visualize the input palette
 Utility function to quickly visualize a color palette formatted for motif weight visualization
 }
 \examples{
+\dontrun{
 motif_color_pal <- c(-20, -10, 0, 10, 20)
 names(motif_color_pal) <- c("darkblue", "cyan", "gray", "orange", "darkred")
 plot_pal(motif_color_pal)
+}
 }

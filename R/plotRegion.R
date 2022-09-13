@@ -1,50 +1,84 @@
 #' @title \code{plotRegion}
 #'
-#' @description \code{plotRegion} Plots the region that you've summarized across all cell groupings (groups=initial getPopFrags() split) with optional motif overlay, chromosome position
-#' ideogram, and additional GRanges tracks. If plotting motif overlay, ensure that motif annotations have been added
-#' to your counts SummarizedExperment.
-#' A basic plot can be rendered with just a counts SummarizedExperiment, but additional formatting arguments allow for further customization.
-#' Note that to show specific genes with the option 'whichGene' the \pkg{RMariaDB} package must be installed.
+#' @description \code{plotRegion} Plots the region that you've summarized across
+#'   all cell groupings (groups=initial getPopFrags() split) with optional motif
+#'   overlay, chromosome position ideogram, and additional GRanges tracks. If
+#'   plotting motif overlay, ensure that motif annotations have been added to
+#'   your counts SummarizedExperment. A basic plot can be rendered with just a
+#'   counts SummarizedExperiment, but additional formatting arguments allow for
+#'   further customization. Note that to show specific genes with the option
+#'   'whichGene' the \pkg{RMariaDB} package must be installed.
 #'
-#' @param countdf A dataframe that comes from `getbpCounts()` or `getbpInserts()`
-#' @param plotType Options include 'overlaid','area', or 'RidgePlot'. default is 'area', which will plot a seperate track for each group with the area filled in under the curve.
-#' Setting plotType to 'overlaid' will overlay count plot histograms across samples, instead of faceting out separately.
-#' Setting plotType to 'RidgePlot' will generate a ridgeplot across all groups.
+#' @param countdf A dataframe that comes from `getbpCounts()` or
+#'   `getbpInserts()`
+#' @param plotType Options include 'overlaid','area', or 'RidgePlot'. default is
+#'   'area', which will plot a seperate track for each group with the area
+#'   filled in under the curve. Setting plotType to 'overlaid' will overlay
+#'   count plot histograms across samples, instead of faceting out separately.
+#'   Setting plotType to 'RidgePlot' will generate a ridgeplot across all
+#'   groups.
 #' @param base_size Numeric, default 12. Global plot base text size parameter
-#' @param counts_color Optional color palette. A named vector of color values where names are unique values in the `color_var` column
-#' @param range_label_size Numeric value, default 4. Text size for the y-axis range label
-#' @param legend.position Any acceptable `legend.position` argument to theme(). Default NULL will place legend for overlaid plots at (0.8,0.8),
-#' or to the "right" for faceted plots.
-#' @param facet_label_side Direction character value, default "top". Can also be "right", "left", or "bottom". Position of facet label.
-#' @param counts_group_colors Optional named color vector. Values as colors, names are levels of `counts_color_var`. If provided, will color the plots specifically
-#' using `scale_color_manual()`
-#' @param counts_color_var Character value, default "Groups". Column name from countdf to use to color counts plots.
-#' Only used if counts_group_colors provided
-#' @param counts_theme_ls A list of named theme arguments passed to theme(). For example, `list(axis.ticks = element_blank())`. Default NULL will use `.counts_plot_default_theme`.
-#' @param ArchRProj An archR project containing motif annotations. Only needed if supplying `motifSetName` arg for motif label overlay.
-#' @param motifSetName The name of the motif set in ArchRProj to use for annotation. Example: 'JasparMotifs'
-#' @param motif_y_space_factor A factor for vertical spacing between motif labels. Default 4. Increase to make labels farther apart, decrease to make labels closer.
-#' @param motif_stagger_labels_y = FALSE Logical value, default FALSE. If TRUE, will  stagger motif labels in adjacent columns in the vertical direction
-#' @param motif_weights Optional numeric vector, default NULL. If provided will be used to color motif labels by the weighted values
-#' @param motif_weight_name Character value, default "Motif Weight". Used to label the legend for motif colors
-#' @param weight_colors Named numeric vector. Names should be color values and breaks should be the corresponding values of motif_weights. Values outside the
-#' highest and lowest value will appear as max or min defined color value.
+#' @param counts_color Optional color palette. A named vector of color values
+#'   where names are unique values in the `color_var` column
+#' @param range_label_size Numeric value, default 4. Text size for the y-axis
+#'   range label
+#' @param legend.position Any acceptable `legend.position` argument to theme().
+#'   Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
+#'   "right" for faceted plots.
+#' @param facet_label_side Direction character value, default "top". Can also be
+#'   "right", "left", or "bottom". Position of facet label.
+#' @param counts_group_colors Optional named color vector. Values as colors,
+#'   names are levels of `counts_color_var`. If provided, will color the plots
+#'   specifically using `scale_color_manual()`
+#' @param counts_color_var Character value, default "Groups". Column name from
+#'   countdf to use to color counts plots. Only used if counts_group_colors
+#'   provided
+#' @param counts_theme_ls A list of named theme arguments passed to theme(). For
+#'   example, `list(axis.ticks = element_blank())`. Default NULL will use
+#'   `.counts_plot_default_theme`.
+#' @param ArchRProj An archR project containing motif annotations. Only needed
+#'   if supplying `motifSetName` arg for motif label overlay.
+#' @param motifSetName The name of the motif set in ArchRProj to use for
+#'   annotation. Example: 'JasparMotifs'
+#' @param motif_y_space_factor A factor for vertical spacing between motif
+#'   labels. Default 4. Increase to make labels farther apart, decrease to make
+#'   labels closer.
+#' @param motif_stagger_labels_y = FALSE Logical value, default FALSE. If TRUE,
+#'   will  stagger motif labels in adjacent columns in the vertical direction
+#' @param motif_weights Optional numeric vector, default NULL. If provided will
+#'   be used to color motif labels by the weighted values
+#' @param motif_weight_name Character value, default "Motif Weight". Used to
+#'   label the legend for motif colors
+#' @param weight_colors Named numeric vector. Names should be color values and
+#'   breaks should be the corresponding values of motif_weights. Values outside
+#'   the highest and lowest value will appear as max or min defined color value.
 #' @param motif_lab_size Numeric value, default 1. Size of motif labels.
 #' @param motif_lab_alpha Numeric value, default 0.25. Alpha for motif labels.
 #' @param motif_line_size Numeric value, default 1. Size of motif lines.
 #' @param motif_line_alpha Numeric value, default 0.25. Alpha for motif lines.
-#' @param showGene Logical value, default TRUE. Whether or not the gene track should be plotted.
-#' @param db_id_col Character value. Column in `orgdb` containing the output id for `whichGene` plotting. Default "REFSEQ".
-#' @param collapseGenes Options include 'collapseAll', 'longestTx', or 'None' Default 'None' will plot the expanded view of the reference genes,
-#' 'collapseAll' if you want collapse the gene tracks into one, and 'longestTx' will only plot the longest transcript of each gene.
-#' @param gene_theme_ls Named list of parameters passed to `theme()` for the gene plot. Default NULL will use `.gene_plot_theme`
-#' @param additionalGRangesTrack A GRanges object containing additional track plot data
-#' @param showIdeogram Logical value, default TRUE. If TRUE plots the chromosome ideogram at the top of the multi-track plot
-#' @param ideogram_genome Character value, a genome name for the ideogram plot. Default 'hg19'.
-#' @param relativeHeights Named numeric vector of relative heights for each of the 4 track plots to enable clean visualization when there are many tracks.
-#' Unused tracks will be ignored. Default value = c(`Chr` = 0.9, `Normalized Counts` = 7, `Genes`= 2, `AdditionalGRanges` = 4.5)
-#' @param verbose Logical value, default FALSE. If TRUE will show all messages generated by internal function calls. If FALSE, will attempt to use suppressMessages()
-#' to minimize message output.
+#' @param showGene Logical value, default TRUE. Whether or not the gene track
+#'   should be plotted.
+#' @param db_id_col Character value. Column in `orgdb` containing the output id
+#'   for `whichGene` plotting. Default "REFSEQ".
+#' @param collapseGenes Options include 'collapseAll', 'longestTx', or 'None'
+#'   Default 'None' will plot the expanded view of the reference genes,
+#'   'collapseAll' if you want collapse the gene tracks into one, and
+#'   'longestTx' will only plot the longest transcript of each gene.
+#' @param gene_theme_ls Named list of parameters passed to `theme()` for the
+#'   gene plot. Default NULL will use `.gene_plot_theme`
+#' @param additionalGRangesTrack A GRanges object containing additional track
+#'   plot data
+#' @param showIdeogram Logical value, default TRUE. If TRUE plots the chromosome
+#'   ideogram at the top of the multi-track plot
+#' @param ideogram_genome Character value, a genome name for the ideogram plot.
+#'   Default 'hg19'.
+#' @param relativeHeights Named numeric vector of relative heights for each of
+#'   the 4 track plots to enable clean visualization when there are many tracks.
+#'   Unused tracks will be ignored. Default value = c(`Chr` = 0.9, `Normalized
+#'   Counts` = 7, `Genes`= 2, `AdditionalGRanges` = 4.5)
+#' @param verbose Logical value, default FALSE. If TRUE will show all messages
+#'   generated by internal function calls. If FALSE, will attempt to use
+#'   suppressMessages() to minimize message output.
 #'
 #' @return The input ggplot object with motif labels overlaid
 #'
@@ -55,8 +89,11 @@
 #' # Simple counts + ideogram + all genes:
 #' plotRegion(countSE = my_count_SE)
 #'
-#' # Motif overlay for a project (my_proj) containing "JasparMotifs" annotations:
-#' plotRegion(countSE = my_count_SE, motifSetName = "JasparMotifs", motif_lab_alpha = 1, motif_line_alpha = 1)
+#' # Motif overlay for a project my_proj containing "JasparMotifs" annotations:
+#' plotRegion(
+#'   countSE = my_count_SE, motifSetName = "JasparMotifs", 
+#'   motif_lab_alpha = 1, motif_line_alpha = 1
+#' )
 #'
 #' # Motif overlay w/ weights:
 #' plotRegion(

@@ -505,9 +505,11 @@ counts_plot_motif_overlay <- function(p1,
 #' @param pal A palette, named list of values where names are colors and values are the color breaks
 #' @return Plots a base plot to visualize the input palette
 #' @examples
+#' \dontrun{
 #' motif_color_pal <- c(-20, -10, 0, 10, 20)
 #' names(motif_color_pal) <- c("darkblue", "cyan", "gray", "orange", "darkred")
 #' plot_pal(motif_color_pal)
+#' }
 plot_pal <- function(pal, cex = 4, cex.lab = 1) {
   npal <- length(pal)
   plotdim(npal * 1, 3)
