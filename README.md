@@ -1,5 +1,9 @@
 # README for MOCHA
 
+  <!-- badges: start -->
+  [![R-CMD-check](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check.yaml)
+  <!-- badges: end -->
+
 ------------------------------------------------------------------------
 
 ## Table of Contents
