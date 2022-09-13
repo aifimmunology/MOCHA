@@ -13,9 +13,24 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
-Imports: data.table, ArchR, plyranges, dplyr, GenomicRanges, RaggedExperiment, MultiAssayExperiment, stringr, ggbio, wCorr, TxDb.Hsapiens.UCSC.hg38.refGene, SummarizedExperiment
+Depends: R (>= 3.5.0)
+Imports:
+    data.table,
+    ArchR,
+    plyranges,
+    dplyr,
+    GenomicRanges,
+    RaggedExperiment,
+    MultiAssayExperiment,
+    SummarizedExperiment,
+    stringr,
+    ggbio,
+    wCorr,
+    TxDb.Hsapiens.UCSC.hg38.refGene,
+    org.Hs.eg.db,
+    withr,
+    RMariaDB
 Suggests: 
-    RMariaDB,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
