@@ -29,7 +29,6 @@
 #' ziSpear_mat <- co_accessibility(mat1, numCores = 5)
 #' head(ziSpear_mat)
 #'
-#' @internal
 #' @noRd
 
 co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose = FALSE) {

@@ -34,7 +34,6 @@
 #'   Zero-Inflated Data" (2009). Dissertations. 721.
 #'   https://scholarworks.wmich.edu/dissertations/721
 #'
-#' @internal
 #' @noRd
 
 weightedZISpearman <- function(x, y, w = 1) {

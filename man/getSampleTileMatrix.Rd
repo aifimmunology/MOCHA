@@ -46,9 +46,17 @@ SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity mat
   callOpenTiles and creates sample-tile matrices containing the signal intensity
   at each tile.
 }
-\details{
-The technical details of the algorithm are found in XX.
+\examples{
+\dontrun{
+SampleTileMatrices <- scMACS::getSampleTileMatrix(
+  tileResults,
+  cellPopulations = cellPopulations,
+  groupColumn = groupColumn,
+  threshold = threshold,
+  join = join,
+  NAtoZero = TRUE,
+  log2Intensity = TRUE
+)
 }
-\references{
-XX
+
 }

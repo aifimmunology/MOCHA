@@ -13,7 +13,7 @@
 #' @return FilteredTileCorr The filtered correlation table with chr,
 #'   start, and end site of each link
 #'
-#' @example
+#' @examples
 #' \dontrun{
 #'  scMACS::filterCoAccessibleLinks(links, threshold = 0.5)
 #' }
