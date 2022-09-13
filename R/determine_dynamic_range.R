@@ -1,7 +1,7 @@
 #' @title \code{determine_dynamic_range}
 #'
 #' @description \code{determine_dynamic_range} is an R helper function, part of the single-cell peak calling
-#' algorithm scMACS by (XXX et al, 2021) that determines which genomic regions, or bins,
+#' algorithm MOCHA by (Zaim, Pebworth, et. al. 2022) that determines which genomic regions, or bins,
 #' will be used for de-novo peak calling. The function "determine_dynamic_range" is a wrapper function
 #' around the dynamic_bins function
 #'
@@ -21,8 +21,6 @@
 #'
 #' @details The technical details of the algorithm are found in XX.
 #'
-#' @references XX
-#'
 #' @noRd
 #'
 
@@ -33,7 +31,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
   #   stop('AllFragmentsList must be a list of arrow files')
   # }
 
-  TotalRange <- scMACS:::dynamic_bins(
+  TotalRange <- MOCHA:::dynamic_bins(
     AllFragmentsList = AllFragmentsList,
     doBin = doBin,
     coreNum = 30

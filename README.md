@@ -1,4 +1,4 @@
-README for scMACS
+README for MOCHA
 ===============
 
 * * *
@@ -16,24 +16,24 @@ Table of Contents
 * * *
 
 # <a name="introduction"></a> Introduction
-scMACS is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model. 
+MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model. 
 
 # <a name="library"></a> Install package and load library
 
 To install in a HISE IDE, run the following lines of code to install directly from GitHub replacing 'your_token' with your [Github Personal Access Token](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). 
     
     Sys.setenv(GITHUB_PAT='your_token') 
-    devtools::install_github("aifimmunology/scMACS")
+    devtools::install_github("aifimmunology/MOCHA")
 
 # <a name="vignette"></a> Usage
 
 ## Please view the example usage found in this [vignette](vignettes/COVID_example.R).
 
 # <a name="results"></a> Tips: Result formats
-While the pipeline can be run function-to-function, you may wish to inspect intermediate results or use end results for your own custom analyses. All scMACS outputs use common Bioconductor data structures. We also provide some getters for accessing specific results.
+While the pipeline can be run function-to-function, you may wish to inspect intermediate results or use end results for your own custom analyses. All MOCHA outputs use common Bioconductor data structures. We also provide some getters for accessing specific results.
 
 ## callOpenTiles results
-The output of the first step of the pipeline, `scMACS::callOpenTiles` is a [MultiAssayExperiment](https://www.bioconductor.org/packages/devel/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html#overview-of-the-multiassayexperiment-class) organizing your open-tiles by cell population. This is the input to the next function, `scMACS::getSampleTileMatrices`.
+The output of the first step of the pipeline, `MOCHA::callOpenTiles` is a [MultiAssayExperiment](https://www.bioconductor.org/packages/devel/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html#overview-of-the-multiassayexperiment-class) organizing your open-tiles by cell population. This is the input to the next function, `MOCHA::getSampleTileMatrices`.
 ```R
 > tileResults
 A MultiAssayExperiment object of 3 listed
@@ -90,7 +90,7 @@ GRanges object with 1439585 ranges and 0 metadata columns:
 ```
 
 ## getSampleTileMatrix results
-The output of getSampleTileMatrix is a [SummarizedExperiment](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) organizing the sample-tile matrices by cell population. This is the input to `scMACS::getDifferentialAccessibleTiles` and other downstream analyses.
+The output of getSampleTileMatrix is a [SummarizedExperiment](https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html) organizing the sample-tile matrices by cell population. This is the input to `MOCHA::getDifferentialAccessibleTiles` and other downstream analyses.
 ```R
 > SampleTileMatrices
 class: RangedSummarizedExperiment 
@@ -110,12 +110,12 @@ It also holds metadata related to the genome, transcript database, and annotatio
 Individual sample-tile matrices for each cell population can be accessed as follows. These are filtered to only return tiles called for the given cell population.
 ```R
 # Get the sample-tile matrix for DC cells
-DCcellsMatrix <- scMACS::getCellPopMatrix(SampleTileMatrices, "DC")
+DCcellsMatrix <- MOCHA::getCellPopMatrix(SampleTileMatrices, "DC")
 # Get the sample-tile matrix for MAIT cells
-MAITcellsMatrix <- scMACS::getCellPopMatrix(SampleTileMatrices, "MAIT")
+MAITcellsMatrix <- MOCHA::getCellPopMatrix(SampleTileMatrices, "MAIT")
 ```
 ## getDifferentialAccessibleTiles results
-Results of `scMACS::getDifferentialAccessibleTiles` is given as a `data.table` and can be filtered using data.table syntax: 
+Results of `MOCHA::getDifferentialAccessibleTiles` is given as a `data.table` and can be filtered using data.table syntax: 
 ```R
 > differentials[FDR<0.4]
                           Tile CellPopulation Foreground Background   P_value
@@ -158,7 +158,7 @@ Results of `scMACS::getDifferentialAccessibleTiles` is given as a `data.table` a
 _Note that these statistics are poor due to the small # of samples in the example vignette._
 
 ## getCoAccessibleLinks results
-Results of `scMACS::getCoAccessibleLinks` is given as a `data.frame` and can be filtered further according to correlation using `scMACS::filterCoAccessibleLinks`.
+Results of `MOCHA::getCoAccessibleLinks` is given as a `data.frame` and can be filtered further according to correlation using `MOCHA::filterCoAccessibleLinks`.
 ```R
 > links
      Correlation                Tile1                Tile2
@@ -175,7 +175,7 @@ Results of `scMACS::getCoAccessibleLinks` is given as a `data.frame` and can be 
 130:   0.3333333 chrY:7344500-7344999 chrY:7340000-7340499
 
 
-> scMACS::filterCoAccessibleLinks(links, threshold = 0.7)
+> MOCHA::filterCoAccessibleLinks(links, threshold = 0.7)
     Correlation                Tile1                Tile2  chr   start     end
  1:   0.7259259 chrY:7326500-7326999 chrY:7085000-7085499 chrY 7085000 7326999
  2:   0.8444444 chrY:7326500-7326999 chrY:7085500-7085999 chrY 7085500 7326999
@@ -191,4 +191,4 @@ To contact the developers on issues and feature requests, please contact us via 
     
 # <a name="license"></a> License
 
-scMACS follows the Allen Institute Software License - full information about the license can be found on the LICENSE file. 
+MOCHA follows the Allen Institute Software License - full information about the license can be found on the LICENSE file. 

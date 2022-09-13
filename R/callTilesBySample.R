@@ -1,12 +1,12 @@
 #' @title \code{callPeaks}
 #'
-#' @description \code{callPeaks} is the main peak-calling function in scMACS
+#' @description \code{callPeaks} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
 #'   files and cell metadata
 #'
 #' @param blackList A GRanges object containing a blacklist of regions to
 #'   exclude
-#' @param returnAllPeaks boolean. Indicates whether scMACS should return object
+#' @param returnAllPeaks boolean. Indicates whether MOCHA should return object
 #'   containing all genomic regions or just the positive (+) called peaks.
 #'   Default to the latter, only positive peaks.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
@@ -36,17 +36,17 @@ callTilesBySample <- function(blackList,
   # Coefficients trained on ~ 3600 frags per cell
   # Future datasets need to be calibrated to
   # these coefficients
-  finalModelObject <- scMACS::finalModelObject
-  thresholdModel <- scMACS::thresholdModel
+  finalModelObject <- MOCHA::finalModelObject
+  thresholdModel <- MOCHA::thresholdModel
 
-  FinalBins <- scMACS:::determine_dynamic_range(
+  FinalBins <- MOCHA:::determine_dynamic_range(
     AllFragmentsList = fragsList,
     blackList = blackList,
     binSize = 500,
     doBin = FALSE
   )
 
-  countsMatrix <- scMACS:::calculate_intensities(
+  countsMatrix <- MOCHA:::calculate_intensities(
     fragMat = fragsList,
     candidatePeaks = FinalBins,
     totalFrags = totalFrags
@@ -56,14 +56,14 @@ callTilesBySample <- function(blackList,
   countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor
 
   countsMatrix <- countsMatrix[countsMatrix$TotalIntensity > 0, ]
-  scMACS_tiles <- scMACS:::make_prediction(
+  MOCHA_tiles <- MOCHA:::make_prediction(
     X = countsMatrix,
     finalModelObject = finalModelObject
   )
 
   if (!returnAllTiles) {
-    scMACS_tiles <- scMACS_tiles[scMACS_tiles$peak == T]
+    MOCHA_tiles <- MOCHA_tiles[MOCHA_tiles$peak == T]
   }
 
-  return(scMACS_tiles)
+  return(MOCHA_tiles)
 }

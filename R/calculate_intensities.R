@@ -1,7 +1,7 @@
 #' @title \code{calculate_intensities}
 #'
 #' @description \code{calculate_intensities} is an R helper function, part of the single-cell peak calling
-#' algorithm scMACS by (XXX et al, 2021) that calculates the design matrix, X,
+#' algorithm MOCHA by (Zaim, Pebworth, et. al. 2022) that calculates the design matrix, X,
 #' used to make peak calls.
 #'
 #' @param fragMat a genomic ranges object containing the fragments
@@ -14,8 +14,6 @@
 #' @details The technical details of the algorithm are found in XX.
 #'
 #' @usage calculate_intensities(fragMat, candidatePeaks, FALSE)
-#'
-#' @references XX
 #'
 #' @import data.table
 #'

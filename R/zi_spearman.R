@@ -2,7 +2,7 @@
 #' scHOT implemented Pimentel's zero-inflated (ZI) correlation
 #' in their R package, providing implementations
 #' of the ZI spearman and tau rank correlations.
-#' scMACS implements a slight modification of
+#' MOCHA implements a slight modification of
 #' scHOT's zero-inflated correlation measure, by
 #' returning NAs in the cases where the correlation
 #' is undefined, and modifying it to use a C-backed correlation program.

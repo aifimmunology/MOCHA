@@ -16,7 +16,7 @@ test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   Org <- org.Hs.eg.db
 
   capture.output(
-    tileResults <- scMACS::callOpenTiles(
+    tileResults <- MOCHA::callOpenTiles(
       testProj,
       cellPopLabel = "Clusters",
       cellPopulations = cellPopulations,
@@ -27,7 +27,7 @@ test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   )
 
   capture.output(
-    SampleTileMatrix <- scMACS::getSampleTileMatrix(
+    SampleTileMatrix <- MOCHA::getSampleTileMatrix(
       tileResults,
       cellPopulations = cellPopulations,
       threshold = 0
@@ -35,11 +35,11 @@ test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   )
 
   cellPopulation <- "C1"
-  regions <- scMACS::StringsToGRanges(c(
+  regions <- MOCHA::StringsToGRanges(c(
     "chr1:102368000-102368499",
     "chr1:101873000-101873499"
   ))
-  links <- scMACS::getCoAccessibleLinks(SampleTileMatrix,
+  links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
     cellPopulation,
     regions,
     verbose = TRUE

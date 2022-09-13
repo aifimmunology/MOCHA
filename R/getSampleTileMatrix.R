@@ -30,7 +30,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' SampleTileMatrices <- scMACS::getSampleTileMatrix(
+#' SampleTileMatrices <- MOCHA::getSampleTileMatrix(
 #'   tileResults,
 #'   cellPopulations = cellPopulations,
 #'   groupColumn = groupColumn,
@@ -92,7 +92,7 @@ getSampleTileMatrix <- function(tileResults,
   tilesByCellPop <- parallel::mclapply(MultiAssayExperiment::experiments(subTileResults), function(x) {
 
     # Get consensus tiles for this cell population for filtering
-    scMACS:::singlePopulationConsensusTiles(
+    MOCHA:::singlePopulationConsensusTiles(
       x,
       sampleData,
       threshold,
@@ -109,7 +109,7 @@ getSampleTileMatrix <- function(tileResults,
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- parallel::mclapply(MultiAssayExperiment::experiments(tileResults), function(x) {
-    scMACS:::singlePopulationSampleTileMatrix(
+    MOCHA:::singlePopulationSampleTileMatrix(
       x,
       allTiles,
       NAtoZero,
@@ -120,7 +120,7 @@ getSampleTileMatrix <- function(tileResults,
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
     do.call("cbind", .) %>%
     as.data.frame()
-  allTilesGR <- scMACS::StringsToGRanges(allTiles)
+  allTilesGR <- MOCHA::StringsToGRanges(allTiles)
   mcols(allTilesGR) <- tilePresence
 
   results <- SummarizedExperiment::SummarizedExperiment(

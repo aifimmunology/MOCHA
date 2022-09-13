@@ -1,6 +1,6 @@
 #' @title \code{TwoPart}
 #'
-#' @description \code{TwoPart} is the main peak-calling function in scMACS
+#' @description \code{TwoPart} is the main peak-calling function in MOCHA
 #'              that serves as a wrapper function to call peaks provided a set
 #'              of fragment files and an ArchR Project for meta-data purposes
 #'

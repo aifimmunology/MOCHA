@@ -5,10 +5,10 @@
 ####################################################
 
 library(devtools)
-setwd("scMACS")
+setwd("MOCHA")
 install()
 
-library(scMACS)
+library(MOCHA)
 library(ArchR)
 
 # You should substitute this with your own ArchR project.
@@ -65,7 +65,7 @@ join <- "union"
 #    for all specified cell populations
 ####################################################
 
-tileResults <- scMACS::callOpenTiles(
+tileResults <- MOCHA::callOpenTiles(
   myArchRProj,
   cellPopLabel = cellPopLabel,
   cellPopulations = cellPopulations,
@@ -82,7 +82,7 @@ tileResults <- scMACS::callOpenTiles(
 #    primary input to downstream analyses.
 ####################################################
 
-SampleTileMatrices <- scMACS::getSampleTileMatrix(
+SampleTileMatrices <- MOCHA::getSampleTileMatrix(
   tileResults,
   cellPopulations = cellPopulations,
   groupColumn = groupColumn,
@@ -93,53 +93,53 @@ SampleTileMatrices <- scMACS::getSampleTileMatrix(
 )
 
 ####################################################
-# 4. (Optional) Add gene annotations and motifs to our 
-#    SampleTileMatrices. This info will aid further 
-#    downstream analyses but is not required for 
+# 4. (Optional) Add gene annotations and motifs to our
+#    SampleTileMatrices. This info will aid further
+#    downstream analyses but is not required for
 #    differential accessibility nor coaccessibility.
 ####################################################
 
 # This function can also take any GRanges object
 # and add annotations to its metadata.
-SampleTileMatricesAnnotated <- scMACS::annotateTiles( 
+SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
   SampleTileMatrices
 )
 
-# Load a curated motif set from library(chromVARmotifs) 
+# Load a curated motif set from library(chromVARmotifs)
 # included with ArchR installation
 data(human_pwms_v2)
-SampleTileMatricesAnnotated <- scMACS::addMotifSet(
-  SampleTileMatricesAnnotated, 
-  pwms = human_pwms_v2,  
+SampleTileMatricesAnnotated <- MOCHA::addMotifSet(
+  SampleTileMatricesAnnotated,
+  pwms = human_pwms_v2,
   w = 7 # width parameter for motifmatchr::matchMotifs()
 )
 
 ####################################################
-# 5. (Optional) Plot a specific region's coverage. 
-#    Here we plot coverage at a specific region and 
+# 5. (Optional) Plot a specific region's coverage.
+#    Here we plot coverage at a specific region and
 #    gene by infection stage.
 ####################################################
-countSE <- scMACS::extractRegion(
-  SampleTileObj = SampleTileMatrices, 
-  cellPopulations = 'CD16 Mono',
-  region = 'chr3:38137866-38139912', 
-  groupColumn = 'COVID_status',
+countSE <- MOCHA::extractRegion(
+  SampleTileObj = SampleTileMatrices,
+  cellPopulations = "CD16 Mono",
+  region = "chr3:38137866-38139912",
+  groupColumn = "COVID_status",
   numCores = numCores,
   sampleSpecific = FALSE
 )
-dev.off() 
-pdf('ExamplePlot.pdf')
-# Note that to show specific genes with the option 
+dev.off()
+pdf("ExamplePlot.pdf")
+# Note that to show specific genes with the option
 # 'whichGene' you must have the package RMariaDB
 # installed
-scMACS::plotRegion(countSE = countSE, whichGene = 'MYD88')
+MOCHA::plotRegion(countSE = countSE, whichGene = "MYD88")
 dev.off()
 
 ####################################################
-# 6. Get differential accessibility for specific 
-#    cell populations. Here we are comparing MAIT  
-#    cells between samples where our groupColumn 
-#    "COVID_status" is Positive (our foreground) 
+# 6. Get differential accessibility for specific
+#    cell populations. Here we are comparing MAIT
+#    cells between samples where our groupColumn
+#    "COVID_status" is Positive (our foreground)
 #    to Negative samples (our background).
 ####################################################
 cellPopulation <- "MAIT"
@@ -154,15 +154,15 @@ fdrToDisplay <- 0.2
 # Default is TRUE.
 outputGRanges <- TRUE
 
-differentials <- scMACS::getDifferentialAccessibleTiles(
-    SampleTileObj = SampleTileMatrices,
-    cellPopulation = cellPopulation,
-    groupColumn = groupColumn,
-    foreground = foreground,
-    background = background,
-    fdrToDisplay = fdrToDisplay,
-    outputGRanges = outputGRanges,
-    numCores = numCores
+differentials <- MOCHA::getDifferentialAccessibleTiles(
+  SampleTileObj = SampleTileMatrices,
+  cellPopulation = cellPopulation,
+  groupColumn = groupColumn,
+  foreground = foreground,
+  background = background,
+  fdrToDisplay = fdrToDisplay,
+  outputGRanges = outputGRanges,
+  numCores = numCores
 )
 
 ####################################################
@@ -183,7 +183,7 @@ regions <- head(differentials, 10)
 #   "chrY:7344500-7344999"
 # )
 
-links <- scMACS::getCoAccessibleLinks(
+links <- MOCHA::getCoAccessibleLinks(
   SampleTileObj = SampleTileMatricesAnnotated,
   cellPopulation = cellPopulation,
   regions = regions,
@@ -195,4 +195,4 @@ links <- scMACS::getCoAccessibleLinks(
 # Optionally filter these links by their absolute
 # correlation - this output also adds the chromosome,
 # start, and end site of each link to the table.
-scMACS::filterCoAccessibleLinks(links, threshold = 0.7)
+MOCHA::filterCoAccessibleLinks(links, threshold = 0.7)

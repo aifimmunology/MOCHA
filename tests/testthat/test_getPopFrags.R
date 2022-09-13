@@ -120,11 +120,11 @@ for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
 test_that(
   "validRegionString works on edge cases",
   {
-    expect_true(scMACS:::validRegionString("chr1:1-123412"))
-    expect_true(scMACS:::validRegionString("chr20:12300-12400"))
-    expect_true(scMACS:::validRegionString("4:145-146"))
-    expect_false(scMACS:::validRegionString("chr20_12300-12400"))
-    expect_false(scMACS:::validRegionString("chr20:12300-12200"))
+    expect_true(MOCHA:::validRegionString("chr1:1-123412"))
+    expect_true(MOCHA:::validRegionString("chr20:12300-12400"))
+    expect_true(MOCHA:::validRegionString("4:145-146"))
+    expect_false(MOCHA:::validRegionString("chr20_12300-12400"))
+    expect_false(MOCHA:::validRegionString("chr20:12300-12200"))
   }
 )
 

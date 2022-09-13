@@ -33,12 +33,12 @@ getCoAccessibleLinks <- function(SampleTileObj,
   if (class(regions) == "GRanges") {
     regionDF <- as.data.frame(regions)
   } else if (class(regions) == "character") {
-    regionDF <- scMACS::StringsToGRanges(regions) %>% as.data.frame()
+    regionDF <- MOCHA::StringsToGRanges(regions) %>% as.data.frame()
   } else {
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
   }
 
-  tileDF <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation)
+  tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation)
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
   chr <- gsub("\\:.*", "", rownames(tileDF))
@@ -66,7 +66,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
             chr %in% regionDF$seqnames[i]
         )
       )
-      nextCorr <- scMACS:::co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
+      nextCorr <- MOCHA:::co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
         filterPairs = TileCorr, numCores = numCores,
         index = keyTile, verbose = verbose
       )

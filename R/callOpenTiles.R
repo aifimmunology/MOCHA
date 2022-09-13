@@ -1,6 +1,6 @@
 #' @title \code{callOpenTiles}
 #'
-#' @description \code{callOpenTiles} is the main peak-calling function in scMACS
+#' @description \code{callOpenTiles} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
 #'   files and an ArchR Project for meta-data purposes
 #'
@@ -26,7 +26,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' tileResults <- scMACS::callOpenTiles(
+#' tileResults <- MOCHA::callOpenTiles(
 #'   myArchRProj,
 #'   cellPopLabel = cellPopLabel,
 #'   cellPopulations = cellPopulations,
@@ -96,7 +96,7 @@ callOpenTiles <- function(ArchRProj,
     message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
 
     # Get our fragments for this cellPop
-    frags <- scMACS::getPopFrags(
+    frags <- MOCHA::getPopFrags(
       ArchRProj = ArchRProj,
       metaColumn = cellPopLabel,
       cellSubsets = cellPop,
@@ -133,7 +133,7 @@ callOpenTiles <- function(ArchRProj,
 
     # save coverage files to folder.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
-      covFiles <- scMACS:::getCoverage(
+      covFiles <- MOCHA:::getCoverage(
         popFrags = fragsNoNull,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
@@ -154,7 +154,7 @@ callOpenTiles <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(fragsNoNull),
       function(x) {
-        scMACS:::callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
@@ -191,7 +191,7 @@ callOpenTiles <- function(ArchRProj,
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
   sampleData <- suppressWarnings(
-    scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
+    MOCHA:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
   # Add experimentList to MultiAssayExperiment
@@ -231,7 +231,7 @@ callOpenTilesFast <- function(ArchRProj,
 
   # Get frags grouped by cell population and sample
   # This will also validate the input cellPopulations
-  frags <- scMACS::getPopFrags(
+  frags <- MOCHA::getPopFrags(
     ArchRProj = ArchRProj,
     metaColumn = cellPopLabel,
     cellSubsets = cellPopulations,
@@ -268,7 +268,7 @@ callOpenTilesFast <- function(ArchRProj,
   }
 
   # Split the fragments list into a list of lists per cell population
-  splitFrags <- scMACS:::splitFragsByCellPop(fragsNoNull)
+  splitFrags <- MOCHA:::splitFragsByCellPop(fragsNoNull)
 
   # getPopFrags needs to replace spaces for underscores, so
   # here we rename the fragments with the original cell populations labels.
@@ -307,7 +307,7 @@ callOpenTilesFast <- function(ArchRProj,
 
     # save coverage files to folder.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
-      covFiles <- scMACS:::getCoverage(
+      covFiles <- MOCHA:::getCoverage(
         popFrags = popFrags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
@@ -328,7 +328,7 @@ callOpenTilesFast <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(popFrags),
       function(x) {
-        scMACS:::callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
@@ -361,7 +361,7 @@ callOpenTilesFast <- function(ArchRProj,
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
   sampleData <- suppressWarnings(
-    scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
+    MOCHA:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
   # Add experimentList to MultiAssayExperiment

@@ -10,7 +10,7 @@ test_that("We can call peaks by sample", {
   capture.output(testProj <- ArchR::getTestProject(), type = "message")
 
   capture.output(expect_snapshot_value(
-    scMACS::callOpenTiles(
+    MOCHA::callOpenTiles(
       testProj,
       cellPopLabel = "Clusters",
       cellPopulations = c("C1", "C2"),

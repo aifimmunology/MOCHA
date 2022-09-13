@@ -15,7 +15,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' scMACS::filterCoAccessibleLinks(links, threshold = 0.5)
+#' MOCHA::filterCoAccessibleLinks(links, threshold = 0.5)
 #' }
 #'
 #' @export

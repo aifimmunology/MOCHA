@@ -19,7 +19,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' SampleTileMatricesAnnotated <- scMACS::annotateTiles(
+#' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
 #'   SampleTileMatrices
 #' )
 #' }

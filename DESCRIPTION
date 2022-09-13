@@ -1,4 +1,4 @@
-Package: scMACS
+Package: MOCHA
 Type: Package
 Title: single-cell Modeling of Accessible Chromatin Sites
 Version: 0.1.0
@@ -6,7 +6,7 @@ Author: Samir Rachid Zaim [aut, cre],
         Mark-Phillip Pebworth [aut, ctb],
         Xiaojun Li [aut, ctb]    
 Maintainer: Samir Rachid Zaim <samir.rachidzaim@alleninstitute.org>
-Description: scMACS is a novel peak-calling algorithm that captures and leverage single-cell 
+Description: MOCHA is a novel peak-calling algorithm that captures and leverage single-cell 
              information to model and identify accesible chromatin in single-cell 
              ATAC-Sequencing data.
 License: MIT + file LICENSE

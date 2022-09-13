@@ -5,7 +5,7 @@
 
 
 
-## runChromVar is a wrapper for chromVAR from scMACS
+## runChromVar is a wrapper for chromVAR from MOCHA
 ## Obj could be a ragged experiment or a sumarized experiment
 ## motifGRangesList is a list of all motif positions in a GRangesList format
 ## genome is the reference genome we use

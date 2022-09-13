@@ -29,7 +29,7 @@
 #'   "chrY:7339500-7339999",
 #'   "chrY:7344500-7344999"
 #' )
-#' links <- scMACS::getCoAccessibleLinks(
+#' links <- MOCHA::getCoAccessibleLinks(
 #'   SampleTileObj = SampleTileMatricesAnnotated,
 #'   cellPopulation = cellPopulation,
 #'   regions = regions,
@@ -69,7 +69,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   background_samples <- metaFile[metaFile[, groupColumn] == background, "Sample"]
 
   # This will only include called tiles
-  sampleTileMatrix <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation)
+  sampleTileMatrix <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation)
 
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
@@ -176,7 +176,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   )
 
   if (outputGRanges) {
-    full_results <- scMACS::differentialsToGRanges(full_results)
+    full_results <- MOCHA::differentialsToGRanges(full_results)
   }
 
   full_results

@@ -1,7 +1,7 @@
 #' @title \code{dynamic_bins}
 #'
 #' @description \code{dynamic_bins} is an R helper function, part of the single-cell peak calling
-#' algorithm scMACS by (XXX et al, 2021) that determines which genomic regions, or bins,
+#' algorithm MOCHA by (Zaim, Pebworth, et. al. 2022) that determines which genomic regions, or bins,
 #' will be used for de-novo peak calling. The function "dynamic_bins" generates bins for peak calling based on the actual fragments present within a sample.
 # AllFragmentsList: List of fragments by arrow file
 #'
@@ -18,9 +18,6 @@
 #' @return a data.table, countsByBin, that returns the two intensity parameters required
 #' to calculate the probability of a (+) peak
 #'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
 #'
 #' @noRd
 #'

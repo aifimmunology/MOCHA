@@ -111,8 +111,8 @@ getPopFrags <- function(ArchRProj,
 
     # Extract fragments from a given region only
     # Validate region and interpret as string or GRanges
-    if (scMACS:::validRegionString(region) & tolower(NormMethod) == "raw") {
-      regionGRanges <- scMACS:::StringsToGRanges(region)
+    if (MOCHA:::validRegionString(region) & tolower(NormMethod) == "raw") {
+      regionGRanges <- MOCHA:::StringsToGRanges(region)
     } else if (class(region)[1] == "GRanges" & tolower(NormMethod) == "raw") {
       regionGRanges <- region
     } else if (tolower(NormMethod) != "raw") {
@@ -152,7 +152,7 @@ getPopFrags <- function(ArchRProj,
     }, mc.cores = numCores)
   }
 
-  # From scMACS - sorts cell barcodes by population
+  # From MOCHA - sorts cell barcodes by population
   barcodesByCellPop <- lapply(cellPopulations, function(x) {
     row.names(metadf)[which(metadf[, metaColumn] == x)]
   })
@@ -187,7 +187,7 @@ getPopFrags <- function(ArchRProj,
     stop("Error: Incorrect NormMethod given.")
   }
 
-  # From scMACS - Function to sort fragments by populations based on cell barcode lists
+  # From MOCHA - Function to sort fragments by populations based on cell barcode lists
   subset_Frag <- function(cellNames, fragsGRanges) {
     fragsTable <- as.data.table(fragsGRanges)
     idx <- which(fragsTable$RG %in% cellNames)

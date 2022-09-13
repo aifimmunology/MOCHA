@@ -63,7 +63,7 @@ splitFragsByCellPop <- function(frags) {
 }
 
 
-# This function converst scMACS DAPs data table to a Summarized Experiment
+# This function converst MOCHA DAPs data table to a Summarized Experiment
 # for use with ArchR's functions
 # This functions expects a DAPs data.table, with a column named 'Peak'
 DAPsToSE <- function(daps) {
@@ -94,7 +94,7 @@ DAPsToSE <- function(daps) {
 
 
 
-# This function converst scMACS sample-specific peak calls, raw fragments by sample,
+# This function converst MOCHA sample-specific peak calls, raw fragments by sample,
 # the sample-specific peak matrix, and sample metadata into one Summarized Experiment Object
 # It expects a column in the peak matrix called 'tileID', and a column in the metadata called 'Sample'
 
@@ -192,7 +192,7 @@ GRangesToString <- function(GR_obj) {
 #' @return a GRanges containing all original information
 #' @export
 differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
-  regions <- scMACS::StringsToGRanges(differentials[[tileColumn]])
+  regions <- MOCHA::StringsToGRanges(differentials[[tileColumn]])
   GenomicRanges::mcols(regions) <- differentials
   regions
 }

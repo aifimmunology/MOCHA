@@ -1,7 +1,7 @@
-#' @title \code{determine_dynamic_range}
+#' @title \code{make_prediction}
 #'
 #' @description \code{make_prediction} is an R helper function, part of the single-cell peak calling
-#' algorithm scMACS by (XXX et al, 2021) that determines which genomic regions, or bins,
+#' algorithm MOCHA by (Zaim, Pebworth, et. al. 2022) that determines which genomic regions, or bins,
 #' will be used to determine accessibility. The function "make_prediction" applies the
 #' logistic regression model predictions and then calls peaks that exceed a given
 #' threshold.
@@ -10,13 +10,10 @@
 #' @param X an intensityMatrix output from \code{calculate_intensities}
 #' @param finalModel is a matrix with coefficients and an index indicating
 #'        the number of cell used to train that model
-#' @param thresholdModel is an internal threhsod
 #'
 #' @return the original intensityMatrix with the two intensity parameters required
 #' to calculate the probability of a (+) peak, with an additional two columns
 #' that include the prediction probability
-#'
-#' @details The technical details of the algorithm are found in XX.
 #'
 #' @noRd
 #'
@@ -127,7 +124,7 @@ make_prediction <- function(X, finalModelObject) {
   ### Identify cutoff based on
   ### different abundances
   newdata <- data.frame(Ncells = cell_model)
-  adaptiveThreshold <- as.numeric(predict(scMACS::youden_threshold, newdata = newdata))
+  adaptiveThreshold <- as.numeric(predict(MOCHA::youden_threshold, newdata = newdata))
 
 
   ### Boolean indicating whether

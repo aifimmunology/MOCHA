@@ -1,4 +1,4 @@
 library(testthat)
-library(scMACS)
+library(MOCHA)
 
-test_check("scMACS")
+test_check("MOCHA")

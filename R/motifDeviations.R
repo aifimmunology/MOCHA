@@ -34,21 +34,21 @@ getMotifCoverages <- function(covFiles, MotifLocations, numCores = 1) {
 
 matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL, method = "Mean", N = 50, numCores = 1) {
   if (class(ForegroundPeakset)[1] == "Character") {
-    ForegroundPeakSet <- scMACS::StringsToGRanges(ForegroundPeakset)
+    ForegroundPeakSet <- MOCHA::StringsToGRanges(ForegroundPeakset)
   } else if (class(ForegroundPeakset)[1] != "GRanges") {
     stop("Error: Foreground Peakset must either be a GRanges object or a vector of string in the format Chr1:100-200")
   }
 
   if (is.null(BackgroundSet)) {
-    BackgroundSet <- plyranges::filter_by_non_overlaps(scMACS::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
+    BackgroundSet <- plyranges::filter_by_non_overlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
   } else if (!is.null(BackgroundSet) & class(BackgroundSet)[1] == "Character") {
-    BackgroundSet <- scMACS::StringsToGranges(BackgrounfSet)
+    BackgroundSet <- MOCHA::StringsToGranges(BackgrounfSet)
   } else if (!is.null(BackgroundSet) & class(BackgroundSet)[1] != "GRanges") {
     stop("Error: BackgroundSet must either be a GRanges object, a vector of string in the format Chr1:100-200, or set to NULL")
   }
 
-  Count1 <- findOverlaps(scMACS::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
-  Count2 <- findOverlaps(scMACS::StringsToGRanges(SampleTileMatrix$tileID), BackgroundSet)
+  Count1 <- findOverlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
+  Count2 <- findOverlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), BackgroundSet)
 
   # Check if the background and foreground set overlap with any tiles in common.
   if (any(queryHits(Count1) %in% queryHits(Count2))) {

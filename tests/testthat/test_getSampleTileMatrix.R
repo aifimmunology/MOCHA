@@ -12,7 +12,7 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
   cellPopulations <- c("C1", "C2")
 
   capture.output(
-    tileResults <- scMACS::callOpenTiles(
+    tileResults <- MOCHA::callOpenTiles(
       testProj,
       cellPopLabel = "Clusters",
       cellPopulations = cellPopulations,
@@ -23,7 +23,7 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
 
   capture.output(
     expect_snapshot_value(
-      scMACS::getSampleTileMatrix(
+      MOCHA::getSampleTileMatrix(
         tileResults,
         cellPopulations = cellPopulations,
         threshold = 0

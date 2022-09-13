@@ -1,17 +1,19 @@
 
-library(scMACS)
+library(MOCHA)
 library(SummarizedExperiment)
 library(dplyr)
 
-SampleTileObj <- readRDS('SampleTileMatrix.RDS')
+SampleTileObj <- readRDS("SampleTileMatrix.RDS")
 
 ## Compare CD14s and CD16s
-MonocyteComp <- compareCellTypes(SampleTileObj, CellType_1 = 'CD14 Mono', 
-                                 CellType_2 = 'CD16 Mono',
-                                 outputGRanges = TRUE, numCores = 25)
+MonocyteComp <- compareCellTypes(SampleTileObj,
+  CellType_1 = "CD14 Mono",
+  CellType_2 = "CD16 Mono",
+  outputGRanges = TRUE, numCores = 25
+)
 
 ## Identify unique markers for all cell types
-allMarkers <- getCellTypeMarkers(SampleTileObj,outputGRanges = TRUE, numCores = 25)
+allMarkers <- getCellTypeMarkers(SampleTileObj, outputGRanges = TRUE, numCores = 25)
 
 
 #####################################################################
@@ -20,128 +22,127 @@ allMarkers <- getCellTypeMarkers(SampleTileObj,outputGRanges = TRUE, numCores = 
 
 #####################################################################
 
-getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25){
-                       
-                #Extract all the Sample-Tile Matrices for each cell type
-                temp <- assays(STObj)
-                           
-                cl <- parallel::makeCluster(numCores)
-                # Let's generate a new assay, that will contain the 
-                # the intensity for a given cell, as well as the 
-                # median intensity per sample-tile for all other cell types (i.e. the background)
+getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25) {
 
-                newAssays <- lapply(1:length(temp), function(x){
-                    
-                        # Generate the list of intensities for all other cell types
-                        temp2 = temp[-x]
-                        # Transform it into an array
-                        bckGround <- array(unlist(temp2), c(dim(temp2[[1]]), length(temp2)))
-                        bckGround[is.na(bckGround)] = 0
-                        # Find the median background intensity per sample-tile across all cell types
-                        tmp <- parallel::parApply(cl, bckGround, 1:2 , function(y) median(y))
-                        # Rename the columns with 'Bckgrnd' so that we identify the background samples
-                        colnames(tmp) <- paste(colnames(temp[[x]]), 'Bckgrnd', sep = "_") 
-                        # Merge it with the cell type intensities, so that the background samples
-                        # are in the same 
-                        cbind(temp[[x]], tmp)
-                                     
-                })
-                parallel::stopCluster(cl)
-                
-                names(newAssays) = names(temp)
-                    
-                newAssays = lapply(assays(newObj), as.matrix)
-                
-                colData_tmp <- colData(STObj)
-                rownames(colData_tmp) <- paste(rownames(colData_tmp), 'Bckgrnd', sep = "_") 
-                newColData <- rbind(colData(STObj), colData_tmp)
-                newColData$CellType <- c(rep('Foreground', nrow(colData_tmp)), 
-                                         rep('Background', nrow(colData_tmp)))
-                newColData$Sample = rownames(newColData)
-                    
-                newObj <- readRDS('tmp.RDS')
-                allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
-                for(i in names(temp)){
-                
-                    mcols(allRanges)[,i] = rep(TRUE, length(allRanges))
-                    
-                }
-                
-                newObj <- SummarizedExperiment(assays = newAssays,
-                                               colData = newColData,
-                                               rowRanges = allRanges,
-                                               metadata = SampleTileObj@metadata)
-                    
-                allDifs <- lapply(names(temp), function(x){
-                    
-                            getDifferentialAccessibleTiles(newObj,
-                                           cellPopulation = x,
-                                           groupColumn = 'CellType',
-                                           foreground = 'Foreground',
-                                           background = 'Background',
-                                           fdrToDisplay = 0.2,
-                                           outputGRanges = outputGRanges,
-                                           numCores = 25)
-                    })
-                
-                names(allDifs) <- names(temp)
-                    
-               return(allDifs)
-                    
-                    
-}
-                                    
-compareCellTypes <- function(STObj, CellType_1, CellType_2, outputGRanges = TRUE, numCores = 25){
-                       
-                #Extract all the Sample-Tile Matrices for each cell type
-                temp <- SummarizedExperiment::assays(STObj)
-    
-                #Confirm that CellType_1 and CellType_2 exist in STObj
-    
-                if(!all(c(CellType_1, CellType_2) %in% names(temp))){
-                
-                    stop('Error: Cell types not found. Please check input')
-                    
-                }
-    
-                # Bind matrices from the two cell together
-                CellType1 = temp[[CellType_1]]
-                CellType2 = temp[[CellType_2]]
-                newAssay <- lapply(list(CellType1, CellType2), function(x){
-                    
-                                colnames(x) <- NULL
-                                x
-                    
-                                }) %>% do.call('cbind', .) %>% list('Comparison' = .)
-                
-                
-                colData_tmp <- colData(STObj)
-                rownames(colData_tmp) <- paste(rownames(colData_tmp), 'Bckgrnd', sep = "_") 
-                newColData <- rbind(colData(STObj), colData_tmp)
-                newColData$CellType <- c(rep('Foreground', nrow(colData_tmp)), 
-                                         rep('Background', nrow(colData_tmp)))
-                newColData$Sample = rownames(newColData)
+  # Extract all the Sample-Tile Matrices for each cell type
+  temp <- assays(STObj)
 
-                allRanges <- SummarizedExperiment::rowRanges(STObj)
-                allRanges$Comparison = GenomicRanges::mcols(allRanges)[,CellType_1] | 
-                                        GenomicRanges::mcols(allRanges)[,CellType_2]
-                
-                newObj <- SummarizedExperiment(assays = newAssay,
-                                               colData = newColData,
-                                               rowRanges = allRanges,
-                                               metadata = STObj@metadata)
-                    
-               diff <- getDifferentialAccessibleTiles(newObj,
-                                           cellPopulation = 'Comparison',
-                                           groupColumn = 'CellType',
-                                           foreground = 'Foreground',
-                                           background = 'Background',
-                                           fdrToDisplay = 0.2,
-                                           outputGRanges = outputGRanges,
-                                           numCores = numCores)
-                    
-               return(diff)
-                    
-                    
+  cl <- parallel::makeCluster(numCores)
+  # Let's generate a new assay, that will contain the
+  # the intensity for a given cell, as well as the
+  # median intensity per sample-tile for all other cell types (i.e. the background)
+
+  newAssays <- lapply(1:length(temp), function(x) {
+
+    # Generate the list of intensities for all other cell types
+    temp2 <- temp[-x]
+    # Transform it into an array
+    bckGround <- array(unlist(temp2), c(dim(temp2[[1]]), length(temp2)))
+    bckGround[is.na(bckGround)] <- 0
+    # Find the median background intensity per sample-tile across all cell types
+    tmp <- parallel::parApply(cl, bckGround, 1:2, function(y) median(y))
+    # Rename the columns with 'Bckgrnd' so that we identify the background samples
+    colnames(tmp) <- paste(colnames(temp[[x]]), "Bckgrnd", sep = "_")
+    # Merge it with the cell type intensities, so that the background samples
+    # are in the same
+    cbind(temp[[x]], tmp)
+  })
+  parallel::stopCluster(cl)
+
+  names(newAssays) <- names(temp)
+
+  newAssays <- lapply(assays(newObj), as.matrix)
+
+  colData_tmp <- colData(STObj)
+  rownames(colData_tmp) <- paste(rownames(colData_tmp), "Bckgrnd", sep = "_")
+  newColData <- rbind(colData(STObj), colData_tmp)
+  newColData$CellType <- c(
+    rep("Foreground", nrow(colData_tmp)),
+    rep("Background", nrow(colData_tmp))
+  )
+  newColData$Sample <- rownames(newColData)
+
+  newObj <- readRDS("tmp.RDS")
+  allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
+  for (i in names(temp)) {
+    mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
+  }
+
+  newObj <- SummarizedExperiment(
+    assays = newAssays,
+    colData = newColData,
+    rowRanges = allRanges,
+    metadata = SampleTileObj@metadata
+  )
+
+  allDifs <- lapply(names(temp), function(x) {
+    getDifferentialAccessibleTiles(newObj,
+      cellPopulation = x,
+      groupColumn = "CellType",
+      foreground = "Foreground",
+      background = "Background",
+      fdrToDisplay = 0.2,
+      outputGRanges = outputGRanges,
+      numCores = 25
+    )
+  })
+
+  names(allDifs) <- names(temp)
+
+  return(allDifs)
 }
-       
+
+compareCellTypes <- function(STObj, CellType_1, CellType_2, outputGRanges = TRUE, numCores = 25) {
+
+  # Extract all the Sample-Tile Matrices for each cell type
+  temp <- SummarizedExperiment::assays(STObj)
+
+  # Confirm that CellType_1 and CellType_2 exist in STObj
+
+  if (!all(c(CellType_1, CellType_2) %in% names(temp))) {
+    stop("Error: Cell types not found. Please check input")
+  }
+
+  # Bind matrices from the two cell together
+  CellType1 <- temp[[CellType_1]]
+  CellType2 <- temp[[CellType_2]]
+  newAssay <- lapply(list(CellType1, CellType2), function(x) {
+    colnames(x) <- NULL
+    x
+  }) %>%
+    do.call("cbind", .) %>%
+    list("Comparison" = .)
+
+
+  colData_tmp <- colData(STObj)
+  rownames(colData_tmp) <- paste(rownames(colData_tmp), "Bckgrnd", sep = "_")
+  newColData <- rbind(colData(STObj), colData_tmp)
+  newColData$CellType <- c(
+    rep("Foreground", nrow(colData_tmp)),
+    rep("Background", nrow(colData_tmp))
+  )
+  newColData$Sample <- rownames(newColData)
+
+  allRanges <- SummarizedExperiment::rowRanges(STObj)
+  allRanges$Comparison <- GenomicRanges::mcols(allRanges)[, CellType_1] |
+    GenomicRanges::mcols(allRanges)[, CellType_2]
+
+  newObj <- SummarizedExperiment(
+    assays = newAssay,
+    colData = newColData,
+    rowRanges = allRanges,
+    metadata = STObj@metadata
+  )
+
+  diff <- getDifferentialAccessibleTiles(newObj,
+    cellPopulation = "Comparison",
+    groupColumn = "CellType",
+    foreground = "Foreground",
+    background = "Background",
+    fdrToDisplay = 0.2,
+    outputGRanges = outputGRanges,
+    numCores = numCores
+  )
+
+  return(diff)
+}
