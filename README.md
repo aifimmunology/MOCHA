@@ -28,7 +28,7 @@ To install in a HISE IDE, run the following lines of code to install directly fr
 
 ## Please view the example usage found in this [vignette](vignettes/COVID_example.R).
 
-## Example usage demonstrates this workflow: [Workflow](data/workflow.png)
+## Example usage demonstrates this workflow: [Workflow](inst/extData/workflow.png)
 
 # <a name="results"></a> Tips: Result formats
 
