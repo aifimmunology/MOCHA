@@ -1,8 +1,27 @@
+---
+title: "Comparing-Cell-Populations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparing-Cell-Populations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+```{r setup}
 library(MOCHA)
 library(SummarizedExperiment)
 library(dplyr)
+```
 
+```{r}
 SampleTileObj <- readRDS("SampleTileMatrix.RDS")
 
 ## Compare CD14s and CD16s
@@ -14,14 +33,15 @@ MonocyteComp <- compareCellTypes(SampleTileObj,
 
 ## Identify unique markers for all cell types
 allMarkers <- getCellTypeMarkers(SampleTileObj, outputGRanges = TRUE, numCores = 25)
+```
 
-
-#####################################################################
+##################################################################### 
 
 #### Additional Functions for this Vignette
 
-#####################################################################
+##################################################################### 
 
+```{r}
 getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25) {
 
   # Extract all the Sample-Tile Matrices for each cell type
@@ -146,3 +166,4 @@ compareCellTypes <- function(STObj, CellType_1, CellType_2, outputGRanges = TRUE
 
   return(diff)
 }
+```
