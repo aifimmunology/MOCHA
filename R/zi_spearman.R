@@ -63,7 +63,7 @@ weightedZISpearman <- function(x, y, w = 1) {
   if (any(pospos) & p_11 > 0) {
     rho_11 <- wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
   } else {
-    print("Zero inflated Spearman correlation is undefined,
+    warning("Zero inflated Spearman correlation is undefined,
           returning NA")
     rho <- NA
     return(rho)
