@@ -42,7 +42,7 @@ matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL
   if (is.null(BackgroundSet)) {
     BackgroundSet <- plyranges::filter_by_non_overlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
   } else if (!is.null(BackgroundSet) & class(BackgroundSet)[1] == "Character") {
-    BackgroundSet <- MOCHA::StringsToGranges(BackgrounfSet)
+    BackgroundSet <- MOCHA::StringsToGRanges(BackgroundSet)
   } else if (!is.null(BackgroundSet) & class(BackgroundSet)[1] != "GRanges") {
     stop("Error: BackgroundSet must either be a GRanges object, a vector of string in the format Chr1:100-200, or set to NULL")
   }
