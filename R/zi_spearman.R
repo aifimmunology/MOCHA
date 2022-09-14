@@ -36,7 +36,7 @@
 #'
 #' @noRd
 
-weightedZISpearman <- function(x, y, w = 1) {
+weightedZISpearman <- function(x, y, w = 1, verbose = FALSE) {
 
   # needs the original values, not the ranks
 
@@ -63,9 +63,10 @@ weightedZISpearman <- function(x, y, w = 1) {
   if (any(pospos) & p_11 > 0) {
     rho_11 <- wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
   } else {
-    warning("Zero inflated Spearman correlation is undefined,
-          returning NA")
     rho <- NA
+    if (verbose) { 
+      message("Zero inflated Spearman correlation is undefined, returning NA")
+    }
     return(rho)
   }
 
@@ -73,9 +74,10 @@ weightedZISpearman <- function(x, y, w = 1) {
     3 * (p_00 * p_11 - p_10 * p_01)
 
   if (is.na(rho_star)) {
-    warning("Zero inflated Spearman correlation is undefined,
-          returning NA")
     rho <- NA
+    if (verbose) { 
+      message("Zero inflated Spearman correlation is undefined, returning NA")
+    }
     return(rho)
   }
 

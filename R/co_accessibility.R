@@ -60,7 +60,8 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose 
     # If only one pair of tiles to test, then it's no longer a data.frame, but a vector.
     zero_inflated_spearman <- MOCHA:::weightedZISpearman(
       x = subMat[keyNeighborPairs[1], ],
-      y = subMat[keyNeighborPairs[2], ]
+      y = subMat[keyNeighborPairs[2], ],
+      verbose = verbose
     )
 
     zi_spear_mat <- data.table(
@@ -75,7 +76,8 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose 
       function(x) {
         MOCHA:::weightedZISpearman(
           x = subMat[keyNeighborPairs[x, "Key"], ],
-          y = subMat[keyNeighborPairs[x, "Neighbor"], ]
+          y = subMat[keyNeighborPairs[x, "Neighbor"], ],
+          verbose = verbose
         )
       },
       mc.cores = numCores
