@@ -1,3 +1,6 @@
+library(ArchR)
+library(TxDb.Hsapiens.UCSC.hg38.refGene) 
+library(org.Hs.eg.db)
 # Download test project before all tests
 capture.output(proj <- ArchR::getTestProject(), type = "message")
 outdir <- dirname(getOutputDirectory(proj))

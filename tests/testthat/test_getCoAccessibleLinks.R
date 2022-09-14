@@ -41,7 +41,7 @@ test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
     cellPopulation,
     regions,
-    verbose = TRUE
+    verbose = FALSE
   )
 
   expect_false(any((links$Peak1 == links$Peak2)))
