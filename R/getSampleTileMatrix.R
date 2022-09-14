@@ -92,7 +92,7 @@ getSampleTileMatrix <- function(tileResults,
   tilesByCellPop <- parallel::mclapply(MultiAssayExperiment::experiments(subTileResults), function(x) {
 
     # Get consensus tiles for this cell population for filtering
-    MOCHA:::singlePopulationConsensusTiles(
+    singlePopulationConsensusTiles(
       x,
       sampleData,
       threshold,
@@ -109,7 +109,7 @@ getSampleTileMatrix <- function(tileResults,
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- parallel::mclapply(MultiAssayExperiment::experiments(tileResults), function(x) {
-    MOCHA:::singlePopulationSampleTileMatrix(
+    singlePopulationSampleTileMatrix(
       x,
       allTiles,
       NAtoZero,

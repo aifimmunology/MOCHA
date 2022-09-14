@@ -58,7 +58,7 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose 
   } else if (length(keyNeighborPairs) == 2) {
 
     # If only one pair of tiles to test, then it's no longer a data.frame, but a vector.
-    zero_inflated_spearman <- MOCHA:::weightedZISpearman(
+    zero_inflated_spearman <- weightedZISpearman(
       x = subMat[keyNeighborPairs[1], ],
       y = subMat[keyNeighborPairs[2], ],
       verbose = verbose
@@ -74,7 +74,7 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose 
     # General case for >1 pair
     zero_inflated_spearman <- unlist(parallel::mclapply(1:nrow(keyNeighborPairs),
       function(x) {
-        MOCHA:::weightedZISpearman(
+        weightedZISpearman(
           x = subMat[keyNeighborPairs[x, "Key"], ],
           y = subMat[keyNeighborPairs[x, "Neighbor"], ],
           verbose = verbose

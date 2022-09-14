@@ -165,7 +165,7 @@ plotRegion <- function(countSE,
   countdf <- do.call("rbind", as.list(SummarizedExperiment::assays(countSE)))
 
   # Extract region from region string as granges
-  regionGRanges <- MOCHA:::countdf_to_region(countdf = countdf)
+  regionGRanges <- countdf_to_region(countdf = countdf)
 
   # Variables
   chrom <- toString(unique(countdf$chr))
@@ -176,7 +176,7 @@ plotRegion <- function(countSE,
 
   # Base Plot of Sample Counts
   p1 <- verbf(
-    MOCHA:::counts_plot_samples(countdf,
+    counts_plot_samples(countdf,
       plotType = plotType,
       base_size = base_size,
       counts_color_var = counts_color_var,
@@ -195,7 +195,7 @@ plotRegion <- function(countSE,
       msg = sprintf("%s not found in Summarized Experiment", motifSetName)
     )
     p1 <- verbf(
-      MOCHA:::counts_plot_motif_overlay(
+      counts_plot_motif_overlay(
         p1 = p1,
         countdf = countdf,
         motifsList = countSE@metadata[[motifSetName]],
@@ -221,7 +221,7 @@ plotRegion <- function(countSE,
     # If user provided a specific gene symbol(s), pull new granges from database and format models
     if (!is.null(whichGene)) {
       newModel <- verbf(
-        MOCHA:::get_gene_body_model(
+        get_gene_body_model(
           whichGene = whichGene,
           countdf = countdf,
           regionGRanges = regionGRanges,
@@ -237,7 +237,7 @@ plotRegion <- function(countSE,
     if (!is.null(whichGene) & !is.null(newModel)) {
       # Successful newmodel generated
       p2 <- verbf(
-        MOCHA:::plot_whichGene(newModel,
+        plot_whichGene(newModel,
           base_size = base_size,
           x_lim = range(countdf$Locus),
           theme_ls = gene_theme_ls
@@ -252,11 +252,11 @@ plotRegion <- function(countSE,
         Homo.sapiens.hg38 <- verbf(OrganismDbi::makeOrganismDbFromTxDb(TxDb, orgdb = orgdb))
       }
 
-      geneBody <- verbf(MOCHA:::get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
+      geneBody <- verbf(get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
 
       if (length(geneBody) > 0) {
         p2 <- verbf(
-          MOCHA:::plot_geneBody(
+          plot_geneBody(
             organismdb = Homo.sapiens.hg38,
             geneBody_gr = geneBody,
             collapseGenes = tolower(collapseGenes) == "collapseall",
@@ -312,7 +312,7 @@ plotRegion <- function(countSE,
   if (!is.null(linkdf) &
     any(linkdf$start + 250 > start(regionGRanges) &
       linkdf$end - 250 < end(regionGRanges))) {
-    p5 <- MOCHA:::get_link_plot(
+    p5 <- get_link_plot(
       regionGRanges, legend.position,
       relativeHeights, linkdf
     )

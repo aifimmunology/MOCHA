@@ -39,14 +39,14 @@ callTilesBySample <- function(blackList,
   finalModelObject <- MOCHA::finalModelObject
   thresholdModel <- MOCHA::thresholdModel
 
-  FinalBins <- MOCHA:::determine_dynamic_range(
+  FinalBins <- determine_dynamic_range(
     AllFragmentsList = fragsList,
     blackList = blackList,
     binSize = 500,
     doBin = FALSE
   )
 
-  countsMatrix <- MOCHA:::calculate_intensities(
+  countsMatrix <- calculate_intensities(
     fragMat = fragsList,
     candidatePeaks = FinalBins,
     totalFrags = totalFrags
@@ -56,7 +56,7 @@ callTilesBySample <- function(blackList,
   countsMatrix$maxIntensity <- countsMatrix$maxIntensity * StudypreFactor
 
   countsMatrix <- countsMatrix[countsMatrix$TotalIntensity > 0, ]
-  MOCHA_tiles <- MOCHA:::make_prediction(
+  MOCHA_tiles <- make_prediction(
     X = countsMatrix,
     finalModelObject = finalModelObject
   )

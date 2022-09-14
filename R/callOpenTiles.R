@@ -133,7 +133,7 @@ callOpenTiles <- function(ArchRProj,
 
     # save coverage files to folder.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
-      covFiles <- MOCHA:::getCoverage(
+      covFiles <- getCoverage(
         popFrags = fragsNoNull,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
@@ -154,7 +154,7 @@ callOpenTiles <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(fragsNoNull),
       function(x) {
-        MOCHA:::callTilesBySample(
+        callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
@@ -191,7 +191,7 @@ callOpenTiles <- function(ArchRProj,
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
   sampleData <- suppressWarnings(
-    MOCHA:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
+    sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
   # Add experimentList to MultiAssayExperiment
@@ -268,7 +268,7 @@ callOpenTilesFast <- function(ArchRProj,
   }
 
   # Split the fragments list into a list of lists per cell population
-  splitFrags <- MOCHA:::splitFragsByCellPop(fragsNoNull)
+  splitFrags <- splitFragsByCellPop(fragsNoNull)
 
   # getPopFrags needs to replace spaces for underscores, so
   # here we rename the fragments with the original cell populations labels.
@@ -307,7 +307,7 @@ callOpenTilesFast <- function(ArchRProj,
 
     # save coverage files to folder.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
-      covFiles <- MOCHA:::getCoverage(
+      covFiles <- getCoverage(
         popFrags = popFrags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
@@ -328,7 +328,7 @@ callOpenTilesFast <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(popFrags),
       function(x) {
-        MOCHA:::callTilesBySample(
+        callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
@@ -361,7 +361,7 @@ callOpenTilesFast <- function(ArchRProj,
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
   sampleData <- suppressWarnings(
-    MOCHA:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
+    sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
   # Add experimentList to MultiAssayExperiment

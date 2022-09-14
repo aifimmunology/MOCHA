@@ -31,7 +31,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
   #   stop('AllFragmentsList must be a list of arrow files')
   # }
 
-  TotalRange <- MOCHA:::dynamic_bins(
+  TotalRange <- dynamic_bins(
     AllFragmentsList = AllFragmentsList,
     doBin = doBin,
     coreNum = 30

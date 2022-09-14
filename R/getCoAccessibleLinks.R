@@ -66,7 +66,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
             chr %in% regionDF$seqnames[i]
         )
       )
-      nextCorr <- MOCHA:::co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
+      nextCorr <- co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
         filterPairs = TileCorr, numCores = numCores,
         index = keyTile, verbose = verbose
       )

@@ -111,8 +111,8 @@ getPopFrags <- function(ArchRProj,
 
     # Extract fragments from a given region only
     # Validate region and interpret as string or GRanges
-    if (MOCHA:::validRegionString(region) & tolower(NormMethod) == "raw") {
-      regionGRanges <- MOCHA:::StringsToGRanges(region)
+    if (validRegionString(region) & tolower(NormMethod) == "raw") {
+      regionGRanges <- StringsToGRanges(region)
     } else if (class(region)[1] == "GRanges" & tolower(NormMethod) == "raw") {
       regionGRanges <- region
     } else if (tolower(NormMethod) != "raw") {
