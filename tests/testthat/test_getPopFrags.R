@@ -8,57 +8,57 @@ capture.output(ArchR::addArchRVerbose(verbose = FALSE), type = "message")
 capture.output(testProj <- ArchR::getTestProject(), type = "message") # Requires an internet connection
 metaColumn <- "Clusters" # Column with cell population groups
 
-# Test getPopFrags with full genome and all normalization methods
-# Includes snapshot test for output
-for (sampleSpecific in c(TRUE, FALSE)) {
-  for (NormMethod in c("raw", "nFrags", "nCells", "Median", NULL)) {
-    test_that(
-      stringr::str_interp(
-        "getPopFrags works for NormMethod='${NormMethod}', sampleSpecific=${sampleSpecific}"
-      ),
-      {
-        testthat::local_edition(3)
-        capture.output(
-          popFrags <- getPopFrags(
-            testProj,
-            metaColumn = metaColumn,
-            numCores = 1,
-            NormMethod = NormMethod,
-            sampleSpecific = sampleSpecific
-          ),
-          type = "message"
-        )
-
-        # # Test population+sample names are as expected
-        # populations <- sort(unique(getCellColData(testProj)[[metaColumn]]))
-        # 
-        # if (sampleSpecific) {
-        #   samples <- unique(testProj$Sample)
-        #   combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
-        #   expected_names <- gsub(" ", "#", combinations)
-        # } else {
-        #   expected_names <- populations
-        # }
-        # sampleNames <- names(popFrags)
-        # actual_names <- sort(gsub("__.*", "", sampleNames))
-        # 
-        # expect_equal(actual_names, expected_names)
-        # 
-        # # Remove population+sample names and check that the content is equal
-        # names(popFrags) <- NULL
-        # 
-        # snapshotVariant <- str_interp("${NormMethod}")
-        # if (sampleSpecific) {
-        #   snapshotVariant <- paste(snapshotVariant, "sampleSpecific", sep = "_")
-        # }
-        # expect_snapshot_output(
-        #   popFrags,
-        #   variant = snapshotVariant
-        # )
-      }
-    )
-  }
-}
+# # Test getPopFrags with full genome and all normalization methods
+# # Includes snapshot test for output
+# for (sampleSpecific in c(TRUE, FALSE)) {
+#   for (NormMethod in c("raw", "nFrags", "nCells", "Median", NULL)) {
+#     test_that(
+#       stringr::str_interp(
+#         "getPopFrags works for NormMethod='${NormMethod}', sampleSpecific=${sampleSpecific}"
+#       ),
+#       {
+#         testthat::local_edition(3)
+#         capture.output(
+#           popFrags <- getPopFrags(
+#             testProj,
+#             metaColumn = metaColumn,
+#             numCores = 1,
+#             NormMethod = NormMethod,
+#             sampleSpecific = sampleSpecific
+#           ),
+#           type = "message"
+#         )
+#         
+#         # Test population+sample names are as expected
+#         populations <- sort(unique(getCellColData(testProj)[[metaColumn]]))
+#         
+#         if (sampleSpecific) {
+#           samples <- unique(testProj$Sample)
+#           combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
+#           expected_names <- gsub(" ", "#", combinations)
+#         } else {
+#           expected_names <- populations
+#         }
+#         sampleNames <- names(popFrags)
+#         actual_names <- sort(gsub("__.*", "", sampleNames))
+#         
+#         expect_equal(actual_names, expected_names)
+#         
+#         # Remove population+sample names and check that the content is equal
+#         names(popFrags) <- NULL
+#         
+#         snapshotVariant <- str_interp("${NormMethod}")
+#         if (sampleSpecific) {
+#           snapshotVariant <- paste(snapshotVariant, "sampleSpecific", sep = "_")
+#         }
+#         expect_snapshot_output(
+#           popFrags,
+#           variant = snapshotVariant
+#         )
+#       }
+#     )
+#   }
+# }
 
 
 # Test getPopFrags with specific region
