@@ -73,7 +73,7 @@ weightedZISpearman <- function(x, y, w = 1) {
     3 * (p_00 * p_11 - p_10 * p_01)
 
   if (is.na(rho_star)) {
-    print("Zero inflated Spearman correlation is undefined,
+    warning("Zero inflated Spearman correlation is undefined,
           returning NA")
     rho <- NA
     return(rho)
