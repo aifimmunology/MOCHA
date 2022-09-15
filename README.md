@@ -1,4 +1,4 @@
-# README for MOCHA
+# MOCHA: Model-based single cell Open CHromatin Analysis
 
   <!-- badges: start -->
   [![R-CMD-check](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check.yaml)
@@ -17,7 +17,7 @@
 
 ------------------------------------------------------------------------
 
-# <a name="introduction"></a> Introduction {#introduction}
+# <a name="introduction"></a> Introduction
 
 MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
@@ -30,9 +30,11 @@ To install in a HISE IDE, run the following lines of code to install directly fr
 
 # <a name="vignette"></a> Usage
 
-## Please view the example usage found in this [vignette](vignettes/COVID_example.R).
+Please view the example usage found in this [vignette](vignettes/COVID_example.R).
 
-## Example usage demonstrates this workflow: ![Workflow](inst/extData/workflow.svg)
+Example usage demonstrates this workflow: 
+
+![Workflow](inst/extData/workflow.svg)
 
 # <a name="results"></a> Tips: Result formats
 
@@ -202,10 +204,10 @@ Results of `MOCHA::getCoAccessibleLinks` is given as a `data.frame` and can be f
  5:   0.9037037 chrY:7326500-7326999 chrY:7280000-7280499 chrY 7280000 7326999
 ```
 
-# <a name="contact"></a> Contact {#contact}
+# <a name="contact"></a> Contact
 
 To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs.
 
-# <a name="license"></a> License {#license}
+# <a name="license"></a> License
 
 MOCHA follows the Allen Institute Software License - full information about the license can be found on the LICENSE file.
