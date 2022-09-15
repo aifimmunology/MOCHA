@@ -37,7 +37,6 @@ callTilesBySample <- function(blackList,
   # Future datasets need to be calibrated to
   # these coefficients
   finalModelObject <- MOCHA::finalModelObject
-  thresholdModel <- MOCHA::thresholdModel
 
   FinalBins <- determine_dynamic_range(
     AllFragmentsList = fragsList,
