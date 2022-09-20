@@ -36,8 +36,14 @@ Default is 'ALL'.}
 Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR
 and make a new fold named MOCHA for saving files.}
 
+\item{fast}{Optional, set to TRUE to use a faster but more memory-intensive 
+algorithm. Default is FALSE.}
+
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populations.}
+
+\item{force}{Optional, whether to force creation of coverage files if they 
+already exist. Default is FALSE.}
 }
 \value{
 tileResults A MultiAssayExperiment object containing ranged data

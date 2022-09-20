@@ -24,6 +24,8 @@ Can be the output from getDifferentialAccessibleTiles.}
 \item{windowSize}{the size of the window, in basepairs, around each input region to search for co-accessible links}
 
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
 TileCorr A data.table correlation matrix

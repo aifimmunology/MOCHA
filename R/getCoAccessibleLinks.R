@@ -9,7 +9,8 @@
 #'   Can be the output from getDifferentialAccessibleTiles.
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
-#'
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' 
 #' @return TileCorr A data.table correlation matrix
 #'
 #' @details The technical details of the zero-inflated correlation can be

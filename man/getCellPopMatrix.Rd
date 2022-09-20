@@ -10,7 +10,7 @@ getCellPopMatrix(SampleTileObj, cellPopulation)
 \item{SampleTileObj}{The output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk
 intensities across all tiles & cell types.}
 
-\item{@cellPopulation}{- The cell population you want to pull out.}
+\item{cellPopulation}{- The cell population you want to pull out.}
 }
 \value{
 sampleTileMatrix a matrix of samples by called tiles for a given cell population.

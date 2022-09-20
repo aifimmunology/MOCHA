@@ -6,7 +6,10 @@
 \usage{
 GRangesToString(GR_obj)
 }
+\arguments{
+\item{GR_obj}{the GRanges object to convert to a string}
+}
 \description{
-\code{GRangesToStrin} Turns a GRanges Object into
+\code{GRangesToString} Turns a GRanges Object into
 	a list of strings in the format chr1:100-200
 }

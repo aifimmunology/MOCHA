@@ -2,7 +2,6 @@
 
 export(GRangesToString)
 export(StringsToGRanges)
-export(TwoPart)
 export(addMotifSet)
 export(annotateTiles)
 export(callOpenTiles)

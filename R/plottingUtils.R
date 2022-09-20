@@ -22,6 +22,8 @@
 #' @param output_string Logical value, default TRUE. If TRUE outputs a range string (ie 'chr1: 1700000-1710000') else
 #' outputs a granges object
 #' @return A range string or granges object, depending on 'output_string' parameter.
+#'
+#' @noRd
 get_promoter_range <- function(proj, gene, upstream = 50000, downstream = 50000, output_string = TRUE) {
   gene_pos <- ArchR::getGenes(proj, gene)
   pro_pos_gr <- GenomicRanges::promoters(gene_pos, upstream = upstream, downstream = downstream)
@@ -45,6 +47,8 @@ get_promoter_range <- function(proj, gene, upstream = 50000, downstream = 50000,
 #'
 #' @param countdf  A dataframe that comes from `getbpCounts()` or `getbpInserts()`. Expected columns "chr" and "Locus"
 #' @return A granges object for the region defined in countdf
+#'
+#' @noRd
 countdf_to_region <- function(countdf) {
   assertthat::assert_that("chr" %in% names(countdf))
   assertthat::assert_that("Locus" %in% names(countdf))
@@ -67,6 +71,8 @@ countdf_to_region <- function(countdf) {
 #' @param regionGRanges regionGRanges A region Granges object to retrieve gene bodies for. For example, the output of countdf_to_region.
 #' @param TxDb A TxDb database
 #' @param single.strand.genes.only Logical, default FALSE.
+#'
+#' @noRd
 get_grange_genebody <- function(regionGRanges, TxDb, single.strand.genes.only = TRUE) {
   geneBody <- GenomicFeatures::genes(TxDb, single.strand.genes.only = single.strand.genes.only) %>%
     plyranges::join_overlap_intersect(regionGRanges)
@@ -109,6 +115,8 @@ get_grange_genebody <- function(regionGRanges, TxDb, single.strand.genes.only = 
 #' Only used if counts_group_colors provided
 #' @param theme_ls A list of named theme arguments passed to theme(), defaults to `.counts_plot_default_theme`. For example, `list(axis.ticks = ggplot2::element_blank())`
 #' @return A ggplot object of count histograms by sample.
+#'
+#' @noRd
 
 counts_plot_samples <- function(countdf,
                                 plotType = "area",
@@ -305,8 +313,10 @@ counts_plot_samples <- function(countdf,
 #'
 #' Get scaled values for custom breaks in a given value vector for use
 #' defining breaks in scale_gradientn(), for example
-#' @param vector of breaks
+#' @param breaks vector of breaks
 #' @param x vector of weights
+#' 
+#' @noRd
 breaks_to_scaledbreaks <- function(breaks, x) {
   rescaled_weights <- scales::rescale(x)
   rescaled_breaks <- quantile(rescaled_weights, probs = ecdf(x)(breaks))
@@ -334,10 +344,11 @@ cleanup_breaks <- function(breaks, x) {
 #' Helper to return the motif annotations within a specfic region outside of
 #' the plotting function. Can supply either a counts df or a region string.
 #'
-#' @param ArchRProj The archr project containing motif annotations
-#' @param motifSetName The name of the motif annotations in the ArchR project
+#' @param motifsList List of motifs
 #' @param countdf A counts data frame object from getPop
-get_motifs_in_region <- function(motifsList, countdf = NULL, regionString = NULL, numCores = 1, metaColumn = NULL, cellSubsets = "ALL") {
+#' 
+#' @noRd
+get_motifs_in_region <- function(motifsList, countdf) {
   chrom <- toString(unique(countdf$chr))
   startSite <- min(countdf$Locus)
   endSite <- max(countdf$Locus)
@@ -361,21 +372,20 @@ get_motifs_in_region <- function(motifsList, countdf = NULL, regionString = NULL
 #'
 #' @param p1 The output of `counts_plot_samples()`
 #' @param countdf  A dataframe that comes from `getbpCounts()` or `getbpInserts()`
-#' @param ArchRProj An archR project containing motif annotations
-#' @param motifSetName The name of the motif set in ArchRProj to use for annotation
+#' @param motifsList List of motifs
 #' @param motif_y_space_factor A factor for vertical spacing between motif labels. Default 4. Increase to make labels farther apart, decrease to make labels closer.
 #' @param motif_stagger_labels_y = FALSE Logical value, default FALSE. If TRUE, will  stagger motif labels in adjacent columns in the vertical direction
 #' @param motif_weights Optional numeric vector, default NULL. If provided will be used to color motif labels by the weighted values. Values must be uniquely named
 #' with motif names, for example c(`KLF5`= 3.2, `STAT1 = 0.2`, `EOMES` = -1.4`). Weights can be anything relevant, for example if the peak/region is associated with
 #' a specific group/sample then global motif enrichment results for that group: `-log10(FDR)*sign(change)`
 #' @param motif_weight_name Character value, default "Motif Weight". Used to label the color legend.
-#' @param weight_colors Named numeric vector. Names should be color values and breaks should be the corresponding values of motif_weights. Values outside the
-#' highest and lowest value will appear as max or min defined color value.
 #' @param motif_lab_size Numeric value, default 1. Size of motif labels.
 #' @param motif_lab_alpha Numeric value, default 0.25. Alpha for motif labels.
 #' @param motif_line_size Numeric value, default 1. Size of motif lines.
 #' @param motif_line_alpha Numeric value, default 0.25. Alpha for motif lines.
 #' @return The input ggplot object with motif labels overlaid
+#'
+#' @noRd
 counts_plot_motif_overlay <- function(p1,
                                       countdf,
                                       motifsList,
@@ -392,7 +402,7 @@ counts_plot_motif_overlay <- function(p1,
   # Retrieve annotations in region and format
   specMotifs <- get_motifs_in_region(
     countdf = countdf,
-    motifsList = motifsList,
+    motifsList = motifsList
   )
   reduceMotifs <- plyranges::reduce_ranges(specMotifs, count = plyranges::n(), names = paste(labels, collapse = ","))
   splitMotifs <- strsplit(reduceMotifs$names, split = ",")
@@ -503,6 +513,8 @@ counts_plot_motif_overlay <- function(p1,
 #' Utility function to quickly visualize a color palette formatted for motif weight visualization
 #'
 #' @param pal A palette, named list of values where names are colors and values are the color breaks
+#' @param cex number indicating the amount by which plotting text and symbols should be scaled relative to the default
+#' @param cex.lab magnification of x and y labels relative to cex
 #' @return Plots a base plot to visualize the input palette
 #' @examples
 #' \dontrun{
@@ -510,6 +522,8 @@ counts_plot_motif_overlay <- function(p1,
 #' names(motif_color_pal) <- c("darkblue", "cyan", "gray", "orange", "darkred")
 #' plot_pal(motif_color_pal)
 #' }
+#'
+#' @noRd
 plot_pal <- function(pal, cex = 4, cex.lab = 1) {
   npal <- length(pal)
   plotdim(npal * 1, 3)
@@ -530,6 +544,8 @@ plot_pal <- function(pal, cex = 4, cex.lab = 1) {
 #' @param db_id_col Character value. Column in `orgdb` containing the output id. Default "REFSEQ".
 #' @param verbose Logical value, default TRUE.
 #' @return GRanges object for gene to plot
+#'
+#' @noRd
 get_gene_body_model <- function(whichGene,
                                 regionGRanges,
                                 countdf,
@@ -644,11 +660,12 @@ get_gene_body_model <- function(whichGene,
 #' Creates a gene track ggplot based on gene model GRanges
 #' Used conditinally in `plotRegion()` for gene plot.
 #'
-#' @param A gene granges model, ie generated by `get_gene_body_model()`
-#' @param x_min Numeric value. Min x-axis limit. If NULL (default) will use min value from newModel granges.
-#' @param x_max Numeric value. Max x-axis limit. If NULL (default) will use max value from newModel granges.
+#' @param newModel gene granges model, ie generated by `get_gene_body_model()`
+#' @param x_lim Numeric value. Min x-axis limit. If NULL (default) will use min value from newModel granges.
 #' @param base_size Numeric, default 12. Global plot base text size parameter
 #' @param theme_ls Named list of parameters passed to `theme()`. For defaults see `.gene_plot_theme`
+#'
+#' @noRd
 plot_whichGene <- function(newModel,
                            x_lim = NULL,
                            base_size = 12,
@@ -690,12 +707,14 @@ plot_whichGene <- function(newModel,
 #'
 #' @param organismdb Database object, for example the output of `OrganismDbi::makeOrganismDbFromTxDb()`
 #' @param geneBody_gr A GRanges object containing the gene, for example an output of `get_grange_genebody()`
-#' @param xlim vector of (x_min, x_max)
+#' @param x_lim vector of (x_min, x_max)
 #' @param base_size Numeric, default 12. Global plot base text size parameter
-#' @param plot_theme Named list of `ggplot2::theme()` parameters.
+#' @param theme_ls Named list of `ggplot2::theme()` parameters.
 #' @param collapseGenes Logical value, default FALSE. If TRUE will collapse all genes into one line.
 #' sites into a single row
 #' @return A ggplot object
+#' 
+#' @noRd
 plot_geneBody <- function(organismdb,
                           geneBody_gr,
                           x_lim = NULL,
@@ -739,7 +758,8 @@ plot_geneBody <- function(organismdb,
 #'
 #' @param TxDb A TxDb object with transcript info.
 #' @param orgdb A OrgDb object with gene name info.
-
+#'
+#' @noRd
 simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
 
   # retrieve transcript lengths
@@ -775,8 +795,14 @@ simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
 }
 
 
-
-
+#' Generate a link plot from a dataframe of co-accessible links
+#' 
+#' @param regionGRanges GRanges containing the regions to plot
+#' @param legend.position legend.position
+#' @param relativeHeights named list of tracks and relative track heights
+#' @param linkdf Dataframe of co-accessible links from getCoAccessibleLinks
+#' 
+#' @noRd
 get_link_plot <- function(regionGRanges, legend.position = NULL,
                           relativeHeights, linkdf) {
   linkdf2 <- dplyr::filter(linkdf, start + 250 > start(regionGRanges) & end - 250 < end(regionGRanges))

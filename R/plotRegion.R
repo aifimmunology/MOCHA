@@ -9,8 +9,7 @@
 #'   further customization. Note that to show specific genes with the option
 #'   'whichGene' the \pkg{RMariaDB} package must be installed.
 #'
-#' @param countdf A dataframe that comes from `getbpCounts()` or
-#'   `getbpInserts()`
+#' @param countSE A SummarizedExperiment from MOCHA::getCoverage
 #' @param plotType Options include 'overlaid','area', or 'RidgePlot'. default is
 #'   'area', which will plot a seperate track for each group with the area
 #'   filled in under the curve. Setting plotType to 'overlaid' will overlay
@@ -36,8 +35,6 @@
 #' @param counts_theme_ls A list of named theme arguments passed to theme(). For
 #'   example, `list(axis.ticks = element_blank())`. Default NULL will use
 #'   `.counts_plot_default_theme`.
-#' @param ArchRProj An archR project containing motif annotations. Only needed
-#'   if supplying `motifSetName` arg for motif label overlay.
 #' @param motifSetName The name of the motif set in ArchRProj to use for
 #'   annotation. Example: 'JasparMotifs'
 #' @param motif_y_space_factor A factor for vertical spacing between motif
@@ -49,15 +46,17 @@
 #'   be used to color motif labels by the weighted values
 #' @param motif_weight_name Character value, default "Motif Weight". Used to
 #'   label the legend for motif colors
-#' @param weight_colors Named numeric vector. Names should be color values and
-#'   breaks should be the corresponding values of motif_weights. Values outside
-#'   the highest and lowest value will appear as max or min defined color value.
+#' @param motif_weight_colors Named numeric vector. Names should be color values
+#'   and breaks should be the corresponding values of motif_weights. Values
+#'   outside the highest and lowest value will appear as max or min defined
+#'   color value.
 #' @param motif_lab_size Numeric value, default 1. Size of motif labels.
 #' @param motif_lab_alpha Numeric value, default 0.25. Alpha for motif labels.
 #' @param motif_line_size Numeric value, default 1. Size of motif lines.
 #' @param motif_line_alpha Numeric value, default 0.25. Alpha for motif lines.
 #' @param showGene Logical value, default TRUE. Whether or not the gene track
 #'   should be plotted.
+#' @param whichGene Name of gene for plotting this specific gene in region.
 #' @param db_id_col Character value. Column in `orgdb` containing the output id
 #'   for `whichGene` plotting. Default "REFSEQ".
 #' @param collapseGenes Options include 'collapseAll', 'longestTx', or 'None'
@@ -68,6 +67,8 @@
 #'   gene plot. Default NULL will use `.gene_plot_theme`
 #' @param additionalGRangesTrack A GRanges object containing additional track
 #'   plot data
+#' @param linkdf A dataframe with co-accessible links to display as an additonal
+#'   track
 #' @param showIdeogram Logical value, default TRUE. If TRUE plots the chromosome
 #'   ideogram at the top of the multi-track plot
 #' @param ideogram_genome Character value, a genome name for the ideogram plot.
@@ -91,7 +92,7 @@
 #'
 #' # Motif overlay for a project my_proj containing "JasparMotifs" annotations:
 #' plotRegion(
-#'   countSE = my_count_SE, motifSetName = "JasparMotifs", 
+#'   countSE = my_count_SE, motifSetName = "JasparMotifs",
 #'   motif_lab_alpha = 1, motif_line_alpha = 1
 #' )
 #'
@@ -128,7 +129,7 @@ plotRegion <- function(countSE,
                        motif_line_size = 0.75,
                        # Genes plot args
                        showGene = TRUE,
-                       whichGene = NULL, # for plotting specific gene in region
+                       whichGene = NULL,
                        db_id_col = "REFSEQ",
                        collapseGenes = "None",
                        gene_theme_ls = NULL,

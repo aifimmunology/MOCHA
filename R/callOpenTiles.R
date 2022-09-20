@@ -20,6 +20,10 @@
 #'   and make a new fold named MOCHA for saving files.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations.
+#' @param fast Optional, set to TRUE to use a faster but more memory-intensive 
+#'   algorithm. Default is FALSE.
+#' @param force Optional, whether to force creation of coverage files if they 
+#'   already exist. Default is FALSE.
 #'
 #' @return tileResults A MultiAssayExperiment object containing ranged data
 #'   for each tile

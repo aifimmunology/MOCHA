@@ -44,6 +44,8 @@ sample-tile intensity matrix. Optional, default is FALSE.}
 
 \item{numCores}{Optional, the number of cores to use with multiprocessing.
 Default is 1.}
+
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
 SampleTileMatrices a MultiAssayExperiment containing a sample-tile

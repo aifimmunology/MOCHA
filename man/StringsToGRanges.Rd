@@ -6,6 +6,9 @@
 \usage{
 StringsToGRanges(regionString)
 }
+\arguments{
+\item{regionString}{A string or list of strings each in the format chr1:100-200}
+}
 \description{
 \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
   into GRanges

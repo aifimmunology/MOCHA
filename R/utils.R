@@ -146,6 +146,8 @@ validRegionString <- function(regionString) {
 #'
 #' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
 #'   into GRanges
+#'   
+#' @param regionString A string or list of strings each in the format chr1:100-200
 #'
 #' @export
 StringsToGRanges <- function(regionString) {
@@ -173,9 +175,10 @@ StringsToGRanges <- function(regionString) {
 
 #' @title \code{GRangesToString} Converts a GRanges object to a string in the format 'chr1:100-200'
 #'
-#' @description \code{GRangesToStrin} Turns a GRanges Object into
+#' @description \code{GRangesToString} Turns a GRanges Object into
 #' 	a list of strings in the format chr1:100-200
-#'
+#' 	
+#' @param GR_obj the GRanges object to convert to a string
 #'
 #' @export
 GRangesToString <- function(GR_obj) {

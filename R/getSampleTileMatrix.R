@@ -24,6 +24,7 @@
 #'   sample-tile intensity matrix. Optional, default is FALSE.
 #' @param numCores Optional, the number of cores to use with multiprocessing.
 #'   Default is 1.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return SampleTileMatrices a MultiAssayExperiment containing a sample-tile
 #'   intensity matrix for each cell population
