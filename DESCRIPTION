@@ -26,12 +26,12 @@ Imports:
     SummarizedExperiment,
     stringr,
     ggbio,
-    wCorr,
+    wCorr
+Suggests: 
+    RMariaDB,
     TxDb.Hsapiens.UCSC.hg38.refGene,
     org.Hs.eg.db,
     withr,
-    RMariaDB
-Suggests: 
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
