@@ -7,8 +7,10 @@
 #' @param cellPopulations the cell populations you want to visualize.
 #' @param groupColumn Optional parameter, same as in getSampleTileMatrix, which defines whether you
 #' 				  want to plot reproducibility within each 
-#' defining the promoter region. The format is (upstream, downstream). 
-#' Default is (2000, 100).
+#' @param returnPlotList Instead of one plot with all celltypes/conditions, it returns a list of plots for each cell types 
+#' @param returnDFs Instead of a plot, returns a data.frame of the reproducibility across samples. 
+#' 						If set to false, then it plots the data.frame instead of returning it. 
+#' @param numCores Number of cores to multithread over. 
 #'
 #' @return SampleTileObj the input data structure with added gene annotations.
 #'
@@ -93,7 +95,7 @@ plotReproducibility <- function(tileObject,
 cellTypeDF <- function(peaksExperiment, sampleData,groupColumn = NULL, returnPlotList = FALSE){
 
   samplePeakMat <- RaggedExperiment::compactAssay(
-							peaksExperiment,521
+							peaksExperiment,
 							i = "peak"
 						)
   

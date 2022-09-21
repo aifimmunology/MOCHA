@@ -13,7 +13,6 @@
 #'   Default is 'ALL'.
 #' @param groupColumn Optional, the column containing sample group labels for determining consensus tiles within sample groups. Default is NULL, all samples will be used for determining consensus tiles.
 #' @param threshold Threshold for consensus tiles, the minimum % of samples (within a sample group) that a peak must be called in to be retained.
-#' @param join The join method to combine consensus tiles across sample groups. Can be "union" (default) or "intersect".
 #' @param NAtoZero Boolean, set to TRUE to convert NA intensities from peak calling (tiles with too low signal) to zeroes. Optional, default is FALSE.
 #' @param log2Intensity Boolean, set to TRUE to return the log2 of the sample-tile intensity matrix. Optional, default is FALSE.
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
@@ -31,14 +30,10 @@ getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
                                 groupColumn = NULL,
                                 threshold = 0.2,
-                                join = "union",
                                 NAtoZero = FALSE,
                                 log2Intensity = TRUE,
                                 numCores = 1,
                                 verbose = FALSE) {
-  if (!(join %in% c("union", "intersect"))) {
-    stop("`join` must be either 'union' or 'intersect'")
-  }
 
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
@@ -80,8 +75,7 @@ getSampleTileMatrix <- function(tileResults,
       x,
       sampleData,
       threshold,
-      groupColumn,
-      join
+      groupColumn
     )
   }, mc.cores = numCores)
 

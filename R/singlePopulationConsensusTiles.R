@@ -8,8 +8,7 @@
 singlePopulationConsensusTiles <- function(peaksExperiment,
                                            sampleData,
                                            threshold,
-                                           groupColumn = NULL,
-                                           join = 'union') {
+                                           groupColumn = NULL) {
     
   
   # Extract matrices of samples by peak tileIDs with peak status
@@ -50,13 +49,9 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
       
     }
     names(consensusPeaksByGroup) <- groups
-    
-    if (join=="union"){
-      consensusPeaks <- Reduce(union, consensusPeaksByGroup)
-    } else if (join=="intersect"){
-      consensusPeaks <- Reduce(intersect, consensusPeaksByGroup)
-    }
-
+	
+    consensusPeaks <- Reduce(union, consensusPeaksByGroup)
+	
   }
   return(consensusPeaks)
 }
