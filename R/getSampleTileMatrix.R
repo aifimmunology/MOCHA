@@ -117,7 +117,12 @@ getSampleTileMatrix <- function(tileResults,
       log2Intensity
     )
   }, mc.cores = numCores)
-
+    
+  # Order sampleData rows to match the same order as the columns
+  maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
+  colOrder <- colnames(sampleTileIntensityMatList[[maxMat]])
+  sampleData <- sampleData[match(colOrder, rownames(sampleData)),]
+    
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
     do.call("cbind", .) %>%
     as.data.frame()

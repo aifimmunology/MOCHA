@@ -9,8 +9,6 @@
 name: R
 
 on:
-  push:
-    branches: [ "main", "docs-and-style" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
