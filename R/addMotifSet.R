@@ -13,6 +13,8 @@
 #'   returnObj=TRUE. Default is 'Motifs'.
 #'
 #' @return the modified SE_Object with motifs added to the metadata
+#' 
+#' @importFrom magrittr %>%
 #' @examples
 #' \dontrun{
 #' # load a curated motif set from library(chromVARmotifs)
@@ -26,14 +28,15 @@
 #' @export
 
 addMotifSet <- function(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName = "Motifs") {
-  TotalPeakSet <- rowRanges(SE_Object)
-  genome <- metadata(SE_Object)$Genome
+  TotalPeakSet <- IRanges::rowRanges(SE_Object)
+  genome <- SummarizedExperiment::metadata(SE_Object)$Genome
   motif_ix <- motifmatchr::matchMotifs(
     pwms = pwms,
     TotalPeakSet,
     genome = genome,
     out = "positions", w = w
   )
+  . <- NULL
   names(motif_ix) <- sub("_D_.*|_I_.*", "", names(motif_ix)) %>%
     sub("_I$|_D$", "", .) %>%
     sub(".*_LINE", "", .) %>%
@@ -43,7 +46,7 @@ addMotifSet <- function(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName =
   names(motifList) <- motifSetName
 
   if (returnObj) {
-    metadata(SE_Object) <- append(metadata(SE_Object), motifList)
+    SummarizedExperiment::metadata(SE_Object) <- append(SummarizedExperiment::metadata(SE_Object), motifList)
     return(SE_Object)
   } else {
     return(motif_ix)

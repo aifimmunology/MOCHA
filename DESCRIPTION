@@ -26,7 +26,8 @@ Imports:
     SummarizedExperiment,
     stringr,
     ggbio,
-    wCorr
+    wCorr,
+    magrittr
 Suggests: 
     RMariaDB,
     TxDb.Hsapiens.UCSC.hg38.refGene,
