@@ -199,13 +199,17 @@ callOpenTiles <- function(ArchRProj,
     scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
 
+  #Save the cell number per population-sample in the metadata
+  allCellCounts = table(cellColData[, c('Sample',cellPopLabel)])
+  allCellCounts = allCellCounts[,cellPopulations]
+
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
-
+   
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list(
+    metadata = list('CellCounts' = allCellCounts,
       "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
       "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
     )
