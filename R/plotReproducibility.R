@@ -16,6 +16,9 @@
 #'
 #'
 #' @export
+
+
+
 plotReproducibility <- function(tileObject,
 						  cellPopulations  = 'All',
                           groupColumn = NULL,
@@ -55,16 +58,18 @@ plotReproducibility <- function(tileObject,
 		if(!is.null(groupColumn)){
 		
 			allPlots <- lapply(seq_along(alldf), function(x) 
-							ggplot(alldf[[x]], aes(x = Reproducibility, y = log(PeakNumber), group = GroupName, color = GroupName)) + 
-								geom_point() + ggtitle(names(alldf)[x])
+							ggplot(alldf[[x]], aes(x = Reproducibility, y = PeakNumber, group = GroupName, color = GroupName)) + 
+								geom_point() + ggtitle(names(alldf)[x]) + scale_y_continuous(trans='log2') + 
+								ylab('Peak Number') + theme_bw()
 							
 						)
 		
 		}else{
 		
 			allPlots <- lapply(seq_along(alldf), function(x) 
-						ggplot(alldf[[x]], aes(x = Reproducibility, y = log(PeakNumber))) + 
-								geom_point() + ggtitle(names(alldf)[x])
+						ggplot(alldf[[x]], aes(x = Reproducibility, y = PeakNumber)) + 
+								geom_point() + ggtitle(names(alldf)[x]) + scale_y_continuous(trans='log2') + 
+								ylab('Peak Number')  + theme_bw()
 							
 						)
 		}
@@ -84,30 +89,46 @@ plotReproducibility <- function(tileObject,
 	
 	}
   
-	p1 <- ggplot(combinedDF, aes(x = Reproducibility, y = log(PeakNumber), group = groups, color = groups)) + geom_line()
-	return(p1)
- 
+	p1 <- ggplot(combinedDF, aes(x = Reproducibility, y = PeakNumber, group = groups, color = groups)) + geom_line() + 
+			scale_y_continuous(trans='log10') + ylab('Peak Number')  + theme_bw()
+	
+	 return
+	 (p1)
   }
+  
+ 
    
 }
 
 
-cellTypeDF <- function(peaksExperiment, sampleData,groupColumn = NULL, returnPlotList = FALSE){
+cellTypeDF <- function(peaksExperiment, sampleData, groupColumn = NULL, returnPlotList = FALSE){
 
   samplePeakMat <- RaggedExperiment::compactAssay(
 							peaksExperiment,
 							i = "peak"
 						)
   
-  samplePeakMat[is.na(samplePeakMat)] <- FALSE
-  nSamples <- length(colnames(peaksExperiment))
+  # Identify any samples that had less than 5 cells, and therefore no peak calls
+  emptySamples <- apply(samplePeakMat, 2, function(x) all(is.na(x) | !x))
   
+  #Now we'll filter out those samples, and replace all NAs with zeros. 
+  samplePeakMat <- samplePeakMat[,!emptySamples]
+  samplePeakMat[is.na(samplePeakMat)] <- FALSE
+  sampleData <- sampleData[rownames(sampleData) %in% names(which(!emptySamples)),]
+  
+
+
   if (is.null(groupColumn)) {
 
-		# Count the number of TRUE peaks in each row and divide by nSamples
-		peakTable <- table(rowSums(samplePeakMat) / nSamples)
-		TruePeaks <- data.frame('Reproducibility' = as.numeric(as.character(names(peakTable))), 'PeakNumber' = unlist(as.list(peakTable)))
-		rownames(TruePeaks) = NULL
+	#The number of samples for reproducibility will be all samples with peak calls
+	nSamples <- sum(!emptySamples)
+	reproducibility_perc <- seq(0, 1, by = 1/nSamples)
+
+	# Count the number of TRUE peaks in each row and divide by nSamples
+	peakReps <- rowSums(samplePeakMat) / nSamples
+	RepPeaks <- sapply(reproducibility_perc, function(x) sum(peakReps>=x))
+	TruePeaks <- data.frame('Reproducibility' = reproducibility_perc, 'PeakNumber' = RepPeaks)
+	
   }else{
     
     # Get consensus peaks for groupings of samples 
@@ -119,17 +140,20 @@ cellTypeDF <- function(peaksExperiment, sampleData,groupColumn = NULL, returnPlo
       samplesInGroup <- rownames(samplesInGroupDF)
       groupSamplePeakMat <- samplePeakMat[,samplesInGroup]
 	  
-	  peakTable <- table(rowSums(groupSamplePeakMat) / length(samplesInGroup))
-      tmp <- data.frame('Reproducibility' = as.numeric(as.character(names(peakTable))), 'PeakNumber' = unlist(as.list(peakTable)))
-	  tmp$GroupName = rep(group, length(peakTable))
-	  rownames(tmp) = NULL
-	  TruePeaks <- rbind(TruePeaks, tmp)
+	  reproducibility_perc <- seq(0, 1, by = 1/length(samplesInGroup))
+	  
+	  peakReps_tmp <- rowSums(groupSamplePeakMat) / length(samplesInGroup)
+	  RepPeaks_tmp <- sapply(reproducibility_perc, function(x) sum(peakReps_tmp>=x))
+	  TruePeaks_tmp <- data.frame('Reproducibility' = reproducibility_perc, 'PeakNumber' = RepPeaks_tmp)
+	  
+	  TruePeaks_tmp$GroupName = rep(group, length(RepPeaks_tmp))
+	  
+	  TruePeaks <- rbind(TruePeaks, TruePeaks_tmp)
       
     }
 	
   }
   
   return(TruePeaks)
-
 
 }
