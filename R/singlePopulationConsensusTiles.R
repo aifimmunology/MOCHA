@@ -17,8 +17,16 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
     peaksExperiment,
     i = "peak"
   )
+  
+  # Identify any samples that had less than 5 cells, and therefore no peak calls
+  emptySamples <- apply(samplePeakMat, 2, function(x) all(is.na(x) | !x))
+  
+  #Now we'll filter out those samples, and replace all NAs with zeros. 
+  samplePeakMat <- samplePeakMat[,!emptySamples]
   samplePeakMat[is.na(samplePeakMat)] <- FALSE
-  nSamples <- length(colnames(peaksExperiment))
+  
+  #The number of samples for reproducibility will be all samples with peak calls
+  nSamples <- sum(!emptySamples)
   
   if (is.null(groupColumn)) {
 
