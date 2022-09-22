@@ -24,6 +24,7 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
   #Now we'll filter out those samples, and replace all NAs with zeros. 
   samplePeakMat <- samplePeakMat[,!emptySamples]
   samplePeakMat[is.na(samplePeakMat)] <- FALSE
+  sampleData <- sampleData[, !emptySamples]
   
   #The number of samples for reproducibility will be all samples with peak calls
   nSamples <- sum(!emptySamples)
@@ -31,6 +32,7 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
   if (is.null(groupColumn)) {
 
     # Count the number of TRUE peaks in each row and divide by nSamples
+	
     percentTruePeaks <- rowSums(samplePeakMat) / nSamples
 
     # Keep only peaks with reproducibility above specified threshold
@@ -42,6 +44,22 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
     # Get consensus peaks for groupings of samples
     groups <- unique(sampleData[[groupColumn]])
     consensusPeaksByGroup <- list()
+	
+	#We need to throw an error if there are too few samples for a given group to meet threshold
+	if(any(threshold > 1/table(sampleData[[groupColumn]]))){
+	
+		stop('Error: Too few samples within group to apply the given threshold')
+	
+	}
+	
+	## The user may accidentally provide a groupColumn that includes NAs - which would mean that a set of Samples would be ignored entirely for peak calling. 
+	## We will throw this error and force the user to either exclude the samples before analysis, or edit the sampledata. 
+	if(any(is.na(sampleData[[groupColumn]]))){
+	
+		stop('Error: GroupColumn contains NAs. If you want to call reproducible tiles within groups, provide a group annotation that includes all samples.')
+	
+	}
+	
     for (group in groups){
       # Filter sample-peak matrix to samples in this group
       samplesInGroupDF <- sampleData[sampleData[[groupColumn]]==group,]
@@ -49,7 +67,8 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
       groupSamplePeakMat <- samplePeakMat[,samplesInGroup]
 
       # Keep only peaks with reproducibility above specified threshold
-      percentTruePeaks <- rowSums(groupSamplePeakMat) / nSamples
+	  
+      percentTruePeaks <- rowSums(groupSamplePeakMat) / samplesInGroup
       consensusPeaks <- percentTruePeaks[percentTruePeaks >= threshold]
       consensusPeaks <- names(consensusPeaks)
       
