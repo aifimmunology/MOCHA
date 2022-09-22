@@ -8,6 +8,7 @@
 singlePopulationConsensusTiles <- function(peaksExperiment,
                                            sampleData,
                                            threshold,
+										   disableMinimum = FALSE,
                                            groupColumn = NULL) {
     
   
@@ -33,6 +34,12 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
 
     # Count the number of TRUE peaks in each row and divide by nSamples
 	
+	if(threshold <= 1/nSamples & !disableMinimum){
+	
+		stop('Error: Threshold is too low. Only one sample is needed to call a peak reproducible. Set disableMinimum = TRUE if you want to bypass this error.')
+	
+	}
+	
     percentTruePeaks <- rowSums(samplePeakMat) / nSamples
 
     # Keep only peaks with reproducibility above specified threshold
@@ -46,9 +53,9 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
     consensusPeaksByGroup <- list()
 	
 	#We need to throw an error if there are too few samples for a given group to meet threshold
-	if(any(threshold <= 1/table(sampleData[[groupColumn]]))){
+	if(any(threshold <= 1/table(sampleData[[groupColumn]])) & !disableMinimum){
 	
-		stop('Error: Too few samples within group to apply the given threshold')
+		stop('Error: Threshold is too low. Only one sample is needed to call a peak reproducible within one or more of your groups. Set disableMinimum = TRUE if you want to bypass this error.')
 	
 	}
 	
