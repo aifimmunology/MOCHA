@@ -46,7 +46,7 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
     consensusPeaksByGroup <- list()
 	
 	#We need to throw an error if there are too few samples for a given group to meet threshold
-	if(any(threshold > 1/table(sampleData[[groupColumn]]))){
+	if(any(threshold <= 1/table(sampleData[[groupColumn]]))){
 	
 		stop('Error: Too few samples within group to apply the given threshold')
 	
