@@ -345,10 +345,17 @@ get_motifs_in_region <- function(motifsList, countdf = NULL, regionString = NULL
 
   specMotifs <- unlist(motifsList) %>%
     plyranges::mutate(name = gsub("_.*", "", names(.))) %>%
-    plyranges::join_overlap_intersect(regionGRanges) %>%
-    plyranges::mutate(type = "exon") %>%
-    plyranges::mutate(index = seq(1, length(.), by = 1)) %>%
-    plyranges::mutate(labels = paste(name, index, sep = "_"))
+    plyranges::join_overlap_intersect(regionGRanges) 
+	
+  if(length(specMotifs) > 0) { 
+  
+		specMotifs <- specMotifs %>%
+		plyranges::mutate(type = "exon") %>%
+		plyranges::mutate(index = seq(1, length(.), by = 1)) %>%
+		plyranges::mutate(labels = paste(name, index, sep = "_"))
+	
+
+  }else{ specMotifs= NULL }
 
   return(specMotifs)
 }
@@ -394,6 +401,12 @@ counts_plot_motif_overlay <- function(p1,
     countdf = countdf,
     motifsList = motifsList,
   )
+  
+  if(is.null(specMotifs)){ 
+		warning('No motifs found for this region')
+		return(p1)
+	}
+  
   reduceMotifs <- plyranges::reduce_ranges(specMotifs, count = plyranges::n(), names = paste(labels, collapse = ","))
   splitMotifs <- strsplit(reduceMotifs$names, split = ",")
 
@@ -419,8 +432,8 @@ counts_plot_motif_overlay <- function(p1,
     y = y1,
     name = specMotifs$labels
   ) %>%
-    pivot_longer(cols = c("x1", "x2"), names_to = NULL, values_to = "x") %>%
-    group_by(name) %>%
+    tidyr::pivot_longer(cols = c("x1", "x2"), names_to = NULL, values_to = "x") %>%
+    gdplyr::roup_by(name) %>%
     dplyr::mutate(labels = ifelse(max(x) == x, gsub("_.*", "", name), NA))
 
   # Incorprate Weights

@@ -58,11 +58,12 @@ addDelta <- function(CountSE,
   
 	if( all(fore$chr == back$chr & fore$Locus == back$Locus)){
 	
-		delta <- data.frame(chr = fore$chr, Locus = fore$Locus, 
+		delta <- list(data.frame(chr = fore$chr, Locus = fore$Locus, 
 						Counts = fore$Counts - back$Counts,
-						Groups = rep(DeltaName, length(fore$Counts)))
-						
-		assays(CountSE) <- append(assays(CountSE), list(DeltaName = delta))
+						Groups = rep(DeltaName, length(fore$Counts))))
+		names(delta) <- DeltaName
+		
+		assays(CountSE) <- append(assays(CountSE), delta)
 
 		return(CountSE)
 		
