@@ -103,7 +103,7 @@ callOpenTiles <- function(ArchRProj,
 
     # Check for and remove celltype-sample groups for which there are no fragments.
     fragsNoNull <- frags[lengths(frags) != 0]
-    emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
+    emptyFragsBool <- !(names(frags) %in% names(fragsNoNull))
     emptyGroups <- names(frags)[emptyFragsBool]
     emptyGroups <- gsub("__.*", "", emptyGroups)
 
