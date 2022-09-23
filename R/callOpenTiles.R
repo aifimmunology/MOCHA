@@ -140,7 +140,7 @@ callOpenTiles <- function(ArchRProj,
 
 
     # Add prefactor multiplier across datasets
-    if(is.null(studySignal){
+    if(is.null(studySignal)){
         message('calculating study signal on ArchR project. Make sure data contains all cell populations')
         curr_frags_median <- median(cellColData$nFrags)
         
