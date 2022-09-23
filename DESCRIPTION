@@ -27,7 +27,8 @@ Imports:
     stringr,
     ggbio,
     wCorr,
-    magrittr
+    magrittr,
+    rlang
 Suggests: 
     RMariaDB,
     TxDb.Hsapiens.UCSC.hg38.refGene,

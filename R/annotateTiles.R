@@ -16,7 +16,10 @@
 #' Default is (2000, 100).
 #'
 #' @return SampleTileObj the input data structure with added gene annotations.
-#'
+#' 
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data 
+#' 
 #' @examples
 #' \dontrun{
 #' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
@@ -36,7 +39,7 @@ annotateTiles <- function(SampleTileObj,
     tileGRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
     TxDb <- AnnotationDbi::loadDb(S4Vectors::metadata(SampleTileObj)$TxDb)
     Org <- AnnotationDbi::loadDb(S4Vectors::metadata(SampleTileObj)$Org)
-  } else if (class(tileList)[[1]] == "GRanges" & !is.null(TxDb) & !is.null(Org)) {
+  } else if (class(SampleTileObj)[[1]] == "GRanges" & !is.null(TxDb) & !is.null(Org)) {
     tileGRanges <- SampleTileObj
   } else {
     stop("Error: Invalid inputs. Verify SampleTileObj is a RangedSummarizedExperiment. If SampleTileObj is a GRanges, TxDb and Org must be provided.")
@@ -47,23 +50,23 @@ annotateTiles <- function(SampleTileObj,
   exonList <- suppressWarnings(ensembldb::exonsBy(TxDb, by = "gene"))
   # Same TxDb, same gene names in same order.
   names(exonList) <- names(txList)
-
-  txs <- stack(txList) %>%
+  . <- NULL
+  txs <- utils::stack(txList) %>%
     GenomicRanges::trim() %>%
     S4Vectors::unique(.)
-  exonSet <- stack(exonList)
+  exonSet <- utils::stack(exonList)
 
-  promoterSet <- stack(txList) %>%
+  promoterSet <- utils::stack(txList) %>%
     GenomicRanges::trim(.) %>%
     S4Vectors::unique(.) %>%
     suppressWarnings(GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]))
 
   getOverlapNameList <- function(rowTiles, annotGR) {
-    overlapGroup <- findOverlaps(rowTiles, annotGR) %>% as.data.frame()
+    overlapGroup <- IRanges::findOverlaps(rowTiles, annotGR) %>% as.data.frame()
     overlapGroup$Genes <- as.character(annotGR$name[overlapGroup$subjectHits])
     last <- overlapGroup %>%
-      dplyr::group_by(subjectHits) %>%
-      dplyr::summarize(Genes = paste(unique(Genes), collapse = ", "))
+      dplyr::group_by(.data$subjectHits) %>%
+      dplyr::summarize(Genes = paste(unique(.data$Genes), collapse = ", "))
     return(last)
   }
 
@@ -71,7 +74,7 @@ annotateTiles <- function(SampleTileObj,
   exon_overlaps <- getOverlapNameList(tileGRanges, exonSet)
   promo_overlaps <- getOverlapNameList(tileGRanges, promoterSet)
 
-  tileType <- as.data.frame(mcols(tileGRanges)) %>%
+  tileType <- as.data.frame(GenomicRanges::mcols(tileGRanges)) %>%
     dplyr::mutate(Index = 1:nrow(.)) %>%
     dplyr::mutate(Type = dplyr::case_when(
       Index %in% promo_overlaps$subjectHits ~ "Promoter",
@@ -80,14 +83,14 @@ annotateTiles <- function(SampleTileObj,
       TRUE ~ "Distal"
     )) %>%
     dplyr::left_join(promo_overlaps, by = c("Index" = "subjectHits")) %>%
-    dplyr::rename("Promo" = Genes) %>%
+    dplyr::rename("Promo" = .data$Genes) %>%
     dplyr::left_join(exon_overlaps, by = c("Index" = "subjectHits")) %>%
-    dplyr::rename("Exons" = Genes) %>%
+    dplyr::rename("Exons" = .data$Genes) %>%
     dplyr::left_join(txs_overlaps, by = c("Index" = "subjectHits")) %>%
-    dplyr::rename("Txs" = Genes) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Promoter", Promo, NA)) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Exonic", Exons, Genes)) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Intronic", Txs, Genes))
+    dplyr::rename("Txs" = .data$Genes) %>%
+    dplyr::mutate(Genes = ifelse(.data$Type == "Promoter", .data$Promo, NA)) %>%
+    dplyr::mutate(Genes = ifelse(.data$Type == "Exonic", .data$Exons, .data$Genes)) %>%
+    dplyr::mutate(Genes = ifelse(.data$Type == "Intronic", .data$Txs, .data$Genes))
 
   tileGRanges$tileType <- tileType$Type
   tileGRanges$Gene <- tileType$Genes
