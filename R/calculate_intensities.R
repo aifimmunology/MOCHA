@@ -24,7 +24,8 @@
 
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
-                                  totalFrags
+                                  totalFrags,
+								  verbose = FALSE
                                   )
 {
 
@@ -129,7 +130,7 @@ calculate_intensities <- function(fragMat,
 
   ### Rename "bin" identifier as "tileID"
   colnames(countsByBin)[1] <- 'tileID'
-  message(' ---> Analysis finished on ', numCells, ' cells')
+  if(verbose){  message(' ---> Analysis finished on ', numCells, ' cells') }
 
   return(countsByBin)
 }

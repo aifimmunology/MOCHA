@@ -160,6 +160,7 @@ callOpenTiles <- function(ArchRProj,
           numCores = numCores,
           totalFrags = normalization_factors[x],
           fragsList = frags[[x]],
+		  verbose = verbose,
           StudypreFactor = study_prefactor
         )
       },
