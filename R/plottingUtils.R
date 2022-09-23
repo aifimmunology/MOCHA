@@ -132,7 +132,8 @@ counts_plot_samples <- function(countdf,
   assertthat::assert_that("Locus" %in% names(countdf))
   assertthat::assert_that("Groups" %in% names(countdf))
   assertthat::assert_that(counts_color_var %in% names(countdf))
-
+  
+  Locus <- Counts <- Groups <- Groups2 <- NULL
   # Fill in theme any unspecified theme options with defaults
   default_theme <- .counts_plot_default_theme
   unspec_param <- setdiff(names(default_theme), names(theme_ls))
@@ -148,11 +149,13 @@ counts_plot_samples <- function(countdf,
   )
 
   # Intialize plot
-  p1 <- ggplot(data = countdf, ggplot2::aes(x = Locus, y = Counts)) +
-    theme_bw(base_size = base_size)
+  p1 <- ggplot2::ggplot(data = countdf, ggplot2::aes(x = Locus, y = Counts)) +
+    ggplot2::theme_bw(base_size = base_size)
 
 
   # Plots
+  x <- y <- label <- theme <- NULL
+  
   if (tolower(plotType) == "overlaid") {
     # Conditional Theme
     if (is.null(legend.position)) {
@@ -168,10 +171,10 @@ counts_plot_samples <- function(countdf,
     # Base Plot
     p1 <- p1 +
       ggplot2::geom_line(ggplot2::aes(color = !!as.name(counts_color_var)), alpha = 0.75, size = 1.5) +
-      ylab(NULL) +
-      labs(Groups = "Groups") +
-      coord_cartesian(clip = "off") +
-      geom_text(
+      ggplot2::ylab(NULL) +
+      ggplot2::labs(Groups = "Groups") +
+      ggplot2::coord_cartesian(clip = "off") +
+      ggplot2::geom_text(
         data = df_range,
         ggplot2::aes(x = x, y = y, label = label),
         size = range_label_size,
@@ -184,7 +187,7 @@ counts_plot_samples <- function(countdf,
     if (!is.null(counts_group_colors)) {
       # assertthat::assert_that(all(unique(countdf[[counts_color_var]]) %in% names(counts_group_colors)),
       #                        msg = "Must supply colors for all levels of color variable")
-      p1 <- p1 + scale_color_manual(values = counts_group_colors, breaks = names(counts_group_colors))
+      p1 <- p1 + ggplot2::scale_color_manual(values = counts_group_colors, breaks = names(counts_group_colors))
     }
   } else if (tolower(plotType) == "area") {
     # Conditional Theme
@@ -201,17 +204,17 @@ counts_plot_samples <- function(countdf,
     # Base Plot, conditional
     if (is.null(counts_color)) {
       p1 <- p1 +
-        geom_area(ggplot2::aes(fill = !!as.name(counts_color_var)), position = "identity")
+        ggplot2::geom_area(ggplot2::aes(fill = !!as.name(counts_color_var)), position = "identity")
     } else {
       p1 <- p1 +
-        geom_area(fill = counts_color, position = "identity")
+        ggplot2::geom_area(fill = counts_color, position = "identity")
     }
 
     # Base Plot, common elements
     p1 <- p1 +
-      ylab(NULL) +
-      facet_wrap(vars(Groups), ncol = 1, strip.position = facet_label_side) +
-      geom_text(
+      ggplot2::ylab(NULL) +
+      ggplot2::facet_wrap(dplyr::vars(Groups), ncol = 1, strip.position = facet_label_side) +
+      ggplot2::geom_text(
         data = df_range,
         ggplot2::aes(x = x, y = y, label = label),
         size = range_label_size,
@@ -226,7 +229,7 @@ counts_plot_samples <- function(countdf,
       # assertthat::assert_that(all(unique(countdf[[counts_color_var]]) %in% names(counts_group_colors)),
       #                        msg = "Must supply colors for all levels of color variable")
       p1 <- p1 +
-        scale_fill_manual(values = counts_group_colors, breaks = names(counts_group_colors))
+        ggplot2::scale_fill_manual(values = counts_group_colors, breaks = names(counts_group_colors))
     }
   } else if (tolower(plotType) == "line") {
     # Conditional Theme
@@ -251,9 +254,9 @@ counts_plot_samples <- function(countdf,
 
     # Base Plot, common elements
     p1 <- p1 +
-      ylab(NULL) +
-      facet_wrap(vars(Groups), ncol = 1, strip.position = facet_label_side) +
-      geom_text(
+      ggplot2::ylab(NULL) +
+      ggplot2::facet_wrap(dplyr::vars(Groups), ncol = 1, strip.position = facet_label_side) +
+      ggplot2::geom_text(
         data = df_range,
         ggplot2::aes(x = x, y = y, label = label),
         size = range_label_size,
@@ -268,7 +271,7 @@ counts_plot_samples <- function(countdf,
       # assertthat::assert_that(all(unique(countdf[[counts_color_var]]) %in% names(counts_group_colors)),
       #                        msg = "Must supply colors for all levels of color variable")
       p1 <- p1 +
-        scale_fill_manual(values = counts_group_colors, breaks = names(counts_group_colors))
+        ggplot2::scale_fill_manual(values = counts_group_colors, breaks = names(counts_group_colors))
     }
   } else if (tolower(plotType) == "ridgeplot") {
 
@@ -280,7 +283,7 @@ counts_plot_samples <- function(countdf,
 
     # Base plot, conditional
     p1 <- p1 +
-      geom_ridgeline(
+      ggplot2::geom_ridgeline(
         data = as.data.frame(countdf),
         ggplot2::aes(
           x = Locus, y = Groups2, height = Counts,
@@ -288,12 +291,12 @@ counts_plot_samples <- function(countdf,
         ),
         alpha = 0.25
       ) +
-      ylab(NULL) +
-      scale_y_continuous(
+      ggplot2::ylab(NULL) +
+      ggplot2::scale_y_continuous(
         breaks = c(1:length(tmp$Var1)),
         label = tmp$Var1
       ) +
-      geom_text(
+      ggplot2::geom_text(
         data = data.frame(
           x = Inf, y = Inf,
           label = paste("Range:", 0, "-", round(max(countdf$Counts), digits = 2), sep = "")
@@ -698,9 +701,9 @@ plot_whichGene <- function(newModel,
   }
 
   p_gene <- p_gene +
-    scale_y_continuous(expand = c(0.3, 0.3)) +
-    theme_bw(base_size = base_size) +
-    coord_cartesian(clip = "off") +
+    ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) +
+    ggplot2::theme_bw(base_size = base_size) +
+    ggplot2::coord_cartesian(clip = "off") +
     do.call(theme, theme_ls)
 
   return(p_gene)
@@ -746,9 +749,9 @@ plot_geneBody <- function(organismdb,
   }
 
   g_geneBody <- g_geneBody +
-    scale_y_continuous(expand = c(0.3, 0.3)) +
-    theme_bw(base_size = base_size) +
-    coord_cartesian(clip = "off") +
+    ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) +
+    ggplot2::theme_bw(base_size = base_size) +
+    ggplot2::coord_cartesian(clip = "off") +
     do.call(theme, theme_ls)
 
 
@@ -832,15 +835,15 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
     data = cbind(linkdf2, y = rep(0, dim(linkdf2)[1]))
     ) +
     theme_minimal() +
-    ylab(NULL) +
-    xlab(NULL) +
+    ggplot2::ylab(NULL) +
+    ggplot2::xlab(NULL) +
     ylim(-1, 0) +
     scale_colour_viridis_c(breaks = c(
       ceiling(10 * min(linkdf2$Correlation)) / 10,
       0,
       floor(10 * max(linkdf2$Correlation)) / 10
     )) +
-    coord_cartesian(clip = "off", ylim = c(-0.75, 0)) +
+    ggplot2::coord_cartesian(clip = "off", ylim = c(-0.75, 0)) +
     theme(
       panel.grid = ggplot2::element_blank(), panel.border = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank(),
