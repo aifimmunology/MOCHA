@@ -148,7 +148,7 @@ counts_plot_samples <- function(countdf,
   )
 
   # Intialize plot
-  p1 <- ggplot(data = countdf, aes(x = Locus, y = Counts)) +
+  p1 <- ggplot(data = countdf, ggplot2::aes(x = Locus, y = Counts)) +
     theme_bw(base_size = base_size)
 
 
@@ -167,13 +167,13 @@ counts_plot_samples <- function(countdf,
 
     # Base Plot
     p1 <- p1 +
-      geom_line(aes(color = !!as.name(counts_color_var)), alpha = 0.75, size = 1.5) +
+      ggplot2::geom_line(ggplot2::aes(color = !!as.name(counts_color_var)), alpha = 0.75, size = 1.5) +
       ylab(NULL) +
       labs(Groups = "Groups") +
       coord_cartesian(clip = "off") +
       geom_text(
         data = df_range,
-        aes(x = x, y = y, label = label),
+        ggplot2::aes(x = x, y = y, label = label),
         size = range_label_size,
         hjust = 1,
         vjust = 1
@@ -201,7 +201,7 @@ counts_plot_samples <- function(countdf,
     # Base Plot, conditional
     if (is.null(counts_color)) {
       p1 <- p1 +
-        geom_area(aes(fill = !!as.name(counts_color_var)), position = "identity")
+        geom_area(ggplot2::aes(fill = !!as.name(counts_color_var)), position = "identity")
     } else {
       p1 <- p1 +
         geom_area(fill = counts_color, position = "identity")
@@ -213,7 +213,7 @@ counts_plot_samples <- function(countdf,
       facet_wrap(vars(Groups), ncol = 1, strip.position = facet_label_side) +
       geom_text(
         data = df_range,
-        aes(x = x, y = y, label = label),
+        ggplot2::aes(x = x, y = y, label = label),
         size = range_label_size,
         hjust = 1,
         vjust = 1
@@ -243,10 +243,10 @@ counts_plot_samples <- function(countdf,
     # Base Plot, conditional
     if (is.null(counts_color)) {
       p1 <- p1 +
-        geom_line(aes(color = !!as.name(counts_color_var)), position = "identity")
+        ggplot2::geom_line(ggplot2::aes(color = !!as.name(counts_color_var)), position = "identity")
     } else {
       p1 <- p1 +
-        geom_line(color = counts_color, position = "identity")
+        ggplot2::geom_line(color = counts_color, position = "identity")
     }
 
     # Base Plot, common elements
@@ -255,7 +255,7 @@ counts_plot_samples <- function(countdf,
       facet_wrap(vars(Groups), ncol = 1, strip.position = facet_label_side) +
       geom_text(
         data = df_range,
-        aes(x = x, y = y, label = label),
+        ggplot2::aes(x = x, y = y, label = label),
         size = range_label_size,
         hjust = 1,
         vjust = 1
@@ -282,7 +282,7 @@ counts_plot_samples <- function(countdf,
     p1 <- p1 +
       geom_ridgeline(
         data = as.data.frame(countdf),
-        aes(
+        ggplot2::aes(
           x = Locus, y = Groups2, height = Counts,
           fill = Groups
         ),
@@ -298,7 +298,7 @@ counts_plot_samples <- function(countdf,
           x = Inf, y = Inf,
           label = paste("Range:", 0, "-", round(max(countdf$Counts), digits = 2), sep = "")
         ),
-        aes(x = x, y = y, label = label),
+        ggplot2::aes(x = x, y = y, label = label),
         size = 2, hjust = 0.9, vjust = 1.4
       ) +
       theme(legend.position = "none")
@@ -319,7 +319,7 @@ counts_plot_samples <- function(countdf,
 #' @noRd
 breaks_to_scaledbreaks <- function(breaks, x) {
   rescaled_weights <- scales::rescale(x)
-  rescaled_breaks <- quantile(rescaled_weights, probs = ecdf(x)(breaks))
+  rescaled_breaks <- stats::quantile(rescaled_weights, probs = stats::ecdf(x)(breaks))
   return(rescaled_breaks)
 }
 
@@ -384,7 +384,8 @@ get_motifs_in_region <- function(motifsList, countdf) {
 #' @param motif_line_size Numeric value, default 1. Size of motif lines.
 #' @param motif_line_alpha Numeric value, default 0.25. Alpha for motif lines.
 #' @return The input ggplot object with motif labels overlaid
-#'
+#' 
+#' @importFrom magrittr %>%
 #' @noRd
 counts_plot_motif_overlay <- function(p1,
                                       countdf,
@@ -423,15 +424,17 @@ counts_plot_motif_overlay <- function(p1,
   }
 
   # TF label coordinates and labels
+  x <- NULL
+  y <- NULL
   tmp_motifdf <- data.frame(
-    x1 = start(specMotifs),
-    x2 = start(specMotifs) + width(specMotifs),
+    x1 = IRanges::start(specMotifs),
+    x2 = IRanges::start(specMotifs) + IRanges::width(specMotifs),
     y = y1,
     name = specMotifs$labels
   ) %>%
-    pivot_longer(cols = c("x1", "x2"), names_to = NULL, values_to = "x") %>%
-    group_by(name) %>%
-    dplyr::mutate(labels = ifelse(max(x) == x, gsub("_.*", "", name), NA))
+    tidyr::pivot_longer(cols = c("x1", "x2"), names_to = NULL, values_to = "x") %>%
+    dplyr::group_by(.data$name) %>%
+    dplyr::mutate(labels = ifelse(max(x) == x, gsub("_.*", "", .data$name), NA))
 
   # Incorprate Weights
   if (!is.null(motif_weights)) {
@@ -440,36 +443,38 @@ counts_plot_motif_overlay <- function(p1,
     if (length(intersect(names(motif_weights), tmp_motifdf$labels)) == 0) {
       warning(sprintf(
         "None of the supplied motif weight names match expected motif labels. Example motif label format: %s",
-        paste(head(unique(na.omit(tmp_motifdf$label)), 3), collapse = ", ")
+        paste(utils::head(unique(stats::na.omit(tmp_motifdf$label)), 3), collapse = ", ")
       ))
     }
+    mweight <- NULL
     tmp_motifdf <- tmp_motifdf %>%
       dplyr::mutate(mweight = ifelse(labels %in% names(motif_weights), motif_weights[labels], NA)) %>%
       dplyr::mutate(mweight = ifelse(!all(is.na(mweight)), max(mweight, na.rm = T), NA)) %>% # still grouped by name. this ensures weights are applied to each row of same motif
-      dplyr::mutate(mweight = case_when( # clip ends within color range
-        mweight > max(motif_weight_colors) ~ max(motif_weight_colors),
-        mweight < min(motif_weight_colors) ~ min(motif_weight_colors),
-        is.na(mweight) ~ as.numeric(NA),
-        TRUE ~ mweight
+      dplyr::mutate(mweight = dplyr::case_when( # clip ends within color range
+        .data$mweight > max(motif_weight_colors) ~ max(motif_weight_colors),
+        .data$mweight < min(motif_weight_colors) ~ min(motif_weight_colors),
+        is.na(.data$mweight) ~ as.numeric(NA),
+        TRUE ~ .data$mweight
       ))
   } else {
     tmp_motifdf$mweight <- 1
   }
 
   # Plot
+  mweight <- name <- NULL
   p1 <- p1 +
-    geom_line(
+    ggplot2::geom_line(
       data = tmp_motifdf,
-      aes(x = x, y = y, group = name, color = mweight),
+      ggplot2::aes(x = x, y = y, group = name, color = mweight),
       alpha = motif_line_alpha,
       size = motif_line_size
     ) +
     # vertical labels
     ggrepel::geom_text_repel(
       data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
-      aes(x = x, y = y, label = labels, color = mweight),
+      ggplot2::aes(x = x, y = y, label = labels, color = mweight),
       direction = "x",
-      arrow = arrow(length = grid::unit(0.5, "mm")),
+      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
       alpha = motif_lab_alpha,
       size = motif_lab_size,
       segment.size = 0.25,
@@ -479,8 +484,8 @@ counts_plot_motif_overlay <- function(p1,
     # motif labels along x-axis
     ggrepel::geom_text_repel(
       data = tmp_motifdf[tmp_motifdf$y == 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
-      aes(x = x, y = y, label = labels, color = mweight),
-      arrow = arrow(length = grid::unit(0.5, "mm")),
+      ggplot2::aes(x = x, y = y, label = labels, color = mweight),
+      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
       alpha = motif_lab_alpha,
       size = motif_lab_size,
       direction = "y",
@@ -488,20 +493,20 @@ counts_plot_motif_overlay <- function(p1,
       min.segment.length = 0,
       nudge_y = -max(countdf$Counts) / 20
     ) +
-    ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
-    xlim(min(countdf$Locus), max(countdf$Locus))
+    ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
+    ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
 
   # Color text by motif weights
   if (!is.null(motif_weights)) {
-    scaled_breaks <- breaks_to_scaledbreaks(motif_weight_colors, na.omit(tmp_motifdf$mweight))
+    scaled_breaks <- breaks_to_scaledbreaks(motif_weight_colors, stats::na.omit(tmp_motifdf$mweight))
 
-    p1 <- p1 + scale_color_gradientn(
+    p1 <- p1 + ggplot2::scale_color_gradient(
       colors = names(motif_weight_colors), values = scaled_breaks,
       na.value = "gray", # may want to parameterize this
       name = motif_weight_name
     )
   } else {
-    p1 <- p1 + scale_color_gradient(low = "black", high = "black", na.value = "gray", name = motif_weight_name, guide = "none")
+    p1 <- p1 + ggplot2::scale_color_gradient(low = "black", high = "black", na.value = "gray", name = motif_weight_name, guide = "none")
   }
 
   return(p1)
@@ -683,7 +688,7 @@ plot_whichGene <- function(newModel,
 
   p_gene <- ggbio::ggbio() +
     ggbio::geom_alignment(newModel,
-      aes(type = model),
+      ggplot2::aes(type = model),
       cds.rect.h = 0.25,
       rect.height = 0.25 / 4
     )
@@ -819,7 +824,7 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
   }
 
   p5 <- ggplot() +
-    geom_curve(aes(
+    geom_curve(ggplot2::aes(
       x = start + 250, xend = end - 250,
       y = y, yend = y, color = Correlation
     ),
