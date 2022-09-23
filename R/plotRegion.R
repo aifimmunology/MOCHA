@@ -123,6 +123,12 @@ plotRegion <- function(countSE,
       suppressMessages(x)
     }
   }
+  
+  if(!is.null(motif_weights) & plotType != "area"){
+  
+	stop("Error: Motif weights can only be used with area plots, due to ggplot settings. Please remove motif weights or change plotType to 'area'.")
+  
+  }
 
 
   countdf <- do.call("rbind", as.list(SummarizedExperiment::assays(countSE)))
