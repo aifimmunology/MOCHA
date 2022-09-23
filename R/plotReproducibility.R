@@ -17,8 +17,6 @@
 #'
 #' @export
 
-
-
 plotReproducibility <- function(tileObject,
 						  cellPopulations  = 'All',
                           groupColumn = NULL,

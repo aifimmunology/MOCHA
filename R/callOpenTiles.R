@@ -37,6 +37,7 @@ callOpenTiles <- function(ArchRProj,
                           outDir = NULL,
                           fast = FALSE,
                           numCores = 30,
+						  verbose = TRUE,
                           force = FALSE) {
   
   if (is.null(outDir)) {
@@ -68,14 +69,19 @@ callOpenTiles <- function(ArchRProj,
   blackList <- ArchR::getBlacklist(ArchRProj)
 
   # Get cell populations
-  tmp <- cellColData[, cellPopLabel]
-  cellCounts <- table(tmp[!is.na(tmp)])
+  cellTypeLabelList <- cellColData[, cellPopLabel]
+  cellCounts <- table(cellTypeLabelList[!is.na(cellTypeLabelList)])
+
 
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- names(cellCounts)
   } else if (!all(cellPopulations %in% names(cellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   }
+  
+  #Save the cell number per population-sample in the metadata
+  allCellCounts = table(cellColData[,'Sample'], cellTypeLabelList)
+  allCellCounts = allCellCounts[,cellPopulations]
   
   # Genome and TxDb annotation info is added to the metadata of 
   # the final MultiAssayExperiment for downstream analysis
@@ -98,12 +104,13 @@ callOpenTiles <- function(ArchRProj,
       sampleSpecific = TRUE,
       NormMethod = "nfrags",
       blackList = NULL,
+	  verbose = verbose,
       overlapList = 50
     )
 
     # Check for and remove celltype-sample groups for which there are no fragments.
     fragsNoNull <- frags[lengths(frags) != 0]
-    emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
+    emptyFragsBool <- !(names(frags) %in% names(fragsNoNull))
     emptyGroups <- names(frags)[emptyFragsBool]
     emptyGroups <- gsub("__.*", "", emptyGroups)
 	
@@ -143,7 +150,7 @@ callOpenTiles <- function(ArchRProj,
 
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time)
+    # (Arrow files are locked - one access at a time) 
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
       function(x) {
@@ -198,10 +205,6 @@ callOpenTiles <- function(ArchRProj,
   sampleData <- suppressWarnings(
     scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
-
-  #Save the cell number per population-sample in the metadata
-  allCellCounts = table(cellColData[, c('Sample',cellPopLabel)])
-  allCellCounts = allCellCounts[,cellPopulations]
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
