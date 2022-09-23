@@ -42,7 +42,7 @@ plotReproducibility <- function(tileObject,
   
   sampleData = MultiAssayExperiment::colData(tileObject)
   
-  alldf <- mclapply(names(subTileResults), function(x){
+  alldf <- parallel::mclapply(names(subTileResults), function(x){
 					cellTypeDF(peaksExperiment = subTileResults[[x]], sampleData = sampleData, 
 									groupColumn = groupColumn, returnPlotList = returnPlotList)
 					}, mc.cores = numCores)
@@ -55,21 +55,24 @@ plotReproducibility <- function(tileObject,
   
 		if(!is.null(groupColumn)){
 		
-			allPlots <- lapply(seq_along(alldf), function(x) 
+			allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
+			
 							ggplot(alldf[[x]], aes(x = Reproducibility, y = PeakNumber, group = GroupName, color = GroupName)) + 
 								geom_point() + ggtitle(names(alldf)[x]) + scale_y_continuous(trans='log2') + 
 								ylab('Peak Number') + theme_bw()
-							
-						)
+				
+						}, mc.cores = numCores)
+				
 		
 		}else{
 		
-			allPlots <- lapply(seq_along(alldf), function(x) 
+			allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
+			
 						ggplot(alldf[[x]], aes(x = Reproducibility, y = PeakNumber)) + 
 								geom_point() + ggtitle(names(alldf)[x]) + scale_y_continuous(trans='log2') + 
 								ylab('Peak Number')  + theme_bw()
 							
-						)
+						}, mc.cores = numCores)
 		}
 						
 		return(allPlots)

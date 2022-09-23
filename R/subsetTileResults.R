@@ -5,6 +5,7 @@
 #' @param tileObject A MultiAssayExperiment object from callOpenTiles, 
 #' @param subsetBy the variable to subset by. Can either be 'celltype', or a column from the sample metadata (see colData(tileObject) )
 #' @param groupList the list of cell type names or sample-associated data that should be used to subset the tileObject 
+#' @param na.rm removes groups that are NA if set to true. If set to false, then you filter for everything in the groupList and also NA values. 
 #'
 #' @return tileObject the input tileObject, filtered down to either the cell type or samples desired.
 #'
@@ -14,7 +15,8 @@
 
 subsetTileResults <- function(tileObject,
 						  subsetBy,
-                          groupList
+                          groupList,
+						  na.rm = TRUE
 						  ) {
 						  
 		
@@ -29,9 +31,15 @@ subsetTileResults <- function(tileObject,
 		stop("Error: groupList includes names not found within the object sample data. Please check groupList.")
 	}
 	
-	keep <- rownames(sampleData)[which(sampleData[[subsetBy]] %in% groupList)]
 	
-	return(tileObject[,keep])
+	if(na.rm){
+		keep <- rownames(sampleData)[which(sampleData[[subsetBy]] %in% groupList)]
+		return(tileObject[,keep])
+	}else{
+	
+		keep <- rownames(sampleData)[which(sampleData[[subsetBy]] %in% groupList | is.na(sampleData[[subsetBy]]))]
+		return(tileObject[,keep])
+	}
 	
   } 
   
