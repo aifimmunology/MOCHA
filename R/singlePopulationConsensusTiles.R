@@ -74,7 +74,6 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
       groupSamplePeakMat <- samplePeakMat[,samplesInGroup]
 
       # Keep only peaks with reproducibility above specified threshold
-	  
       percentTruePeaks <- rowSums(groupSamplePeakMat) / length(samplesInGroup)
       consensusPeaks <- percentTruePeaks[percentTruePeaks >= threshold]
       consensusPeaks <- names(consensusPeaks)

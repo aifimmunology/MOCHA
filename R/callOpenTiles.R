@@ -37,8 +37,10 @@ callOpenTiles <- function(ArchRProj,
                           outDir = NULL,
                           fast = FALSE,
                           numCores = 30,
-						  verbose = TRUE,
-                          force = FALSE) {
+                          verbose = TRUE,
+                          force = FALSE,
+                          studySignal=NULL
+                         ) {
   
   if (is.null(outDir)) {
     ## Generate folder within ArchR for outputting results
@@ -145,8 +147,12 @@ callOpenTiles <- function(ArchRProj,
 	#rm(frags)
 	
     # Add prefactor multiplier across datasets
-    curr_frags_median <- median(cellColData$nFrags)
-    study_prefactor <- 3668 / curr_frags_median # Training median
+    if(is.null(studySignal)){
+        message('calculating study signal on ArchR project. Make sure data contains all cell populations')
+        curr_frags_median <- median(cellColData$nFrags)
+        
+    }
+    study_prefactor <- 3668 / studySignal # Training median
 
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
