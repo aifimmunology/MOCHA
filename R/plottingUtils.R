@@ -433,7 +433,7 @@ counts_plot_motif_overlay <- function(p1,
     name = specMotifs$labels
   ) %>%
     tidyr::pivot_longer(cols = c("x1", "x2"), names_to = NULL, values_to = "x") %>%
-    gdplyr::roup_by(name) %>%
+    dplyr::group_by(name) %>%
     dplyr::mutate(labels = ifelse(max(x) == x, gsub("_.*", "", name), NA))
 
   # Incorprate Weights
