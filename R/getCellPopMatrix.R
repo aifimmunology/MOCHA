@@ -5,19 +5,16 @@
 #'
 #' @param SampleTileObj The output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk 
 #'   intensities across all tiles & cell types.
-#' @param cellPopulation - The cell population you want to pull out.
-#' @param dropSamples , Boolean flag to determine whether to drop samples that were too small for peak calling. 
-#' 
+#' @param @cellPopulation - The cell population you want to pull out.
+#'
 #' @return sampleTileMatrix a matrix of samples by called tiles for a given cell population.
 #'
 #' @export
-getCellPopMatrix <- function(SampleTileObj, cellPopulation, dropSamples = TRUE){
+getCellPopMatrix <- function(SampleTileObj, cellPopulation){
     
         tilesCalled <- GenomicRanges::mcols(SummarizedExperiment::rowRanges(SampleTileObj))[,cellPopulation]
         
         sampleTileMatrix <- SummarizedExperiment::assays(SampleTileObj)[[cellPopulation]][tilesCalled, , drop = FALSE]
-		
-		if(dropSamples){sampleTileMatrix <- sampleTileMatrix[, colSums(sampleTileMatrix) > 0] }
-		
+    
         return(sampleTileMatrix)
 }

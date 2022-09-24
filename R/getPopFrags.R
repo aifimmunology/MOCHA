@@ -36,7 +36,6 @@ getPopFrags <- function(ArchRProj,
                         sampleSpecific = TRUE,
                         NormMethod = "nfrags",
                         blackList = NULL,
-						verbose = TRUE,
                         overlapList = 50) {
   
   #Turn off ArchR logging messages
@@ -102,10 +101,7 @@ getPopFrags <- function(ArchRProj,
     # Extract fragments from all available regions
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
 
-	  if(verbose){
-		message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
-	  }
-	  
+      message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
       ArchR::getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = cellNames,
@@ -139,15 +135,13 @@ getPopFrags <- function(ArchRProj,
       dplyr::select(seqnames)
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
 	
-		if(verbose){
-			message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
-				fragsGRanges <- getFragmentsFromArrow(
-				ArrowFile = arrows[x],
-				cellNames = cellNames,
-				chr = as.character(chrom[, 1]),
-				verbose = FALSE
-			) %>% plyranges::join_overlap_intersect(regionGRanges)
-		}
+	message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
+     	fragsGRanges <- getFragmentsFromArrow(
+        ArrowFile = arrows[x],
+        cellNames = cellNames,
+        chr = as.character(chrom[, 1]),
+        verbose = FALSE
+      ) %>% plyranges::join_overlap_intersect(regionGRanges)
 
       # Filter according to provided blacklist
       if (is.null(blackList)) {
