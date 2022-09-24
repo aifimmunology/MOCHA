@@ -143,7 +143,7 @@ GRangesToString <- function(GR_obj) {
 #' @export
 differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   regions <- MOCHA::StringsToGRanges(differentials[[tileColumn]])
-  GenomicRanges::GenomicRanges::mcols(regions) <- differentials
+  GenomicRanges::mcols(regions) <- differentials
   regions
 }
 
