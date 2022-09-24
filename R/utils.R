@@ -106,7 +106,7 @@ StringsToGRanges <- function(regionString) {
   # } else if(!validRegionString(regionString)) {
   #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
   # }
-
+  . <- NULL
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
     gsub("-.*", "", .) %>%
@@ -116,7 +116,7 @@ StringsToGRanges <- function(regionString) {
   if (any(startSite >= endSite)) {
     stop("Error in region string: Make sure the start of the genomic range occurs before the end")
   }
-  regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
+  regionGRanges <- GenomicRanges::GRanges(seqnames = chrom, ranges = IRanges::IRanges(start = startSite, end = endSite), strand = "*")
   return(regionGRanges)
 }
 
@@ -129,7 +129,7 @@ StringsToGRanges <- function(regionString) {
 #'
 #' @export
 GRangesToString <- function(GR_obj) {
-  paste(seqnames(GR_obj), ":", start(GR_obj), "-", end(GR_obj), sep = "")
+  paste(GenomicRanges::seqnames(GR_obj), ":", GenomicRanges::start(GR_obj), "-", GenomicRanges::end(GR_obj), sep = "")
 }
 
 #' @title \code{differentialsToGRanges} Converts a data.frame matrix to a GRanges,
@@ -143,7 +143,7 @@ GRangesToString <- function(GR_obj) {
 #' @export
 differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   regions <- MOCHA::StringsToGRanges(differentials[[tileColumn]])
-  GenomicRanges::mcols(regions) <- differentials
+  GenomicRanges::GenomicRanges::mcols(regions) <- differentials
   regions
 }
 
@@ -161,11 +161,11 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
 ###          If type = null, then it will just use the number of Ranges instead of the number of unique
 ###           entries in column 'type'
 EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = FALSE) {
-  Group1Cat <- filter_by_overlaps(Group1, Category)
-  Group2Cat <- filter_by_overlaps(Group2, Category)
+  Group1Cat <- plyranges::filter_by_overlaps(Group1, Category)
+  Group2Cat <- plyranges::filter_by_overlaps(Group2, Category)
 
-  OnlyGroup1 <- filter_by_non_overlaps(Group1, Category)
-  OnlyGroup2 <- filter_by_non_overlaps(Group2, Category)
+  OnlyGroup1 <- plyranges::filter_by_non_overlaps(Group1, Category)
+  OnlyGroup2 <- plyranges::filter_by_non_overlaps(Group2, Category)
 
   if (returnTable & is.null(type)) {
     dt_table <- data.frame(
@@ -176,16 +176,16 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
 
     return(t(dt_table))
   } else if (returnTable &
-    sum(c(colnames(mcols(Group1)), colnames(mcols(Group2))) %in% type) == 2 &
+    sum(c(colnames(GenomicRanges::mcols(Group1)), colnames(GenomicRanges::mcols(Group2))) %in% type) == 2 &
     length(type) == 1) {
     dt_table <- data.frame(
       Group1 = c(
-        length(unique(mcols(Group1Cat)[, type])),
-        length(unique(mcols(OnlyGroup1)[, type]))
+        length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
+        length(unique(GenomicRanges::mcols(OnlyGroup1)[, type]))
       ),
       Group2 = c(
-        length(unique(mcols(Group2Cat)[, type])),
-        length(unique(mcols(OnlyGroup2)[, type]))
+        length(unique(GenomicRanges::mcols(Group2Cat)[, type])),
+        length(unique(GenomicRanges::mcols(OnlyGroup2)[, type]))
       ),
       row.names = c("In Category", "Not in Category")
     )
@@ -196,20 +196,20 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
   }
 
   if (is.null(type)) {
-    pVal <- phyper(
+    pVal <- stats::phyper(
       q = length(Group1Cat),
       m = length(Group1),
       n = length(Group2),
       k = length(Group1Cat) + length(Group2Cat),
       lower.tail = FALSE
     )
-  } else if (sum(c(colnames(mcols(Group1)), colnames(mcols(Group2))) %in% type) == 2 &
+  } else if (sum(c(colnames(GenomicRanges::mcols(Group1)), colnames(GenomicRanges::mcols(Group2))) %in% type) == 2 &
     length(type) == 1) {
-    pVal <- phyper(
-      q = length(unique(mcols(Group1Cat)[, type])),
-      m = length(unique(mcols(Group1)[, type])),
-      n = length(unique(mcols(Group2)[, type])),
-      k = length(unique(mcols(Group1Cat)[, type])) + length(unique(mcols(Group2Cat)[, type])),
+    pVal <- stats::phyper(
+      q = length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
+      m = length(unique(GenomicRanges::mcols(Group1)[, type])),
+      n = length(unique(GenomicRanges::mcols(Group2)[, type])),
+      k = length(unique(GenomicRanges::mcols(Group1Cat)[, type])) + length(unique(GenomicRanges::mcols(Group2Cat)[, type])),
       lower.tail = FALSE
     )
   } else {
