@@ -1,6 +1,6 @@
-#' @title \code{plotReproducibility}
+#' @title \code{plotConsensus}
 #'
-#' @description \code{plotReproducibility} Extracts the peak reproducibility and generates a 
+#' @description \code{plotConsensus} Extracts the peak reproducibility and generates a 
 #'					heuristic plots that can be used to determine the reproducibility threshold
 #'					used within getSampleTileMatrix. 
 #' @param tileObject A MultiAssayExperiment object from callOpenTiles, 
@@ -17,7 +17,7 @@
 #'
 #' @export
 
-plotReproducibility <- function(tileObject,
+plotConsensus <- function(tileObject,
 						  cellPopulations  = 'All',
                           groupColumn = NULL,
 						  returnPlotList = FALSE,
