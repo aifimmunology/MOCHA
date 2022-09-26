@@ -74,7 +74,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   diff0s <- abs(zero_A - zero_B)
   
-  Log2Intensity <- metadata(SampleTileObj)$Log2Intensity
+  Log2Intensity <- SampleTileMatrices@metadata$Log2Intensity
   log2FC_filter <- ifelse(Log2Intensity, noiseThreshold, 2^noiseThreshold)
   
   idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
