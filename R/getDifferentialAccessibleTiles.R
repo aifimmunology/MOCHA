@@ -69,8 +69,8 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1)], na.rm = T)
   medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0)], na.rm = T)
 
-  zero_A <- rowMeans(is.na(sampleTileMatrix[, which(group == 1)]))
-  zero_B <- rowMeans(is.na(sampleTileMatrix[, which(group == 0)]))
+  zero_A <- rowMeans(sampleTileMatrix[, which(group == 1)] ==0)
+  zero_B <- rowMeans(sampleTileMatrix[, which(group == 0)] ==0)
 
   diff0s <- abs(zero_A - zero_B)
   
