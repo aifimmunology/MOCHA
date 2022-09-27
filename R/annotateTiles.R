@@ -56,7 +56,7 @@ annotateTiles <- function(SampleTileObj,
     overlapGroup <- findOverlaps(rowTiles, annotGR) %>% as.data.frame()
     overlapGroup$Genes <- as.character(annotGR$name[overlapGroup$subjectHits])
     last <- overlapGroup %>%
-      dplyr::group_by(subjectHits) %>%
+      dplyr::group_by(queryHits) %>%
       dplyr::summarize(Genes = paste(unique(Genes), collapse = ", "))
     return(last)
   }
