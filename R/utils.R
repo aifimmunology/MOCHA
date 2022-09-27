@@ -70,7 +70,7 @@ validRegionString <- function(regionString) {
   }
 
   pattern <- "([0-9]{1,2}|chr[0-9]{1,2}|chr[X-Y]{1,1}):[0-9]*-[0-9]*"
-  matchedPattern <- str_extract(regionString, pattern)
+  matchedPattern <- stringr::str_extract(regionString, pattern)
 
   if (any(is.na(matchedPattern))) {
     return(FALSE)
@@ -78,7 +78,7 @@ validRegionString <- function(regionString) {
     return(FALSE)
   }
 
-  splits <- str_split(regionString, "[:-]")[[1]]
+  splits <- stringr::str_split(regionString, "[:-]")[[1]]
   start <- splits[2]
   end <- splits[3]
   if (any(start > end)) {
