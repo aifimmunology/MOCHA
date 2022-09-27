@@ -6,7 +6,7 @@
 
 
 ## runChromVar is a wrapper for chromVAR from MOCHA
-## Obj could be a ragged experiment or a sumarized experiment
+## Obj could be a ragged experiment or a summarized experiment
 ## motifGRangesList is a list of all motif positions in a GRangesList format
 ## genome is the reference genome we use
 
@@ -14,24 +14,24 @@
 runChromVar <- function(Obj, motifs,
                         genome = BSgenome.Hsapiens.UCSC.hg38) {
   if (class(Obj)[1] == "RaggedSummarizedExperiment" & class(motifs)[1] == "GRangesList") {
-    Obj1 <- RaggedExperiment::compactSummarizedExperiment(RepTiles, i = "TotalIntensity")
+    Obj1 <- RaggedExperiment::compactSummarizedExperiment(Obj, i = "TotalIntensity")
     tmp <- SummarizedExperiment::assays(Obj1)
     tmp[[1]][is.na(tmp[[1]])] <- 0
     names(tmp) <- "counts"
-    assays(Obj1) <- tmp
+    SummarizedExperiment::assays(Obj1) <- tmp
 
     motifGRangesList <- motifs
   } else if (class(Obj)[1] == "RangedSummarizedExperiment") {
-    if (!names(assays(Obj)) %in% "counts") {
+    if (!names(SummarizedExperiment::assays(Obj)) %in% "counts") {
 
 
 
     } else if (class(motifs)[1] == "GRangesList") {
       Obj1 <- Obj
       motifGRangesList <- motifs
-    } else if (class(motifs)[1] == "character" & any(names(metadata(Obj)) %in% motifs)) {
+    } else if (class(motifs)[1] == "character" & any(names(SummarizedExperiment::metadata(Obj)) %in% motifs)) {
       Obj1 <- Obj
-      motifGRangesList <- metadata(Obj)[[motifs]]
+      motifGRangesList <- SummarizedExperiment::metadata(Obj)[[motifs]]
     } else {
       stop("Error: No motifset found. Check input")
     }
@@ -39,7 +39,7 @@ runChromVar <- function(Obj, motifs,
     stop("Error: Wrong Input Object. Must be either a RaggedExperiment or a RangedSummarizedExperiment")
   }
 
-  CisbpAnno <- chromVAR::getAnnotations(motifGRangesList, rowRanges = rowRanges(Obj1))
+  CisbpAnno <- chromVAR::getAnnotations(motifGRangesList, rowRanges = SummarizedExperiment::rowRanges(Obj1))
 
   Obj1 <- chromVAR::addGCBias(Obj1, genome = genome)
 
@@ -135,12 +135,12 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
 
 
 MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores = 1) {
-  allEnrichmentList <- mclapply(motifPosList, function(x) {
+  allEnrichmentList <- parallel::mclapply(motifPosList, function(x) {
     tmp_df <- EnrichedRanges(Group1, Group2, Category = x, type = type)
   }, mc.cores = numCores)
   df_final <- do.call("rbind", allEnrichmentList)
 
-  df_final$adjp_val <- p.adjust(df_final$p_value)
+  df_final$adjp_val <- stats::p.adjust(df_final$p_value)
   df_final$mlog10Padj <- -log10(df_final$adjp_val)
 
   return(df_final)
@@ -165,7 +165,7 @@ Gene2Motif <- function(TSS_Sites, allPeaks, TSS_Links, motifPosList,
   if (verbose) {
     print("Generating TSS-Peak Network.")
   }
-
+  . <- NULL
   TSS_Network <- c(
     TSS_Links$Peak1, TSS_Links$Peak2,
     GRangesToString(TSS_Sites)
@@ -178,15 +178,15 @@ Gene2Motif <- function(TSS_Sites, allPeaks, TSS_Links, motifPosList,
     print("Finding all motifs related to each peak within the TSS-Peak Network.")
   }
   ## Let's find all the motifs that overlap with each peak within the altTSS Network
-  tmpOverlap <- mclapply(seq_along(motifPosList), function(x) {
-    ifelse(count_overlaps(TSS_Network, motifPosList[[x]]) > 0,
+  tmpOverlap <- parallel::mclapply(seq_along(motifPosList), function(x) {
+    ifelse(plyranges::count_overlaps(TSS_Network, motifPosList[[x]]) > 0,
       names(motifPosList)[x], NA
     )
   }, mc.cores = numCores)
 
 
   overlap_df <- do.call("cbind", tmpOverlap)
-  motifList <- mclapply(c(1:dim(overlap_df)[1]), function(x) {
+  motifList <- parallel::mclapply(c(1:dim(overlap_df)[1]), function(x) {
     ifelse(any(!is.na(overlap_df[x, ])),
       list(overlap_df[x, which(!is.na(overlap_df[x, ]))]),
       NA
@@ -197,8 +197,8 @@ Gene2Motif <- function(TSS_Sites, allPeaks, TSS_Links, motifPosList,
     print("Finding all peaks related to each gene within the TSS-Peak Network.")
   }
   ## Find all the peaks related to each gene.
-
-  Peak2Gene <- mclapply(unique(TSS_Sites$name), function(x) {
+  name <- Peak1 <- Peak2 <- NULL
+  Peak2Gene <- parallel::mclapply(unique(TSS_Sites$name), function(x) {
     geneTSS <- plyranges::filter(TSS_Sites, name == x) %>%
       plyranges::filter_by_overlaps(allPeaks, .) %>%
       plyranges::ungroup() %>%
@@ -220,12 +220,12 @@ Gene2Motif <- function(TSS_Sites, allPeaks, TSS_Links, motifPosList,
     print("Linking Motifs to each gene within the TSS-Peak Network")
   }
   ## Link all the genes to motifs via Peak2Gene and the motifList
-  Gene2Motif <- mclapply(Peak2Gene, function(x) {
+  Gene2Motif <- parallel::mclapply(Peak2Gene, function(x) {
 
     # Find which indices of the AltTSS Network GRanges are linked to that Gene
-    tmp <- findOverlaps(StringsToGRanges(x), TSS_Network)
+    tmp <- IRanges::findOverlaps(StringsToGRanges(x), TSS_Network)
     # Pull up and unlist all the motifs associated with those tiles.
-    unlist(motifList[subjectHits(tmp)])
+    unlist(motifList[S4Vectors::subjectHits(tmp)])
   }, mc.cores = numCores)
 
   return(Gene2Motif)
