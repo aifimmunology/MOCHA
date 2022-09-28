@@ -53,6 +53,7 @@ estimate_differential_accessibility <- function(tile_values, group,
     
     hodges_lehmann <- median(pairwise_matrix$diff)
     meanDiff <- calculateMeanDiff(data_vec, group)
+    
     ## Create Final Results Matrix
     res <- data.frame(
         P_value=two_part_results$pvalue,

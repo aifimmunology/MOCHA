@@ -65,9 +65,11 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   #############################################################################
   # Prioritize high-signal tiles
+  sampleTileMatrix2 <- sampleTileMatrix
+  sampleTileMatrix2[sampleTileMatrix==0] <- NA
 
-  medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1)], na.rm = T)
-  medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0)], na.rm = T)
+  medians_a <- matrixStats::rowMedians(sampleTileMatrix2[, which(group == 1)], na.rm = T)
+  medians_b <- matrixStats::rowMedians(sampleTileMatrix2[, which(group == 0)], na.rm = T)
 
   zero_A <- rowMeans(sampleTileMatrix[, which(group == 1)] ==0)
   zero_B <- rowMeans(sampleTileMatrix[, which(group == 0)] ==0)
