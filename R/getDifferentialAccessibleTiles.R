@@ -45,38 +45,35 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     stop(str_interp("Provided background value is not present in the column {groupColumn} in the provided SampleTileObj"))
   }
 
+
   # Get group labels
   foreground_samples <- metaFile[metaFile[, groupColumn] == foreground, "Sample"]
   background_samples <- metaFile[metaFile[, groupColumn] == background, "Sample"]
 
   # This will only include called tiles
-  sampleTileMatrix <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation)
+  sampleTileMatrix <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = FALSE )
   
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
   sampleTileMatrix <- sampleTileMatrix[, colnames(SampleTileObj) %in% c(foreground_samples, background_samples)]
 
-  # We need to enforce that NAs were set to zeros in getSampleTileMatrix
-  miscMetadata <- S4Vectors::metadata(SampleTileObj)
-  if (!miscMetadata$NAtoZero) {
-    sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
-  }
   group <- as.numeric(colnames(sampleTileMatrix) %in% foreground_samples)
 
   #############################################################################
   # Prioritize high-signal tiles
-  sampleTileMatrix2 <- sampleTileMatrix
-  sampleTileMatrix2[sampleTileMatrix==0] <- NA
 
-  medians_a <- matrixStats::rowMedians(sampleTileMatrix2[, which(group == 1)], na.rm = T)
-  medians_b <- matrixStats::rowMedians(sampleTileMatrix2[, which(group == 0)], na.rm = T)
+  medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1)], na.rm = T)
+  medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0)], na.rm = T)
 
+  # We need to enforce that NAs were set to zeros in getSampleTileMatrix
+  sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
+ 
   zero_A <- rowMeans(sampleTileMatrix[, which(group == 1)] ==0)
   zero_B <- rowMeans(sampleTileMatrix[, which(group == 0)] ==0)
 
   diff0s <- abs(zero_A - zero_B)
   
-  Log2Intensity <- SampleTileMatrices@metadata$Log2Intensity
+  Log2Intensity <- SampleTileObj@metadata$Log2Intensity
   log2FC_filter <- ifelse(Log2Intensity, noiseThreshold, 2^noiseThreshold)
   
   idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
@@ -135,6 +132,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   meansA <- rowMeans(sampleTileMatrix[, group == 1], na.rm = T)
   meansB <- rowMeans(sampleTileMatrix[, group == 0])
   full_results$MeanDiff <- meansA - meansB
+  full_results$MeanDiff[is.na(full_results$FDR)] <- NA
   full_results$CellPopulation <- rep(cellPopulation, length(meansA))
   full_results$Foreground <- rep(foreground, length(meansA))
   full_results$Background <- rep(background, length(meansA))

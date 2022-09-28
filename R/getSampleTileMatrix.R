@@ -13,7 +13,6 @@
 #'   Default is 'ALL'.
 #' @param groupColumn Optional, the column containing sample group labels for determining consensus tiles within sample groups. Default is NULL, all samples will be used for determining consensus tiles.
 #' @param threshold Threshold for consensus tiles, the minimum % of samples (within a sample group) that a peak must be called in to be retained.
-#' @param NAtoZero Boolean, set to TRUE to convert NA intensities from peak calling (tiles with too low signal) to zeroes. Optional, default is FALSE.
 #' @param log2Intensity Boolean, set to TRUE to return the log2 of the sample-tile intensity matrix. Optional, default is FALSE.
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #'
@@ -31,7 +30,6 @@ getSampleTileMatrix <- function(tileResults,
                                 groupColumn = NULL,
                                 threshold = 0.2,
 								disableMinimum = FALSE,
-                                NAtoZero = FALSE,
                                 log2Intensity = TRUE,
                                 numCores = 1,
                                 verbose = FALSE) {
@@ -92,7 +90,7 @@ getSampleTileMatrix <- function(tileResults,
     scMACS:::singlePopulationSampleTileMatrix(
       x,
       allTiles,
-      NAtoZero,
+      NAtoZero = FALSE,
       log2Intensity
     )
   }, mc.cores = numCores)
@@ -113,7 +111,7 @@ getSampleTileMatrix <- function(tileResults,
     rowRanges = allTilesGR,
     colData = sampleData,
     metadata = append(
-      list("Log2Intensity" = log2Intensity, "NAtoZero" = NAtoZero),
+      list("Log2Intensity" = log2Intensity),
       MultiAssayExperiment::metadata(tileResults)
     )
   )
