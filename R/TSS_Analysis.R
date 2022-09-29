@@ -84,8 +84,8 @@ getAltTSS <- function(completeDAPs,
     
     altTSS <- tpeaks %>% plyranges::filter(!duplicated(exactTSS)) %>%
                 plyranges::group_by(name) %>% 
-                plyranges::filter(any(FDR < threshold) & any(duplicated(name)))  %>% 
-                 plyranges::filter(ifelse(all(!is.na(FDR)) & all(FDR < threshold, na.rm = TRUE), 
+                plyranges::filter(any(FDR <= threshold) & any(duplicated(name)))  %>% 
+                 plyranges::filter(ifelse(all(!is.na(FDR)) & all(FDR <= threshold, na.rm = FALSE), 
                                           !all({{effectSize}} > 0) & !all({{effectSize}} < 0), TRUE)) %>% 
                                    ungroup() %>% sort() 
     
