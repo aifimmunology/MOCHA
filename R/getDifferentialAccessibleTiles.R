@@ -4,18 +4,26 @@
 #'   determine whether regions of chromatin are differentially accessible
 #'   between groups by conducting a test
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
+#' @param SampleTileObj The SummarizedExperiment object output from
+#'  getSampleTileMatrix
 #' @param cellPopulation A string denoting the cell population of interest
 #' @param groupColumn The column containing sample group labels
 #' @param foreground The foreground group of samples for differential comparison
 #' @param background The background group of samples for differential comparison
-#' @param fdrToDisplay Optional, false-discovery rate used only for standard output messaging
-#' @param outputGRanges Optional, outputs a GRanges if TRUE and a data.frame if FALSE.
-#'   Default is TRUE.
-#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param signalThreshold Minimum median intensity required to keep tiles for
+#'  differential testing to increase statistical power in small sample cohorts.
+#'  Default is 12.
+#' @param minZeroDiff Minimum difference in average dropout rates across groups
+#'  require to keep tiles for differential testing. Default is 0.5 (50%).
+#' @param fdrToDisplay False-discovery rate used only for standard
+#'  output messaging. Default is 0.2.
+#' @param outputGRanges Outputs a GRanges if TRUE and a data.frame if
+#'  FALSE. Default is TRUE.
+#' @param numCores The number of cores to use with multiprocessing.
+#'  Default is 1.
 #'
-#' @return full_results The differential accessibility results as a GRanges or matrix
-#'   data.frame depending on the flag `outputGRanges`.
+#' @return full_results The differential accessibility results as a GRanges or
+#'   matrix data.frame depending on the flag `outputGRanges`.
 #'
 #' @export
 
@@ -24,13 +32,17 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            groupColumn,
                                            foreground,
                                            background,
-                                           noiseThreshold = 12,
+                                           signalThreshold = 12,
                                            minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
                                            numCores = 2) {
   if (!any(names(assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
+  }
+
+  if (signalThreshold < 1) {
+    warning("Setting the signalThreshold too low will reduce statistical power. You may inspect the distribution of intensities to set a threshold that will remove highly sparse regions.")
   }
 
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
@@ -74,7 +86,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   diff0s <- abs(zero_A - zero_B)
   
   Log2Intensity <- SampleTileObj@metadata$Log2Intensity
-  log2FC_filter <- ifelse(Log2Intensity, noiseThreshold, 2^noiseThreshold)
+  log2FC_filter <- ifelse(Log2Intensity, signalThreshold, 2^signalThreshold)
   
   idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
 
