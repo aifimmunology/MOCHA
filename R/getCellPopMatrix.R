@@ -5,8 +5,8 @@
 #'
 #' @param SampleTileObj The output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk 
 #'   intensities across all tiles & cell types.
-#' @param cellPopulation - The cell population you want to pull out.
-#' @param dropSamples , Boolean flag to determine whether to drop samples that were too small for peak calling. 
+#' @param cellPopulation The cell population you want to pull out.
+#' @param dropSamples Boolean flag to determine whether to drop samples that were too small for peak calling. 
 #' @param NAtoZero Boolean flag to determine whether to replace NAs with zero
 #' 
 #' @return sampleTileMatrix a matrix of samples by called tiles for a given cell population.
