@@ -14,7 +14,7 @@
 #' @export
 
 
-subsetObject <- function(Object,
+subsetMOCHAObject <- function(Object,
 						  subsetBy,
                           groupList,
 						  na.rm = TRUE
