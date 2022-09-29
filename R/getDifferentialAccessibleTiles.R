@@ -151,14 +151,14 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
 
   colnames(full_results) <- c(
-    "Tile", "P_value", "Test-Statistic", "Log2FC_C",
+    "Tile", "P_value", "Test_Statistic", "Log2FC_C",
     "MeanDiff", "Avg_Intensity_Case", "Pct0_Case",
     "Avg_Intensity_Control", "Pct0_Control", "FDR",
     "CellPopulation", "Foreground", "Background"
   )
 
   full_results <- full_results[, c(
-    "Tile", "CellPopulation", "Foreground", "Background", "P_value", "Test-Statistic", "FDR", "Log2FC_C",
+    "Tile", "CellPopulation", "Foreground", "Background", "P_value", "Test_Statistic", "FDR", "Log2FC_C",
     "MeanDiff", "Avg_Intensity_Case", "Pct0_Case",
     "Avg_Intensity_Control", "Pct0_Control"
   )]
