@@ -29,10 +29,13 @@ getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
                                 groupColumn = NULL,
                                 threshold = 0.2,
-								disableMinimum = FALSE,
+								                disableMinimum = FALSE,
                                 log2Intensity = TRUE,
                                 numCores = 1,
                                 verbose = FALSE) {
+  if (!(join %in% c("union", "intersect"))) {
+    stop("`join` must be either 'union' or 'intersect'")
+  }
 
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
@@ -74,8 +77,8 @@ getSampleTileMatrix <- function(tileResults,
       x,
       sampleData,
       threshold,
-	  disableMinimum,
-      groupColumn
+      groupColumn,
+      join
     )
   }, mc.cores = numCores)
 

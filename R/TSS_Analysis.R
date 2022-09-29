@@ -54,7 +54,7 @@ getAltTSS <- function(completeDAPs,
                       nuancedTSS = TRUE,
                       nuancedTSSGap = 150,
                       threshold = 0.2,
-                      effectSize = 'Log2FC_C',
+                      effectSize = Log2FC_C,
                       TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, 
                       Org = org.Hs.eg.db){
     

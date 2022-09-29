@@ -31,7 +31,6 @@ callTilesBySample <- function(blackList,
                               numCores = 10,
                               totalFrags,
                               fragsList,
-							  verbose = FALSE,
                               StudypreFactor) {
 
   # Coefficients trained on ~ 3600 frags per cell
@@ -50,8 +49,7 @@ callTilesBySample <- function(blackList,
   countsMatrix <- scMACS:::calculate_intensities(
     fragMat = fragsList,
     candidatePeaks = FinalBins,
-    totalFrags = totalFrags,
-	verbose = verbose
+    totalFrags = totalFrags
   )
 
   countsMatrix$TotalIntensity <- countsMatrix$TotalIntensity * StudypreFactor
