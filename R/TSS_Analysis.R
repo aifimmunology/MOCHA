@@ -1,4 +1,6 @@
-
+ExtractGR <- function(peaks){
+  stop()
+} # TODO Missing function needed for these functions
 
 ##################################################################################################
 ### getStartWSites pulls out all peaks that fall in TSS sites and annotates them with the name of gene.
@@ -7,8 +9,8 @@
 ## @Org - Organism Db for annotating gene names across databases. Must match TxDb.
 
 getStartSites <- function(peakSet,
-                          TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-                          Org = org.Hs.eg.db) {
+                          TxDb,
+                          Org) {
   if (grepl("data.table|SummarizedExperiment", class(peakSet)[1])) {
     Granges <- ExtractGR(peakSet)
   } else if (class(peakSet)[1] == "GRanges") {
@@ -17,12 +19,12 @@ getStartSites <- function(peakSet,
 
   tss1 <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ("gene")))
 
-  names(tss1) <- suppressWarnings(mapIds(Org, names(tss1), "SYMBOL", "ENTREZID"))
-
-  allT <- stack(tss1) %>%
+  names(tss1) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(tss1), "SYMBOL", "ENTREZID"))
+  . <- exactTSS <- NULL
+  allT <- utils::stack(tss1) %>%
     GenomicRanges::trim(.) %>%
     GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
-    plyranges::mutate(exactTSS = start(.)) %>%
+    plyranges::mutate(exactTSS = GenomicRanges::start(.)) %>%
     plyranges::filter(!duplicated(exactTSS)) %>%
     plyranges::anchor_3p(.) %>%
     suppressWarnings(plyranges::stretch(., extend = 125)) %>%
@@ -54,10 +56,12 @@ getAltTSS <- function(completeDAPs,
                       nuancedTSS = TRUE,
                       nuancedTSSGap = 150,
                       threshold = 0.2,
-
-                      effectSize = Log2FC_C,
-                      TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-                      Org = org.Hs.eg.db) {
+                      effectSize,
+                      TxDb,
+                      Org) {
+  
+  . <- exactTSS <- name <- FDR <- seqnames <- strand <- NULL
+  
   if (grepl("data.table|SummarizedExperiment", class(completeDAPs)[1])) {
     DAP_Granges <- ExtractGR(completeDAPs)
   } else if (class(completeDAPs)[1] == "GRanges") {
@@ -66,18 +70,18 @@ getAltTSS <- function(completeDAPs,
 
   tss1 <- ensembldb::transcriptsBy(TxDb, by = ("gene"))
 
-  names(tss1) <- mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
-
-  allT <- stack(tss1) %>%
-    trim(.) %>%
-    promoters(., upstream = 0, downstream = 0) %>%
-    plyranges::mutate(exactTSS = start(.)) %>%
+  names(tss1) <- AnnotationDbi::mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
+  
+  allT <- utils::stack(tss1) %>%
+    GenomicRanges::trim(.) %>%
+    GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
+    plyranges::mutate(exactTSS = GenomicRanges::start(.)) %>%
     plyranges::filter(!duplicated(exactTSS)) %>%
     plyranges::anchor_3p(.) %>%
     plyranges::stretch(., extend = 125) %>%
-    trim()
+    GenomicRanges::trim()
 
-  tpeaks <- join_overlap_intersect(allT, DAP_GRanges)
+  tpeaks <- plyranges::join_overlap_intersect(allT, DAP_GRanges)
 
   if (returnAllTSS) {
     return(tpeaks)
@@ -90,20 +94,20 @@ getAltTSS <- function(completeDAPs,
     plyranges::filter(ifelse(all(!is.na(FDR)) & all(FDR < threshold, na.rm = TRUE),
       !all({{ effectSize }} > 0) & !all({{ effectSize }} < 0), TRUE
     )) %>%
-    ungroup() %>%
+    dplyr::ungroup() %>%
     sort()
 
   if (!nuancedTSS) {
     nuancedGenes <- split(altTSS, as.character(altTSS$name)) %>%
-      mclapply(., function(x) {
-        tmp <- gaps(x) %>%
-          filter(seqnames == seqnames(x) & strand == strand(x)) %>%
-          width(.)
+      parallel::mclapply(., function(x) {
+        tmp <- GenomicRanges::gaps(x) %>%
+          plyranges::filter(seqnames == GenomicRanges::seqnames(x) & strand == GenomicRanges::strand(x)) %>%
+          IRanges::width(.)
         ifelse(length(tmp) == 3 & tmp[2] < nuancedTSSGap, FALSE, TRUE)
       }) %>%
       unlist()
 
-    altTSS <- altTSS %>% filter(name %in% nuancedGenes[nuancedGenes])
+    altTSS <- altTSS %>% plyranges::filter(name %in% nuancedGenes[nuancedGenes])
   }
   return(altTSS)
 }

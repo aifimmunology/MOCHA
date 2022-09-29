@@ -12,12 +12,13 @@
 ## @numCores: number of cores to parallelize over.
 
 getMotifCoverages <- function(covFiles, MotifLocations, numCores = 1) {
-  allMotifs <- stack(MotifLocations)
-  counts <- mclapply(covFiles, function(x) {
+  score <- NewScore <- WeightedScore <- . <- name <- NULL
+  allMotifs <- utils::stack(MotifLocations)
+  counts <- parallel::mclapply(covFiles, function(x) {
     x %>%
       plyranges::mutate(NewScore = score) %>%
       plyranges::join_overlap_intersect(allMotifs) %>%
-      plyranges::mutate(WeightedScore = NewScore * width(.)) %>%
+      plyranges::mutate(WeightedScore = NewScore * IRanges::width(.)) %>%
       plyranges::group_by(name) %>%
       plyranges::reduce_ranges(score = mean(WeightedScore))
   }, mc.cores = numCores)
@@ -32,7 +33,7 @@ getMotifCoverages <- function(covFiles, MotifLocations, numCores = 1) {
 ## @numCores: number of cores to parallelize over.
 
 
-matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL, method = "Mean", N = 50, numCores = 1) {
+matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL, method = "Mean", N = 50, returnGR = TRUE, numCores = 1) {
   if (class(ForegroundPeakset)[1] == "Character") {
     ForegroundPeakSet <- MOCHA::StringsToGRanges(ForegroundPeakset)
   } else if (class(ForegroundPeakset)[1] != "GRanges") {
@@ -47,33 +48,33 @@ matchPeaks <- function(SampleTileMatrix, ForegroundPeakset, BackgroundSet = NULL
     stop("Error: BackgroundSet must either be a GRanges object, a vector of string in the format Chr1:100-200, or set to NULL")
   }
 
-  Count1 <- findOverlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
-  Count2 <- findOverlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), BackgroundSet)
+  Count1 <- GenomicRanges::findOverlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), ForegroundPeakset)
+  Count2 <- GenomicRanges::findOverlaps(MOCHA::StringsToGRanges(SampleTileMatrix$tileID), BackgroundSet)
 
   # Check if the background and foreground set overlap with any tiles in common.
-  if (any(queryHits(Count1) %in% queryHits(Count2))) {
+  if (any(S4Vectors::queryHits(Count1) %in% S4Vectors::queryHits(Count2))) {
     stop("Error: Background & Foreground set overlap for Sample-Tile matrix")
   }
 
-  ForeMat <- SampleTileMatrix[queryHits(Count1), -"tileID"]
+  ForeMat <- SampleTileMatrix[S4Vectors::queryHits(Count1), -"tileID"]
 
-  BackMat <- SampleTileMatrix[queryHits(Count2), -"tileID"]
+  BackMat <- SampleTileMatrix[S4Vectors::queryHits(Count2), -"tileID"]
 
-  if (toLower(Method) == "mean") {
+  if (tolower(method) == "mean") {
     avgForeMat <- rowMeans(as.matrix(ForeMat))
     avgBackMat <- rowMeans(as.matrix(BackMat))
-  } else if (toLower(Method) == "median") {
-    avgForeMat <- rowMedians(as.matrix(ForeMat))
-    avgBackMat <- rowMedians(as.matrix(BackMat))
-  } else if (toLower(Method) == "sd") {
-    avgForeMat <- rowSds(as.matrix(ForeMat))
-    avgBackMat <- rowMSds(as.matrix(BackMat))
+  } else if (tolower(method) == "median") {
+    avgForeMat <- matrixStats::rowMedians(as.matrix(ForeMat))
+    avgBackMat <- matrixStats::rowMedians(as.matrix(BackMat))
+  } else if (tolower(method) == "sd") {
+    avgForeMat <- matrixStats::rowSds(as.matrix(ForeMat))
+    avgBackMat <- matrixStats::rowSds(as.matrix(BackMat))
   } else {
-    stop("Error: Method not recognize")
+    stop("Error: method not recognize")
   }
 
 
-  matchedPeak <- mclapply(avgForeMat, function(x) {
+  matchedPeak <- parallel::mclapply(avgForeMat, function(x) {
     order(abs(x - avgBackMat))[c(1:N)]
   }, mc.cores = numCores)
 
@@ -103,10 +104,10 @@ normalized_wilcoxon <- function(data, group, point.mass = 0, test = "wilcoxon") 
     B2 <- 0
   } else if ((success[1] == 0) | (success[2] == 0)) {
     T2 <- 0
-    B2 <- prop.test(pointmass, obs)$statistic
+    B2 <- stats::prop.test(pointmass, obs)$statistic
   } else if ((success[1] == 1) | (success[2] == 1)) {
     T2 <- 0
-    B2 <- prop.test(pointmass, obs)$statistic
+    B2 <- stats::prop.test(pointmass, obs)$statistic
   } else {
     uniq1 <- length(unique(Group1[Group1 != point.mass]))
     uniq2 <- length(unique(Group0[Group0 != point.mass]))
@@ -115,31 +116,31 @@ normalized_wilcoxon <- function(data, group, point.mass = 0, test = "wilcoxon") 
       if (sum(pointmass) == 0) {
         B2 <- 0
       } else {
-        B2 <- prop.test(pointmass, obs)$statistic
+        B2 <- stats::prop.test(pointmass, obs)$statistic
       }
     } else if (sum(pointmass) == 0) {
       B2 <- 0
       if (test == "t.test") {
-        T2 <- t.test(data ~ group)$statistic
+        T2 <- stats::t.test(data ~ group)$statistic
       }
       if (test == "wilcoxon") {
-        W <- wilcox.test(data ~ group, exact = FALSE)$statistic
+        W <- stats::wilcox.test(data ~ group, exact = FALSE)$statistic
         mu <- (n1 * n2) / 2
         sigma <- sqrt((n1 * n2 * (n1 + n2 + 1)) / 12)
         T2 <- ((W - mu) - 0.5) / sigma
       }
     } else {
-      B2 <- prop.test(pointmass, obs)$statistic
+      B2 <- stats::prop.test(pointmass, obs)$statistic
       contIndex <- data != point.mass
       cont <- data[contIndex]
       cGroup <- group[contIndex]
       n1c <- sum(cGroup == 1)
       n2c <- sum(cGroup == 0)
       if (test == "t.test") {
-        T2 <- t.test(cont ~ cGroup)$statistic
+        T2 <- stats::t.test(cont ~ cGroup)$statistic
       }
       if (test == "wilcoxon") {
-        W <- wilcox.test(cont ~ cGroup, exact = FALSE)$statistic
+        W <- stats::wilcox.test(cont ~ cGroup, exact = FALSE)$statistic
         mu <- (n1c * n2c) / 2
         sigma <- sqrt((n1c * n2c * (n1c + n2c + 1)) / 12)
         T2 <- ((W - mu) - 0.5) / sigma
@@ -155,11 +156,15 @@ normalized_wilcoxon <- function(data, group, point.mass = 0, test = "wilcoxon") 
 
 getMotifDev <- function(MotifCoverage, ForegroundPeaks, BackgroundPeaks,
                         numCores = 1, testType = "Wilcoxon", verbose = FALSE) {
-  ForeSubset <- mclapply(MotifCoverage, function(x) plyranges::filter_by_overlaps(x, ForegroundPeaks), mc.cores = numCores)
-  BackSubset <- mclapply(MotifCoverage, function(x) plyranges::filter_by_overlaps(x, BackgroundPeaks), mc.cores = numCores)
+  # TODO
+  # These variables are all undefined. 
+  ResDFList <- MotifLocations <- TimeDFList <- NULL # delete me when fixed
+  
+  ForeSubset <- parallel::mclapply(MotifCoverage, function(x) plyranges::filter_by_overlaps(x, ForegroundPeaks), mc.cores = numCores)
+  BackSubset <- parallel::mclapply(MotifCoverage, function(x) plyranges::filter_by_overlaps(x, BackgroundPeaks), mc.cores = numCores)
 
 
-  ForeDF <- mclapply(seq_along(MotifCoverage), function(x) {
+  ForeDF <- parallel::mclapply(seq_along(MotifCoverage), function(x) {
     tmp1 <- data.frame(GRangesToString(ForeDF[[x]]), ForeDF[[x]]$name, ForeDF[[x]]$score)
     colnames(tmp1) <- c("Peak", "Motif", names(ForeSubset)[x])
     tmp1
@@ -167,7 +172,7 @@ getMotifDev <- function(MotifCoverage, ForegroundPeaks, BackgroundPeaks,
 
   ForeDF[is.na(ResDFList)] <- 0
 
-  ResDF <- mclapply(seq_along(MotifCoverage), function(x) {
+  ResDF <- parallel::mclapply(seq_along(MotifCoverage), function(x) {
     tmp1 <- data.frame(GRangesToString(BackSubset[[x]]), BackSubset[[x]]$name, BackSubset[[x]]$score)
     colnames(tmp1) <- c("Peak", "Motif", names(BackSubset)[x])
     tmp1
@@ -177,13 +182,13 @@ getMotifDev <- function(MotifCoverage, ForegroundPeaks, BackgroundPeaks,
   ResDF[is.na(ResDF)] <- 0
 
   motifList <- names(MotifLocations)
-
-  motifDev <- mclapply(seq_along(motifList), function(x) {
+  Motif <- . <- NULL
+  motifDev <- parallel::mclapply(seq_along(motifList), function(x) {
     timeSub <- TimeDFList %>% dplyr::filter(Motif == motifList[x])
     resSub <- ResDFList %>% dplyr::filter(Motif == motifList[x])
     ## Iterate over all samples, comparing each sample to the average.
     motif1Dev <- lapply(seq_along(dim(timeSub)[2] - 2), function(y) {
-      comb -> rbind(timeSub[, y + 2], resSub[, y + 2])
+      comb <- rbind(timeSub[, y + 2], resSub[, y + 2])
       group1 <- c(rep(1, dim(timeSub)[1]), rep(0, dim(resSub)[1]))
 
       normalized_wilcoxon(comb, group1, test = testType)

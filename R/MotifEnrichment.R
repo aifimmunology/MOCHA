@@ -12,7 +12,7 @@
 
 
 runChromVar <- function(Obj, motifs,
-                        genome = BSgenome.Hsapiens.UCSC.hg38) {
+                        genome) {
   if (class(Obj)[1] == "RaggedSummarizedExperiment" & class(motifs)[1] == "GRangesList") {
     Obj1 <- RaggedExperiment::compactSummarizedExperiment(Obj, i = "TotalIntensity")
     tmp <- SummarizedExperiment::assays(Obj1)
@@ -29,9 +29,9 @@ runChromVar <- function(Obj, motifs,
     } else if (class(motifs)[1] == "GRangesList") {
       Obj1 <- Obj
       motifGRangesList <- motifs
-    } else if (class(motifs)[1] == "character" & any(names(SummarizedExperiment::metadata(Obj)) %in% motifs)) {
+    } else if (class(motifs)[1] == "character" & any(names(S4Vectors::metadata(Obj)) %in% motifs)) {
       Obj1 <- Obj
-      motifGRangesList <- SummarizedExperiment::metadata(Obj)[[motifs]]
+      motifGRangesList <- S4Vectors::metadata(Obj)[[motifs]]
     } else {
       stop("Error: No motifset found. Check input")
     }
