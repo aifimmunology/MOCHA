@@ -34,14 +34,16 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
     # Get consensus peaks for groupings of samples
     groups <- unique(sampleData[[groupColumn]])
     consensusPeaksByGroup <- list()
+
     for (group in groups) {
+
       # Filter sample-peak matrix to samples in this group
       samplesInGroupDF <- sampleData[sampleData[[groupColumn]] == group, ]
       samplesInGroup <- rownames(samplesInGroupDF)
       groupSamplePeakMat <- samplePeakMat[, samplesInGroup]
 
       # Keep only peaks with reproducibility above specified threshold
-      percentTruePeaks <- rowSums(groupSamplePeakMat) / nSamples
+      percentTruePeaks <- rowSums(groupSamplePeakMat) / length(samplesInGroup)
       consensusPeaks <- percentTruePeaks[percentTruePeaks >= threshold]
       consensusPeaks <- names(consensusPeaks)
 
