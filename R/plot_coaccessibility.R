@@ -29,17 +29,20 @@
 
 plot_coaccessibility <- function(zi_mat, index, peak_mat,fname, addLabel=F){
     
+    p1 = which(peak_mat$tileID == zi_mat$Peak1[index])
+    p2 = which(peak_mat$tileID == zi_mat$Peak2[index])
+    
     df = data.frame(
-        Values_X = as.numeric(peak_mat[zi_mat$Peak1[index], 2:ncol(peak_mat)]),
-        Values_Y = as.numeric(peak_mat[zi_mat$Peak2[index], 2:ncol(peak_mat)])
-        )
+        Values_X = as.numeric(peak_mat[p1, 1:ncol(peak_mat)-1]),
+        Values_Y = as.numeric(peak_mat[p2, 1:ncol(peak_mat)-1])
+    )
 
     
         fname =paste(fname,'.png',sep='')
 
     ## Calculate 3-metrics of correlation
     spear_cor = cor(df[,1], df[,2], method='spearman')
-    zi_spear_cor = weightedZISpearman(df[,1], df[,2])
+    zi_spear_cor = scMACS:::weightedZISpearman(df[,1], df[,2])
 
     ## Filter out nonzeros 
     df=as.data.table(df)
@@ -49,7 +52,7 @@ plot_coaccessibility <- function(zi_mat, index, peak_mat,fname, addLabel=F){
     nonzero_df = df[Values_X != 0 & Values_Y != 0]
     spear_nonzero = cor(nonzero_df$Values_X, nonzero_df$Values_Y, method='spearman')
     
-    nonzero_fit <- lm(log2(Values_Y+1) ~ log2(Values_X+1), nonzero_df)
+    nonzero_fit <- lm(Values_Y ~ Values_X, nonzero_df)
     int = nonzero_fit$coefficients[1]
     slp = nonzero_fit$coefficients[2]
     
@@ -57,15 +60,15 @@ plot_coaccessibility <- function(zi_mat, index, peak_mat,fname, addLabel=F){
                ZI_Spearman=zi_spear_cor,
                Spearman_NonZero=spear_nonzero)
     
-    x1 = log2(min(nonzero_df$Values_X))-1
-    x2 = log2(max(nonzero_df$Values_X))+1
+    x1 = min(nonzero_df$Values_X)-1
+    x2 = max(nonzero_df$Values_X)+2
     y1 = int + slp* x1
     y2 = int + slp* x2
     
     png(fname)
     p <- ggplot(df,
-                aes(x=log2(Values_X+1),
-                    y=log2(Values_Y+1)
+                aes(x=Values_X+1,
+                    y=Values_Y+1
                    ))+    geom_point()+
         ggtitle(paste("Co-Accessibility"))+xlim(0,17)+ylim(0,17)+
             xlab(zi_mat$Peak1[index])+ylab(zi_mat$Peak2[index])+
@@ -75,7 +78,8 @@ plot_coaccessibility <- function(zi_mat, index, peak_mat,fname, addLabel=F){
         strip.text.x = element_text(size=18),
         axis.text.x = element_text(size=14, angle = 90),
         axis.text.y = element_text(size=14),
-          )
+          )+
+    theme_bw()
     
     if(addLabel){
             p= p+geom_text(  x = c(3), y = c(8),
@@ -86,8 +90,8 @@ plot_coaccessibility <- function(zi_mat, index, peak_mat,fname, addLabel=F){
                   label=paste('S=',
                                round(spear_cor,2)),
                                        size=10,
-                             col='blue')+
-            geom_smooth(method='lm', se=FALSE,size=2)+
+                             col='brown')+
+            geom_smooth(method='lm', se=FALSE,size=2, col='brown', lty=2)+
             geom_segment(aes(x = x1, xend =x2 , 
                                  y = y1,  yend = y2),size=2
                              )
