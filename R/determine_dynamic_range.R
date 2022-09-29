@@ -26,7 +26,7 @@
 
 
 determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, doBin = FALSE) {
-
+  . <- NULL
   # if(class(AllFragmentsList)!='SimpleList'){
   #   stop('AllFragmentsList must be a list of arrow files')
   # }
@@ -60,15 +60,15 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
   RangeBins <- plyranges::stretch(plyranges::anchor_end(TotalRangesFilt),
     extend = GenomicRanges::start(TotalRangesFilt) %% binSize
   )
-
+  
   FinalBins <- plyranges::stretch(plyranges::anchor_start(RangeBins),
-    extend = (binSize - end(RangeBins) %% binSize)
+    extend = (binSize - IRanges::end(RangeBins) %% binSize)
   ) %>%
     plyranges::reduce_ranges() %>%
     plyranges::slide_ranges(width = binSize, step = binSize) %>%
-    plyranges::filter(width(.) == binSize)
+    plyranges::filter(IRanges::width(.) == binSize)
 
-  FinalBins <- subsetByOverlaps(FinalBins, blackList, invert = T)
+  FinalBins <- IRanges::subsetByOverlaps(FinalBins, blackList, invert = T)
 
   return(FinalBins)
 }

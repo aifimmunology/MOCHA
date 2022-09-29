@@ -43,6 +43,8 @@ extractRegion <- function(SampleTileObj,
                           approxLimit = 100000,
                           binSize = 250,
                           numCores = 1) {
+  . <- idx <- score <- NULL
+  
   cellNames <- names(SummarizedExperiment::assays(SampleTileObj))
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
   outDir <- SampleTileObj@metadata$Directory
@@ -86,13 +88,13 @@ extractRegion <- function(SampleTileObj,
     subGroups <- "All"
     subSamples <- list("All" = metaFile[, "Sample"])
   }
-
+  
   # Determine if binning is needed to simplify things
-  if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
-    print(str_interp("Size of region exceeds ${approxLimit}bp. Binning data over ${binSize}bp windows."))
+  if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
+    message(stringr::str_interp("Size of region exceeds ${approxLimit}bp. Binning data over ${binSize}bp windows."))
     binnedData <- regionGRanges %>%
-      tile_ranges(., binSize) %>%
-      mutate(idx = c(1:length(.)))
+      plyranges::tile_ranges(., binSize) %>%
+      dplyr::mutate(idx = c(1:length(.)))
   }
 
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
@@ -111,29 +113,29 @@ extractRegion <- function(SampleTileObj,
         filterCounts <- lapply(subSampleList, function(x) {
           tmpGR <- plyranges::join_overlap_intersect(x, regionGRanges)
 
-          if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+          if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
             tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
               plyranges::group_by(idx) %>%
               plyranges::reduce_ranges(score = mean(score)) %>%
-              ungroup()
+              dplyr::ungroup()
           }
           tmpGR
         })
 
 
 
-        stack(as(filterCounts, "GRangesList")) %>%
+        utils::stack(methods::as(filterCounts, "GRangesList")) %>%
           plyranges::join_overlap_intersect(regionGRanges) %>%
           plyranges::compute_coverage(weight = .$score / sampleCount) %>%
           plyranges::join_overlap_intersect(regionGRanges)
       } else {
         tmpCounts <- lapply(subSampleList, function(x) {
           tmpGR <- x %>% plyranges::join_overlap_intersect(regionGRanges)
-          if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+          if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
             tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
               plyranges::group_by(idx) %>%
               plyranges::reduce_ranges(score = mean(score)) %>%
-              ungroup()
+              dplyr::ungroup()
           }
         })
         unlist(tmpCounts)

@@ -149,7 +149,7 @@ callOpenTiles <- function(ArchRProj,
 
 
     # Add prefactor multiplier across datasets
-    curr_frags_median <- median(cellColData$nFrags)
+    curr_frags_median <- stats::median(cellColData$nFrags)
     study_prefactor <- 3668 / curr_frags_median # Training median
 
     # This mclapply will parallelize over each sample within a celltype.
@@ -323,7 +323,7 @@ callOpenTilesFast <- function(ArchRProj,
 
 
     # Add prefactor multiplier across datasets
-    curr_frags_median <- median(cellColData$nFrags)
+    curr_frags_median <- stats::median(cellColData$nFrags)
     study_prefactor <- 3668 / curr_frags_median # Training median
 
     # This mclapply will parallelize over each sample within a celltype.

@@ -122,12 +122,13 @@ getSampleTileMatrix <- function(tileResults,
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
   colOrder <- colnames(sampleTileIntensityMatList[[maxMat]])
   sampleData <- sampleData[match(colOrder, rownames(sampleData)),]
-    
+  
+  . <- NULL
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
     do.call("cbind", .) %>%
     as.data.frame()
   allTilesGR <- MOCHA::StringsToGRanges(allTiles)
-  mcols(allTilesGR) <- tilePresence
+  GenomicRanges::mcols(allTilesGR) <- tilePresence
 
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,

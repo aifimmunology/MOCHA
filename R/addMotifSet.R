@@ -29,7 +29,7 @@
 #' @export
 
 addMotifSet <- function(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName = "Motifs") {
-  TotalPeakSet <- IRanges::rowRanges(SE_Object)
+  TotalPeakSet <- SummarizedExperiment::rowRanges(SE_Object)
   genome <- S4Vectors::metadata(SE_Object)$Genome
   motif_ix <- motifmatchr::matchMotifs(
     pwms = pwms,

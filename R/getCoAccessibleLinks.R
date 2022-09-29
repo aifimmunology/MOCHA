@@ -46,10 +46,10 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   # Initialize correlation datatable
   TileCorr <- NULL
-  pb <- txtProgressBar(min = 0, max = length(regions), initial = 0, style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = length(regions), initial = 0, style = 3)
 
   for (i in 1:length(regions)) {
-    setTxtProgressBar(pb, i)
+    utils::setTxtProgressBar(pb, i)
 
     # Find all neighboring tiles in the window
     windowIndexBool <- which(start > regionDF$start[i] - windowSize / 2 &

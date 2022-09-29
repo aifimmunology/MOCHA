@@ -213,7 +213,7 @@ plotRegion <- function(countSE,
     )
   } else {
     p1 <- verbf(
-      p1 + xlim(min(countdf$Locus), max(countdf$Locus))
+      p1 + ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
     )
   }
 
@@ -270,7 +270,7 @@ plotRegion <- function(countSE,
         print("No gene body in range")
         # Empty gene track to prevent errors resulting from p2 nonexistence
         p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
-          theme_void()
+          ggplot2::theme_void()
         relativeHeights["Genes"] <- 10^6
         showGene <- FALSE
       }
@@ -285,14 +285,14 @@ plotRegion <- function(countSE,
   if (!is.null(additionalGRangesTrack)) {
 
     # Check for name metadata column
-    if ("name" %in% colnames(mcols(additionalGRangesTrack))) {
+    if ("name" %in% colnames(GenomicRanges::mcols(additionalGRangesTrack))) {
       # Only plot the overlap of this region and the additional GRanges Track
       overlapGRanges <- verbf(plyranges::join_overlap_intersect(additionalGRangesTrack, regionGRanges))
       if (length(overlapGRanges) > 0) {
         # Use the subset within our region as the track we want to plot
         print("GRanges has overlap")
         # Assign exon status to each row
-        mcols(overlapGRanges)$type <- rep("exon", each = length(overlapGRanges))
+        GenomicRanges::mcols(overlapGRanges)$type <- rep("exon", each = length(overlapGRanges))
         # split into list of GRanges -> GRangesList named for the names metadata col
         additionalGRangesTrack <- split(overlapGRanges, overlapGRanges$name)
       } else {
@@ -311,8 +311,8 @@ plotRegion <- function(countSE,
 
   ## Generate Link track
   if (!is.null(linkdf) &
-    any(linkdf$start + 250 > start(regionGRanges) &
-      linkdf$end - 250 < end(regionGRanges))) {
+    any(linkdf$start + 250 > GenomicRanges::start(regionGRanges) &
+      linkdf$end - 250 < GenomicRanges::end(regionGRanges))) {
     p5 <- get_link_plot(
       regionGRanges, legend.position,
       relativeHeights, linkdf
@@ -355,7 +355,7 @@ plotRegion <- function(countSE,
   # Additional Ranges
   if (!is.null(additionalGRangesTrack)) {
     print("Combining base tracks with an additional GRanges track")
-    p4 <- verbf(autoplot(additionalGRangesTrack)) + theme_minimal()
+    p4 <- verbf(ggbio::autoplot(additionalGRangesTrack)) + ggplot2::theme_minimal()
     track_list <- c(track_list, list("AdditionalGRanges" = p4))
   }
 
@@ -379,10 +379,10 @@ plotRegion <- function(countSE,
       heights = trackHeights,
       xlim = range(countdf$Locus),
       track.bg.color = "transparent",
-      padding = unit(-1, "lines"),
+      padding = grid::unit(-1, "lines"),
       label.bg.fill = "transparent",
       label.bg.color = "transparent",
-      label.width = unit(2, "lines")
+      label.width = grid::unit(2, "lines")
     )
     # coord_cartesian(clip = "off")
   )

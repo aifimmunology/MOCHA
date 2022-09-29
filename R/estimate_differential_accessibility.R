@@ -50,7 +50,7 @@ estimate_differential_accessibility <- function(tile_values, group,
   pairwise_matrix <- data.table::as.data.table(expand.grid(nonzero_dx, nonzero_control))
   pairwise_matrix$diff <- pairwise_matrix[, 1] - pairwise_matrix[, 2]
 
-  hodges_lehmann <- median(pairwise_matrix$diff)
+  hodges_lehmann <- stats::median(pairwise_matrix$diff)
   meanDiff <- calculateMeanDiff(data_vec, group)
   ## Create Final Results Matrix
   res <- data.frame(
@@ -58,15 +58,15 @@ estimate_differential_accessibility <- function(tile_values, group,
     TestStatistic = two_part_results$statistic,
     Log2FC_C = hodges_lehmann,
     MeanDiff = meanDiff,
-    Case_mu = median(nonzero_dx),
+    Case_mu = stats::median(nonzero_dx),
     Case_rho = mean(data_vec[group == 1] == 0),
-    Control_mu = median(nonzero_control),
+    Control_mu = stats::median(nonzero_control),
     Control_rho = mean(data_vec[group == 0] == 0)
   )
 
   if (providePermutation) {
     nPerm <- 10
-    set.seed(seed)
+
     permuted_pvals <- t(data.frame(sapply(1:nPerm, function(x) {
 
       ## permutation test

@@ -283,7 +283,7 @@ counts_plot_samples <- function(countdf,
 
     # Base plot, conditional
     p1 <- p1 +
-      ggplot2::geom_ridgeline(
+      ggridges::geom_ridgeline(
         data = as.data.frame(countdf),
         ggplot2::aes(
           x = Locus, y = Groups2, height = Counts,
@@ -293,8 +293,8 @@ counts_plot_samples <- function(countdf,
       ) +
       ggplot2::ylab(NULL) +
       ggplot2::scale_y_continuous(
-        breaks = c(1:length(tmp$Var1)),
-        label = tmp$Var1
+        breaks = c(1:length(countdf_tmp$Var1)),
+        label = countdf_tmp$Var1
       ) +
       ggplot2::geom_text(
         data = data.frame(
@@ -304,7 +304,7 @@ counts_plot_samples <- function(countdf,
         ggplot2::aes(x = x, y = y, label = label),
         size = 2, hjust = 0.9, vjust = 1.4
       ) +
-      theme(legend.position = "none")
+      ggplot2::theme(legend.position = "none")
   } else {
     stop("Error: Plot type not recognized. Please check input for variable 'plotType'")
   }
@@ -352,10 +352,15 @@ cleanup_breaks <- function(breaks, x) {
 #' 
 #' @noRd
 get_motifs_in_region <- function(motifsList, countdf) {
+  . <- name <- index <- NULL
   chrom <- toString(unique(countdf$chr))
   startSite <- min(countdf$Locus)
   endSite <- max(countdf$Locus)
-  regionGRanges <- GRanges(seqnames = chrom, ranges = IRanges(start = startSite, end = endSite), strand = "*")
+  regionGRanges <- GenomicRanges::GRanges(
+    seqnames = chrom, 
+    ranges = IRanges::IRanges(start = startSite, end = endSite), 
+    strand = "*"
+  )
 
   specMotifs <- unlist(motifsList) %>%
     plyranges::mutate(name = gsub("_.*", "", names(.))) %>%
@@ -516,29 +521,6 @@ counts_plot_motif_overlay <- function(p1,
 }
 
 
-#' Plot colors in a color palette
-#'
-#' Utility function to quickly visualize a color palette formatted for motif weight visualization
-#'
-#' @param pal A palette, named list of values where names are colors and values are the color breaks
-#' @param cex number indicating the amount by which plotting text and symbols should be scaled relative to the default
-#' @param cex.lab magnification of x and y labels relative to cex
-#' @return Plots a base plot to visualize the input palette
-#' @examples
-#' \dontrun{
-#' motif_color_pal <- c(-20, -10, 0, 10, 20)
-#' names(motif_color_pal) <- c("darkblue", "cyan", "gray", "orange", "darkred")
-#' plot_pal(motif_color_pal)
-#' }
-#'
-#' @noRd
-plot_pal <- function(pal, cex = 4, cex.lab = 1) {
-  npal <- length(pal)
-  plotdim(npal * 1, 3)
-  plot(1:npal, rep(1, npal), pch = 19, cex = cex, col = names(pal))
-  text(1:npal, rep(1, npal), labels = pal, cex = cex.lab)
-}
-
 #' Get Gene Body Model
 #'
 #' Get Gene Body model for specific gene in region ranges
@@ -560,6 +542,7 @@ get_gene_body_model <- function(whichGene,
                                 orgdb,
                                 db_id_col = "REFSEQ",
                                 verbose = TRUE) {
+  seqnames <- . <- tx_name <- model <- NULL
   # Check for dependency RMariaDB needed for GenomicFeatures::makeTxDbFromUCSC
   if (!requireNamespace("RMariaDB", quietly = TRUE)) {
     stop("Couldn't load the package RMariaDB. RMariaDB must be installed to plot specific genes.")
@@ -591,16 +574,16 @@ get_gene_body_model <- function(whichGene,
   }
 
   # Get granges object from database and intersect with region granges
-  newTxDBgenes <- unlist(genes(newTxDB, single.strand.genes.only = FALSE)) %>%
+  newTxDBgenes <- unlist(GenomicFeatures::genes(newTxDB, single.strand.genes.only = FALSE)) %>%
     plyranges::filter(!grepl("_", seqnames))
   newGRanges <- biovizBase::crunch(newTxDB, which = newTxDBgenes) %>%
     plyranges::join_overlap_intersect(regionGRanges)
-  colnames(values(newGRanges))[4] <- "model" # rename 'Type' column to models
+  colnames(GenomicRanges::values(newGRanges))[4] <- "model" # rename 'Type' column to models
 
   if (length(newGRanges) > 0) {
     newGRangesf <- as.data.frame(newGRanges)
-    startSide <- newGRangesf[newGRangesf$start %in% start(regionGRanges) & newGRangesf$model == "gap", ]
-    endSide <- newGRangesf[newGRangesf$end %in% end(regionGRanges) & newGRangesf$model == "gap", ]
+    startSide <- newGRangesf[newGRangesf$start %in% GenomicRanges::start(regionGRanges) & newGRangesf$model == "gap", ]
+    endSide <- newGRangesf[newGRangesf$end %in% GenomicRanges::end(regionGRanges) & newGRangesf$model == "gap", ]
     beginexon <- NULL
     endexon <- NULL
 
@@ -631,13 +614,13 @@ get_gene_body_model <- function(whichGene,
         model = "exon"
       )
     }
-
+    
     newModel <- rbind(newGRangesf, beginexon, endexon) %>%
       plyranges::mutate(nameList = paste(whichGene, tx_name, sep = ": ")) %>%
-      makeGRangesListFromDataFrame(., split.field = "nameList", keep.extra.columns = TRUE)
+      GenomicRanges::makeGRangesListFromDataFrame(., split.field = "nameList", keep.extra.columns = TRUE)
 
     # check for transcripts that are identical within the window
-    uniqueTranscripts <- stack(newModel)[!duplicated(ranges(stack(newModel)))] %>%
+    uniqueTranscripts <- utils::stack(newModel)[!duplicated(GenomicRanges::ranges(utils::stack(newModel)))] %>%
       plyranges::filter(model != "utr") %>%
       as.data.frame() %>%
       dplyr::select(tx_name) %>%
@@ -678,6 +661,8 @@ plot_whichGene <- function(newModel,
                            x_lim = NULL,
                            base_size = 12,
                            theme_ls = .gene_plot_theme) {
+  model <- theme <- NULL
+  
   # if(is.null(x_min)){
   #     xmin = min(newModel$
   # }
@@ -697,7 +682,7 @@ plot_whichGene <- function(newModel,
     )
 
   if (!is.null(x_lim)) {
-    p_gene <- p_gene + xlim(x_lim[1], x_lim[2])
+    p_gene <- p_gene + ggplot2::xlim(x_lim[1], x_lim[2])
   }
 
   p_gene <- p_gene +
@@ -745,9 +730,9 @@ plot_geneBody <- function(organismdb,
   g_geneBody <- ggbio::autoplot(organismdb, wh = geneBody_gr) # , stat = stat_val)
 
   if (!is.null(x_lim)) { # had to move this here, otherwise theme would be overwritten...
-    g_geneBody <- g_geneBody + xlim(x_lim[1], x_lim[2])
+    g_geneBody <- g_geneBody + ggplot2::xlim(x_lim[1], x_lim[2])
   }
-
+  theme <- NULL
   g_geneBody <- g_geneBody +
     ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) +
     ggplot2::theme_bw(base_size = base_size) +
@@ -769,30 +754,31 @@ plot_geneBody <- function(organismdb,
 #'
 #' @noRd
 simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
-
+  len <- tx_len <- utr5_len <- utr3_len <- gene_id <- tx_id <- . <- NULL
+  
   # retrieve transcript lengths
-  txlen <- transcriptLengths(TxDb, with.utr5_len = TRUE, with.utr3_len = TRUE)
+  txlen <- GenomicFeatures::transcriptLengths(TxDb, with.utr5_len = TRUE, with.utr3_len = TRUE)
   setDT(txlen)
   txlen$len <- rowSums(as.matrix(txlen[, .(tx_len, utr5_len, utr3_len)]))
 
   setkey(txlen, gene_id, len, tx_id)
 
   # filter longesttranscript by gene_id
-  ltx <- txlen[!is.na(gene_id)][, tail(.SD, 1), by = gene_id]$tx_id
+  ltx <- txlen[!is.na(gene_id)][, utils::tail(.SD, 1), by = gene_id]$tx_id
 
   # filter txdb object
   txb <- as.list(TxDb)
   txb$transcripts <- txb$transcripts[txb$transcripts$tx_id %in% ltx, ]
   txb$splicings <- txb$splicings[txb$splicings$tx_id %in% ltx, ]
   txb$genes <- txb$genes[txb$genes$tx_id %in% ltx, ]
-  chrominfo <- as.data.frame(seqinfo(TxDb)) %>%
-    dplyr::mutate(chrom = rownames(.)) %>%
-    dplyr::rename(length = seqlengths, is_circular = isCircular)
+  chrominfo <- as.data.frame(GenomeInfoDb::seqinfo(TxDb)) %>%
+    dplyr::mutate(chrom = rownames(.data)) %>%
+    dplyr::rename(length = .data$seqlengths, is_circular = .data$isCircular)
   txb2 <- GenomicFeatures::makeTxDb(txb$transcripts, txb$splicings, txb$genes, chrominfo,
     metadata =
-      filter(
-        metadata(TxDb),
-        grepl("Genome|Organism|Data source|UCSC Table", name)
+      dplyr::filter(
+        S4Vectors::metadata(TxDb),
+        grepl("Genome|Organism|Data source|UCSC Table", .data$name)
       )
   )
   Homo.sapiens.hg38 <- OrganismDbi::makeOrganismDbFromTxDb(txb2,
@@ -813,7 +799,9 @@ simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
 #' @noRd
 get_link_plot <- function(regionGRanges, legend.position = NULL,
                           relativeHeights, linkdf) {
-  linkdf2 <- dplyr::filter(linkdf, start + 250 > start(regionGRanges) & end - 250 < end(regionGRanges))
+  start <- end <- y <- Correlation <- NULL
+  
+  linkdf2 <- dplyr::filter(linkdf, .data$start + 250 > GenomicRanges::start(regionGRanges) & end - 250 < GenomicRanges::end(regionGRanges))
 
   ## Set Curvature to fit window
   if (is.null(legend.position) & relativeHeights["Links"] / 3 <= 0.5) {
@@ -825,26 +813,26 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
   } else {
     curveVal <- 0.4
   }
-
-  p5 <- ggplot() +
-    geom_curve(ggplot2::aes(
+  
+  p5 <- ggplot2::ggplot() +
+    ggplot2::geom_curve(ggplot2::aes(
       x = start + 250, xend = end - 250,
       y = y, yend = y, color = Correlation
     ),
     curvature = curveVal,
     data = cbind(linkdf2, y = rep(0, dim(linkdf2)[1]))
     ) +
-    theme_minimal() +
+    ggplot2::theme_minimal() +
     ggplot2::ylab(NULL) +
     ggplot2::xlab(NULL) +
-    ylim(-1, 0) +
-    scale_colour_viridis_c(breaks = c(
+    ggplot2::ylim(-1, 0) +
+    ggplot2::scale_colour_viridis_c(breaks = c(
       ceiling(10 * min(linkdf2$Correlation)) / 10,
       0,
       floor(10 * max(linkdf2$Correlation)) / 10
     )) +
     ggplot2::coord_cartesian(clip = "off", ylim = c(-0.75, 0)) +
-    theme(
+    ggplot2::theme(
       panel.grid = ggplot2::element_blank(), panel.border = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank()

@@ -44,15 +44,15 @@ make_prediction <- function(X, finalModelObject) {
     if (cell_model <= 100000) {
 
       ## Loess Fit
-      Intercept <- predict(
+      Intercept <- stats::predict(
         finalModelObject$Loess$Intercept,
         data.frame(NumCells = cell_model)
       )
-      Total <- predict(
+      Total <- stats::predict(
         finalModelObject$Loess$Total,
         data.frame(NumCells = cell_model)
       )
-      Max <- predict(
+      Max <- stats::predict(
         finalModelObject$Loess$Max,
         data.frame(NumCells = cell_model)
       )
@@ -62,32 +62,32 @@ make_prediction <- function(X, finalModelObject) {
 
       ## Average of Loess & Linear Fit
       Intercept <- mean(
-        predict(
+        stats::predict(
           finalModelObject$Loess$Intercept,
           data.frame(NumCells = cell_model)
         ),
-        predict(
+        stats::predict(
           finalModelObject$Linear$Intercept,
           data.frame(NumCells = cell_model)
         )
       )
 
       Total <- mean(
-        predict(
+        stats::predict(
           finalModelObject$Loess$Total,
           data.frame(NumCells = cell_model)
         ),
-        predict(
+        stats::predict(
           finalModelObject$Linear$Total,
           data.frame(NumCells = cell_model)
         )
       )
       Max <- mean(
-        predict(
+        stats::predict(
           finalModelObject$Loess$Max,
           data.frame(NumCells = cell_model)
         ),
-        predict(
+        stats::predict(
           finalModelObject$Linear$Max,
           data.frame(NumCells = cell_model)
         )
@@ -97,9 +97,9 @@ make_prediction <- function(X, finalModelObject) {
       tmpModel <- as.matrix(tmpModel)
     } else {
       ## Linear Fit
-      Intercept <- predict(finalModelObject$Linear$Intercept, data.frame(NumCells = cell_model))
-      Total <- predict(finalModelObject$Linear$Total, data.frame(NumCells = cell_model))
-      Max <- predict(finalModelObject$Linear$Max, data.frame(NumCells = cell_model))
+      Intercept <- stats::predict(finalModelObject$Linear$Intercept, data.frame(NumCells = cell_model))
+      Total <- stats::predict(finalModelObject$Linear$Total, data.frame(NumCells = cell_model))
+      Max <- stats::predict(finalModelObject$Linear$Max, data.frame(NumCells = cell_model))
       tmpModel <- c(Intercept, Total, Max)
       tmpModel <- as.matrix(tmpModel)
     }
@@ -124,7 +124,7 @@ make_prediction <- function(X, finalModelObject) {
   ### Identify cutoff based on
   ### different abundances
   newdata <- data.frame(Ncells = cell_model)
-  adaptiveThreshold <- as.numeric(predict(MOCHA::youden_threshold, newdata = newdata))
+  adaptiveThreshold <- as.numeric(stats::predict(MOCHA::youden_threshold, newdata = newdata))
 
 
   ### Boolean indicating whether

@@ -48,20 +48,20 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
                                            numCores = 2) {
-  if (!any(names(assays(SampleTileObj)) %in% cellPopulation)) {
+  if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
   }
 
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
 
   if (!(groupColumn %in% colnames(metaFile))) {
-    stop(str_interp("Provided groupCol '{groupColumn}' not found in the provided SampleTileObj"))
+    stop(stringr::str_interp("Provided groupCol '{groupColumn}' not found in the provided SampleTileObj"))
   }
   if (!(foreground %in% metaFile[[groupColumn]])) {
-    stop(str_interp("Provided foreground value is not present in the column {groupColumn} in the provided SampleTileObj"))
+    stop(stringr::str_interp("Provided foreground value is not present in the column {groupColumn} in the provided SampleTileObj"))
   }
   if (!(background %in% metaFile[[groupColumn]])) {
-    stop(str_interp("Provided background value is not present in the column {groupColumn} in the provided SampleTileObj"))
+    stop(stringr::str_interp("Provided background value is not present in the column {groupColumn} in the provided SampleTileObj"))
   }
 
   # Get group labels
@@ -93,7 +93,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   diff0s <- abs(zero_A - zero_B)
 
-  Log2Intensity <- metadata(SampleTileObj)$Log2Intensity
+  Log2Intensity <- S4Vectors::metadata(SampleTileObj)$Log2Intensity
   log2FC_filter <- ifelse(Log2Intensity, 12, 2^12)
   idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= 0.5)
 

@@ -33,7 +33,7 @@ calculate_intensities <- function(fragMat,
   if (!is.integer(totalFrags)) {
     stop("totalFrags user-input must be an integer denoting the total # of frags")
   }
-
+  bin <- cell <- normedFrags <- NULL
   ### set normalization
   ### scale for fragment counts
   normScale <- 10^9
