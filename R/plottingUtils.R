@@ -397,7 +397,7 @@ counts_plot_motif_overlay <- function(p1,
                                       motif_line_alpha = 0.25) {
 
   # Retrieve annotations in region and format
-  specMotifs <- scMACS:::get_motifs_in_region(
+  specMotifs <- get_motifs_in_region(
     countdf = countdf,
     motifsList = motifsList,
   )
@@ -527,8 +527,8 @@ counts_plot_motif_overlay <- function(p1,
 		  min.segment.length = 0,
 		  nudge_y = -max(countdf$Counts) / 20
 		) +
-		ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
-		xlim(min(countdf$Locus), max(countdf$Locus))
+		ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
+		ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
 
   }
 
