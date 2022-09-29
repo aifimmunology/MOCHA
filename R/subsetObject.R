@@ -58,7 +58,7 @@ subsetObject <- function(Object,
 		
 		keep <- which(names(assays(Object)) %in% groupList)
 		
-		assays(object) <- assays(object)[keep]
+		SummarizedExperiment::assays(object) <- SummarizedExperiment::assays(object)[keep]
 		
 		return(Object)
 		
