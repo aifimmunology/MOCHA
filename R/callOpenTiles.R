@@ -80,12 +80,12 @@ callOpenTiles <- function(ArchRProj,
   } else if (!all(cellPopulations %in% names(cellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   }
-  
+
   #Save the cell number per population-sample in the metadata
-  allCellCounts = table(cellColData[,'Sample'], cellTypeLabelList)
-  allCellCounts = allCellCounts[,cellPopulations]
-  
-  # Genome and TxDb annotation info is added to the metadata of 
+  allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
+  allCellCounts <- allCellCounts[, cellPopulations]
+
+  # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
   AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
