@@ -1,11 +1,14 @@
 Package: MOCHA
 Type: Package
-Title: single-cell Modeling of Accessible Chromatin Sites
+Title: Modeling for single cell Open Chromatin Analysis
 Version: 0.1.0
 Author: Samir Rachid Zaim [aut, cre],
-        Mark-Phillip Pebworth [aut, ctb],
-        Xiaojun Li [aut, ctb]    
-Maintainer: Samir Rachid Zaim <samir.rachidzaim@alleninstitute.org>
+        Mark-Phillip Pebworth [aut, cre],
+        Patrick Imran McGrath [aut, cre],
+        Lauren Okada [aut, ctb],
+        Xiaojun Li [aut, ctb]
+Maintainer: 
+        Patrick Imran McGrath <imran.mcgrath@alleninstitute.org>
 Description: MOCHA is a novel peak-calling algorithm that captures and leverage single-cell 
              information to model and identify accesible chromatin in single-cell 
              ATAC-Sequencing data.
