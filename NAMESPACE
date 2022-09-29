@@ -27,4 +27,4 @@ export(plot_differential_region)
 export(plot_sample_specific_reproducible_peaks.R)
 export(plot_tripartite_graph)
 import(data.table)
-export(addDelta)
+
