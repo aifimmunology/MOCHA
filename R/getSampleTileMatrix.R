@@ -29,7 +29,6 @@ getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
                                 groupColumn = NULL,
                                 threshold = 0.2,
-								disableMinimum = FALSE,
                                 log2Intensity = TRUE,
                                 numCores = 1,
                                 verbose = FALSE) {
@@ -74,7 +73,6 @@ getSampleTileMatrix <- function(tileResults,
       x,
       sampleData,
       threshold,
-	  disableMinimum,
       groupColumn
     )
   }, mc.cores = numCores)
