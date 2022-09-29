@@ -99,12 +99,12 @@ extractRegion <- function(SampleTileObj,
 
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
-    tmp <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
 
-    tmp2 <- parallel::mclapply(subSamples, function(y) {
-      sampleNames <- names(tmp)
+    cellPopSubsampleCov <- parallel::mclapply(subSamples, function(y) {
+      sampleNames <- names(originalCovGRanges)
       keepSamples <- grepl(paste(y, collapse = "|"), sampleNames)
-      subSampleList <- tmp[keepSamples]
+      subSampleList <- originalCovGRanges[keepSamples]
 
 	  
       # If we don't want sample-specific, then average and get a dataframe out.
@@ -137,53 +137,52 @@ extractRegion <- function(SampleTileObj,
               plyranges::reduce_ranges(score = mean(score)) %>%
               ungroup()
           }
-		  tmpGR
+		      tmpGR
         })
 		
         unlist(tmpCounts)
       }
     }, mc.cores = numCores)
-    names(tmp2) <- subGroups
-    tmp2
+    names(cellPopSubsampleCov) <- subGroups
+    cellPopSubsampleCov
 	
   })
   names(cellPopulation_Files) <- cellPopulations
   allGroups <- unlist(cellPopulation_Files)
  
   ## Generate a data.frame for export.
-  
+
   if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
-    
-	allTmp <- parallel::mclapply(seq_along(allGroups), function(x) {
-		tmp <- as.data.frame(allGroups[[x]])
-		tmp$Groups <- rep(names(allGroups)[x], length(tmp))
+=
+    allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
+      tmp <- as.data.frame(allGroups[[x]])
+      tmp$Groups <- rep(names(allGroups)[x], length(tmp))
 
-		covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
-		colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
+      covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
+      colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
-		covdf
-	}, mc.cores = numCores)
-	
-	
+      covdf
+    }, mc.cores = numCores)
+
   }else{
+
+    allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
+      tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
+      tmp$score <- allGroups[[x]]$score[tmp$partition]
+      tmp$Groups <- rep(names(allGroups)[x], length(tmp))
+
+      covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
+      colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
+
+      covdf
+    }, mc.cores = numCores)
+  }
+
+
+  names(allGroupsDF) <- names(allGroups)
   
-	allTmp <- parallel::mclapply(seq_along(allGroups), function(x) {
-		tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
-		tmp$score <- allGroups[[x]]$score[tmp$partition]
-		tmp$Groups <- rep(names(allGroups)[x], length(tmp))
 
-		covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
-		colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
-
-		covdf
-	}, mc.cores = numCores)
-}
-
-
-  names(allTmp) <- names(allGroups)
-  
-
-  countSE <- SummarizedExperiment::SummarizedExperiment(allTmp,
+  countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
     metadata = SampleTileObj@metadata
   )
 
