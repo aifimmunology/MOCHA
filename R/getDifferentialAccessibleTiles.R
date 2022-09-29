@@ -24,8 +24,6 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            groupColumn,
                                            foreground,
                                            background,
-                                           noiseThreshold = 12,
-                                           minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
                                            numCores = 2) {
@@ -82,6 +80,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   # Estimate differential accessibility
   
   if(!Log2Intensity){ sampleTileMatrix <- log2(sampleTileMatrix+1) }
+
 
   res_pvals <- parallel::mclapply(rownames(sampleTileMatrix),
     function(x) {

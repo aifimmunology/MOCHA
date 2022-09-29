@@ -37,7 +37,6 @@ callOpenTiles <- function(ArchRProj,
                           outDir = NULL,
                           fast = FALSE,
                           numCores = 30,
-                          verbose = TRUE,
                           force = FALSE,
                           studySignal=NULL
                          ) {
@@ -71,19 +70,14 @@ callOpenTiles <- function(ArchRProj,
   blackList <- ArchR::getBlacklist(ArchRProj)
 
   # Get cell populations
-  cellTypeLabelList <- cellColData[, cellPopLabel]
-  cellCounts <- table(cellTypeLabelList[!is.na(cellTypeLabelList)])
-
+  tmp <- cellColData[, cellPopLabel]
+  cellCounts <- table(tmp[!is.na(tmp)])
 
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- names(cellCounts)
   } else if (!all(cellPopulations %in% names(cellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   }
-  
-  #Save the cell number per population-sample in the metadata
-  allCellCounts = table(cellColData[,'Sample'], cellTypeLabelList)
-  allCellCounts = allCellCounts[,cellPopulations]
   
   # Genome and TxDb annotation info is added to the metadata of 
   # the final MultiAssayExperiment for downstream analysis
@@ -106,7 +100,6 @@ callOpenTiles <- function(ArchRProj,
       sampleSpecific = TRUE,
       NormMethod = "nfrags",
       blackList = NULL,
-	  verbose = verbose,
       overlapList = 50
     )
 
@@ -115,9 +108,7 @@ callOpenTiles <- function(ArchRProj,
     emptyFragsBool <- !(names(frags) %in% names(fragsNoNull))
     emptyGroups <- names(frags)[emptyFragsBool]
     emptyGroups <- gsub("__.*", "", emptyGroups)
-	
-	rm(fragsNoNull)
-	
+
     if (length(emptyGroups) == 0) {
       warning(
         "The following celltype#sample groupings have no fragments",
@@ -125,17 +116,20 @@ callOpenTiles <- function(ArchRProj,
       )
     }
 
+    # Remove frags
+    rm(frags)
+
     # Simplify sample names to remove everything before the first "#"
-    sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
-    names(frags) <- sampleNames
+    sampleNames <- gsub("__.*", "", gsub(".*#", "", names(fragsNoNull)))
+    names(fragsNoNull) <- sampleNames
 
     # Calculate normalization factors as the number of fragments for each celltype_samples
-    normalization_factors <- as.integer(sapply(frags, length))
+    normalization_factors <- as.integer(sapply(fragsNoNull, length))
 
     # save coverage files to folder.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
       covFiles <- scMACS:::getCoverage(
-        popFrags = frags,
+        popFrags = fragsNoNull,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
         numCores = numCores, TxDb = TxDb
@@ -144,8 +138,7 @@ callOpenTiles <- function(ArchRProj,
       rm(covFiles)
     }
 
-	#rm(frags)
-	
+
     # Add prefactor multiplier across datasets
     if(is.null(studySignal)){
         message('calculating study signal on ArchR project. Make sure data contains all cell populations')
@@ -156,17 +149,16 @@ callOpenTiles <- function(ArchRProj,
 
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time) 
+    # (Arrow files are locked - one access at a time)
     tilesGRangesList <- parallel::mclapply(
-      1:length(frags),
+      1:length(fragsNoNull),
       function(x) {
         scMACS:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           numCores = numCores,
           totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
-		  verbose = verbose,
+          fragsList = fragsNoNull[[x]],
           StudypreFactor = study_prefactor
         )
       },
@@ -174,30 +166,18 @@ callOpenTiles <- function(ArchRProj,
     )
 
     names(tilesGRangesList) <- sampleNames
+    rm(fragsNoNull)
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
-    # so NULL will occur for those samples. We need to fill in dummy data so that we
-	# preserve the existence of the sample, while also not including any information from it. 
-	
-	emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
-	
-	if(length(emptyGroups) > 0){
-		warning(
-			"The following celltype#sample groupings have too few celltypes (<5)",
-			"and will be ignored: ", names(tilesGRangesList)[emptyGroups]
-			) 
-	}
-	
-	for(i in emptyGroups){
+    # so NULL will occur for those samples
+    tilesGRangesListNoNull <- BiocGenerics::Filter(Negate(is.null), tilesGRangesList)
+    # TODO: Add warning message about removed samples for this celltype.
 
-		tilesGRangesList[[i]] <- data.table(tileID = 'chr1:827000-827499', seqnames = 'chr1', start = 827000, end = 827499,
-																strand ='*', TotalIntensity = 0, maxIntensity = 0, numCells = 0, Prediction = 0,
-																PredictionStrength = 0, peak = FALSE)	
-	}
+    rm(tilesGRangesList)
 
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
-      tilesGRangesList
+      tilesGRangesListNoNull
     )
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
@@ -215,11 +195,11 @@ callOpenTiles <- function(ArchRProj,
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
-   
+
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list('CellCounts' = allCellCounts,
+    metadata = list(
       "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
       "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
     )
@@ -278,7 +258,7 @@ callOpenTilesFast <- function(ArchRProj,
   prefilterCellPops <- unique(sapply(strsplit(names(frags), "#"), `[`, 1))
   if (any(prefilterCellPops != cellPopulations)) {
     # Removed cell populations must be filtered from cellPopulations
-    postfilterCellPops <- unique(sapply(strsplit(names(frags), "#"), `[`, 1))
+    postfilterCellPops <- unique(sapply(strsplit(names(fragsNoNull), "#"), `[`, 1))
     # Match these labels by index to the original cellPopulatoins
     retainedPopsBool <- (prefilterCellPops %in% postfilterCellPops)
     finalCellPopulations <- cellPopulations[retainedPopsBool]
@@ -287,7 +267,7 @@ callOpenTilesFast <- function(ArchRProj,
   }
 
   # Split the fragments list into a list of lists per cell population
-  splitFrags <- scMACS:::splitFragsByCellPop(frags)
+  splitFrags <- scMACS:::splitFragsByCellPop(fragsNoNull)
 
   # getPopFrags needs to replace spaces for underscores, so
   # here we rename the fragments with the original cell populations labels.

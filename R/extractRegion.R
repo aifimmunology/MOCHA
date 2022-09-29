@@ -75,7 +75,6 @@ extractRegion <- function(SampleTileObj,
   if (!is.null(subGroups) & !is.null(groupColumn)) {
     # If the user defined a list of subgroup(s) within the groupColumn from the metadata, then it subsets to just those samples
     subSamples <- lapply(subGroups, function(x) metaFile[metaFile[, groupColumn] %in% x, "Sample"])
-	names(subSamples) <- subGroups
   } else if (!is.null(groupColumn)) {
 
     # If no subGroup defined, then it'll form a list of samples across all labels within the groupColumn
@@ -95,7 +94,6 @@ extractRegion <- function(SampleTileObj,
       tile_ranges(., binSize) %>%
       mutate(idx = c(1:length(.)))
   }
-  
 
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
@@ -106,13 +104,12 @@ extractRegion <- function(SampleTileObj,
       keepSamples <- grepl(paste(y, collapse = "|"), sampleNames)
       subSampleList <- tmp[keepSamples]
 
-	  
       # If we don't want sample-specific, then average and get a dataframe out.
       # else, get a sample-specific count dataframe out.
       if (!sampleSpecific) {
         sampleCount <- sum(keepSamples)
-        filterCounts <- lapply(subSampleList, function(z) {
-          tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges)
+        filterCounts <- lapply(subSampleList, function(x) {
+          tmpGR <- plyranges::join_overlap_intersect(x, regionGRanges)
 
           if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
             tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
@@ -123,65 +120,44 @@ extractRegion <- function(SampleTileObj,
           tmpGR
         })
 
+
+
         stack(as(filterCounts, "GRangesList")) %>%
           plyranges::join_overlap_intersect(regionGRanges) %>%
           plyranges::compute_coverage(weight = .$score / sampleCount) %>%
           plyranges::join_overlap_intersect(regionGRanges)
-		  
       } else {
-        tmpCounts <- lapply(subSampleList, function(z) {
-          tmpGR <-  plyranges::join_overlap_intersect(z, regionGRanges)
+        tmpCounts <- lapply(subSampleList, function(x) {
+          tmpGR <- x %>% plyranges::join_overlap_intersect(regionGRanges)
           if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
             tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
               plyranges::group_by(idx) %>%
               plyranges::reduce_ranges(score = mean(score)) %>%
               ungroup()
           }
-		  tmpGR
         })
-		
         unlist(tmpCounts)
       }
     }, mc.cores = numCores)
     names(tmp2) <- subGroups
     tmp2
-	
   })
   names(cellPopulation_Files) <- cellPopulations
   allGroups <- unlist(cellPopulation_Files)
- 
+
   ## Generate a data.frame for export.
-  
-  if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
-    
-	allTmp <- parallel::mclapply(seq_along(allGroups), function(x) {
-		tmp <- as.data.frame(allGroups[[x]])
-		tmp$Groups <- rep(names(allGroups)[x], length(tmp))
+  allTmp <- parallel::mclapply(seq_along(allGroups), function(x) {
+    tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
+    tmp$score <- allGroups[[x]]$score[tmp$partition]
+    tmp$Groups <- rep(names(allGroups)[x], length(tmp))
 
-		covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
-		colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
+    covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
+    colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
-		covdf
-	}, mc.cores = numCores)
-	
-	
-  }else{
-  
-	allTmp <- parallel::mclapply(seq_along(allGroups), function(x) {
-		tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
-		tmp$score <- allGroups[[x]]$score[tmp$partition]
-		tmp$Groups <- rep(names(allGroups)[x], length(tmp))
-
-		covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
-		colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
-
-		covdf
-	}, mc.cores = numCores)
-}
-
+    covdf
+  }, mc.cores = numCores)
 
   names(allTmp) <- names(allGroups)
-  
 
   countSE <- SummarizedExperiment::SummarizedExperiment(allTmp,
     metadata = SampleTileObj@metadata
