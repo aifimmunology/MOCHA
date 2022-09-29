@@ -177,23 +177,25 @@ callOpenTiles <- function(ArchRProj,
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
-	# preserve the existence of the sample, while also not including any information from it. 
-	
-	emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
-	
-	if(length(emptyGroups) > 0){
-		warning(
-			"The following celltype#sample groupings have too few celltypes (<5)",
-			"and will be ignored: ", names(tilesGRangesList)[emptyGroups]
-			) 
-	}
-	
-	for(i in emptyGroups){
-
-		tilesGRangesList[[i]] <- data.table(tileID = 'chr1:827000-827499', seqnames = 'chr1', start = 827000, end = 827499,
-																strand ='*', TotalIntensity = 0, maxIntensity = 0, numCells = 0, Prediction = 0,
-																PredictionStrength = 0, peak = FALSE)	
-	}
+    # preserve the existence of the sample, while also not including any information from it. 
+    
+    emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
+    
+    if(length(emptyGroups) > 0){
+    warning(
+      "The following celltype#sample groupings have too few celltypes (<5)",
+      "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
+      ) 
+    }
+    for(i in emptyGroups){
+      # This is an empty region placeholder that represents an empty sample
+      # And is functionally ignored downstream but required for
+      # the RaggedExperiment structure
+      tilesGRangesList[[i]] <- data.table(
+        tileID = 'chr1:1-499', seqnames = 'chr1', start = 1,
+        end = 499, strand ='*', TotalIntensity = 0, maxIntensity = 0,
+        numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE)
+    }
 
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
