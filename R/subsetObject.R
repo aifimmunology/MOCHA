@@ -77,7 +77,6 @@ subsetObject <- function(Object,
 	if(na.rm){
 		keep <- rownames(sampleData)[which(sampleData[[subsetBy]] %in% groupList)]
 		
-		return(keep)
 		return(Object[,keep])
 	}else{
 	
