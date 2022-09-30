@@ -116,7 +116,7 @@ callOpenTiles <- function(ArchRProj,
     emptyGroups <- names(frags)[emptyFragsBool]
     emptyGroups <- gsub("__.*", "", emptyGroups)
 	
-	rm(fragsNoNull)
+	  rm(fragsNoNull)
 	
     if (length(emptyGroups) == 0) {
       warning(
@@ -144,12 +144,10 @@ callOpenTiles <- function(ArchRProj,
       rm(covFiles)
     }
 
-	#rm(frags)
-	
     # Add prefactor multiplier across datasets
     if(is.null(studySignal)){
         message('calculating study signal on ArchR project. Make sure data contains all cell populations')
-        curr_frags_median <- median(cellColData$nFrags)
+        studySignal <- median(cellColData$nFrags)
         
     }
     study_prefactor <- 3668 / studySignal # Training median
@@ -157,6 +155,7 @@ callOpenTiles <- function(ArchRProj,
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time) 
+
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
       function(x) {
@@ -196,7 +195,6 @@ callOpenTiles <- function(ArchRProj,
         end = 499, strand ='*', TotalIntensity = 0, maxIntensity = 0,
         numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE)
     }
-
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesList
