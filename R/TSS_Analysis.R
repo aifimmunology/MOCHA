@@ -25,9 +25,7 @@ getStartSites <- function(peakSet,
 
     allT <- stack(tss1) %>% GenomicRanges::trim(.) %>% GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
             plyranges::mutate(exactTSS = start(.)) %>% plyranges::filter(!duplicated(exactTSS)) %>% 
-            plyranges::anchor_3p(.) %>%
-            suppressWarnings(plyranges::stretch(., extend = 125)) %>% 
-            plyranges::unanchor() %>% GenomicRanges::trim()
+            GenomicRanges::trim()
 
     tpeaks <- plyranges::join_overlap_intersect(allT, GRanges)
     
@@ -43,8 +41,6 @@ getStartSites <- function(peakSet,
 ##                if all their differential TSS usage falls within too small of a range. Default is TRUE
 ## @threshold -  Basepair distance Threshold for filtering out genes who's differential TSS sites all falls very close together,
 ##		   and thus likely too close to be able to distinguish TSS behavior clearly. 
-## @effectSize - name of the metadata column with effect size measurements 
-##              (used to ensure differential TSS sites are not all differential in the same direction). 
 ## @TxDb - Transcript Db object for organism. Default is Hg38. 
 ## @Org - Organism Db for annotating gene names across databases. Must match TxDb. 
 
@@ -54,7 +50,6 @@ getAltTSS <- function(completeDAPs,
                       nuancedTSS = TRUE,
                       nuancedTSSGap = 150,
                       threshold = 0.2,
-                      effectSize = 'Log2FC_C',
                       TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, 
                       Org = org.Hs.eg.db){
     
@@ -65,13 +60,16 @@ getAltTSS <- function(completeDAPs,
     }else if(class(completeDAPs)[1] == 'GRanges'){
         
         DAP_GRanges = completeDAPs
+    }else{
+
+        stop('completeDAPs object type is not compatible. Please submit a GRanges, data.table, or SummarizedExperiment object.')
     }
     
-    tss1 <- ensembldb::transcriptsBy(TxDb, by = ('gene'))
+    tss1 <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ('gene')))
 
-    names(tss1) <- mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
+    names(tss1) <- AnnotationDbi::mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
 
-    allT <- stack(tss1) %>% trim(.) %>% promoters(., upstream = 0, downstream = 0) %>%
+    allT <- stack(tss1) %>% trim(.) %>% GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
             plyranges::mutate(exactTSS = start(.)) %>% plyranges::filter(!duplicated(exactTSS)) %>% 
             plyranges::anchor_3p(.) %>%
             plyranges::stretch(., extend = 125) %>% trim()
@@ -81,15 +79,19 @@ getAltTSS <- function(completeDAPs,
     if(returnAllTSS){
         return(tpeaks)
     }
-    
+
+    ## We want to select all the genes that have multiple TSSs (duplicated(name)) and at least one TSSs that has an FDR <= to the threshold. 
+    ## After that, we want to filter for sites where only a subset of open TSSs change, or all TSSs change, but it opposite directions. 
     altTSS <- tpeaks %>% plyranges::filter(!duplicated(exactTSS)) %>%
                 plyranges::group_by(name) %>% 
-                plyranges::filter(any(FDR <= threshold) & any(duplicated(name)))  %>% 
-                 plyranges::filter(ifelse(all(!is.na(FDR)) & all(FDR <= threshold, na.rm = FALSE), 
-                                          !all({{effectSize}} > 0) & !all({{effectSize}} < 0), TRUE)) %>% 
+                plyranges::filter(any(FDR <= threshold) & any(duplicated(name))) 
+
+    altTSS <- altTSS %>% 
+                 plyranges::filter(ifelse(all(FDR <= threshold, na.rm = FALSE), 
+                                          !all(Log2FC_C > 0) & !all(Log2FC_C < 0), TRUE)) %>% 
                                    ungroup() %>% sort() 
     
-    if(!nuancedTSS){
+    if(nuancedTSS){
         
         nuancedGenes <- split(altTSS, as.character(altTSS$name)) %>% 
                 mclapply(., function(x){
