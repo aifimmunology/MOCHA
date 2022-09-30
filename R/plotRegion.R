@@ -17,7 +17,7 @@
 #' or to the "right" for faceted plots.
 #' @param facet_label_side Direction character value, default "top". Can also be "right", "left", or "bottom". Position of facet label.
 #' @param counts_group_colors Optional named color vector. Values as colors, names are levels of `counts_color_var`. If provided, will color the plots specifically
-#' using `scale_color_manual()`
+#' using `scale_color_manual()`. Can also be set to 'none' so as to avoid any colors. 
 #' @param counts_color_var Character value, default "Groups". Column name from countdf to use to color counts plots.
 #' Only used if counts_group_colors provided
 #' @param counts_theme_ls A list of named theme arguments passed to theme(). For example, `list(axis.ticks = element_blank())`. Default NULL will use `.counts_plot_default_theme`.

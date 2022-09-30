@@ -157,6 +157,7 @@ counts_plot_samples <- function(countdf,
       )
     )
 
+    if(tolower(counts_group_colors) == 'none') {stop("For overlaid plots, counts_group_colors cannot be set to 'none'.")}
     # Base Plot
     p1 <- p1 +
       geom_line(aes(color = !!as.name(counts_color_var)), alpha = 0.75, size = 1.5) +
@@ -194,7 +195,10 @@ counts_plot_samples <- function(countdf,
     if (is.null(counts_color)) {
       p1 <- p1 +
         geom_area(aes(fill = !!as.name(counts_color_var)), position = "identity")
-    } else {
+    } else if (tolower(counts_group_colors) == 'none') {
+      p1 <- p1 +
+        geom_area(fill = 'grey', position = "identity")
+    }else{
       p1 <- p1 +
         geom_area(fill = counts_color, position = "identity")
     }
@@ -213,7 +217,7 @@ counts_plot_samples <- function(countdf,
       do.call(theme, theme_ls)
 
     # Conditional Plot Elements
-    if (!is.null(counts_group_colors)) {
+    if (!is.null(counts_group_colors) & tolower(counts_group_colors) != 'none') {
       # commenting this section out so we can supply specific colors to highlight just a subset if we want--other samples will just be gray
       # assertthat::assert_that(all(unique(countdf[[counts_color_var]]) %in% names(counts_group_colors)),
       #                        msg = "Must supply colors for all levels of color variable")
@@ -236,7 +240,11 @@ counts_plot_samples <- function(countdf,
     if (is.null(counts_color)) {
       p1 <- p1 +
         geom_line(aes(color = !!as.name(counts_color_var)), position = "identity")
-    } else {
+
+    } else if (tolower(counts_group_colors) == 'none') {
+      p1 <- p1 +
+        geom_line()
+    }else{
       p1 <- p1 +
         geom_line(color = counts_color, position = "identity")
     }
@@ -255,7 +263,7 @@ counts_plot_samples <- function(countdf,
       do.call(theme, theme_ls)
 
     # Conditional Plot Elements
-    if (!is.null(counts_group_colors)) {
+    if (!is.null(counts_group_colors) & tolower(counts_group_colors) != 'none') {
       # commenting this section out so we can supply specific colors to highlight just a subset if we want--other samples will just be gray
       # assertthat::assert_that(all(unique(countdf[[counts_color_var]]) %in% names(counts_group_colors)),
       #                        msg = "Must supply colors for all levels of color variable")
