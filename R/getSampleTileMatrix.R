@@ -77,17 +77,25 @@ getSampleTileMatrix <- function(tileResults,
     )
   }, mc.cores = numCores)
 
-  allTiles <- sort(unique(do.call("c", tilesByCellPop)))
+  errorMessages <- parallel::mclapply(tilesByCellPop, function(x){ 
+      if(any(grepl('Error', x))){ x[grep('Error', x)] }
+      else{ NA}
+  }, mc.cores = numCores)
 
-  if(any(grepl('Error', allTiles))){
+  names(errorMessages) <- names(subTileResults)
 
-    print(allTiles[grep('Error', allTiles)])
+  if(any(!is.na(errorMessages))){
+
+    print(errorMessages[!is.na(errorMessages)])
     stop('Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again',
           'If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types',
-          'Or, you can lower the threshold. ')
-
+          'Or, you can lower the threshold. ',
+          'The following cell types were impacted:',
+          paste(names(errorMessages)[!is.na(errorMessages)], collapse = ', '))
 
   }
+
+  allTiles <- sort(unique(do.call("c", tilesByCellPop)))
 
   if (verbose) {
     message(stringr::str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
