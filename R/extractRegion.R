@@ -154,7 +154,7 @@ extractRegion <- function(SampleTileObj,
  
   ## Generate a data.frame for export.
 
-  if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+  if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
 	  
     allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
       tmp <- as.data.frame(allGroups[[x]])

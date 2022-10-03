@@ -13,6 +13,7 @@ getPopFrags(
   sampleSpecific = TRUE,
   NormMethod = "nfrags",
   blackList = NULL,
+  verbose = TRUE,
   overlapList = 50
 )
 }
@@ -41,6 +42,8 @@ string (e.g. 'chr1:1000-2000'), or a GRanges object.}
 \item{blackList}{Blacklisted region to filter out. Default is to not filter
 out anything (i.e. NULL). Input should be provided as a GRanges object. Any
 fragments with more than a certain overlap will be thrown out.}
+
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 
 \item{overlapList}{The minimum overlap necessary for a fragment marked as
 overlapping with the blacklist region and thus thrown out.}

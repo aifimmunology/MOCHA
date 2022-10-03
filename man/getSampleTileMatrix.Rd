@@ -9,8 +9,6 @@ getSampleTileMatrix(
   cellPopulations = "ALL",
   groupColumn = NULL,
   threshold = 0.2,
-  join = "union",
-  NAtoZero = FALSE,
   log2Intensity = TRUE,
   numCores = 1,
   verbose = FALSE
@@ -32,12 +30,6 @@ samples will be used for determining consensus tiles.}
 
 \item{threshold}{Threshold for consensus tiles, the minimum \% of samples
 (within a sample group) that a peak must be called in to be retained.}
-
-\item{join}{The join method to combine consensus tiles across sample groups.
-Can be "union" (default) or "intersect".}
-
-\item{NAtoZero}{Boolean, set to TRUE to convert NA intensities from peak
-calling (tiles with too low signal) to zeroes. Optional, default is FALSE.}
 
 \item{log2Intensity}{Boolean, set to TRUE to return the log2 of the
 sample-tile intensity matrix. Optional, default is FALSE.}

@@ -13,7 +13,9 @@ callOpenTiles(
   outDir = NULL,
   fast = FALSE,
   numCores = 30,
-  force = FALSE
+  verbose = TRUE,
+  force = FALSE,
+  studySignal = NULL
 )
 }
 \arguments{
@@ -32,22 +34,30 @@ Default is 'ALL'.}
 
 \item{Org}{is the genome-wide annotation package for your organism.}
 
-\item{outDir}{is a string describing the output directory for coverage files per sample/celltype.
-Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR
-and make a new fold named MOCHA for saving files.}
+\item{outDir}{is a string describing the output directory for coverage files
+per sample/celltype. Must be a complete directory string. Default is NULL,
+in which case it'll pull out a directory from ArchR and make a new fold
+named MOCHA for saving files.}
 
-\item{fast}{Optional, set to TRUE to use a faster but more memory-intensive 
+\item{fast}{Optional, set to TRUE to use a faster but more memory-intensive
 algorithm. Default is FALSE.}
 
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populations.}
 
-\item{force}{Optional, whether to force creation of coverage files if they 
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
+
+\item{force}{Optional, whether to force creation of coverage files if they
 already exist. Default is FALSE.}
+
+\item{studySignal}{The median signal (\# of fragments) in your study. If not
+set, this will be calculated using the input ArchR project but relies on
+the assumption that the ArchR project encompasses your whole study (i.e. is
+not a subset).}
 }
 \value{
-tileResults A MultiAssayExperiment object containing ranged data
-  for each tile
+tileResults A MultiAssayExperiment object containing ranged data for
+  each tile
 }
 \description{
 \code{callOpenTiles} is the main peak-calling function in MOCHA

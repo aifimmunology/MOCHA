@@ -21,6 +21,7 @@
 #'   fragments with more than a certain overlap will be thrown out.
 #' @param overlapList The minimum overlap necessary for a fragment marked as
 #'   overlapping with the blacklist region and thus thrown out.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
 #'   population defined by cellSubsets (and sample, if
@@ -36,7 +37,7 @@ getPopFrags <- function(ArchRProj,
                         sampleSpecific = TRUE,
                         NormMethod = "nfrags",
                         blackList = NULL,
-						verbose = TRUE,
+                        verbose = TRUE,
                         overlapList = 50) {
   nFrags <- NULL
   # Turn off ArchR logging messages

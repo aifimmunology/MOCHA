@@ -10,13 +10,16 @@ getDifferentialAccessibleTiles(
   groupColumn,
   foreground,
   background,
+  signalThreshold = 12,
+  minZeroDiff = 0.5,
   fdrToDisplay = 0.2,
   outputGRanges = TRUE,
   numCores = 2
 )
 }
 \arguments{
-\item{SampleTileObj}{The SummarizedExperiment object output from getSampleTileMatrix}
+\item{SampleTileObj}{The SummarizedExperiment object output from
+getSampleTileMatrix}
 
 \item{cellPopulation}{A string denoting the cell population of interest}
 
@@ -26,16 +29,25 @@ getDifferentialAccessibleTiles(
 
 \item{background}{The background group of samples for differential comparison}
 
-\item{fdrToDisplay}{Optional, false-discovery rate used only for standard output messaging}
+\item{signalThreshold}{Minimum median intensity required to keep tiles for
+differential testing to increase statistical power in small sample cohorts.
+Default is 12.}
 
-\item{outputGRanges}{Optional, outputs a GRanges if TRUE and a data.frame if FALSE.
-Default is TRUE.}
+\item{minZeroDiff}{Minimum difference in average dropout rates across groups
+require to keep tiles for differential testing. Default is 0.5 (50\%).}
 
-\item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+\item{fdrToDisplay}{False-discovery rate used only for standard
+output messaging. Default is 0.2.}
+
+\item{outputGRanges}{Outputs a GRanges if TRUE and a data.frame if
+FALSE. Default is TRUE.}
+
+\item{numCores}{The number of cores to use with multiprocessing.
+Default is 1.}
 }
 \value{
-full_results The differential accessibility results as a GRanges or matrix
-  data.frame depending on the flag `outputGRanges`.
+full_results The differential accessibility results as a GRanges or
+  matrix data.frame depending on the flag `outputGRanges`.
 }
 \description{
 \code{getDifferentialAccessibleTiles} allows you to

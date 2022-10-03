@@ -14,7 +14,7 @@
 #'  differential testing to increase statistical power in small sample cohorts.
 #'  Default is 12.
 #' @param minZeroDiff Minimum difference in average dropout rates across groups
-#'  require to keep tiles for differential testing. Default is 0.5 (50%).
+#'  require to keep tiles for differential testing. Default is 0.5 (50\%).
 #' @param fdrToDisplay False-discovery rate used only for standard
 #'  output messaging. Default is 0.2.
 #' @param outputGRanges Outputs a GRanges if TRUE and a data.frame if

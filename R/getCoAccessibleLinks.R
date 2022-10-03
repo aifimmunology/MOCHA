@@ -39,7 +39,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
   }
     
-  tileDF <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
+  tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
   chr <- gsub("\\:.*", "", rownames(tileDF))

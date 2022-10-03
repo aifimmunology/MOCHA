@@ -15,18 +15,24 @@
 #'   Default is 'ALL'.
 #' @param TxDb is an AnnotationDbi object with transcript info for the organism.
 #' @param Org is the genome-wide annotation package for your organism.
-#' @param outDir is a string describing the output directory for coverage files per sample/celltype.
-#'   Must be a complete directory string. Default is NULL, in which case it'll pull out a directory from ArchR
-#'   and make a new fold named MOCHA for saving files.
+#' @param outDir is a string describing the output directory for coverage files
+#'   per sample/celltype. Must be a complete directory string. Default is NULL,
+#'   in which case it'll pull out a directory from ArchR and make a new fold
+#'   named MOCHA for saving files.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations.
-#' @param fast Optional, set to TRUE to use a faster but more memory-intensive 
+#' @param fast Optional, set to TRUE to use a faster but more memory-intensive
 #'   algorithm. Default is FALSE.
-#' @param force Optional, whether to force creation of coverage files if they 
+#' @param force Optional, whether to force creation of coverage files if they
 #'   already exist. Default is FALSE.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param studySignal The median signal (\# of fragments) in your study. If not
+#'   set, this will be calculated using the input ArchR project but relies on
+#'   the assumption that the ArchR project encompasses your whole study (i.e. is
+#'   not a subset).
 #'
-#' @return tileResults A MultiAssayExperiment object containing ranged data
-#'   for each tile
+#' @return tileResults A MultiAssayExperiment object containing ranged data for
+#'   each tile
 #'
 #' @examples
 #' \dontrun{
@@ -51,7 +57,7 @@ callOpenTiles <- function(ArchRProj,
                           numCores = 30,
                           verbose = TRUE,
                           force = FALSE,
-                          studySignal=NULL
+                          studySignal = NULL
                          ) {
 
   if (is.null(outDir)) {
@@ -146,7 +152,7 @@ callOpenTiles <- function(ArchRProj,
 
     # save coverage files to folder.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
-      covFiles <- scMACS:::getCoverage(
+      covFiles <- getCoverage(
         popFrags = frags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
@@ -159,9 +165,11 @@ callOpenTiles <- function(ArchRProj,
     # Add prefactor multiplier across datasets
 
     if(is.null(studySignal)){
-        message('calculating study signal on ArchR project. Make sure data contains all cell populations')
+        message("studySignal was not provided. ",
+                "Calculating study signal on ArchR project as the median ",
+                "nFrags with the assumption that all cell populations are ",
+                "present in ArchR project.")
         studySignal <- stats::median(cellColData$nFrags)
-        
     }
     study_prefactor <- 3668 / studySignal # Training median
 

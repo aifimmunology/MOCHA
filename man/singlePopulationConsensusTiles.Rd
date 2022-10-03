@@ -8,8 +8,7 @@ singlePopulationConsensusTiles(
   peaksExperiment,
   sampleData,
   threshold,
-  groupColumn = NULL,
-  join = "union"
+  groupColumn = NULL
 )
 }
 \description{

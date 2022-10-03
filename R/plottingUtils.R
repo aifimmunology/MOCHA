@@ -482,7 +482,7 @@ counts_plot_motif_overlay <- function(p1,
 	  
     # Plot
     p1 <- p1 +
-    geom_line(
+    ggplot2::geom_line(
     data = tmp_motifdf,
     ggplot2::aes(x = x, y = y, group = name, color = mweight),
     alpha = motif_line_alpha,
@@ -512,8 +512,8 @@ counts_plot_motif_overlay <- function(p1,
       min.segment.length = 0,
       nudge_y = -max(countdf$Counts) / 20
     ) +
-    ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
-    xlim(min(countdf$Locus), max(countdf$Locus))
+    ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
+    ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
 
 
   } else {
@@ -521,7 +521,7 @@ counts_plot_motif_overlay <- function(p1,
 	
     # Plot
     p1 <- p1 +
-    geom_line(
+    ggplot2::geom_line(
       data = tmp_motifdf,
       ggplot2::aes(x = x, y = y, group = name),
       alpha = motif_line_alpha,
@@ -586,7 +586,7 @@ counts_plot_motif_overlay <- function(p1,
 #' @param countdf  A dataframe that comes from `getbpCounts()` or `getbpInserts()`
 #' @param orgdb An organism database containing the gene
 #' @param db_id_col Character value. Column in `orgdb` containing the output id. Default "REFSEQ".
-#' @param verbose Logical value, default TRUE.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @return GRanges object for gene to plot
 #'
 #' @noRd
