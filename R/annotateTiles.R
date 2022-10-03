@@ -65,7 +65,7 @@ annotateTiles <- function(SampleTileObj,
     overlapGroup <- IRanges::findOverlaps(rowTiles, annotGR) %>% as.data.frame()
     overlapGroup$Genes <- as.character(annotGR$name[overlapGroup$subjectHits])
     last <- overlapGroup %>%
-      dplyr::group_by(.data$subjectHits) %>%
+      dplyr::group_by(.data$queryHits) %>%
       dplyr::summarize(Genes = paste(unique(.data$Genes), collapse = ", "))
     return(last)
   }
@@ -77,16 +77,16 @@ annotateTiles <- function(SampleTileObj,
   tileType <- as.data.frame(GenomicRanges::mcols(tileGRanges)) %>%
     dplyr::mutate(Index = 1:nrow(.)) %>%
     dplyr::mutate(Type = dplyr::case_when(
-      Index %in% promo_overlaps$subjectHits ~ "Promoter",
-      Index %in% exon_overlaps$subjectHits ~ "Exonic",
-      Index %in% txs_overlaps$subjectHits ~ "Intronic",
+      Index %in% promo_overlaps$queryHits ~ "Promoter",
+      Index %in% exon_overlaps$queryHits ~ "Exonic",
+      Index %in% txs_overlaps$queryHits ~ "Intronic",
       TRUE ~ "Distal"
     )) %>%
-    dplyr::left_join(promo_overlaps, by = c("Index" = "subjectHits")) %>%
+    dplyr::left_join(promo_overlaps, by = c("Index" = "queryHits")) %>%
     dplyr::rename("Promo" = .data$Genes) %>%
-    dplyr::left_join(exon_overlaps, by = c("Index" = "subjectHits")) %>%
+    dplyr::left_join(exon_overlaps, by = c("Index" = "queryHits")) %>%
     dplyr::rename("Exons" = .data$Genes) %>%
-    dplyr::left_join(txs_overlaps, by = c("Index" = "subjectHits")) %>%
+    dplyr::left_join(txs_overlaps, by = c("Index" = "queryHits")) %>%
     dplyr::rename("Txs" = .data$Genes) %>%
     dplyr::mutate(Genes = ifelse(.data$Type == "Promoter", .data$Promo, NA)) %>%
     dplyr::mutate(Genes = ifelse(.data$Type == "Exonic", .data$Exons, .data$Genes)) %>%

@@ -40,11 +40,11 @@ estimate_differential_accessibility <- function(tile_values, group,
   nonzero_control <- data_vec[group == 0]
   nonzero_control <- nonzero_control[nonzero_control != 0]
 
-  df <- data.frame(
-    Vals = data_vec,
-    Group = group,
-    Group_label = ifelse(group == 1, "case", "Control")
-  )
+  # df <- data.frame(
+  #   Vals = data_vec,
+  #   Group = group,
+  #   Group_label = ifelse(group == 1, "case", "Control")
+  # )
 
   ## create all pairwise combinations
   pairwise_matrix <- data.table::as.data.table(expand.grid(nonzero_dx, nonzero_control))

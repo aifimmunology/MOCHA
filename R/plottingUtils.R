@@ -364,10 +364,17 @@ get_motifs_in_region <- function(motifsList, countdf) {
 
   specMotifs <- unlist(motifsList) %>%
     plyranges::mutate(name = gsub("_.*", "", names(.))) %>%
-    plyranges::join_overlap_intersect(regionGRanges) %>%
-    plyranges::mutate(type = "exon") %>%
-    plyranges::mutate(index = seq(1, length(.), by = 1)) %>%
-    plyranges::mutate(labels = paste(name, index, sep = "_"))
+    plyranges::join_overlap_intersect(regionGRanges) 
+	
+  if(length(specMotifs) > 0) { 
+  
+		specMotifs <- specMotifs %>%
+		plyranges::mutate(type = "exon") %>%
+		plyranges::mutate(index = seq(1, length(.), by = 1)) %>%
+		plyranges::mutate(labels = paste(name, index, sep = "_"))
+	
+
+  }else{ specMotifs= NULL }
 
   return(specMotifs)
 }
@@ -408,11 +415,19 @@ counts_plot_motif_overlay <- function(p1,
                                       motif_line_size = 0.75,
                                       motif_line_alpha = 0.25) {
 
+  mweight <- name <- NULL
+
   # Retrieve annotations in region and format
   specMotifs <- get_motifs_in_region(
     countdf = countdf,
     motifsList = motifsList
   )
+  
+  if(is.null(specMotifs)){ 
+		warning('No motifs found for this region')
+		return(p1)
+	}
+  
   reduceMotifs <- plyranges::reduce_ranges(specMotifs, count = plyranges::n(), names = paste(labels, collapse = ","))
   splitMotifs <- strsplit(reduceMotifs$names, split = ",")
 
@@ -444,7 +459,7 @@ counts_plot_motif_overlay <- function(p1,
     dplyr::group_by(.data$name) %>%
     dplyr::mutate(labels = ifelse(max(x) == x, gsub("_.*", "", .data$name), NA))
 
-  # Incorprate Weights
+  # Incoroprate Weights
   if (!is.null(motif_weights)) {
     assertthat::assert_that(is.numeric(motif_weight_colors))
 
@@ -454,7 +469,7 @@ counts_plot_motif_overlay <- function(p1,
         paste(utils::head(unique(stats::na.omit(tmp_motifdf$label)), 3), collapse = ", ")
       ))
     }
-    mweight <- NULL
+    
     tmp_motifdf <- tmp_motifdf %>%
       dplyr::mutate(mweight = ifelse(labels %in% names(motif_weights), motif_weights[labels], NA)) %>%
       dplyr::mutate(mweight = ifelse(!all(is.na(mweight)), max(mweight, na.rm = T), NA)) %>% # still grouped by name. this ensures weights are applied to each row of same motif
@@ -464,19 +479,15 @@ counts_plot_motif_overlay <- function(p1,
         is.na(.data$mweight) ~ as.numeric(NA),
         TRUE ~ .data$mweight
       ))
-  } else {
-    tmp_motifdf$mweight <- 1
-  }
-
-  # Plot
-  mweight <- name <- NULL
-  p1 <- p1 +
-    ggplot2::geom_line(
-      data = tmp_motifdf,
-      ggplot2::aes(x = x, y = y, group = name, color = mweight),
-      alpha = motif_line_alpha,
-      size = motif_line_size
-    ) +
+	  
+    # Plot
+    p1 <- p1 +
+    geom_line(
+    data = tmp_motifdf,
+    ggplot2::aes(x = x, y = y, group = name, color = mweight),
+    alpha = motif_line_alpha,
+    size = motif_line_size
+    )	+
     # vertical labels
     ggrepel::geom_text_repel(
       data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
@@ -501,8 +512,49 @@ counts_plot_motif_overlay <- function(p1,
       min.segment.length = 0,
       nudge_y = -max(countdf$Counts) / 20
     ) +
+    ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
+    xlim(min(countdf$Locus), max(countdf$Locus))
+
+
+  } else {
+    #tmp_motifdf$mweight <-  1
+	
+    # Plot
+    p1 <- p1 +
+    geom_line(
+      data = tmp_motifdf,
+      ggplot2::aes(x = x, y = y, group = name),
+      alpha = motif_line_alpha,
+      size = motif_line_size
+    )	+
+    # vertical labels
+    ggrepel::geom_text_repel(
+      data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
+      ggplot2::aes(x = x, y = y, label = labels),
+      direction = "x",
+      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
+      alpha = motif_lab_alpha,
+      size = motif_lab_size,
+      segment.size = 0.25,
+      max.overlaps = 50,
+      min.segment.length = 0
+    ) +
+    # motif labels along x-axis
+    ggrepel::geom_text_repel(
+      data = tmp_motifdf[tmp_motifdf$y == 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
+      ggplot2::aes(x = x, y = y, label = labels),
+      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
+      alpha =  motif_lab_alpha,
+      size = motif_lab_size,
+      direction = "y",
+      segment.size = 0.25,
+      min.segment.length = 0,
+      nudge_y = -max(countdf$Counts) / 20
+    ) +
     ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
     ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
+
+  }
 
   # Color text by motif weights
   if (!is.null(motif_weights)) {
@@ -513,9 +565,11 @@ counts_plot_motif_overlay <- function(p1,
       na.value = "gray", # may want to parameterize this
       name = motif_weight_name
     )
-  } else {
-    p1 <- p1 + ggplot2::scale_color_gradient(low = "black", high = "black", na.value = "gray", name = motif_weight_name, guide = "none")
-  }
+  } #else {
+   # p1 <- p1 #scale_color_gradient(low = "black", high = "black", na.value = "gray", name = motif_weight_name, guide = "none")
+	#scale_color_manual(values = "gray", breaks = 1, na.value = "gray", name = motif_weight_name, guide = "none")
+	#scale_color_discrete("gray", name = motif_weight_name, guide = "none")
+  #}
 
   return(p1)
 }

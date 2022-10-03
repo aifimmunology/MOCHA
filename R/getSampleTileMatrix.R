@@ -48,14 +48,9 @@ getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
                                 groupColumn = NULL,
                                 threshold = 0.2,
-                                join = "union",
-                                NAtoZero = FALSE,
                                 log2Intensity = TRUE,
                                 numCores = 1,
                                 verbose = FALSE) {
-  if (!(join %in% c("union", "intersect"))) {
-    stop("`join` must be either 'union' or 'intersect'")
-  }
 
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
@@ -97,8 +92,7 @@ getSampleTileMatrix <- function(tileResults,
       x,
       sampleData,
       threshold,
-      groupColumn,
-      join
+      groupColumn
     )
   }, mc.cores = numCores)
 
@@ -113,7 +107,7 @@ getSampleTileMatrix <- function(tileResults,
     singlePopulationSampleTileMatrix(
       x,
       allTiles,
-      NAtoZero,
+      NAtoZero = FALSE,
       log2Intensity
     )
   }, mc.cores = numCores)
@@ -135,7 +129,7 @@ getSampleTileMatrix <- function(tileResults,
     rowRanges = allTilesGR,
     colData = sampleData,
     metadata = append(
-      list("Log2Intensity" = log2Intensity, "NAtoZero" = NAtoZero),
+      list("Log2Intensity" = log2Intensity),
       MultiAssayExperiment::metadata(tileResults)
     )
   )

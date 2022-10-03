@@ -20,8 +20,6 @@
 
 make_prediction <- function(X, finalModelObject) {
 
-
-
   ### Model was trained on varying
   ### cell abundances. Identify
   ### Number of cells in the sample

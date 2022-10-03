@@ -4,18 +4,26 @@
 #'   determine whether regions of chromatin are differentially accessible
 #'   between groups by conducting a test
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
+#' @param SampleTileObj The SummarizedExperiment object output from
+#'  getSampleTileMatrix
 #' @param cellPopulation A string denoting the cell population of interest
 #' @param groupColumn The column containing sample group labels
 #' @param foreground The foreground group of samples for differential comparison
 #' @param background The background group of samples for differential comparison
-#' @param fdrToDisplay Optional, false-discovery rate used only for standard output messaging
-#' @param outputGRanges Optional, outputs a GRanges if TRUE and a data.frame if FALSE.
-#'   Default is TRUE.
-#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param signalThreshold Minimum median intensity required to keep tiles for
+#'  differential testing to increase statistical power in small sample cohorts.
+#'  Default is 12.
+#' @param minZeroDiff Minimum difference in average dropout rates across groups
+#'  require to keep tiles for differential testing. Default is 0.5 (50%).
+#' @param fdrToDisplay False-discovery rate used only for standard
+#'  output messaging. Default is 0.2.
+#' @param outputGRanges Outputs a GRanges if TRUE and a data.frame if
+#'  FALSE. Default is TRUE.
+#' @param numCores The number of cores to use with multiprocessing.
+#'  Default is 1.
 #'
-#' @return full_results The differential accessibility results as a GRanges or matrix
-#'   data.frame depending on the flag `outputGRanges`.
+#' @return full_results The differential accessibility results as a GRanges or
+#'   matrix data.frame depending on the flag `outputGRanges`.
 #'
 #' @examples
 #' \dontrun{
@@ -45,11 +53,17 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            groupColumn,
                                            foreground,
                                            background,
+                                           signalThreshold = 12,
+                                           minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
                                            numCores = 2) {
   if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
+  }
+
+  if (signalThreshold < 1) {
+    warning("Setting the signalThreshold too low will reduce statistical power. You may inspect the distribution of intensities to set a threshold that will remove highly sparse regions.")
   }
 
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
@@ -64,22 +78,18 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     stop(stringr::str_interp("Provided background value is not present in the column {groupColumn} in the provided SampleTileObj"))
   }
 
+
   # Get group labels
   foreground_samples <- metaFile[metaFile[, groupColumn] == foreground, "Sample"]
   background_samples <- metaFile[metaFile[, groupColumn] == background, "Sample"]
 
   # This will only include called tiles
-  sampleTileMatrix <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation)
-
+  sampleTileMatrix <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = FALSE )
+  
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
   sampleTileMatrix <- sampleTileMatrix[, colnames(SampleTileObj) %in% c(foreground_samples, background_samples)]
 
-  # We need to enforce that NAs were set to zeros in getSampleTileMatrix
-  miscMetadata <- S4Vectors::metadata(SampleTileObj)
-  if (!miscMetadata$NAtoZero) {
-    sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
-  }
   group <- as.numeric(colnames(sampleTileMatrix) %in% foreground_samples)
 
   #############################################################################
@@ -88,19 +98,23 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1)], na.rm = T)
   medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0)], na.rm = T)
 
-  zero_A <- rowMeans(is.na(sampleTileMatrix[, which(group == 1)]))
-  zero_B <- rowMeans(is.na(sampleTileMatrix[, which(group == 0)]))
+  # We need to enforce that NAs were set to zeros in getSampleTileMatrix
+  sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
+ 
+  zero_A <- rowMeans(sampleTileMatrix[, which(group == 1)] ==0)
+  zero_B <- rowMeans(sampleTileMatrix[, which(group == 0)] ==0)
 
   diff0s <- abs(zero_A - zero_B)
-
-  Log2Intensity <- S4Vectors::metadata(SampleTileObj)$Log2Intensity
-  log2FC_filter <- ifelse(Log2Intensity, 12, 2^12)
-  idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= 0.5)
+  
+  Log2Intensity <- SampleTileObj@metadata$Log2Intensity
+  log2FC_filter <- ifelse(Log2Intensity, signalThreshold, 2^signalThreshold)
+  
+  idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
 
   ############################################################################
   # Estimate differential accessibility
-
-  sampleTileMatrix <- ifelse(Log2Intensity, sampleTileMatrix, log2(sampleTileMatrix + 1))
+  
+  if(!Log2Intensity){ sampleTileMatrix <- log2(sampleTileMatrix+1) }
 
   res_pvals <- parallel::mclapply(rownames(sampleTileMatrix),
     function(x) {
@@ -151,20 +165,21 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   meansA <- rowMeans(sampleTileMatrix[, group == 1], na.rm = T)
   meansB <- rowMeans(sampleTileMatrix[, group == 0])
   full_results$MeanDiff <- meansA - meansB
+  full_results$MeanDiff[is.na(full_results$FDR)] <- NA
   full_results$CellPopulation <- rep(cellPopulation, length(meansA))
   full_results$Foreground <- rep(foreground, length(meansA))
   full_results$Background <- rep(background, length(meansA))
 
 
   colnames(full_results) <- c(
-    "Tile", "P_value", "Test-Statistic", "Log2FC_C",
+    "Tile", "P_value", "Test_Statistic", "Log2FC_C",
     "MeanDiff", "Avg_Intensity_Case", "Pct0_Case",
     "Avg_Intensity_Control", "Pct0_Control", "FDR",
     "CellPopulation", "Foreground", "Background"
   )
 
   full_results <- full_results[, c(
-    "Tile", "CellPopulation", "Foreground", "Background", "P_value", "Test-Statistic", "FDR", "Log2FC_C",
+    "Tile", "CellPopulation", "Foreground", "Background", "P_value", "Test_Statistic", "FDR", "Log2FC_C",
     "MeanDiff", "Avg_Intensity_Case", "Pct0_Case",
     "Avg_Intensity_Control", "Pct0_Control"
   )]
