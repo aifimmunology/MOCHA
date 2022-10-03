@@ -160,7 +160,7 @@ plotRegion <- function(countSE,
     }
   }
 
-  if (!is.null(motif_weights) && plotType != "area") {
+  if (!is.null(motif_weights) & plotType != "area") {
     stop("Motif weights can only be used with area plots due to ggplot ",
     "settings. Please remove motif weights or change plotType to 'area'.")
   }
