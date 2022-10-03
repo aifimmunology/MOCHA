@@ -79,6 +79,16 @@ getSampleTileMatrix <- function(tileResults,
 
   allTiles <- sort(unique(do.call("c", tilesByCellPop)))
 
+  if(any(grepl('Error', allTiles))){
+
+    print(allTiles[grep('Error', allTiles)])
+    stop('Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again',
+          'If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types',
+          'Or, you can lower the threshold. ')
+
+
+  }
+
   if (verbose) {
     message(stringr::str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
   }
