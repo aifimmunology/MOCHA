@@ -37,18 +37,12 @@ getStartSites <- function(peakSet,
 ### getTSS pulls out all peaks that fall in TSS sites and annotates them with the name of gene. 
 ## @completeDAPs - GRanges object that contains the differential measurements across all peaks (unfiltered DAPs)
 ## @returnAllTSS - Flag to return all TSS sites with DAPs measurements, without filtering for alternative TSS ussage
-## @nuancedTSS - True/False flag to determine if alternative TSS genes should be filtered out 
-##                if all their differential TSS usage falls within too small of a range. Default is TRUE
-## @threshold -  Basepair distance Threshold for filtering out genes who's differential TSS sites all falls very close together,
-##		   and thus likely too close to be able to distinguish TSS behavior clearly. 
 ## @TxDb - Transcript Db object for organism. Default is Hg38. 
 ## @Org - Organism Db for annotating gene names across databases. Must match TxDb. 
 
 
 getAltTSS <- function(completeDAPs,
                       returnAllTSS = FALSE, 
-                      nuancedTSS = TRUE,
-                      nuancedTSSGap = 150,
                       threshold = 0.2,
                       TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, 
                       Org = org.Hs.eg.db){
@@ -86,24 +80,13 @@ getAltTSS <- function(completeDAPs,
                 plyranges::group_by(name) %>% 
                 plyranges::filter(any(FDR <= threshold) & any(duplicated(name))) 
 
+    #return(altTSS)
+
     altTSS <- altTSS %>% 
                  plyranges::filter(ifelse(all(FDR <= threshold, na.rm = FALSE), 
                                           !all(Log2FC_C > 0) & !all(Log2FC_C < 0), TRUE)) %>% 
                                    ungroup() %>% sort() 
-    
-    if(nuancedTSS){
-        
-        nuancedGenes <- split(altTSS, as.character(altTSS$name)) %>% 
-                mclapply(., function(x){
-                    tmp <- gaps(x) %>% 
-                        filter(seqnames == seqnames(x) & strand == strand(x)) %>%
-                        width(.)
-                    ifelse(length(tmp) == 3 & tmp[2] < nuancedTSSGap, FALSE, TRUE)
-                })  %>% unlist()
-        
-        altTSS <- altTSS %>% filter(name %in% names(nuancedGenes)[nuancedGenes])
-        
-    }
+
     return(altTSS)
     
 }
