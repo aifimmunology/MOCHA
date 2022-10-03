@@ -37,6 +37,12 @@ callTilesBySample <- function(blackList,
   # Coefficients trained on ~ 3600 frags per cell
   # Future datasets need to be calibrated to
   # these coefficients
+
+  if(is.null(fragsList)){
+    warning('No cells from this sample. Returning NULL.')
+    return(NULL)  
+  }
+
   finalModelObject <- scMACS::finalModelObject
   thresholdModel <- scMACS::thresholdModel
 
