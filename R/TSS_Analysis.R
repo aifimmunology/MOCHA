@@ -101,7 +101,7 @@ getAltTSS <- function(completeDAPs,
                     ifelse(length(tmp) == 3 & tmp[2] < nuancedTSSGap, FALSE, TRUE)
                 })  %>% unlist()
         
-        altTSS <- altTSS %>% filter(name %in% nuancedGenes[nuancedGenes])
+        altTSS <- altTSS %>% filter(name %in% names(nuancedGenes)[nuancedGenes])
         
     }
     return(altTSS)
