@@ -27,11 +27,11 @@ calculate_intensities <- function(fragMat,
                                   )
 {
 
-  if(class(fragMat) != "GRanges"){
+  if (!is(fragMat, "GRanges")){
     stop("Input fragMat must be a Genomic Ranges (GRanges) object")
   }
 
-  if (class(candidatePeaks) != "GRanges") {
+  if (!is(candidatePeaks, "GRanges")) {
     stop("Input candidatePeaks must be a Genomic Ranges (GRanges) object")
   }
   if (!is.integer(totalFrags)) {

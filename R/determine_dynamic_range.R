@@ -37,7 +37,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
     coreNum = 30
   )
 
-  if (class(binSize) != "numeric" | binSize < 0) {
+  if (!is(binSize,"numeric") | binSize < 0) {
     stop(paste('invalid binSize!: binSize must be an integer value > 0 indicating the width of the genomic region check "binSize=',
       binSize, '" input',
       sep = ""
@@ -48,7 +48,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
     warning("binSize is > 5,000bp. Do you want to set the tile size smaller for peakcalling?")
   }
 
-  if (class(doBin) != "logical") {
+  if (!is(doBin, "logical")) {
     stop("doBin user-input must be a TRUE/FALSE boolean input")
   }
 
