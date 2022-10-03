@@ -52,7 +52,7 @@ getSampleTileMatrix <- function(tileResults,
     cellPopulations <- names(tileResults)
   } else {
     if (all(cellPopulations %in% names(tileResults))) {
-      subTileResults <- tileResults[names(tileResults) %in% cellPopulations]
+      subTileResults <- MultiAssayExperiment::subsetByAssay(tileResults, cellPopulations)
     } else {
       stop(paste(
         "All of `cellPopulations` must present in tileResults.",
