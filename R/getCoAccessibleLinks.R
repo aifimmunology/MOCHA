@@ -32,9 +32,9 @@ getCoAccessibleLinks <- function(SampleTileObj,
                                  numCores = 1,
                                  verbose = FALSE) {
 
-  if (is(regions, "GRanges")) {
+  if (methods::is(regions, "GRanges")) {
     regionDF <- as.data.frame(regions)
-  } else if (is(regions,"character")) {
+  } else if (methods::is(regions,"character")) {
     regionDF <- MOCHA::StringsToGRanges(regions) %>% as.data.frame()
   } else {
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
