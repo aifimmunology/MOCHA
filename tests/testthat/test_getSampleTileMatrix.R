@@ -17,7 +17,7 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
   )
   
   expect_equal(
-    names(assays(tilemat)),
+    names(SummarizedExperiment::assays(tilemat)),
     c("C1","C2")
   )
  

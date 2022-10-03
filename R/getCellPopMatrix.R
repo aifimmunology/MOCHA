@@ -21,7 +21,7 @@ getCellPopMatrix <- function(SampleTileObj, cellPopulation, dropSamples = TRUE, 
   #Drop empty samples
 
   if (dropSamples) {
-    sampleTileMatrix <- sampleTileMatrix[, colSums(sampleTileMatrix, na.rm = TRUE) > 0]
+    sampleTileMatrix <- sampleTileMatrix[, colSums(sampleTileMatrix, na.rm = TRUE) > 0, drop = FALSE]
   }
 
   if (NAtoZero) {
