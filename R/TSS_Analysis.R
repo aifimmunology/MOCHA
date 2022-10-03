@@ -83,7 +83,7 @@ getAltTSS <- function(completeDAPs,
     #return(altTSS)
 
     altTSS <- altTSS %>% 
-                 plyranges::filter(ifelse(all(FDR <= threshold, na.rm = FALSE), 
+                 plyranges::filter(ifelse(all(!is.na(FDR)) & all(FDR <= threshold, na.rm = TRUE), 
                                           !all(Log2FC_C > 0) & !all(Log2FC_C < 0), TRUE)) %>% 
                                    ungroup() %>% sort() 
 
