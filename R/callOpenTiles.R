@@ -72,18 +72,19 @@ callOpenTiles <- function(ArchRProj,
 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
-  cellCounts <- table(cellTypeLabelList[!is.na(cellTypeLabelList)])
-
-
-  if (all(cellPopulations == "ALL")) {
-    cellPopulations <- names(cellCounts)
-  } else if (!all(cellPopulations %in% names(cellCounts))) {
-    stop("Error: cellPopulations not all found in ArchR project.")
-  }
 
   #Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-  allCellCounts <- allCellCounts[, cellPopulations]
+
+  if (all(cellPopulations == "ALL")) {
+    cellPopulations <- colnames(allCellCounts )
+  } else if (!all(cellPopulations %in% colnames(allCellCounts ))) {
+    stop("Error: cellPopulations not all found in ArchR project.")
+  }else{
+      allCellCounts <- allCellCounts[, cellPopulations]
+  }
+
+
 
   #if(verbose){print(allCellCounts)}
 
@@ -109,7 +110,7 @@ callOpenTiles <- function(ArchRProj,
       sampleSpecific = TRUE,
       NormMethod = "nfrags",
       blackList = NULL,
-	  verbose = verbose,
+	    verbose = verbose,
       overlapList = 50
     )
 
@@ -121,6 +122,7 @@ callOpenTiles <- function(ArchRProj,
     normalization_factors <- as.integer(sapply(frags, length))
 
     # save coverage files to folder.
+    #### this doesn't include empty samples and might break. We may need to reconsider how getCoverage works and add empty samples before this step.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
       covFiles <- scMACS:::getCoverage(
         popFrags = frags,
@@ -140,51 +142,50 @@ callOpenTiles <- function(ArchRProj,
     }
     study_prefactor <- 3668 / studySignal # Training median
 
+    # Calculate normalization factors as the number of fragments for each celltype_samples
+    normalization_factors <- as.integer(sapply(frags, length))
 
-    ##Add in a null index for each samples that didn't have any cells
-    ## First, have to handle the table of allCellCounts correctly. 
-
-    if(!all(rownames(allCellCounts) %in% names(frags))){
-
-      emptySamples <- rownames(allCellCounts)[!rownames(allCellCounts) %in% names(frags)]
-      emptyGRanges = lapply(emptySamples, function(x) NA)
-      names(emptyGRanges) <- emptySamples
-      frags <- append(frags, emptyGRanges)
-
-    }
-
-    frags <- frags[sort(names(frags))]
-  
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time) 
-
+    
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
       function(x) {
-        if(any(is.na(x))){
-          NULL
-        }elseP{
-          scMACS::callTilesBySample(
-            blackList = blackList,
-            returnAllTiles = TRUE,
-            totalFrags = normalization_factors[x],
-            fragsList = frags[[x]],
-            verbose = verbose,
-            StudypreFactor = study_prefactor
-          )
-        }
+        scMACS:::callTilesBySample(
+          blackList = blackList,
+          returnAllTiles = TRUE,
+          totalFrags = normalization_factors[x],
+          fragsList = frags[[x]],
+          verbose = verbose,
+          StudypreFactor = study_prefactor
+        )
       },
       mc.cores = numCores
     )
 
     names(tilesGRangesList) <- names(frags)
 
-    return(tilesGRangesList)
+
+    
+
+    ##Add in a null index for each samples that didn't have any cells
+    ## First, have to handle the table of allCellCounts correctly. 
+
+    if(!all(rownames(allCellCounts) %in% names(tilesGRangesList))){
+
+      emptySamples <- rownames(allCellCounts)[!rownames(allCellCounts) %in% names(tilesGRangesList)]
+      emptyGRanges = lapply(emptySamples, function(x) NULL)
+      names(emptyGRanges) <- emptySamples
+      tilesGRangesList <- append(tilesGRangesList, emptyGRanges)
+
+    }
+    tilesGRangesList <- tilesGRangesList[sort(names(tilesGRangesList))]
+
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
     # preserve the existence of the sample, while also not including any information from it. 
-    
+
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
     
     if(length(emptyGroups) > 0){
@@ -202,6 +203,9 @@ callOpenTiles <- function(ArchRProj,
         end = 499, strand ='*', TotalIntensity = 0, maxIntensity = 0,
         numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE)
     }
+
+
+    #return(tilesGRangesList)
     
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
@@ -209,7 +213,6 @@ callOpenTiles <- function(ArchRProj,
     )
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
-    # experimentList <- append(experimentList, tilesGRangesListNoNull)
   }
 
   # Create sample metadata from cellColData using util function
