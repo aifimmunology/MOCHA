@@ -80,6 +80,7 @@ extractRegion <- function(SampleTileObj,
 
     # If no subGroup defined, then it'll form a list of samples across all labels within the groupColumn
     subGroups <- unique(metaFile[, groupColumn])
+
     subSamples <- lapply(subGroups, function(x) metaFile[metaFile[, groupColumn] %in% x, "Sample"])
   } else {
 
@@ -100,7 +101,6 @@ extractRegion <- function(SampleTileObj,
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
     originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
-
     cellPopSubsampleCov <- parallel::mclapply(subSamples, function(y) {
       sampleNames <- names(originalCovGRanges)
       keepSamples <- grepl(paste(y, collapse = "|"), sampleNames)
@@ -113,7 +113,7 @@ extractRegion <- function(SampleTileObj,
         sampleCount <- sum(keepSamples)
         filterCounts <- lapply(subSampleList, function(z) {
           tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges)
-
+          
           if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
             tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
               plyranges::group_by(idx) %>%
@@ -123,10 +123,15 @@ extractRegion <- function(SampleTileObj,
           tmpGR
         })
 
-        stack(as(filterCounts, "GRangesList")) %>%
+        mergedCounts <- stack(as(filterCounts, "GRangesList")) %>%
           plyranges::join_overlap_intersect(regionGRanges) %>%
           plyranges::compute_coverage(weight = .$score / sampleCount) %>%
           plyranges::join_overlap_intersect(regionGRanges)
+        if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+
+          mergedCounts %>% plyranges::join_overlap_intersect(binnedData)
+
+        }else{ mergedCounts}
 		  
       } else {
         tmpCounts <- lapply(subSampleList, function(z) {
@@ -155,10 +160,10 @@ extractRegion <- function(SampleTileObj,
   if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
 	  
     allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
-      tmp <- as.data.frame(allGroups[[x]])
-      tmp$Groups <- rep(names(allGroups)[x], length(tmp))
+      subGroupdf <- as.data.frame(allGroups[[x]])
+      subGroupdf $Groups <- rep(names(allGroups)[x], length(allGroups[[x]]))
 
-      covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
+      covdf <- subGroupdf[, c("seqnames", "start", "score", "Groups")]
       colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
       covdf
@@ -178,10 +183,8 @@ extractRegion <- function(SampleTileObj,
     }, mc.cores = numCores)
   }
 
-
   names(allGroupsDF) <- names(allGroups)
   
-
   countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
     metadata = SampleTileObj@metadata
   )
