@@ -30,7 +30,7 @@ callTilesBySample <- function(blackList,
                               returnAllTiles = FALSE,
                               totalFrags,
                               fragsList,
-							  verbose = FALSE,
+							                verbose = FALSE,
                               StudypreFactor) {
 
   # Coefficients trained on ~ 3600 frags per cell

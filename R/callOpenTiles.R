@@ -85,7 +85,7 @@ callOpenTiles <- function(ArchRProj,
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
   allCellCounts <- allCellCounts[, cellPopulations]
 
-  if(verbose){print(allCellCounts)}
+  #if(verbose){print(allCellCounts)}
 
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
@@ -162,21 +162,25 @@ callOpenTiles <- function(ArchRProj,
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
       function(x) {
-        scMACS:::callTilesBySample(
-          blackList = blackList,
-          returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
-		      verbose = verbose,
-          StudypreFactor = study_prefactor
-        )
+        if(any(is.na(x))){
+          NULL
+        }elseP{
+          scMACS::callTilesBySample(
+            blackList = blackList,
+            returnAllTiles = TRUE,
+            totalFrags = normalization_factors[x],
+            fragsList = frags[[x]],
+            verbose = verbose,
+            StudypreFactor = study_prefactor
+          )
+        }
       },
       mc.cores = numCores
     )
 
     names(tilesGRangesList) <- names(frags)
 
-  
+    return(tilesGRangesList)
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
     # preserve the existence of the sample, while also not including any information from it. 
