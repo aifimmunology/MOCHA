@@ -43,7 +43,7 @@ plotRegion(
 \item{countSE}{A SummarizedExperiment from MOCHA::getCoverage}
 
 \item{plotType}{Options include 'overlaid','area', or 'RidgePlot'. default is
-'area', which will plot a seperate track for each group with the area
+'area', which will plot a separate track for each group with the area
 filled in under the curve. Setting plotType to 'overlaid' will overlay
 count plot histograms across samples, instead of faceting out separately.
 Setting plotType to 'RidgePlot' will generate a ridgeplot across all
@@ -124,7 +124,7 @@ gene plot. Default NULL will use `.gene_plot_theme`}
 \item{additionalGRangesTrack}{A GRanges object containing additional track
 plot data}
 
-\item{linkdf}{A dataframe with co-accessible links to display as an additonal
+\item{linkdf}{A dataframe with co-accessible links to display as an additional
 track}
 
 \item{showIdeogram}{Logical value, default TRUE. If TRUE plots the chromosome
@@ -148,7 +148,7 @@ The input ggplot object with motif labels overlaid
   all cell groupings (groups=initial getPopFrags() split) with optional motif
   overlay, chromosome position ideogram, and additional GRanges tracks. If
   plotting motif overlay, ensure that motif annotations have been added to
-  your counts SummarizedExperment. A basic plot can be rendered with just a
+  your counts SummarizedExperiment. A basic plot can be rendered with just a
   counts SummarizedExperiment, but additional formatting arguments allow for
   further customization. Note that to show specific genes with the option
   'whichGene' the \pkg{RMariaDB} package must be installed.

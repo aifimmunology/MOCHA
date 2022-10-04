@@ -23,7 +23,7 @@ MOCHA is an R package containing a novel single-cell peak-calling algorithm that
 
 # <a name="library"></a> Install package and load library
 
-To install in a HISE IDE, run the following lines of code to install directly from GitHub replacing 'your_token' with your [Github Personal Access Token](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+To install in a HISE IDE, run the following lines of code to install directly from GitHub replacing 'your_token' with your [GitHub Personal Access Token](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
 
     Sys.setenv(GITHUB_PAT='your_token') 
     devtools::install_github("aifimmunology/MOCHA")

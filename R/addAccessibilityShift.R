@@ -4,7 +4,7 @@
 #' 								which will contain the difference in accessibility between two conditions
 #'
 #' @param CountSE The SummarizedExperiment object output from extractRegion
-#' @param foreground Group that will be used as the foreground for the substraction of accessibility
+#' @param foreground Group that will be used as the foreground for the subtraction of accessibility
 #' @param background Group that will be used as the background for the subtraction of accessibility
 #' @param assayName The name given to the new assay that is difference in accessibility between foreground and background.
 #'

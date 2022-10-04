@@ -12,7 +12,7 @@ annotateTiles(
 )
 }
 \arguments{
-\item{SampleTileObj}{A RangedSummarizedExperment generated from getSampleTileMatrix,
+\item{SampleTileObj}{A RangedSummarizedExperiment generated from getSampleTileMatrix,
 containing TxDb and Org in the metadata. This may also be a GRanges object.}
 
 \item{TxDb}{The annotation package for TxDb object for your genome.

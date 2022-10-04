@@ -9,7 +9,7 @@ addAccessibilityShift(CountSE, foreground, background, assayName = NULL)
 \arguments{
 \item{CountSE}{The SummarizedExperiment object output from extractRegion}
 
-\item{foreground}{Group that will be used as the foreground for the substraction of accessibility}
+\item{foreground}{Group that will be used as the foreground for the subtraction of accessibility}
 
 \item{background}{Group that will be used as the background for the subtraction of accessibility}
 

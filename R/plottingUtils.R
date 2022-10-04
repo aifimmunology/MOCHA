@@ -100,7 +100,7 @@ get_grange_genebody <- function(regionGRanges, TxDb, single.strand.genes.only = 
 #' Used in `plotRegion()` for the counts tracks
 #'
 #' @param countdf  A dataframe that comes from `getbpCounts()` or `getbpInserts()`
-#' @param plotType Options include 'overlaid','area', 'line', or 'RidgePlot'. default is 'area', which will plot a seperate track for each group.
+#' @param plotType Options include 'overlaid','area', 'line', or 'RidgePlot'. default is 'area', which will plot a separate track for each group.
 #' Setting plotType to 'overlaid' will overlay count plot histograms across samples, instead of faceting out separately.
 #' Setting plotType to 'RidgePlot' will generate a ridgeplot across all groups.
 #' @param base_size Numeric, default 12. Global plot base text size parameter
