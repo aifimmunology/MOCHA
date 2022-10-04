@@ -28,7 +28,6 @@
 
 callTilesBySample <- function(blackList,
                               returnAllTiles = FALSE,
-                              numCores = 10,
                               totalFrags,
                               fragsList,
 							  verbose = FALSE,
@@ -38,7 +37,7 @@ callTilesBySample <- function(blackList,
   # Future datasets need to be calibrated to
   # these coefficients
 
-  if(is.na(fragsList)){
+  if(any(is.na(fragsList))){
     warning('No cells from this sample. Returning NULL.')
     return(NULL)  
   }

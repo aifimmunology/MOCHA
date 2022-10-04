@@ -113,23 +113,6 @@ callOpenTiles <- function(ArchRProj,
       overlapList = 50
     )
 
-    # Check for and remove celltype-sample groups for which there are no fragments.
-
-    #### This is now redundant and can be removed. getPopFrags only pulls from arrows with cells for a given cell type
-    fragsNoNull <- frags[lengths(frags) != 0]
-    emptyFragsBool <- !(names(frags) %in% names(fragsNoNull))
-    emptyGroups <- names(frags)[emptyFragsBool]
-    emptyGroups <- gsub("__.*", "", emptyGroups)
-	
-	  rm(fragsNoNull)
-	
-    if (length(emptyGroups) == 0) {
-      warning(
-        "The following celltype#sample groupings have no fragments",
-        "and will be ignored: ", emptyGroups
-      )
-    }
-
     # Simplify sample names to remove everything before the first "#"
     sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
     names(frags) <- sampleNames
@@ -163,7 +146,7 @@ callOpenTiles <- function(ArchRProj,
 
     if(!all(rownames(allCellCounts) %in% names(frags))){
 
-      emptySamples <- which(allCellCounts[,cellPop] == 0)
+      emptySamples <- rownames(allCellCounts)[!rownames(allCellCounts) %in% names(frags)]
       emptyGRanges = lapply(emptySamples, function(x) NA)
       names(emptyGRanges) <- emptySamples
       frags <- append(frags, emptyGRanges)
@@ -171,18 +154,18 @@ callOpenTiles <- function(ArchRProj,
     }
 
     frags <- frags[sort(names(frags))]
+  
 
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time) 
-
+    return(frags)
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
       function(x) {
         scMACS:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          numCores = numCores,
           totalFrags = normalization_factors[x],
           fragsList = frags[[x]],
 		  verbose = verbose,
@@ -193,6 +176,8 @@ callOpenTiles <- function(ArchRProj,
     )
 
     names(tilesGRangesList) <- sampleNames
+
+   
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
