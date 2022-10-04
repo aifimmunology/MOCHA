@@ -38,7 +38,7 @@ callTilesBySample <- function(blackList,
   # Future datasets need to be calibrated to
   # these coefficients
 
-  if(is.null(fragsList)){
+  if(is.na(fragsList)){
     warning('No cells from this sample. Returning NULL.')
     return(NULL)  
   }

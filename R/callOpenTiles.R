@@ -85,11 +85,14 @@ callOpenTiles <- function(ArchRProj,
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
   allCellCounts <- allCellCounts[, cellPopulations]
 
+  if(verbose){print(allCellCounts)}
+
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
   AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
   AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
+
 
   # Main loop over all cell populations
   experimentList <- list()
@@ -111,6 +114,8 @@ callOpenTiles <- function(ArchRProj,
     )
 
     # Check for and remove celltype-sample groups for which there are no fragments.
+
+    #### This is now redundant and can be removed. getPopFrags only pulls from arrows with cells for a given cell type
     fragsNoNull <- frags[lengths(frags) != 0]
     emptyFragsBool <- !(names(frags) %in% names(fragsNoNull))
     emptyGroups <- names(frags)[emptyFragsBool]
@@ -151,6 +156,21 @@ callOpenTiles <- function(ArchRProj,
         
     }
     study_prefactor <- 3668 / studySignal # Training median
+
+
+    ##Add in a null index for each samples that didn't have any cells
+    ## First, have to handle the table of allCellCounts correctly. 
+
+    if(!all(rownames(allCellCounts) %in% names(frags))){
+
+      emptySamples <- which(allCellCounts[,cellPop] == 0)
+      emptyGRanges = lapply(emptySamples, function(x) NA)
+      names(emptyGRanges) <- emptySamples
+      frags <- append(frags, emptyGRanges)
+
+    }
+
+    frags <- frags[sort(names(frags))]
 
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
@@ -195,6 +215,7 @@ callOpenTiles <- function(ArchRProj,
         end = 499, strand ='*', TotalIntensity = 0, maxIntensity = 0,
         numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE)
     }
+    
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesList
@@ -335,7 +356,6 @@ callOpenTilesFast <- function(ArchRProj,
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
-
 
     # Add prefactor multiplier across datasets
     curr_frags_median <- median(cellColData$nFrags)
