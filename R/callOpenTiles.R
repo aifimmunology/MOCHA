@@ -155,11 +155,10 @@ callOpenTiles <- function(ArchRProj,
 
     frags <- frags[sort(names(frags))]
   
-
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time) 
-    return(frags)
+
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
       function(x) {
@@ -168,17 +167,16 @@ callOpenTiles <- function(ArchRProj,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
           fragsList = frags[[x]],
-		  verbose = verbose,
+		      verbose = verbose,
           StudypreFactor = study_prefactor
         )
       },
       mc.cores = numCores
     )
 
-    names(tilesGRangesList) <- sampleNames
+    names(tilesGRangesList) <- names(frags)
 
-   
-
+  
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
     # preserve the existence of the sample, while also not including any information from it. 
