@@ -1,12 +1,29 @@
 Package: MOCHA
 Type: Package
-Title: Modeling for single cell Open Chromatin Analysis
+Title: Modeling for Single-Cell Open Chromatin Analysis
 Version: 0.1.0
-Author: Samir Rachid Zaim [aut, cre],
-        Mark-Phillip Pebworth [aut, cre],
-        Imran McGrath [aut, cre],
-        Lauren Okada [aut, ctb],
-        Xiaojun Li [aut, ctb]
+Authors@R: 
+    c(person(given = "Samir",
+           family = "Rachid Zaim",
+           role = c("aut", "ctb"),
+           email = "samir.rachidzaim@alleninstitute.org"),
+    person(given = "Mark-Phillip",
+           family = "Pebworth",
+           role = c("aut", "ctb"),
+           email = "markphillip.pebworth@alleninstitute.org"),
+    person(given = "Imran",
+           family = "McGrath",
+           role = c("aut", "cre"),
+           email = "imran.mcgrath@alleninstitute.org"),
+    person(given = "Lauren",
+           family = "Okada",
+           role = c("aut", "ctb"),
+           email = "lauren.okada@alleninstitute.org"),
+    person(given = "Xiaojun",
+           family = "Li",
+           role = c("aut", "ctb"),
+           email = "xiaojun.li@alleninstitute.org")
+    )
 Maintainer: 
         Imran McGrath <imran.mcgrath@alleninstitute.org>
 Description:  MOCHA is statistical framework for open chromatin analysis designed 
