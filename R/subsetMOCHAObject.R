@@ -40,8 +40,8 @@ subsetMOCHAObject <- function(Object,
         stop("Error: groupList includes celltypes not found within Object.")
       }
 
-      keep <- which(names(Object) %in% groupList)
-      return(Object[keep])
+      keep <- MultiAssayExperiment::subsetByAssay(Object, groupList)
+      return(keep)
     }
   } else if (class(Object)[1] == "RangedSummarizedExperiment") {
     sampleData <- SummarizedExperiment::colData(Object)

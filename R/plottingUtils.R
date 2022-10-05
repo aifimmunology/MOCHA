@@ -822,12 +822,12 @@ simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
 
   # filter txdb object
   txb <- as.list(TxDb)
-  txb$transcripts <- txb$transcripts[txb$transcripts$tx_id %in% ltx, ]
-  txb$splicings <- txb$splicings[txb$splicings$tx_id %in% ltx, ]
-  txb$genes <- txb$genes[txb$genes$tx_id %in% ltx, ]
+  txb$transcripts <- as.data.frame(txb$transcripts[txb$transcripts$tx_id %in% ltx, ])
+  txb$splicings <- as.data.frame(txb$splicings[txb$splicings$tx_id %in% ltx, ])
+  txb$genes <- as.data.frame(txb$genes[txb$genes$tx_id %in% ltx, ])
   chrominfo <- as.data.frame(GenomeInfoDb::seqinfo(TxDb)) %>%
     dplyr::mutate(chrom = rownames(.data)) %>%
-    dplyr::rename(length = .data$seqlengths, is_circular = .data$isCircular)
+    dplyr::rename(length = .data$seqlengths, is_circular = .data$isCircular) %>% as.data.frame()
   txb2 <- GenomicFeatures::makeTxDb(txb$transcripts, txb$splicings, txb$genes, chrominfo,
     metadata =
       dplyr::filter(
