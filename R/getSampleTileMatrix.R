@@ -67,7 +67,7 @@ getSampleTileMatrix <- function(tileResults,
     cellPopulations <- names(tileResults)
   } else {
     if (all(cellPopulations %in% names(tileResults))) {
-      subTileResults <- tileResults[names(tileResults) %in% cellPopulations]
+      subTileResults <- MultiAssayExperiment::subsetByAssay(tileResults, cellPopulations)
     } else {
       stop(paste(
         "All of `cellPopulations` must present in tileResults.",
@@ -91,6 +91,24 @@ getSampleTileMatrix <- function(tileResults,
       groupColumn
     )
   }, mc.cores = numCores)
+
+  errorMessages <- parallel::mclapply(tilesByCellPop, function(x){ 
+      if(any(grepl('Error', x))){ x[grep('Error', x)] }
+      else{ NA}
+  }, mc.cores = numCores)
+
+  names(errorMessages) <- names(subTileResults)
+
+  if(any(!is.na(errorMessages))){
+
+    print(errorMessages[!is.na(errorMessages)])
+    stop('Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again',
+          'If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types, ',
+          'Or, you can lower the threshold. ',
+          'The following cell types were impacted:',
+          paste(names(errorMessages)[!is.na(errorMessages)], collapse = ', '))
+
+  }
 
   allTiles <- sort(unique(do.call("c", tilesByCellPop)))
 
