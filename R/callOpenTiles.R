@@ -5,7 +5,7 @@
 #'   files and an ArchR Project for meta-data purposes
 #'
 #'
-#' @param ArchRProj an ArchR Project
+#' @param ATACFragments an ArchR Project, or a GRangesList of fragments
 #' @param cellPopLabel string indicating which column in the ArchRProject
 #'   metadata contains the cell population label.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
@@ -36,43 +36,57 @@
 #'
 #' @examples
 #' \dontrun{
+#' # Starting from an ArchR Project:
 #' tileResults <- MOCHA::callOpenTiles(
-#'   myArchRProj,
-#'   cellPopLabel = cellPopLabel,
-#'   cellPopulations = cellPopulations,
-#'   TxDb = TxDb,
-#'   Org = Org,
-#'   numCores = numCores
+#'   ArchRProj = myArchRProj,
+#'   cellPopLabel = "celltype_labeling",
+#'   cellPopulations = "CD4",
+#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+#'   Org = org.Hs.eg.db,
+#'   numCores = 10
 #' )
 #' }
 #'
 #' @export
-callOpenTiles <- function(ArchRProj,
+callOpenTiles <- function(ATACFragments,
+                          ...,
                           cellPopLabel,
                           cellPopulations = "ALL",
                           TxDb,
                           Org,
-                          outDir = NULL,
+                          outDir,
                           fast = FALSE,
                           numCores = 30,
                           verbose = TRUE,
                           force = FALSE,
-                          studySignal = NULL
-                         ) {
+                          studySignal = NULL) {
+  UseMethod("callOpenTiles", ATACFragments)
+}
 
+callOpenTiles.ArchRProject <- function(ATACFragments,
+                                       cellPopLabel,
+                                       cellPopulations = "ALL",
+                                       TxDb,
+                                       Org,
+                                       outDir = NULL,
+                                       fast = FALSE,
+                                       numCores = 30,
+                                       verbose = TRUE,
+                                       force = FALSE,
+                                       studySignal = NULL) {
   if (is.null(outDir)) {
-    ## Generate folder within ArchR for outputting results
-    outDir <- paste(ArchR::getOutputDirectory(ArchRProj), "/MOCHA", sep = "")
+    outDir <- paste(ArchR::getOutputDirectory(ATACFragments), "/MOCHA", sep = "")
   }
 
   if (!file.exists(outDir)) {
+    # Generate folder within ArchR for outputting results
     message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
     dir.create(outDir)
   }
 
   if (fast) {
     tileResults <- callOpenTilesFast(
-      ArchRProj,
+      ATACFragments,
       cellPopLabel,
       cellPopulations,
       TxDb,
@@ -85,8 +99,8 @@ callOpenTiles <- function(ArchRProj,
   }
 
   # Get cell metadata and blacklisted regions from ArchR Project
-  cellColData <- ArchR::getCellColData(ArchRProj)
-  blackList <- ArchR::getBlacklist(ArchRProj)
+  cellColData <- ArchR::getCellColData(ATACFragments)
+  blackList <- ArchR::getBlacklist(ATACFragments)
 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
@@ -99,13 +113,13 @@ callOpenTiles <- function(ArchRProj,
     stop("Error: cellPopulations not all found in ArchR project.")
   }
 
-  #Save the cell number per population-sample in the metadata
+  # Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
   allCellCounts <- allCellCounts[, cellPopulations]
 
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
   AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
   AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
 
@@ -116,7 +130,7 @@ callOpenTiles <- function(ArchRProj,
 
     # Get our fragments for this cellPop
     frags <- MOCHA::getPopFrags(
-      ArchRProj = ArchRProj,
+      ArchRProj = ATACFragments,
       metaColumn = cellPopLabel,
       cellSubsets = cellPop,
       region = NULL,
@@ -124,7 +138,7 @@ callOpenTiles <- function(ArchRProj,
       sampleSpecific = TRUE,
       NormMethod = "nfrags",
       blackList = NULL,
-	  verbose = verbose,
+      verbose = verbose,
       overlapList = 50
     )
 
@@ -133,9 +147,9 @@ callOpenTiles <- function(ArchRProj,
     emptyFragsBool <- !(names(frags) %in% names(fragsNoNull))
     emptyGroups <- names(frags)[emptyFragsBool]
     emptyGroups <- gsub("__.*", "", emptyGroups)
-	
-	  rm(fragsNoNull)
-	
+
+    rm(fragsNoNull)
+
     if (length(emptyGroups) == 0) {
       warning(
         "The following celltype#sample groupings have no fragments",
@@ -164,19 +178,21 @@ callOpenTiles <- function(ArchRProj,
 
     # Add prefactor multiplier across datasets
 
-    if(is.null(studySignal)){
-        message("studySignal was not provided. ",
-                "Calculating study signal on ArchR project as the median ",
-                "nFrags with the assumption that all cell populations are ",
-                "present in ArchR project.")
-        studySignal <- stats::median(cellColData$nFrags)
+    if (is.null(studySignal)) {
+      message(
+        "studySignal was not provided. ",
+        "Calculating study signal on ArchR project as the median ",
+        "nFrags with the assumption that all cell populations are ",
+        "present in ArchR project."
+      )
+      studySignal <- stats::median(cellColData$nFrags)
     }
     study_prefactor <- 3668 / studySignal # Training median
 
 
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time) 
+    # (Arrow files are locked - one access at a time)
 
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
@@ -187,7 +203,7 @@ callOpenTiles <- function(ArchRProj,
           numCores = numCores,
           totalFrags = normalization_factors[x],
           fragsList = frags[[x]],
-		  verbose = verbose,
+          verbose = verbose,
           StudypreFactor = study_prefactor
         )
       },
@@ -198,24 +214,25 @@ callOpenTiles <- function(ArchRProj,
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
-    # preserve the existence of the sample, while also not including any information from it. 
-    
+    # preserve the existence of the sample, while also not including any information from it.
+
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
-    
-    if(length(emptyGroups) > 0){
-    warning(
-      "The following celltype#sample groupings have too few celltypes (<5)",
-      "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
-      ) 
+
+    if (length(emptyGroups) > 0) {
+      warning(
+        "The following celltype#sample groupings have too few celltypes (<5)",
+        "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
+      )
     }
-    for(i in emptyGroups){
+    for (i in emptyGroups) {
       # This is an empty region placeholder that represents an empty sample
       # And is functionally ignored downstream but required for
       # the RaggedExperiment structure
       tilesGRangesList[[i]] <- data.table(
-        tileID = 'chr1:1-499', seqnames = 'chr1', start = 1,
-        end = 499, strand ='*', TotalIntensity = 0, maxIntensity = 0,
-        numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE)
+        tileID = "chr1:1-499", seqnames = "chr1", start = 1,
+        end = 499, strand = "*", TotalIntensity = 0, maxIntensity = 0,
+        numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE
+      )
     }
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
@@ -237,11 +254,12 @@ callOpenTiles <- function(ArchRProj,
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
-   
+
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
-    metadata = list('CellCounts' = allCellCounts,
+    metadata = list(
+      "CellCounts" = allCellCounts,
       "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
       "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
     )
@@ -250,7 +268,8 @@ callOpenTiles <- function(ArchRProj,
   return(tileResults)
 }
 
-##### Same function, but runs faster with much, much more RAM usage.
+# Same function as callOpenTiles.ArchRProject,
+# but runs faster with much, much more RAM usage thanks to
 callOpenTilesFast <- function(ArchRProj,
                               cellPopLabel,
                               cellPopulations = "ALL",
@@ -358,7 +377,6 @@ callOpenTilesFast <- function(ArchRProj,
       rm(covFiles)
     }
 
-
     # Add prefactor multiplier across datasets
     curr_frags_median <- stats::median(cellColData$nFrags)
     study_prefactor <- 3668 / curr_frags_median # Training median
@@ -386,7 +404,6 @@ callOpenTilesFast <- function(ArchRProj,
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples
     tilesGRangesListNoNull <- BiocGenerics::Filter(Negate(is.null), tilesGRangesList)
-    # TODO: Add warning message about removed samples for this celltype.
 
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
