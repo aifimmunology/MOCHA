@@ -39,7 +39,8 @@ callOpenTiles <- function(ArchRProj,
                           numCores = 30,
                           verbose = TRUE,
                           force = FALSE,
-                          studySignal=NULL
+                          studySignal=NULL,
+                          sampleSpecific=TRUE
                          ) {
   
   if (is.null(outDir)) {
@@ -103,7 +104,7 @@ callOpenTiles <- function(ArchRProj,
       cellSubsets = cellPop,
       region = NULL,
       numCores = numCores,
-      sampleSpecific = TRUE,
+      sampleSpecific = sampleSpecific,
       NormMethod = "nfrags",
       blackList = NULL,
 	  verbose = verbose,
@@ -172,8 +173,15 @@ callOpenTiles <- function(ArchRProj,
       },
       mc.cores = numCores
     )
-
-    names(tilesGRangesList) <- sampleNames
+      
+    if(sampleSpecific){
+        
+        names(tilesGRangesList) <- sampleNames
+        
+    } else{
+        names(tilesGRangesList) <- cellPop
+        
+    }
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
@@ -211,9 +219,18 @@ callOpenTiles <- function(ArchRProj,
   # sample IDs which correspond to the arrow files.
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
-  sampleData <- suppressWarnings(
-    scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
-  )
+  
+  if(sampleSpecific){
+      sampleData <- suppressWarnings(
+        scMACS:::sampleDataFromCellColData(cellColData, 
+                                           sampleLabel = "Sample")
+      )
+    } else{
+      sampleData <- suppressWarnings(
+        scMACS:::sampleDataFromCellColData(cellColData, 
+                                           sampleLabel = cellPopLabel))
+      
+  }
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
@@ -384,7 +401,8 @@ callOpenTilesFast <- function(ArchRProj,
   sampleData <- suppressWarnings(
     scMACS:::sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
-
+  browser()
+    
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- names(splitFrags)
   
