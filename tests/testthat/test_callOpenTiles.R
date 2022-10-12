@@ -17,9 +17,9 @@ if (requireNamespace("ArchR", quietly = TRUE)) {
         type = "message"
       )
       
-      expect_snapshot_value(
+      expect_snapshot(
         tiles,
-        style = "json2"
+        variant = "ArchR"
       )
     })
   }
@@ -46,9 +46,9 @@ test_that("We can call peaks independent of ArchR", {
   )
   unlink("./test_out", recursive = TRUE)
   
-  expect_snapshot_value(
+  expect_snapshot(
     tiles,
-    style = "json2"
+    variant = "list"
   )
 })
 

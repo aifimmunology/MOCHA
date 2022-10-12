@@ -5,11 +5,12 @@ library(MOCHA)
 library(TxDb.Hsapiens.UCSC.hg38.refGene)
 library(org.Hs.eg.db)
 
+ArchR::getTestProject()
 testProj <- ArchR::loadArchRProject("PBMCSmall")
 TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene 
 Org <- org.Hs.eg.db
 
-tiles <- MOCHA::callOpenTiles(
+tileResults <- MOCHA::callOpenTiles(
   ATACFragments = testProj,
   TxDb = TxDb,
   Org = Org,
@@ -35,6 +36,7 @@ blackList <- ArchR::getBlacklist(testProj)
 genome <- ArchR::validBSgenome(ArchR::getGenome(testProj))
 
 usethis::use_data(
+  tileResults,
   ATACFragments,
   cellColData,
   blackList,
