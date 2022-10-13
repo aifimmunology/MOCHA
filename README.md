@@ -29,7 +29,7 @@ To install in a HISE IDE, run the following lines of code to install directly fr
 
 # <a name="vignette"></a> Usage
 
-Please view the example usage found in this [vignette](vignettes/COVID_example.R).
+Please view the example usage found in this [vignette](vignettes/COVID-walkthrough.html).
 
 Example usage demonstrates this workflow: 
 
