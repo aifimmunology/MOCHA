@@ -129,7 +129,7 @@ extractRegion <- function(SampleTileObj,
           plyranges::join_overlap_intersect(regionGRanges) %>%
           plyranges::compute_coverage(weight = .$score / sampleCount) %>%
           plyranges::join_overlap_intersect(regionGRanges)
-        if (end(regionGRanges) - start(regionGRanges) > approxLimit) {
+        if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
 
           mergedCounts %>% plyranges::join_overlap_intersect(binnedData)
 
