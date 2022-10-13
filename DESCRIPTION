@@ -76,6 +76,7 @@ Imports:
 Suggests: 
     ArchR,
     RMariaDB,
+    BiocManager,
     TxDb.Hsapiens.UCSC.hg38.refGene,
     org.Hs.eg.db,
     withr,

@@ -42,8 +42,7 @@ callTilesBySample <- function(blackList,
     return(NULL)  
   }
 
-  finalModelObject <- scMACS::finalModelObject
-  thresholdModel <- scMACS::thresholdModel
+  finalModelObject <- MOCHA::finalModelObject
 
   FinalBins <- determine_dynamic_range(
     AllFragmentsList = fragsList,
