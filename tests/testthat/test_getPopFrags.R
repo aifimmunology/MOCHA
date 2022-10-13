@@ -12,8 +12,8 @@ test_that(
 
 if(dir.exists("PBMCSmall")){
   # Load ArchR project
-  capture.output(testProj <- loadArchRProject("PBMCSmall"), type = "message")
-  outdir <- dirname(getOutputDirectory(testProj))
+  capture.output(testProj <- ArchR::loadArchRProject("PBMCSmall"), type = "message")
+  outdir <- dirname(ArchR::getOutputDirectory(testProj))
   metaColumn <- "Clusters" # Column with cell population groups
   
   # # Test getPopFrags with full genome and all normalization methods
@@ -95,7 +95,7 @@ if(dir.exists("PBMCSmall")){
   # Test getPopFrags with the wrong NormMethod when specifying a region
   for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
     test_that(
-      str_interp("getPopFrags throws an error if the wrong NormMethod (${NormMethod}) is set when asking for a specific region"),
+      stringr::str_interp("getPopFrags throws an error if the wrong NormMethod (${NormMethod}) is set when asking for a specific region"),
       {
         expect_error(
           capture.output(popFrags <- getPopFrags(
@@ -114,7 +114,7 @@ if(dir.exists("PBMCSmall")){
   
   # Test getPopFrags with an incorrectly formatted region string
   test_that(
-    str_interp("getPopFrags throws an error for an incorrectly formatted region string"),
+    stringr::str_interp("getPopFrags throws an error for an incorrectly formatted region string"),
     {
       expect_error(
         capture.output(
@@ -151,7 +151,7 @@ if(dir.exists("PBMCSmall")){
   
   # Test getPopFrags with a metaColumn not in cellColData
   test_that(
-    str_interp("getPopFrags throws an error for a metaColumn not in cellColData"),
+    stringr::str_interp("getPopFrags throws an error for a metaColumn not in cellColData"),
     {
       expect_error(
         capture.output(
@@ -170,7 +170,7 @@ if(dir.exists("PBMCSmall")){
   
   # Test getPopFrags with nonexistent cell subsets
   test_that(
-    str_interp("getPopFrags throws an error for missing cellSubsets"),
+    stringr::str_interp("getPopFrags throws an error for missing cellSubsets"),
     {
       expect_error(
         capture.output(
