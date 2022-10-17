@@ -89,7 +89,7 @@ the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 calling is done on all cell populations in the ArchR project metadata.
 Default is 'ALL'.}
 
-\item{studySignal}{The median signal (\# of fragments) in your study. If not
+\item{studySignal}{The median signal (number of fragments) in your study. If not
 set, this will be calculated using the input ArchR project but relies on
 the assumption that the ArchR project encompasses your whole study (i.e. is
 not a subset).}
