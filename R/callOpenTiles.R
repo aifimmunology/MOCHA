@@ -16,7 +16,7 @@
 #' @param cellColData A DataFrame containing cell-level metadata and a 'Sample' column
 #' @param blackList A GRanges of blacklisted regions
 #' @param genome A valid BSGenome object describing the genome of your organism
-#' @param studySignal The median signal (\# of fragments) in your study. If not
+#' @param studySignal The median signal (number of fragments) in your study. If not
 #'   set, this will be calculated using the input ArchR project but relies on
 #'   the assumption that the ArchR project encompasses your whole study (i.e. is
 #'   not a subset).

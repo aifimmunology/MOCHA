@@ -1,8 +1,5 @@
 # MOCHA: Model-based single cell Open CHromatin Analysis
 
-  <!-- badges: start -->
-[![R-CMD-check](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check-manual.yml/badge.svg)](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check-manual.yml)
-  <!-- badges: end -->
 ------------------------------------------------------------------------
 
 ## Table of Contents
@@ -29,9 +26,10 @@ To install in a HISE IDE, run the following lines of code to install directly fr
 
 # <a name="vignette"></a> Usage
 
-Please view the example usage found in this [vignette](vignettes/COVID-walkthrough.html).
+Please view the example usage found in the vignette found under
+`vignettes/COVID-walkthrough.html`.
 
-Example usage demonstrates this workflow: 
+The example usage demonstrates this workflow: 
 
 ![Workflow](inst/extData/workflow.svg)
 

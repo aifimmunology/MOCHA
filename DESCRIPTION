@@ -26,8 +26,8 @@ Authors@R:
     )
 Maintainer: 
         Imran McGrath <imran.mcgrath@alleninstitute.org>
-Description:  MOCHA is statistical framework for open chromatin analysis designed 
-              specifically for scATAC data, after cell type/cluster identification.
+Description:  A statistical framework and analysis tool for open chromatin analysis designed 
+              specifically for single cell ATAC-seq data, after cell type/cluster identification.
               These novel modules remove unwanted technical variation, identify 
               open chromatin, robustly models repeated measures in single cell data, 
               implement advanced statistical frameworks to model zero-inflation 
@@ -35,7 +35,7 @@ Description:  MOCHA is statistical framework for open chromatin analysis designe
               existing databases and modules for downstream analyses to reveal 
               biological insights. MOCHA provides a statistical foundation for 
               complex downstream analysis to help advance the potential of 
-              scATAC-seq for translational studies.
+              single cell ATAC-seq for applied studies.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
