@@ -61,7 +61,7 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
   	if(any(threshold <= 1/table(sampleData[[groupColumn]])) & !disableMinimum){
   	
   		stop("Threshold is too low resulting in only one sample needed to keep",
-  		     "a tile within one or more of your groups. Set threshold to 0 to ",
+  		     " a tile within one or more of your groups. Set threshold to 0 to ",
   		     "explicitly keep the union of tiles across all samples.")
   	  
   	}
