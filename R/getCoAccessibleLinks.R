@@ -25,7 +25,7 @@
 #' @export
 
 getCoAccessibleLinks <- function(SampleTileObj, 
-                                 cellPopulation, 
+                                 cellPopulation = 'All', 
                                  regions, 
                                  windowSize = 1 * 10^6, 
                                  numCores = 1, 
@@ -39,7 +39,24 @@ getCoAccessibleLinks <- function(SampleTileObj,
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
   }
     
-  tileDF <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
+  if(cellPopulation == 'All'){
+  
+	tileDF <- do.call('cbind', assays(SampleTileObj))
+	
+  }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
+  
+ 	tileDF <- do.call('cbind', assays(SampleTileObj)[names(assays(SampleTileObj)) %in% cellPopulation])
+	
+  }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
+  
+ 	tileDF <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
+	
+  }else{
+  
+	error('Cell type not found within SampleTileObj')
+  
+  }
+  
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
   chr <- gsub("\\:.*", "", rownames(tileDF))
