@@ -9,6 +9,7 @@
 #'   Can be the output from getDifferentialAccessibleTiles.
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links 
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param ZI boolean flag that enables zro-inflated (ZI) spearman correlations to be used. Default is true, and we don't recemmend setting this flag to false. When set to false, it will default to a pure spearman correlation. 
 #'
 #' @return 
 #' 
@@ -29,6 +30,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
                                  regions, 
                                  windowSize = 1 * 10^6, 
                                  numCores = 1, 
+                                 ZI = TRUE
                                  verbose = FALSE) {
   
   if (class(regions) == "GRanges") {
@@ -86,7 +88,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
       )
       nextCorr <- scMACS:::co_accessibility(tileDF[windowIndexBool, , drop=FALSE],
                                    filterPairs = TileCorr, numCores = numCores,
-                                   index = keyTile, verbose = verbose
+                                   index = keyTile, ZI = ZI, verbose = verbose
       )
       # For first iteration, TileCorr is NULL so it will be ignored
       TileCorr <- rbind(TileCorr, nextCorr)
