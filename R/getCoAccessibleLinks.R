@@ -43,7 +43,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
     
   if(cellPopulation == 'All'){
   
-	tileDF <- do.call('cbind', assays(SampleTileObj))
+	tileDF <- do.call('cbind', SummarizedExperiment::assays(SampleTileObj))
 	
   }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
   
