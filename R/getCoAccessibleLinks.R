@@ -30,7 +30,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
                                  regions, 
                                  windowSize = 1 * 10^6, 
                                  numCores = 1, 
-                                 ZI = TRUE
+                                 ZI = TRUE,
                                  verbose = FALSE) {
   
   if (class(regions) == "GRanges") {
