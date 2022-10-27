@@ -5,35 +5,35 @@
 #'   and available annotations can be found at Bioconductor: 
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
-#' @param SampleTileObj A RangedSummarizedExperment generated from getSampleTileMatrix, 
+#' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix, 
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
 #' @param TxDb The annotation package for TxDb object for your genome. 
-#'   Optional, only required if SampleTileObj is a GRanges.
+#'   Optional, only required if Obj is a GRanges.
 #' @param Org The genome-wide annotation for your organism. 
-#'   Optional, only required if SampleTileObj is a GRanges.
+#'   Optional, only required if Obj is a GRanges.
 #' @param promoterRegion Optional list containing the window size in basepairs 
 #' defining the promoter region. The format is (upstream, downstream). 
 #' Default is (2000, 100).
 #'
-#' @return SampleTileObj the input data structure with added gene annotations.
+#' @return Obj, the input data structure with added gene annotations (whether GRanges or SampleTileObj)
 #'
 #'
 #' @export
-annotateTiles <- function(SampleTileObj,
+annotateTiles <- function(Obj,
                           TxDb = NULL,
                           Org = NULL,
                           promoterRegion = c(2000, 100)) {
-  if (class(SampleTileObj)[1] == "RangedSummarizedExperiment" & is.null(TxDb) & is.null(Org)) {
-    if (!all(c("TxDb", "Org") %in% names(S4Vectors::metadata(SampleTileObj)))) {
+  if (class(Obj)[1] == "RangedSummarizedExperiment" & is.null(TxDb) & is.null(Org)) {
+    if (!all(c("TxDb", "Org") %in% names(S4Vectors::metadata(Obj)))) {
       stop("Error: TxDb and/or Org are missing from SampleTileObj. SampleTileObj as a RangedSummarizedExperiment must contain a TxDb and Org in the metadata.")
     }
-    tileGRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
-    TxDb <- AnnotationDbi::loadDb(S4Vectors::metadata(SampleTileObj)$TxDb)
-    Org <- AnnotationDbi::loadDb(S4Vectors::metadata(SampleTileObj)$Org)
-  } else if (class(tileList)[[1]] == "GRanges" & !is.null(TxDb) & !is.null(Org)) {
-    tileGRanges <- SampleTileObj
+    tileGRanges <- SummarizedExperiment::rowRanges(Obj)
+    TxDb <- AnnotationDbi::loadDb(S4Vectors::metadata(Obj)$TxDb)
+    Org <- AnnotationDbi::loadDb(S4Vectors::metadata(Obj)$Org)
+  } else if (class(Obj)[[1]] == "GRanges" & !is.null(TxDb) & !is.null(Org)) {
+    tileGRanges <- Obj
   } else {
-    stop("Error: Invalid inputs. Verify SampleTileObj is a RangedSummarizedExperiment. If SampleTileObj is a GRanges, TxDb and Org must be provided.")
+    stop("Error: Invalid inputs. Verify Obj is a RangedSummarizedExperiment. If Obj is a GRanges, TxDb and Org must be provided.")
   }
 
   txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ("gene")))
@@ -50,7 +50,7 @@ annotateTiles <- function(SampleTileObj,
   promoterSet <- stack(txList) %>%
     GenomicRanges::trim(.) %>%
     S4Vectors::unique(.) %>%
-    suppressWarnings(GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]))
+    GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])
 
   getOverlapNameList <- function(rowTiles, annotGR) {
     overlapGroup <- findOverlaps(rowTiles, annotGR) %>% as.data.frame()
@@ -89,9 +89,9 @@ annotateTiles <- function(SampleTileObj,
 
   # If input was as Ranged SE, then edit the rowRanges for the SE and return it.
   # Else, return the annotated tile GRanges SampleTileObject.
-  if (class(SampleTileObj)[1] == "RangedSummarizedExperiment") {
-    SummarizedExperiment::rowRanges(SampleTileObj) <- tileGRanges
-    return(SampleTileObj)
+  if (class(Obj)[1] == "RangedSummarizedExperiment") {
+    SummarizedExperiment::rowRanges(Obj) <- tileGRanges
+    return(Obj)
   } else {
     return(tileGRanges)
   }
