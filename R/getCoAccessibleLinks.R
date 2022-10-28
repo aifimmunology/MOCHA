@@ -58,6 +58,8 @@ getCoAccessibleLinks <- function(SampleTileObj,
 	error('Cell type not found within SampleTileObj')
   
   }
+
+  tileDF[is.na(tileDF)] = 0
   
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
