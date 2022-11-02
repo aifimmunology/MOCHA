@@ -68,7 +68,6 @@ Imports:
     ggrepel,
     matrixStats,
     methods,
-    motifmatchr,
     qvalue,
     scales,
     tidyr,
@@ -76,6 +75,7 @@ Imports:
 Suggests: 
     ArchR,
     RMariaDB,
+    motifmatchr,
     BiocManager,
     TxDb.Hsapiens.UCSC.hg38.refGene,
     org.Hs.eg.db,
