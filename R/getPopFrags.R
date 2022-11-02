@@ -267,7 +267,7 @@ getPopFrags <- function(ArchRProj,
 
       tmp
     } else {
-      stack(as(tmp, "GRangesList"))
+      stack(methods::as(tmp, "GRangesList"))
     }
   })
 
