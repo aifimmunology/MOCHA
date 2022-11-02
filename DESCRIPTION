@@ -26,8 +26,8 @@ Authors@R:
     )
 Maintainer: 
         Imran McGrath <imran.mcgrath@alleninstitute.org>
-Description:  MOCHA is statistical framework for open chromatin analysis designed 
-              specifically for scATAC data, after cell type/cluster identification.
+Description: A statistical framework and analysis tool for open chromatin analysis designed 
+              specifically for single cell ATAC-seq data, after cell type/cluster identification.
               These novel modules remove unwanted technical variation, identify 
               open chromatin, robustly models repeated measures in single cell data, 
               implement advanced statistical frameworks to model zero-inflation 
@@ -35,15 +35,13 @@ Description:  MOCHA is statistical framework for open chromatin analysis designe
               existing databases and modules for downstream analyses to reveal 
               biological insights. MOCHA provides a statistical foundation for 
               complex downstream analysis to help advance the potential of 
-              scATAC-seq for translational studies.
-License: MIT + file LICENSE
+              single cell ATAC-seq for applied studies.
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
 Depends: R (>= 3.5.0)
-Remotes: GreenleafLab/ArchR
 Imports:
-    ArchR,
     data.table,
     plyranges,
     dplyr,
@@ -70,19 +68,22 @@ Imports:
     ggrepel,
     matrixStats,
     methods,
-    motifmatchr,
     qvalue,
     scales,
     tidyr,
     ggridges
 Suggests: 
+    ArchR,
     RMariaDB,
+    motifmatchr,
+    BiocManager,
     TxDb.Hsapiens.UCSC.hg38.refGene,
     org.Hs.eg.db,
     withr,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
+Additional_repositories: https://imran-aifi.github.io/drat
 biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization
 VignetteBuilder: knitr
 Config/testthat/edition: 3

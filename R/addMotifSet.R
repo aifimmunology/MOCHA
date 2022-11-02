@@ -29,6 +29,10 @@
 #' @export
 
 addMotifSet <- function(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName = "Motifs") {
+  if (!requireNamespace("motifmatchr", quietly = TRUE)){
+    stop("Package 'motifmatchr' is required for addMotifSet. ",
+          "Please install 'motifmatchr' to proceed.")
+  }
   TotalPeakSet <- SummarizedExperiment::rowRanges(SE_Object)
   genome <- S4Vectors::metadata(SE_Object)$Genome
   motif_ix <- motifmatchr::matchMotifs(

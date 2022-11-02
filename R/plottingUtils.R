@@ -674,7 +674,7 @@ get_gene_body_model <- function(whichGene,
       GenomicRanges::makeGRangesListFromDataFrame(., split.field = "nameList", keep.extra.columns = TRUE)
 
     # check for transcripts that are identical within the window
-    uniqueTranscripts <- utils::stack(newModel)[!duplicated(GenomicRanges::ranges(utils::stack(newModel)))] %>%
+    uniqueTranscripts <- IRanges::stack(newModel)[!duplicated(GenomicRanges::ranges(utils::stack(newModel)))] %>%
       plyranges::filter(model != "utr") %>%
       as.data.frame() %>%
       dplyr::select(tx_name) %>%

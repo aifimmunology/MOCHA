@@ -26,6 +26,7 @@
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
+#'   
 #'
 #' @export
 
@@ -212,6 +213,7 @@ getPopFrags <- function(ArchRProj,
   # Sort fragments into a list by cell population
 
   popFrags <- lapply(seq_along(barcodesByCellPop), function(x) {
+
     message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
     if (sum(fragsListIndex[[x]]) > 1) {
       tmp <- parallel::mclapply(which(fragsListIndex[[x]]), function(y) {
@@ -265,7 +267,7 @@ getPopFrags <- function(ArchRProj,
 
       tmp
     } else {
-      utils::stack(methods::as(tmp, "GRangesList"))
+      IRanges::stack(methods::as(tmp, "GRangesList"))
     }
   })
 

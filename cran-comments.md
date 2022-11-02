@@ -2,14 +2,14 @@
 
 There were no ERRORs or WARNINGs. 
 
-There was 1 NOTE:
+There was 1 NOTEs:
 
-❯ checking package dependencies ... NOTE
-  Imports includes 31 non-default packages.
-  Importing from so many packages makes the package vulnerable to any of
-  them becoming unavailable.  Move as many as possible to Suggests and
-  use conditionally.
+Possibly misspelled words in DESCRIPTION:
+    ATAC (29:44, 37:27)
 
-MOCHA is a comprehensive analysis package for the fundamental steps of downstream analysis with scATAC data - having many dependencies is not unexpected. Most dependencies are very popular or are found in Bioconductor, and are well maintained per Bioconductor guidelines. 
+  Suggests or Enhances not in mainstream repositories:
+    ArchR
+  Availability using Additional_repositories specification:
+    ArchR   yes   https://imran-aifi.github.io/drat
 
 * This is a new release.

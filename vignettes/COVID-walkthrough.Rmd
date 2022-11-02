@@ -71,9 +71,8 @@ cellPopulations <- c("MAIT", "CD16 Mono", "DC")
 numCores <- 20
 
 # Parameters for generating the sample-tile matrices
-threshold <- 0.2 
+threshold <- 0.34 # We only have 3 samples for each COVID status (3 positive and 3 negative)
 groupColumn <- "COVID_status" 
-join <- "union"
 ```
 
 #################################################### 
@@ -106,7 +105,7 @@ These matrices are organized by cell population RangedSummarizedExperiment objec
 #################################################### 
 
 ```{r}
-SampleTileMatrices <- MOCHA::getSampleTileMatrix(tileResults, cellPopulations = cellPopulations, groupColumn = groupColumn, threshold = threshold, join = join, NAtoZero = TRUE, log2Intensity = TRUE )
+SampleTileMatrices <- MOCHA::getSampleTileMatrix(tileResults, cellPopulations = cellPopulations, groupColumn = groupColumn, threshold = threshold, log2Intensity = TRUE )
 ```
 
 #################################################### 
@@ -171,8 +170,12 @@ Here we are comparing MAIT cells between samples where our groupColumn "COVID_st
 cellPopulation <- "MAIT"
 foreground <- "Positive"
 background <- "Negative" 
+
 # Standard output will display the number of tiles found below a false-discovery rate threshold.
-# This does not filter results and only affects \# this message. fdrToDisplay <- 0.2 \# Choose to output a GRanges or data.frame.
+# This parameter does not filter results and only affects the afforementioned message. 
+fdrToDisplay <- 0.2
+
+# Choose to output a GRanges or data.frame.
 # Default is TRUE
 outputGRanges <- TRUE
 
@@ -211,7 +214,7 @@ regions <- head(differentials, 10)
 # )
 
 links <- MOCHA::getCoAccessibleLinks(
-  SampleTileObj = SampleTileMatricesAnnotated,
+  SampleTileObj = SampleTileMatrices,
   cellPopulation = cellPopulation,
   regions = regions,
   windowSize = 1 * 10^6,
