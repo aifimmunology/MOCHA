@@ -51,12 +51,12 @@ annotateTiles <- function(SampleTileObj,
   # Same TxDb, same gene names in same order.
   names(exonList) <- names(txList)
   . <- NULL
-  txs <- utils::stack(txList) %>%
+  txs <- IRanges::stack(txList) %>%
     GenomicRanges::trim() %>%
     S4Vectors::unique(.)
-  exonSet <- utils::stack(exonList)
+  exonSet <- IRanges::stack(exonList)
 
-  promoterSet <- utils::stack(txList) %>%
+  promoterSet <- IRanges::stack(txList) %>%
     GenomicRanges::trim(.) %>%
     S4Vectors::unique(.) %>%
     suppressWarnings(GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]))

@@ -125,7 +125,7 @@ extractRegion <- function(SampleTileObj,
           tmpGR
         })
 
-        mergedCounts <- stack(methods::as(filterCounts, "GRangesList")) %>%
+        mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList")) %>%
           plyranges::join_overlap_intersect(regionGRanges) %>%
           plyranges::compute_coverage(weight = .$score / sampleCount) %>%
           plyranges::join_overlap_intersect(regionGRanges)
