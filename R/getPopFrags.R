@@ -27,7 +27,6 @@
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
 #'   
-#' @importFrom utils stack
 #'
 #' @export
 
@@ -268,7 +267,7 @@ getPopFrags <- function(ArchRProj,
 
       tmp
     } else {
-      stack(methods::as(tmp, "GRangesList"))
+      stack(as(tmp, "GRangesList"))
     }
   })
 
