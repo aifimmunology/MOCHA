@@ -14,7 +14,7 @@
 #'  differential testing to increase statistical power in small sample cohorts.
 #'  Default is 12.
 #' @param minZeroDiff Minimum difference in average dropout rates across groups
-#'  require to keep tiles for differential testing. Default is 0.5 (50%).
+#'  require to keep tiles for differential testing. Default is 0.5 (50\%).
 #' @param fdrToDisplay False-discovery rate used only for standard
 #'  output messaging. Default is 0.2.
 #' @param outputGRanges Outputs a GRanges if TRUE and a data.frame if
@@ -25,6 +25,27 @@
 #' @return full_results The differential accessibility results as a GRanges or
 #'   matrix data.frame depending on the flag `outputGRanges`.
 #'
+#' @examples
+#' \dontrun{
+#' regions <- head(differentials, 10)
+#'
+#' # Alternatively, define regions as a character vector
+#' # of region strings in the format "chr:start-end"
+#' regions <- c(
+#'   "chrY:7326500-7326999",
+#'   "chrY:7327000-7327499",
+#'   "chrY:7339500-7339999",
+#'   "chrY:7344500-7344999"
+#' )
+#' links <- MOCHA::getCoAccessibleLinks(
+#'   SampleTileObj = SampleTileMatricesAnnotated,
+#'   cellPopulation = cellPopulation,
+#'   regions = regions,
+#'   windowSize = 1 * 10^6,
+#'   numCores = numCores,
+#'   verbose = TRUE
+#' )
+#' }
 #' @export
 
 getDifferentialAccessibleTiles <- function(SampleTileObj,
@@ -37,7 +58,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
                                            numCores = 2) {
-  if (!any(names(assays(SampleTileObj)) %in% cellPopulation)) {
+  if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
   }
 
@@ -48,13 +69,13 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
 
   if (!(groupColumn %in% colnames(metaFile))) {
-    stop(str_interp("Provided groupCol '{groupColumn}' not found in the provided SampleTileObj"))
+    stop(stringr::str_interp("Provided groupCol '{groupColumn}' not found in the provided SampleTileObj"))
   }
   if (!(foreground %in% metaFile[[groupColumn]])) {
-    stop(str_interp("Provided foreground value is not present in the column {groupColumn} in the provided SampleTileObj"))
+    stop(stringr::str_interp("Provided foreground value is not present in the column {groupColumn} in the provided SampleTileObj"))
   }
   if (!(background %in% metaFile[[groupColumn]])) {
-    stop(str_interp("Provided background value is not present in the column {groupColumn} in the provided SampleTileObj"))
+    stop(stringr::str_interp("Provided background value is not present in the column {groupColumn} in the provided SampleTileObj"))
   }
 
 
@@ -63,7 +84,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   background_samples <- metaFile[metaFile[, groupColumn] == background, "Sample"]
 
   # This will only include called tiles
-  sampleTileMatrix <- scMACS::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = FALSE )
+  sampleTileMatrix <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = FALSE )
   
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
@@ -168,9 +189,9 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     discoveries, " differential regions found at FDR ",
     fdrToDisplay
   )
-  
-  if (outputGRanges){
-    full_results <- scMACS::differentialsToGRanges(full_results)
+
+  if (outputGRanges) {
+    full_results <- MOCHA::differentialsToGRanges(full_results)
   }
 
   full_results

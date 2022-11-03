@@ -12,23 +12,19 @@ filterCoAccessibleLinks(TileCorr, threshold = 0.5)
 \item{threshold}{Keep}
 }
 \value{
-FilteredTileCorr The filtered correlation table with chr, 
+FilteredTileCorr The filtered correlation table with chr,
   start, and end site of each link
 }
 \description{
-\code{filterCoAccessibleLinks} will filter the output from 
+\code{filterCoAccessibleLinks} will filter the output from
   getCoAccessibleLinks by a threshold, retaining links with a
   absolute correlation greater than the threshold.
   This function also adds the chr, start, and end site of each link to
   the output table.
 }
-\details{
-The technical details of the zero-inflated correlation can be
-         found here:
+\examples{
+\dontrun{
+MOCHA::filterCoAccessibleLinks(links, threshold = 0.5)
+}
 
-              Pimentel, Ronald Silva, "Kendall's Tau and Spearman's Rho
-              for Zero-Inflated Data" (2009). Dissertations.
-
-         while the implementation (scHOT R package), can be found here:
-              http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
 }

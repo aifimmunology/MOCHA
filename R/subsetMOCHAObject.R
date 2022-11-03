@@ -1,18 +1,22 @@
 #' @title \code{subsetObject}
 #'
-#' @description \code{subsetObject) subsets a tileResults-type object (from callOpenTiles),
-#' 										or a SummarizedExperiment-type object (from getSampleTileMatrix),
-#' 										  either by cell type or sample metadata.
-#' @param Object A MultiAssayExperiment or RangedSummarizedExperiment,
-#' @param subsetBy the variable to subset by. Can either be 'celltype', or a column from the sample metadata (see colData(Object) )
-#' @param groupList the list of cell type names or sample-associated data that should be used to subset the Object
-#' @param na.rm removes groups that are NA if set to true. If set to false, then you filter for everything in the groupList and also NA values.
+#' @description \code{subsetObject} subsets a tileResults-type object (from
+#'   callOpenTiles), or a SummarizedExperiment-type object (from
+#'   getSampleTileMatrix), either by cell type or sample metadata.
 #'
-#' @return Object the input Object, filtered down to either the cell type or samples desired.
+#' @param Object A MultiAssayExperiment or RangedSummarizedExperiment,
+#' @param subsetBy the variable to subset by. Can either be 'celltype', or a
+#'   column from the sample metadata (see colData(Object))
+#' @param groupList the list of cell type names or sample-associated data that
+#'   should be used to subset the Object
+#' @param na.rm removes groups that are NA if set to true. If set to false, then
+#'   you filter for everything in the groupList and also NA values.
+#'
+#' @return Object the input Object, filtered down to either the cell type or
+#'   samples desired.
 #'
 #'
 #' @export
-
 
 subsetMOCHAObject <- function(Object,
                               subsetBy,
@@ -49,7 +53,7 @@ subsetMOCHAObject <- function(Object,
         stop("Error: groupList includes celltypes not found within Object.")
       }
 
-      keep <- which(names(assays(Object)) %in% groupList)
+      keep <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
 
       SummarizedExperiment::assays(object) <- SummarizedExperiment::assays(object)[keep]
 

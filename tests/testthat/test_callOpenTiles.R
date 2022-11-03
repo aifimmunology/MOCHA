@@ -1,22 +1,61 @@
-test_that("We can call peaks by sample", {
-  
-  # Check for existence of ArchR test data first:
-  capture.output(ArchR::addArchRThreads(threads = 10), type = "message")
-  withr::local_options(timeout = 600) # 10 minute timeout for download
-  capture.output(ArchR::addArchRVerbose(verbose = FALSE), type = "message")
-  
-  # This only downloads the test project the first time
-  # subsequent runs load the object itself
-  capture.output(testProj <- ArchR::getTestProject(), type = "message")
+# This test should only be used for local testing
+# with TxDb.Hsapiens.UCSC.hg38.refGene and org.Hs.eg.db installed/
+if (
+  requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
+  requireNamespace("org.Hs.eg.db", quietly = TRUE)
+) {
+  if (requireNamespace("ArchR", quietly = TRUE) & dir.exists("PBMCSmall")) {
+    test_that("We can call peaks by sample from an ArchR project", {
+      capture.output(
+        testProj <- ArchR::loadArchRProject("PBMCSmall"),
+        type = "message"
+      )
 
-  capture.output(expect_snapshot_value(
-    scMACS::callOpenTiles(
-      testProj,
-      cellPopLabel = "Clusters",
-      cellPopulations = c("C1", "C2"),
-      numCores = 10
-    ),
-    style = "json2"
-  ), type = "message")
-  
-})
+      TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
+      Org <- org.Hs.eg.db
+      capture.output(
+        tiles <- MOCHA::callOpenTiles(
+          ATACFragments = testProj,
+          TxDb = TxDb,
+          Org = Org,
+          cellPopLabel = "Clusters",
+          cellPopulations = c("C1", "C2"),
+          numCores = 1
+        ),
+        type = "message"
+      )
+
+      expect_snapshot(
+        tiles,
+        variant = "ArchR"
+      )
+    })
+  }
+
+  test_that("We can call peaks independent of ArchR", {
+
+    TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
+    Org <- org.Hs.eg.db
+    capture.output(
+      tiles <- MOCHA::callOpenTiles(
+        MOCHA:::ATACFragments,
+        MOCHA:::cellColData,
+        MOCHA:::blackList,
+        MOCHA:::genome,
+        TxDb = TxDb,
+        Org = Org,
+        outDir = "./test_out",
+        cellPopLabel = "Clusters",
+        cellPopulations = c("C1", "C2"),
+        numCores = 1
+      ),
+      type = "message"
+    )
+    unlink("./test_out", recursive = TRUE)
+
+    expect_snapshot(
+      tiles,
+      variant = "list"
+    )
+  })
+}

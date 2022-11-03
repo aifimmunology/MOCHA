@@ -1,24 +1,89 @@
-Package: scMACS
+Package: MOCHA
 Type: Package
-Title: single-cell Modeling of Accessible Chromatin Sites
+Title: Modeling for Single-Cell Open Chromatin Analysis
 Version: 0.1.0
-Author: Samir Rachid Zaim [aut, cre],
-        Mark-Phillip Pebworth [aut, ctb],
-        Xiaojun Li [aut, ctb]    
-Maintainer: Samir Rachid Zaim <samir.rachidzaim@alleninstitute.org>
-Description: scMACS is a novel peak-calling algorithm that captures and leverage single-cell 
-             information to model and identify accesible chromatin in single-cell 
-             ATAC-Sequencing data.
-License: LICENSE
+Authors@R: 
+    c(person(given = "Samir",
+           family = "Rachid Zaim",
+           role = c("aut", "ctb"),
+           email = "samir.rachidzaim@alleninstitute.org"),
+    person(given = "Mark-Phillip",
+           family = "Pebworth",
+           role = c("aut", "ctb"),
+           email = "markphillip.pebworth@alleninstitute.org"),
+    person(given = "Imran",
+           family = "McGrath",
+           role = c("aut", "cre"),
+           email = "imran.mcgrath@alleninstitute.org"),
+    person(given = "Lauren",
+           family = "Okada",
+           role = c("aut", "ctb"),
+           email = "lauren.okada@alleninstitute.org"),
+    person(given = "Xiaojun",
+           family = "Li",
+           role = c("aut", "ctb"),
+           email = "xiaojun.li@alleninstitute.org")
+    )
+Maintainer: 
+        Imran McGrath <imran.mcgrath@alleninstitute.org>
+Description: A statistical framework and analysis tool for open chromatin analysis designed 
+              specifically for single cell ATAC-seq data, after cell type/cluster identification.
+              These novel modules remove unwanted technical variation, identify 
+              open chromatin, robustly models repeated measures in single cell data, 
+              implement advanced statistical frameworks to model zero-inflation 
+              for differential and co-accessibility analyses, and integrate with 
+              existing databases and modules for downstream analyses to reveal 
+              biological insights. MOCHA provides a statistical foundation for 
+              complex downstream analysis to help advance the potential of 
+              single cell ATAC-seq for applied studies.
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
-Imports: data.table, ArchR, plyranges, dplyr, GenomicRanges, RaggedExperiment, MultiAssayExperiment, stringr, ggbio, wCorr, TxDb.Hsapiens.UCSC.hg38.refGene, SummarizedExperiment
+Depends: R (>= 3.5.0)
+Imports:
+    data.table,
+    plyranges,
+    dplyr,
+    GenomicRanges,
+    RaggedExperiment,
+    MultiAssayExperiment,
+    SummarizedExperiment,
+    stringr,
+    ggbio,
+    wCorr,
+    magrittr,
+    rlang,
+    AnnotationDbi,
+    BiocGenerics,
+    GenomeInfoDb,
+    GenomicFeatures,
+    IRanges,
+    OrganismDbi,
+    S4Vectors,
+    assertthat,
+    biovizBase,
+    ensembldb,
+    ggplot2,
+    ggrepel,
+    matrixStats,
+    methods,
+    qvalue,
+    scales,
+    tidyr,
+    ggridges
 Suggests: 
+    ArchR,
     RMariaDB,
+    motifmatchr,
+    BiocManager,
+    TxDb.Hsapiens.UCSC.hg38.refGene,
+    org.Hs.eg.db,
+    withr,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
+Additional_repositories: https://imran-aifi.github.io/drat
 biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization
 VignetteBuilder: knitr
 Config/testthat/edition: 3

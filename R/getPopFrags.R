@@ -21,11 +21,13 @@
 #'   fragments with more than a certain overlap will be thrown out.
 #' @param overlapList The minimum overlap necessary for a fragment marked as
 #'   overlapping with the blacklist region and thus thrown out.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
-#' 
+#'   
+#'
 #' @export
 
 getPopFrags <- function(ArchRProj,
@@ -36,14 +38,14 @@ getPopFrags <- function(ArchRProj,
                         sampleSpecific = TRUE,
                         NormMethod = "nfrags",
                         blackList = NULL,
-						verbose = TRUE,
+                        verbose = TRUE,
                         overlapList = 50) {
-  
-  #Turn off ArchR logging messages
+  nFrags <- NULL
+  # Turn off ArchR logging messages
   ArchR::addArchRVerbose(verbose = FALSE)
 
   # Extract metadata
-  metadf <- getCellColData(ArchRProj)
+  metadf <- ArchR::getCellColData(ArchRProj)
 
   if (!any(colnames(metadf) %in% metaColumn)) {
     stop(paste(
@@ -60,16 +62,16 @@ getPopFrags <- function(ArchRProj,
     cellPopulations <- names(cellCounts)
   } else {
 
-  # Take our cell populations from given cellSubsets
-  cellPopulations <- unique(cellSubsets[!is.na(cellSubsets)][order(cellSubsets)])
+    # Take our cell populations from given cellSubsets
+    cellPopulations <- unique(cellSubsets[!is.na(cellSubsets)][order(cellSubsets)])
 
-  # Filter cellCounts to selected cell subsets (populations)
-  cellCounts <- cellCounts[cellPopulations]
-  if (any(is.na(cellCounts))) {
-     stop(paste(
+    # Filter cellCounts to selected cell subsets (populations)
+    cellCounts <- cellCounts[cellPopulations]
+    if (any(is.na(cellCounts))) {
+      stop(paste(
         "Some cell populations have NA cell counts.",
         "Please verify that all given cellSubsets exist for the given metaColumn.",
-        str_interp("cellSubsets with NA cell counts: ${cellPopulations[is.na(names(cellCounts))]}")
+        stringr::str_interp("cellSubsets with NA cell counts: ${cellPopulations[is.na(names(cellCounts))]}")
       ))
     }
   }
@@ -78,7 +80,7 @@ getPopFrags <- function(ArchRProj,
     stop("No cells were found for the given cellSubsets and/or metaColumn.")
   }
 
-  cellNames = rownames(metadf)[metadf[,metaColumn] %in% cellPopulations]
+  cellNames <- rownames(metadf)[metadf[, metaColumn] %in% cellPopulations]
 
   #### Up to here, the above is only specific to sampleSpecific=False
   allArrows <- ArchR::getArrowFiles(ArchRProj)
@@ -102,9 +104,9 @@ getPopFrags <- function(ArchRProj,
     # Extract fragments from all available regions
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
 
-	  if(verbose){
-		message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
-	  }
+      if(verbose){
+        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
+      }
 	  
       ArchR::getFragmentsFromArrow(
         ArrowFile = arrows[x],
@@ -116,8 +118,8 @@ getPopFrags <- function(ArchRProj,
 
     # Extract fragments from a given region only
     # Validate region and interpret as string or GRanges
-    if (scMACS:::validRegionString(region) & tolower(NormMethod) == "raw") {
-      regionGRanges <- scMACS:::StringsToGRanges(region)
+    if (validRegionString(region) & tolower(NormMethod) == "raw") {
+      regionGRanges <- StringsToGRanges(region)
     } else if (class(region)[1] == "GRanges" & tolower(NormMethod) == "raw") {
       regionGRanges <- region
     } else if (tolower(NormMethod) != "raw") {
@@ -136,12 +138,12 @@ getPopFrags <- function(ArchRProj,
 
     chrom <- regionGRanges %>%
       as.data.frame() %>%
-      dplyr::select(seqnames)
+      dplyr::select(.data$seqnames)
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
 	
 		if(verbose){
 			message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
-				fragsGRanges <- getFragmentsFromArrow(
+				fragsGRanges <- ArchR::getFragmentsFromArrow(
 				ArrowFile = arrows[x],
 				cellNames = cellNames,
 				chr = as.character(chrom[, 1]),
@@ -160,7 +162,7 @@ getPopFrags <- function(ArchRProj,
     }, mc.cores = numCores)
   }
 
-  # From scMACS - sorts cell barcodes by population
+  # From MOCHA - sorts cell barcodes by population
   barcodesByCellPop <- lapply(cellPopulations, function(x) {
     row.names(metadf)[which(metadf[, metaColumn] == x)]
   })
@@ -195,7 +197,7 @@ getPopFrags <- function(ArchRProj,
     stop("Error: Incorrect NormMethod given.")
   }
 
-  # From scMACS - Function to sort fragments by populations based on cell barcode lists
+  # From MOCHA - Function to sort fragments by populations based on cell barcode lists
   subset_Frag <- function(cellNames, fragsGRanges) {
     fragsTable <- as.data.table(fragsGRanges)
     idx <- which(fragsTable$RG %in% cellNames)
@@ -211,6 +213,7 @@ getPopFrags <- function(ArchRProj,
   # Sort fragments into a list by cell population
 
   popFrags <- lapply(seq_along(barcodesByCellPop), function(x) {
+
     message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
     if (sum(fragsListIndex[[x]]) > 1) {
       tmp <- parallel::mclapply(which(fragsListIndex[[x]]), function(y) {
@@ -264,7 +267,7 @@ getPopFrags <- function(ArchRProj,
 
       tmp
     } else {
-      stack(as(tmp, "GRangesList"))
+      IRanges::stack(methods::as(tmp, "GRangesList"))
     }
   })
 
@@ -273,10 +276,9 @@ getPopFrags <- function(ArchRProj,
   } else {
     names(popFrags) <- names(barcodesByCellPop)
   }
-   
-  #Turn off ArchR logging messages
+
+  # Turn off ArchR logging messages
   ArchR::addArchRVerbose(verbose = TRUE)
 
   return(popFrags)
-
 }

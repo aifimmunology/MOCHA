@@ -23,6 +23,9 @@ plotConsensus <- function(tileObject,
                           returnPlotList = FALSE,
                           returnDFs = FALSE,
                           numCores = 1) {
+  
+  Reproducibility <- PeakNumber <- groups <- GroupName <- NULL
+  
   if (length(cellPopulations) == 1 & all(tolower(cellPopulations) == "all")) {
     subTileResults <- tileObject
     cellPopulations <- names(tileObject)
@@ -55,21 +58,21 @@ plotConsensus <- function(tileObject,
   if (returnPlotList) {
     if (!is.null(groupColumn)) {
       allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
-        ggplot(alldf[[x]], aes(x = Reproducibility, y = PeakNumber, group = GroupName, color = GroupName)) +
-          geom_point() +
-          ggtitle(names(alldf)[x]) +
-          scale_y_continuous(trans = "log2") +
-          ylab("Peak Number") +
-          theme_bw()
+        ggplot2::ggplot(alldf[[x]], ggplot2::aes(x = Reproducibility, y = PeakNumber, group = GroupName, color = GroupName)) +
+          ggplot2::geom_point() +
+          ggplot2::ggtitle(names(alldf)[x]) +
+          ggplot2::scale_y_continuous(trans = "log2") +
+          ggplot2::ylab("Peak Number") +
+          ggplot2::theme_bw()
       }, mc.cores = numCores)
     } else {
       allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
-        ggplot(alldf[[x]], aes(x = Reproducibility, y = PeakNumber)) +
-          geom_point() +
-          ggtitle(names(alldf)[x]) +
-          scale_y_continuous(trans = "log2") +
-          ylab("Peak Number") +
-          theme_bw()
+        ggplot2::ggplot(alldf[[x]], ggplot2::aes(x = Reproducibility, y = PeakNumber)) +
+          ggplot2::geom_point() +
+          ggplot2::ggtitle(names(alldf)[x]) +
+          ggplot2::scale_y_continuous(trans = "log2") +
+          ggplot2::ylab("Peak Number") +
+          ggplot2::theme_bw()
       }, mc.cores = numCores)
     }
 
@@ -84,14 +87,13 @@ plotConsensus <- function(tileObject,
       combinedDF$groups <- combinedDF$CellPop
     }
 
-    p1 <- ggplot(combinedDF, aes(x = Reproducibility, y = PeakNumber, group = groups, color = groups)) +
-      geom_line() +
-      scale_y_continuous(trans = "log10") +
-      ylab("Peak Number") +
-      theme_bw()
+    p1 <- ggplot2::ggplot(combinedDF, ggplot2::aes(x = Reproducibility, y = PeakNumber, group = groups, color = groups)) +
+      ggplot2::geom_line() +
+      ggplot2::scale_y_continuous(trans = "log10") +
+      ggplot2::ylab("Peak Number") +
+      ggplot2::theme_bw()
 
-    return
-    (p1)
+    return(p1)
   }
 }
 

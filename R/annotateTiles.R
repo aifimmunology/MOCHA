@@ -2,21 +2,30 @@
 #'
 #' @description \code{annotateTiles} annotates a set of sample-tile matrices
 #'   given with gene annotations. Details on TxDb and Org annotation packages
-#'   and available annotations can be found at Bioconductor: 
+#'   and available annotations can be found at Bioconductor:
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
 #' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix, 
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
-#' @param TxDb The annotation package for TxDb object for your genome. 
+#' @param TxDb The annotation package for TxDb object for your genome.
 #'   Optional, only required if Obj is a GRanges.
-#' @param Org The genome-wide annotation for your organism. 
+#' @param Org The genome-wide annotation for your organism.
 #'   Optional, only required if Obj is a GRanges.
-#' @param promoterRegion Optional list containing the window size in basepairs 
-#' defining the promoter region. The format is (upstream, downstream). 
+#' @param promoterRegion Optional list containing the window size in basepairs
+#' defining the promoter region. The format is (upstream, downstream).
 #' Default is (2000, 100).
 #'
 #' @return Obj, the input data structure with added gene annotations (whether GRanges or SampleTileObj)
-#'
+#' 
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data 
+#' 
+#' @examples
+#' \dontrun{
+#' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
+#'   SampleTileMatrices
+#' )
+#' }
 #'
 #' @export
 annotateTiles <- function(Obj,
@@ -38,30 +47,30 @@ annotateTiles <- function(Obj,
 
   txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ("gene")))
   names(txList) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(txList), "SYMBOL", "ENTREZID"))
-  
-  txs <- stack(txList) %>%
+
+  txs <- IRanges::stack(txList) %>%
     GenomicRanges::trim() %>%
     S4Vectors::unique(.)
 
-  promoterSet <- stack(txList) %>%
+  promoterSet <- IRanges::stack(txList) %>%
     GenomicRanges::trim(.) %>%
     S4Vectors::unique(.) %>%
    GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])
 
 
   getOverlapNameList <- function(rowTiles, annotGR) {
-    overlapGroup <- findOverlaps(rowTiles, annotGR) %>% as.data.frame()
+    overlapGroup <- IRanges::findOverlaps(rowTiles, annotGR) %>% as.data.frame()
     overlapGroup$Genes <- as.character(annotGR$name[overlapGroup$subjectHits])
     last <- overlapGroup %>%
-      dplyr::group_by(queryHits) %>%
-      dplyr::summarize(Genes = paste(unique(Genes), collapse = ", "))
+      dplyr::group_by(.data$queryHits) %>%
+      dplyr::summarize(Genes = paste(unique(.data$Genes), collapse = ", "))
     return(last)
   }
 
   txs_overlaps <- getOverlapNameList(tileGRanges, txs)
   promo_overlaps <- getOverlapNameList(tileGRanges, promoterSet)
 
- tileType <- as.data.frame(mcols(tileGRanges)) %>%
+  tileType <- as.data.frame(GenomicRanges::mcols(tileGRanges)) %>%
     dplyr::mutate(Index = 1:nrow(.)) %>%
     dplyr::mutate(Type = dplyr::case_when(
       Index %in% promo_overlaps$queryHits ~ "Promoter",
@@ -74,7 +83,6 @@ annotateTiles <- function(Obj,
     dplyr::rename("Txs" = Genes) %>%
     dplyr::mutate(Genes = ifelse(Type == "Promoter", Promo, NA)) %>%
     dplyr::mutate(Genes = ifelse(Type == "Intragenic", Txs, Genes))
-
 
   tileGRanges$tileType <- tileType$Type
   tileGRanges$Gene <- tileType$Genes

@@ -12,7 +12,7 @@ singlePopulationSampleTileMatrix(
 )
 }
 \arguments{
-\item{peaksExperiment}{peakset raggedExperiment, one celltype from the output of callOpenTiles}
+\item{peaksExperiment}{peakset RaggedExperiment, one celltype from the output of callOpenTiles}
 
 \item{consensusTiles}{a vector containing the tileIDs to subset the
 sample-tile matrix}

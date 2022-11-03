@@ -40,38 +40,62 @@ plotRegion(
 )
 }
 \arguments{
-\item{plotType}{Options include 'overlaid','area', or 'RidgePlot'. default is 'area', which will plot a seperate track for each group with the area filled in under the curve.
-Setting plotType to 'overlaid' will overlay count plot histograms across samples, instead of faceting out separately.
-Setting plotType to 'RidgePlot' will generate a ridgeplot across all groups.}
+\item{countSE}{A SummarizedExperiment from MOCHA::getCoverage}
+
+\item{plotType}{Options include 'overlaid','area', or 'RidgePlot'. default is
+'area', which will plot a separate track for each group with the area
+filled in under the curve. Setting plotType to 'overlaid' will overlay
+count plot histograms across samples, instead of faceting out separately.
+Setting plotType to 'RidgePlot' will generate a ridgeplot across all
+groups.}
 
 \item{base_size}{Numeric, default 12. Global plot base text size parameter}
 
-\item{counts_color}{Optional color palette. A named vector of color values where names are unique values in the `color_var` column}
+\item{counts_color}{Optional color palette. A named vector of color values
+where names are unique values in the `color_var` column}
 
-\item{range_label_size}{Numeric value, default 4. Text size for the y-axis range label}
+\item{range_label_size}{Numeric value, default 4. Text size for the y-axis
+range label}
 
-\item{legend.position}{Any acceptable `legend.position` argument to theme(). Default NULL will place legend for overlaid plots at (0.8,0.8),
-or to the "right" for faceted plots.}
+\item{legend.position}{Any acceptable `legend.position` argument to theme().
+Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
+"right" for faceted plots.}
 
-\item{facet_label_side}{Direction character value, default "top". Can also be "right", "left", or "bottom". Position of facet label.}
+\item{facet_label_side}{Direction character value, default "top". Can also be
+"right", "left", or "bottom". Position of facet label.}
 
-\item{counts_color_var}{Character value, default "Groups". Column name from countdf to use to color counts plots.
-Only used if counts_group_colors provided}
+\item{counts_color_var}{Character value, default "Groups". Column name from
+countdf to use to color counts plots. Only used if counts_group_colors
+provided}
 
-\item{counts_group_colors}{Optional named color vector. Values as colors, names are levels of `counts_color_var`. If provided, will color the plots specifically
-using `scale_color_manual()`}
+\item{counts_group_colors}{Optional named color vector. Values as colors,
+names are levels of `counts_color_var`. If provided, will color the plots
+specifically using `scale_color_manual()`}
 
-\item{counts_theme_ls}{A list of named theme arguments passed to theme(). For example, `list(axis.ticks = element_blank())`. Default NULL will use `.counts_plot_default_theme`.}
+\item{counts_theme_ls}{A list of named theme arguments passed to theme(). For
+example, `list(axis.ticks = element_blank())`. Default NULL will use
+`.counts_plot_default_theme`.}
 
-\item{motifSetName}{The name of the motif set in ArchRProj to use for annotation. Example: 'JasparMotifs'}
+\item{motifSetName}{The name of the motif set in ArchRProj to use for
+annotation. Example: 'JasparMotifs'}
 
-\item{motif_y_space_factor}{A factor for vertical spacing between motif labels. Default 4. Increase to make labels farther apart, decrease to make labels closer.}
+\item{motif_y_space_factor}{A factor for vertical spacing between motif
+labels. Default 4. Increase to make labels farther apart, decrease to make
+labels closer.}
 
-\item{motif_stagger_labels_y}{= FALSE Logical value, default FALSE. If TRUE, will  stagger motif labels in adjacent columns in the vertical direction}
+\item{motif_stagger_labels_y}{= FALSE Logical value, default FALSE. If TRUE,
+will  stagger motif labels in adjacent columns in the vertical direction}
 
-\item{motif_weights}{Optional numeric vector, default NULL. If provided will be used to color motif labels by the weighted values}
+\item{motif_weights}{Optional numeric vector, default NULL. If provided will
+be used to color motif labels by the weighted values}
 
-\item{motif_weight_name}{Character value, default "Motif Weight". Used to label the legend for motif colors}
+\item{motif_weight_name}{Character value, default "Motif Weight". Used to
+label the legend for motif colors}
+
+\item{motif_weight_colors}{Named numeric vector. Names should be color values
+and breaks should be the corresponding values of motif_weights. Values
+outside the highest and lowest value will appear as max or min defined
+color value.}
 
 \item{motif_lab_size}{Numeric value, default 1. Size of motif labels.}
 
@@ -81,43 +105,53 @@ using `scale_color_manual()`}
 
 \item{motif_line_size}{Numeric value, default 1. Size of motif lines.}
 
-\item{showGene}{Logical value, default TRUE. Whether or not the gene track should be plotted.}
+\item{showGene}{Logical value, default TRUE. Whether or not the gene track
+should be plotted.}
 
-\item{db_id_col}{Character value. Column in `orgdb` containing the output id for `whichGene` plotting. Default "REFSEQ".}
+\item{whichGene}{Name of gene for plotting this specific gene in region.}
 
-\item{collapseGenes}{Options include 'collapseAll', 'longestTx', or 'None' Default 'None' will plot the expanded view of the reference genes,
-'collapseAll' if you want collapse the gene tracks into one, and 'longestTx' will only plot the longest transcript of each gene.}
+\item{db_id_col}{Character value. Column in `orgdb` containing the output id
+for `whichGene` plotting. Default "REFSEQ".}
 
-\item{gene_theme_ls}{Named list of parameters passed to `theme()` for the gene plot. Default NULL will use `.gene_plot_theme`}
+\item{collapseGenes}{Options include 'collapseAll', 'longestTx', or 'None'
+Default 'None' will plot the expanded view of the reference genes,
+'collapseAll' if you want collapse the gene tracks into one, and
+'longestTx' will only plot the longest transcript of each gene.}
 
-\item{additionalGRangesTrack}{A GRanges object containing additional track plot data}
+\item{gene_theme_ls}{Named list of parameters passed to `theme()` for the
+gene plot. Default NULL will use `.gene_plot_theme`}
 
-\item{showIdeogram}{Logical value, default TRUE. If TRUE plots the chromosome ideogram at the top of the multi-track plot}
+\item{additionalGRangesTrack}{A GRanges object containing additional track
+plot data}
 
-\item{ideogram_genome}{Character value, a genome name for the ideogram plot. Default 'hg19'.}
+\item{linkdf}{A dataframe with co-accessible links to display as an additional
+track}
 
-\item{relativeHeights}{Named numeric vector of relative heights for each of the 4 track plots to enable clean visualization when there are many tracks.
-Unused tracks will be ignored. Default value = c(`Chr` = 0.9, `Normalized Counts` = 7, `Genes`= 2, `AdditionalGRanges` = 4.5)}
+\item{showIdeogram}{Logical value, default TRUE. If TRUE plots the chromosome
+ideogram at the top of the multi-track plot}
 
-\item{verbose}{Logical value, default FALSE. If TRUE will show all messages generated by internal function calls. If FALSE, will attempt to use suppressMessages()
-to minimize message output.}
+\item{ideogram_genome}{Character value, a genome name for the ideogram plot.
+Default 'hg19'.}
 
-\item{countdf}{A dataframe that comes from `getbpCounts()` or `getbpInserts()`}
+\item{relativeHeights}{Named numeric vector of relative heights for each of
+the 4 track plots to enable clean visualization when there are many tracks.
+Unused tracks will be ignored. Default value = c(`Chr` = 0.9, `Normalized
+Counts` = 7, `Genes`= 2, `AdditionalGRanges` = 4.5)}
 
-\item{ArchRProj}{An archR project containing motif annotations. Only needed if supplying `motifSetName` arg for motif label overlay.}
-
-\item{weight_colors}{Named numeric vector. Names should be color values and breaks should be the corresponding values of motif_weights. Values outside the
-highest and lowest value will appear as max or min defined color value.}
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
 The input ggplot object with motif labels overlaid
 }
 \description{
-\code{plotRegion} Plots the region that you've summarized across all cell groupings (groups=initial getPopFrags() split) with optional motif overlay, chromosome position
-ideogram, and additional GRanges tracks. If plotting motif overlay, ensure that motif annotations have been added
-to your counts SummarizedExperment.
-A basic plot can be rendered with just a counts SummarizedExperiment, but additional formatting arguments allow for further customization.
-Note that to show specific genes with the option 'whichGene' the \pkg{RMariaDB} package must be installed.
+\code{plotRegion} Plots the region that you've summarized across
+  all cell groupings (groups=initial getPopFrags() split) with optional motif
+  overlay, chromosome position ideogram, and additional GRanges tracks. If
+  plotting motif overlay, ensure that motif annotations have been added to
+  your counts SummarizedExperiment. A basic plot can be rendered with just a
+  counts SummarizedExperiment, but additional formatting arguments allow for
+  further customization. Note that to show specific genes with the option
+  'whichGene' the \pkg{RMariaDB} package must be installed.
 }
 \examples{
 \dontrun{
@@ -126,8 +160,11 @@ Note that to show specific genes with the option 'whichGene' the \pkg{RMariaDB} 
 # Simple counts + ideogram + all genes:
 plotRegion(countSE = my_count_SE)
 
-# Motif overlay for a project (my_proj) containing "JasparMotifs" annotations:
-plotRegion(countSE = my_count_SE, motifSetName = "JasparMotifs", motif_lab_alpha = 1, motif_line_alpha = 1)
+# Motif overlay for a project my_proj containing "JasparMotifs" annotations:
+plotRegion(
+  countSE = my_count_SE, motifSetName = "JasparMotifs",
+  motif_lab_alpha = 1, motif_line_alpha = 1
+)
 
 # Motif overlay w/ weights:
 plotRegion(

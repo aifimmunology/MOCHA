@@ -1,27 +1,42 @@
 #' @title \code{getSampleTileMatrix}
 #'
 #' @description \code{getSampleTileMatrix} takes the output of peak calling with
-#'   callOpenTiles and creates sample-tile matrices containing the signal intensity
-#'   at each tile.
+#'   callOpenTiles and creates sample-tile matrices containing the signal
+#'   intensity at each tile.
 #'
+#' @param tileResults a MultiAssayExperiment returned by callOpenTiles
+#'   containing containing peak calling results.
+#' @param cellPopulations vector of strings. Cell subsets in TileResults for
+#'   which to generate sample-tile matrices. This list of group names must be
+#'   identical to names that appear in the ArchRProject metadata.  If
+#'   cellPopulations='ALL', then peak calling is done on all cell populations in
+#'   the ArchR project metadata. Default is 'ALL'.
+#' @param groupColumn Optional, the column containing sample group labels for
+#'   determining consensus tiles within sample groups. Default is NULL, all
+#'   samples will be used for determining consensus tiles.
+#' @param threshold Threshold for consensus tiles, the minimum \% of samples
+#'   (within a sample group) that a peak must be called in to be retained.
+#' @param log2Intensity Boolean, set to TRUE to return the log2 of the
+#'   sample-tile intensity matrix. Optional, default is FALSE.
+#' @param numCores Optional, the number of cores to use with multiprocessing.
+#'   Default is 1.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @param tileResults a MultiAssayExperiment returned by callOpenTiles containing
-#'   containing peak calling results.
-#' @param cellPopulations vector of strings. Cell subsets in TileResults for which to generate sample-tile matrices. This list of group names must be identical to names that appear in
-#'   the ArchRProject metadata.  If cellPopulations='ALL', then peak
-#'   calling is done on all cell populations in the ArchR project metadata.
-#'   Default is 'ALL'.
-#' @param groupColumn Optional, the column containing sample group labels for determining consensus tiles within sample groups. Default is NULL, all samples will be used for determining consensus tiles.
-#' @param threshold Threshold for consensus tiles, the minimum % of samples (within a sample group) that a peak must be called in to be retained.
-#' @param log2Intensity Boolean, set to TRUE to return the log2 of the sample-tile intensity matrix. Optional, default is FALSE.
-#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @return SampleTileMatrices a MultiAssayExperiment containing a sample-tile
+#'   intensity matrix for each cell population
 #'
-#' @return SampleTileMatrices a MultiAssayExperiment containing a sample-tile intensity matrix
-#'   for each cell population
-#'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
+#' @examples
+#' \dontrun{
+#' SampleTileMatrices <- MOCHA::getSampleTileMatrix(
+#'   tileResults,
+#'   cellPopulations = cellPopulations,
+#'   groupColumn = groupColumn,
+#'   threshold = threshold,
+#'   join = join,
+#'   NAtoZero = TRUE,
+#'   log2Intensity = TRUE
+#' )
+#' }
 #'
 #' @export
 
@@ -69,7 +84,7 @@ getSampleTileMatrix <- function(tileResults,
   tilesByCellPop <- parallel::mclapply(MultiAssayExperiment::experiments(subTileResults), function(x) {
 
     # Get consensus tiles for this cell population for filtering
-    scMACS:::singlePopulationConsensusTiles(
+    singlePopulationConsensusTiles(
       x,
       sampleData,
       threshold,
@@ -103,7 +118,7 @@ getSampleTileMatrix <- function(tileResults,
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- parallel::mclapply(MultiAssayExperiment::experiments(tileResults), function(x) {
-    scMACS:::singlePopulationSampleTileMatrix(
+    singlePopulationSampleTileMatrix(
       x,
       allTiles,
       NAtoZero = FALSE,
@@ -115,12 +130,13 @@ getSampleTileMatrix <- function(tileResults,
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
   colOrder <- colnames(sampleTileIntensityMatList[[maxMat]])
   sampleData <- sampleData[match(colOrder, rownames(sampleData)),]
-    
+  
+  . <- NULL
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
     do.call("cbind", .) %>%
     as.data.frame()
-  allTilesGR <- scMACS::StringsToGRanges(allTiles)
-  mcols(allTilesGR) <- tilePresence
+  allTilesGR <- MOCHA::StringsToGRanges(allTiles)
+  GenomicRanges::mcols(allTilesGR) <- tilePresence
 
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,

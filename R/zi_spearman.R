@@ -2,7 +2,7 @@
 #' scHOT implemented Pimentel's zero-inflated (ZI) correlation
 #' in their R package, providing implementations
 #' of the ZI spearman and tau rank correlations.
-#' scMACS implements a slight modification of
+#' MOCHA implements a slight modification of
 #' scHOT's zero-inflated correlation measure, by
 #' returning NAs in the cases where the correlation
 #' is undefined, and modifying it to use a C-backed correlation program.
@@ -19,9 +19,9 @@
 #'
 #' @title weightedZISpearman
 #' @param w weight vector, values should be between 0 and 1
-#' @param x x and y are non-negative data vectors
-#' @param y x and y are non-negative data vectors
-#' @param ZI boolean flag. When set to false, this will skip zero-inflation and just calculate the normal spearman
+#' @param x,y x and y are non-negative data vectors
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
 #' @return \code{numeric} weighted rho* association value between x and y
 #'
 #'
@@ -35,10 +35,8 @@
 #'   Zero-Inflated Data" (2009). Dissertations. 721.
 #'   https://scholarworks.wmich.edu/dissertations/721
 #'
-#' @internal
 #' @noRd
-
-weightedZISpearman <- function(x, y, w = 1, ZI = TRUE) {
+weightedZISpearman <- function(x, y, w = 1, verbose = FALSE, ZI = TRUE) {
 
   # needs the original values, not the ranks
 
@@ -72,9 +70,10 @@ weightedZISpearman <- function(x, y, w = 1, ZI = TRUE) {
   if (any(pospos) & p_11 > 0) {
     rho_11 <- wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
   } else {
-    print("Zero inflated Spearman correlation is undefined,
-          returning NA")
     rho <- NA
+    if (verbose) { 
+      message("Zero inflated Spearman correlation is undefined, returning NA")
+    }
     return(rho)
   }
 
@@ -82,9 +81,10 @@ weightedZISpearman <- function(x, y, w = 1, ZI = TRUE) {
     3 * (p_00 * p_11 - p_10 * p_01)
 
   if (is.na(rho_star)) {
-    print("Zero inflated Spearman correlation is undefined,
-          returning NA")
     rho <- NA
+    if (verbose) { 
+      message("Zero inflated Spearman correlation is undefined, returning NA")
+    }
     return(rho)
   }
 

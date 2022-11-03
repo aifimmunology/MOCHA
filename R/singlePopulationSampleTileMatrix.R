@@ -4,7 +4,7 @@
 #'   a set of tile intensities into peak X sample matrix for a custom set of tiles
 #'
 #'
-#' @param peaksExperiment peakset raggedExperiment, one celltype from the output of callOpenTiles
+#' @param peaksExperiment peakset RaggedExperiment, one celltype from the output of callOpenTiles
 #' @param consensusTiles a vector containing the tileIDs to subset the
 #'   sample-tile matrix
 #' @return sampleTileIntensityMat a sample X peak matrix containing observed
@@ -57,8 +57,8 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
     stringr::str_interp("\t${prevDims} before to ${currDims} after")
   )
   sampleTileIntensityMat <- sampleTileIntensityMat[
-    order(rownames(sampleTileIntensityMat)), 
-    order(colnames(sampleTileIntensityMat)), 
+    order(rownames(sampleTileIntensityMat)),
+    order(colnames(sampleTileIntensityMat)),
     drop = FALSE
   ]
 

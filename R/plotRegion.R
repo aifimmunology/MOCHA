@@ -1,50 +1,83 @@
 #' @title \code{plotRegion}
 #'
-#' @description \code{plotRegion} Plots the region that you've summarized across all cell groupings (groups=initial getPopFrags() split) with optional motif overlay, chromosome position
-#' ideogram, and additional GRanges tracks. If plotting motif overlay, ensure that motif annotations have been added
-#' to your counts SummarizedExperment.
-#' A basic plot can be rendered with just a counts SummarizedExperiment, but additional formatting arguments allow for further customization.
-#' Note that to show specific genes with the option 'whichGene' the \pkg{RMariaDB} package must be installed.
+#' @description \code{plotRegion} Plots the region that you've summarized across
+#'   all cell groupings (groups=initial getPopFrags() split) with optional motif
+#'   overlay, chromosome position ideogram, and additional GRanges tracks. If
+#'   plotting motif overlay, ensure that motif annotations have been added to
+#'   your counts SummarizedExperiment. A basic plot can be rendered with just a
+#'   counts SummarizedExperiment, but additional formatting arguments allow for
+#'   further customization. Note that to show specific genes with the option
+#'   'whichGene' the \pkg{RMariaDB} package must be installed.
 #'
-#' @param countdf A dataframe that comes from `getbpCounts()` or `getbpInserts()`
-#' @param plotType Options include 'overlaid','area', or 'RidgePlot'. default is 'area', which will plot a seperate track for each group with the area filled in under the curve.
-#' Setting plotType to 'overlaid' will overlay count plot histograms across samples, instead of faceting out separately.
-#' Setting plotType to 'RidgePlot' will generate a ridgeplot across all groups.
+#' @param countSE A SummarizedExperiment from MOCHA::getCoverage
+#' @param plotType Options include 'overlaid','area', or 'RidgePlot'. default is
+#'   'area', which will plot a separate track for each group with the area
+#'   filled in under the curve. Setting plotType to 'overlaid' will overlay
+#'   count plot histograms across samples, instead of faceting out separately.
+#'   Setting plotType to 'RidgePlot' will generate a ridgeplot across all
+#'   groups.
 #' @param base_size Numeric, default 12. Global plot base text size parameter
-#' @param counts_color Optional color palette. A named vector of color values where names are unique values in the `color_var` column
-#' @param range_label_size Numeric value, default 4. Text size for the y-axis range label
-#' @param legend.position Any acceptable `legend.position` argument to theme(). Default NULL will place legend for overlaid plots at (0.8,0.8),
-#' or to the "right" for faceted plots.
-#' @param facet_label_side Direction character value, default "top". Can also be "right", "left", or "bottom". Position of facet label.
-#' @param counts_group_colors Optional named color vector. Values as colors, names are levels of `counts_color_var`. If provided, will color the plots specifically
-#' using `scale_color_manual()`
-#' @param counts_color_var Character value, default "Groups". Column name from countdf to use to color counts plots.
-#' Only used if counts_group_colors provided
-#' @param counts_theme_ls A list of named theme arguments passed to theme(). For example, `list(axis.ticks = element_blank())`. Default NULL will use `.counts_plot_default_theme`.
-#' @param ArchRProj An archR project containing motif annotations. Only needed if supplying `motifSetName` arg for motif label overlay.
-#' @param motifSetName The name of the motif set in ArchRProj to use for annotation. Example: 'JasparMotifs'
-#' @param motif_y_space_factor A factor for vertical spacing between motif labels. Default 4. Increase to make labels farther apart, decrease to make labels closer.
-#' @param motif_stagger_labels_y = FALSE Logical value, default FALSE. If TRUE, will  stagger motif labels in adjacent columns in the vertical direction
-#' @param motif_weights Optional numeric vector, default NULL. If provided will be used to color motif labels by the weighted values
-#' @param motif_weight_name Character value, default "Motif Weight". Used to label the legend for motif colors
-#' @param weight_colors Named numeric vector. Names should be color values and breaks should be the corresponding values of motif_weights. Values outside the
-#' highest and lowest value will appear as max or min defined color value.
+#' @param counts_color Optional color palette. A named vector of color values
+#'   where names are unique values in the `color_var` column
+#' @param range_label_size Numeric value, default 4. Text size for the y-axis
+#'   range label
+#' @param legend.position Any acceptable `legend.position` argument to theme().
+#'   Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
+#'   "right" for faceted plots.
+#' @param facet_label_side Direction character value, default "top". Can also be
+#'   "right", "left", or "bottom". Position of facet label.
+#' @param counts_group_colors Optional named color vector. Values as colors,
+#'   names are levels of `counts_color_var`. If provided, will color the plots
+#'   specifically using `scale_color_manual()`
+#' @param counts_color_var Character value, default "Groups". Column name from
+#'   countdf to use to color counts plots. Only used if counts_group_colors
+#'   provided
+#' @param counts_theme_ls A list of named theme arguments passed to theme(). For
+#'   example, `list(axis.ticks = element_blank())`. Default NULL will use
+#'   `.counts_plot_default_theme`.
+#' @param motifSetName The name of the motif set in ArchRProj to use for
+#'   annotation. Example: 'JasparMotifs'
+#' @param motif_y_space_factor A factor for vertical spacing between motif
+#'   labels. Default 4. Increase to make labels farther apart, decrease to make
+#'   labels closer.
+#' @param motif_stagger_labels_y = FALSE Logical value, default FALSE. If TRUE,
+#'   will  stagger motif labels in adjacent columns in the vertical direction
+#' @param motif_weights Optional numeric vector, default NULL. If provided will
+#'   be used to color motif labels by the weighted values
+#' @param motif_weight_name Character value, default "Motif Weight". Used to
+#'   label the legend for motif colors
+#' @param motif_weight_colors Named numeric vector. Names should be color values
+#'   and breaks should be the corresponding values of motif_weights. Values
+#'   outside the highest and lowest value will appear as max or min defined
+#'   color value.
 #' @param motif_lab_size Numeric value, default 1. Size of motif labels.
 #' @param motif_lab_alpha Numeric value, default 0.25. Alpha for motif labels.
 #' @param motif_line_size Numeric value, default 1. Size of motif lines.
 #' @param motif_line_alpha Numeric value, default 0.25. Alpha for motif lines.
-#' @param showGene Logical value, default TRUE. Whether or not the gene track should be plotted.
-#' @param db_id_col Character value. Column in `orgdb` containing the output id for `whichGene` plotting. Default "REFSEQ".
-#' @param collapseGenes Options include 'collapseAll', 'longestTx', or 'None' Default 'None' will plot the expanded view of the reference genes,
-#' 'collapseAll' if you want collapse the gene tracks into one, and 'longestTx' will only plot the longest transcript of each gene.
-#' @param gene_theme_ls Named list of parameters passed to `theme()` for the gene plot. Default NULL will use `.gene_plot_theme`
-#' @param additionalGRangesTrack A GRanges object containing additional track plot data
-#' @param showIdeogram Logical value, default TRUE. If TRUE plots the chromosome ideogram at the top of the multi-track plot
-#' @param ideogram_genome Character value, a genome name for the ideogram plot. Default 'hg19'.
-#' @param relativeHeights Named numeric vector of relative heights for each of the 4 track plots to enable clean visualization when there are many tracks.
-#' Unused tracks will be ignored. Default value = c(`Chr` = 0.9, `Normalized Counts` = 7, `Genes`= 2, `AdditionalGRanges` = 4.5)
-#' @param verbose Logical value, default FALSE. If TRUE will show all messages generated by internal function calls. If FALSE, will attempt to use suppressMessages()
-#' to minimize message output.
+#' @param showGene Logical value, default TRUE. Whether or not the gene track
+#'   should be plotted.
+#' @param whichGene Name of gene for plotting this specific gene in region.
+#' @param db_id_col Character value. Column in `orgdb` containing the output id
+#'   for `whichGene` plotting. Default "REFSEQ".
+#' @param collapseGenes Options include 'collapseAll', 'longestTx', or 'None'
+#'   Default 'None' will plot the expanded view of the reference genes,
+#'   'collapseAll' if you want collapse the gene tracks into one, and
+#'   'longestTx' will only plot the longest transcript of each gene.
+#' @param gene_theme_ls Named list of parameters passed to `theme()` for the
+#'   gene plot. Default NULL will use `.gene_plot_theme`
+#' @param additionalGRangesTrack A GRanges object containing additional track
+#'   plot data
+#' @param linkdf A dataframe with co-accessible links to display as an additional
+#'   track
+#' @param showIdeogram Logical value, default TRUE. If TRUE plots the chromosome
+#'   ideogram at the top of the multi-track plot
+#' @param ideogram_genome Character value, a genome name for the ideogram plot.
+#'   Default 'hg19'.
+#' @param relativeHeights Named numeric vector of relative heights for each of
+#'   the 4 track plots to enable clean visualization when there are many tracks.
+#'   Unused tracks will be ignored. Default value = c(`Chr` = 0.9, `Normalized
+#'   Counts` = 7, `Genes`= 2, `AdditionalGRanges` = 4.5)
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return The input ggplot object with motif labels overlaid
 #'
@@ -55,9 +88,12 @@
 #' # Simple counts + ideogram + all genes:
 #' plotRegion(countSE = my_count_SE)
 #'
-#' # Motif overlay for a project (my_proj) containing "JasparMotifs" annotations:
-#' plotRegion(countSE = my_count_SE, motifSetName = "JasparMotifs", motif_lab_alpha = 1, motif_line_alpha = 1)
-#' 
+#' # Motif overlay for a project my_proj containing "JasparMotifs" annotations:
+#' plotRegion(
+#'   countSE = my_count_SE, motifSetName = "JasparMotifs",
+#'   motif_lab_alpha = 1, motif_line_alpha = 1
+#' )
+#'
 #' # Motif overlay w/ weights:
 #' plotRegion(
 #'   countSE = my_count_SE, motifSetName = "JasparMotifs", motif_lab_alpha = 1,
@@ -91,7 +127,7 @@ plotRegion <- function(countSE,
                        motif_line_size = 0.75,
                        # Genes plot args
                        showGene = TRUE,
-                       whichGene = NULL, # for plotting specific gene in region
+                       whichGene = NULL,
                        db_id_col = "REFSEQ",
                        collapseGenes = "None",
                        gene_theme_ls = NULL,
@@ -123,18 +159,17 @@ plotRegion <- function(countSE,
       suppressMessages(x)
     }
   }
-  
-  if(!is.null(motif_weights) & plotType != "area"){
-  
-	stop("Error: Motif weights can only be used with area plots, due to ggplot settings. Please remove motif weights or change plotType to 'area'.")
-  
+
+  if (!is.null(motif_weights) & plotType != "area") {
+    stop("Motif weights can only be used with area plots due to ggplot ",
+    "settings. Please remove motif weights or change plotType to 'area'.")
   }
 
 
   countdf <- do.call("rbind", as.list(SummarizedExperiment::assays(countSE)))
 
   # Extract region from region string as granges
-  regionGRanges <- scMACS:::countdf_to_region(countdf = countdf)
+  regionGRanges <- countdf_to_region(countdf = countdf)
 
   # Variables
   chrom <- toString(unique(countdf$chr))
@@ -145,7 +180,7 @@ plotRegion <- function(countSE,
 
   # Base Plot of Sample Counts
   p1 <- verbf(
-    scMACS:::counts_plot_samples(countdf,
+    counts_plot_samples(countdf,
       plotType = plotType,
       base_size = base_size,
       counts_color_var = counts_color_var,
@@ -164,7 +199,7 @@ plotRegion <- function(countSE,
       msg = sprintf("%s not found in Summarized Experiment", motifSetName)
     )
     p1 <- verbf(
-      scMACS:::counts_plot_motif_overlay(
+      counts_plot_motif_overlay(
         p1 = p1,
         countdf = countdf,
         motifsList = countSE@metadata[[motifSetName]],
@@ -181,7 +216,7 @@ plotRegion <- function(countSE,
     )
   } else {
     p1 <- verbf(
-      p1 + xlim(min(countdf$Locus), max(countdf$Locus))
+      p1 + ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
     )
   }
 
@@ -190,7 +225,7 @@ plotRegion <- function(countSE,
     # If user provided a specific gene symbol(s), pull new granges from database and format models
     if (!is.null(whichGene)) {
       newModel <- verbf(
-        scMACS:::get_gene_body_model(
+        get_gene_body_model(
           whichGene = whichGene,
           countdf = countdf,
           regionGRanges = regionGRanges,
@@ -206,7 +241,7 @@ plotRegion <- function(countSE,
     if (!is.null(whichGene) & !is.null(newModel)) {
       # Successful newmodel generated
       p2 <- verbf(
-        scMACS:::plot_whichGene(newModel,
+        plot_whichGene(newModel,
           base_size = base_size,
           x_lim = range(countdf$Locus),
           theme_ls = gene_theme_ls
@@ -221,11 +256,11 @@ plotRegion <- function(countSE,
         Homo.sapiens.hg38 <- verbf(OrganismDbi::makeOrganismDbFromTxDb(TxDb, orgdb = orgdb))
       }
 
-      geneBody <- verbf(scMACS:::get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
+      geneBody <- verbf(get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
 
       if (length(geneBody) > 0) {
         p2 <- verbf(
-          scMACS:::plot_geneBody(
+          plot_geneBody(
             organismdb = Homo.sapiens.hg38,
             geneBody_gr = geneBody,
             collapseGenes = tolower(collapseGenes) == "collapseall",
@@ -238,7 +273,7 @@ plotRegion <- function(countSE,
         print("No gene body in range")
         # Empty gene track to prevent errors resulting from p2 nonexistence
         p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
-          theme_void()
+          ggplot2::theme_void()
         relativeHeights["Genes"] <- 10^6
         showGene <- FALSE
       }
@@ -253,14 +288,14 @@ plotRegion <- function(countSE,
   if (!is.null(additionalGRangesTrack)) {
 
     # Check for name metadata column
-    if ("name" %in% colnames(mcols(additionalGRangesTrack))) {
+    if ("name" %in% colnames(GenomicRanges::mcols(additionalGRangesTrack))) {
       # Only plot the overlap of this region and the additional GRanges Track
       overlapGRanges <- verbf(plyranges::join_overlap_intersect(additionalGRangesTrack, regionGRanges))
       if (length(overlapGRanges) > 0) {
         # Use the subset within our region as the track we want to plot
         print("GRanges has overlap")
         # Assign exon status to each row
-        mcols(overlapGRanges)$type <- rep("exon", each = length(overlapGRanges))
+        GenomicRanges::mcols(overlapGRanges)$type <- rep("exon", each = length(overlapGRanges))
         # split into list of GRanges -> GRangesList named for the names metadata col
         additionalGRangesTrack <- split(overlapGRanges, overlapGRanges$name)
       } else {
@@ -279,9 +314,9 @@ plotRegion <- function(countSE,
 
   ## Generate Link track
   if (!is.null(linkdf) &
-    any(linkdf$start + 250 > start(regionGRanges) &
-      linkdf$end - 250 < end(regionGRanges))) {
-    p5 <- scMACS:::get_link_plot(
+    any(linkdf$start + 250 > GenomicRanges::start(regionGRanges) &
+      linkdf$end - 250 < GenomicRanges::end(regionGRanges))) {
+    p5 <- get_link_plot(
       regionGRanges, legend.position,
       relativeHeights, linkdf
     )
@@ -323,7 +358,7 @@ plotRegion <- function(countSE,
   # Additional Ranges
   if (!is.null(additionalGRangesTrack)) {
     print("Combining base tracks with an additional GRanges track")
-    p4 <- verbf(autoplot(additionalGRangesTrack)) + theme_minimal()
+    p4 <- verbf(ggbio::autoplot(additionalGRangesTrack)) + ggplot2::theme_minimal()
     track_list <- c(track_list, list("AdditionalGRanges" = p4))
   }
 
@@ -347,10 +382,10 @@ plotRegion <- function(countSE,
       heights = trackHeights,
       xlim = range(countdf$Locus),
       track.bg.color = "transparent",
-      padding = unit(-1, "lines"),
+      padding = grid::unit(-1, "lines"),
       label.bg.fill = "transparent",
       label.bg.color = "transparent",
-      label.width = unit(2, "lines")
+      label.width = grid::unit(2, "lines")
     )
     # coord_cartesian(clip = "off")
   )

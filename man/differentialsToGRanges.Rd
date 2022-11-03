@@ -8,7 +8,7 @@
 differentialsToGRanges(differentials, tileColumn = "Tile")
 }
 \arguments{
-\item{differentials}{a matrix/data.frame with a column tileColumn containing 
+\item{differentials}{a matrix/data.frame with a column tileColumn containing
 region strings in the format "chr:start-end"}
 
 \item{tileColumn}{name of column containing region strings. Default is "Tile".}
