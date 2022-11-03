@@ -72,18 +72,17 @@ callOpenTiles <- function(ArchRProj,
 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
-  cellCounts <- table(cellTypeLabelList[!is.na(cellTypeLabelList)])
-
-
-  if (all(cellPopulations == "ALL")) {
-    cellPopulations <- names(cellCounts)
-  } else if (!all(cellPopulations %in% names(cellCounts))) {
-    stop("Error: cellPopulations not all found in ArchR project.")
-  }
 
   #Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-  allCellCounts <- allCellCounts[, cellPopulations]
+
+  if (all(cellPopulations == "ALL")) {
+    cellPopulations <- colnames(allCellCounts )
+  } else if (!all(cellPopulations %in% colnames(allCellCounts ))) {
+    stop("Error: cellPopulations not all found in ArchR project.")
+  }else{
+      allCellCounts <- allCellCounts[, cellPopulations]
+  }
 
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
@@ -106,24 +105,9 @@ callOpenTiles <- function(ArchRProj,
       sampleSpecific = TRUE,
       NormMethod = "nfrags",
       blackList = NULL,
-	  verbose = verbose,
+	    verbose = verbose,
       overlapList = 50
     )
-
-    # Check for and remove celltype-sample groups for which there are no fragments.
-    fragsNoNull <- frags[lengths(frags) != 0]
-    emptyFragsBool <- !(names(frags) %in% names(fragsNoNull))
-    emptyGroups <- names(frags)[emptyFragsBool]
-    emptyGroups <- gsub("__.*", "", emptyGroups)
-	
-	  rm(fragsNoNull)
-	
-    if (length(emptyGroups) == 0) {
-      warning(
-        "The following celltype#sample groupings have no fragments",
-        "and will be ignored: ", emptyGroups
-      )
-    }
 
     # Simplify sample names to remove everything before the first "#"
     sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
@@ -133,6 +117,7 @@ callOpenTiles <- function(ArchRProj,
     normalization_factors <- as.integer(sapply(frags, length))
 
     # save coverage files to folder.
+    # This doesn't include empty samples and might break. We may need to reconsider how getCoverage works and add empty samples before this step.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
       covFiles <- scMACS:::getCoverage(
         popFrags = frags,
@@ -152,39 +137,51 @@ callOpenTiles <- function(ArchRProj,
     }
     study_prefactor <- 3668 / studySignal # Training median
 
+    # Calculate normalization factors as the number of fragments for each celltype_samples
+    normalization_factors <- as.integer(sapply(frags, length))
+
     # This mclapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time) 
-
     tilesGRangesList <- parallel::mclapply(
       1:length(frags),
       function(x) {
         scMACS:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          numCores = numCores,
           totalFrags = normalization_factors[x],
           fragsList = frags[[x]],
-		  verbose = verbose,
+          verbose = verbose,
           StudypreFactor = study_prefactor
         )
       },
       mc.cores = numCores
     )
 
-    names(tilesGRangesList) <- sampleNames
+    names(tilesGRangesList) <- names(frags)
+
+    # Where samples have no cells, add an empty GRanges placeholder
+    if(!all(rownames(allCellCounts) %in% names(tilesGRangesList))){
+
+      emptySamples <- rownames(allCellCounts)[!rownames(allCellCounts) %in% names(tilesGRangesList)]
+      emptyGRanges <- lapply(emptySamples, function(x) NULL)
+      names(emptyGRanges) <- emptySamples
+      tilesGRangesList <- append(tilesGRangesList, emptyGRanges)
+
+    }
+    tilesGRangesList <- tilesGRangesList[sort(names(tilesGRangesList))]
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in dummy data so that we
     # preserve the existence of the sample, while also not including any information from it. 
-    
+
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
     
     if(length(emptyGroups) > 0){
     warning(
-      "The following celltype#sample groupings have too few celltypes (<5)",
+      "The following celltype#sample groupings have too few cells (<5)",
       "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
-      ) 
+      )
     }
     for(i in emptyGroups){
       # This is an empty region placeholder that represents an empty sample
@@ -195,13 +192,13 @@ callOpenTiles <- function(ArchRProj,
         end = 499, strand ='*', TotalIntensity = 0, maxIntensity = 0,
         numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE)
     }
+    
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesList
     )
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
-    # experimentList <- append(experimentList, tilesGRangesListNoNull)
   }
 
   # Create sample metadata from cellColData using util function
@@ -229,6 +226,7 @@ callOpenTiles <- function(ArchRProj,
 }
 
 ##### Same function, but runs faster with much, much more RAM usage.
+# TODO: Deprecate
 callOpenTilesFast <- function(ArchRProj,
                               cellPopLabel,
                               cellPopulations = "ALL",
@@ -335,7 +333,6 @@ callOpenTilesFast <- function(ArchRProj,
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
-
 
     # Add prefactor multiplier across datasets
     curr_frags_median <- median(cellColData$nFrags)
