@@ -38,19 +38,15 @@ annotateTiles <- function(SampleTileObj,
 
   txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ("gene")))
   names(txList) <- suppressWarnings(AnnotationDbi::mapIds(Org, names(txList), "SYMBOL", "ENTREZID"))
-  exonList <- suppressWarnings(ensembldb::exonsBy(TxDb, by = "gene"))
-  # Same TxDb, same gene names in same order.
-  names(exonList) <- names(txList)
-
+  
   txs <- stack(txList) %>%
     GenomicRanges::trim() %>%
     S4Vectors::unique(.)
-  exonSet <- stack(exonList)
 
   promoterSet <- stack(txList) %>%
     GenomicRanges::trim(.) %>%
     S4Vectors::unique(.) %>%
-    suppressWarnings(GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2]))
+   GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])
 
   getOverlapNameList <- function(rowTiles, annotGR) {
     overlapGroup <- findOverlaps(rowTiles, annotGR) %>% as.data.frame()
@@ -62,26 +58,21 @@ annotateTiles <- function(SampleTileObj,
   }
 
   txs_overlaps <- getOverlapNameList(tileGRanges, txs)
-  exon_overlaps <- getOverlapNameList(tileGRanges, exonSet)
   promo_overlaps <- getOverlapNameList(tileGRanges, promoterSet)
 
  tileType <- as.data.frame(mcols(tileGRanges)) %>%
     dplyr::mutate(Index = 1:nrow(.)) %>%
     dplyr::mutate(Type = dplyr::case_when(
       Index %in% promo_overlaps$queryHits ~ "Promoter",
-      Index %in% exon_overlaps$queryHits ~ "Exonic",
-      Index %in% txs_overlaps$queryHits ~ "Intronic",
+      Index %in% txs_overlaps$queryHits ~ "Intragenic",
       TRUE ~ "Distal"
     )) %>%
     dplyr::left_join(promo_overlaps, by = c("Index" = "queryHits")) %>%
     dplyr::rename("Promo" = Genes) %>%
-    dplyr::left_join(exon_overlaps, by = c("Index" = "queryHits")) %>%
-    dplyr::rename("Exons" = Genes) %>%
     dplyr::left_join(txs_overlaps, by = c("Index" = "queryHits")) %>%
     dplyr::rename("Txs" = Genes) %>%
     dplyr::mutate(Genes = ifelse(Type == "Promoter", Promo, NA)) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Exonic", Exons, Genes)) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Intronic", Txs, Genes))
+    dplyr::mutate(Genes = ifelse(Type == "Intragenic", Txs, Genes))
 
 
   tileGRanges$tileType <- tileType$Type
