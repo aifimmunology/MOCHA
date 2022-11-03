@@ -19,8 +19,9 @@
 #'
 #' @title weightedZISpearman
 #' @param w weight vector, values should be between 0 and 1
-#' @param x x and y are non-negative data vectors
-#' @param y x and y are non-negative data vectors
+#' @param x,y x and y are non-negative data vectors
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
 #' @return \code{numeric} weighted rho* association value between x and y
 #'
 #'
@@ -35,8 +36,7 @@
 #'   https://scholarworks.wmich.edu/dissertations/721
 #'
 #' @noRd
-
-weightedZISpearman <- function(x, y, w = 1, verbose = FALSE) {
+weightedZISpearman <- function(x, y, w = 1, verbose = FALSE, ZI = TRUE) {
 
   # needs the original values, not the ranks
 
@@ -48,6 +48,13 @@ weightedZISpearman <- function(x, y, w = 1, verbose = FALSE) {
   }
   if (length(w) == 1) {
     w <- rep(w, length(x))
+  }
+
+  if(!ZI){
+
+    spearmanCorr <- wCorr::weightedCorr(x = x, y = y, weights = w, method = "Spearman")
+    return(spearmanCorr)
+    
   }
 
   posx <- x > 0
