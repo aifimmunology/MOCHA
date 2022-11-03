@@ -4,8 +4,11 @@
 #'              are co-accessible using a zero-inflated spearman correlation.
 #'
 #'
-#' @param mat sample-tile matrix with regions to analyze
+#' @param subMat sample-tile matrix with regions to analyze
+#' @param filterPairs list of passed tile-pairs that have been tested. Used to remove already tested pairs.
 #' @param numCores integer to determine # of parallel cores
+#' @param ZI boolean that determines whether to use zero-inflated or normal spearman correlations
+#' @param verbose boolean to determine verbosity of the function call. 
 #'
 #' @return a 3-column data.frame containing
 #'         - Correlation = Zero-inflated Spearman Correlation
@@ -32,7 +35,7 @@
 #' @internal
 #' @noRd
 
-co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose = FALSE) {
+co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRUE, verbose = FALSE) {
   
   regionOfInterest <- rownames(subMat)[index]
   allOtherRegions <- rownames(subMat)[-index]
@@ -63,7 +66,8 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose 
     # If only one pair of tiles to test, then it's no longer a data.frame, but a vector.
     zero_inflated_spearman <- scMACS:::weightedZISpearman(
       x = subMat[keyNeighborPairs[1], ],
-      y = subMat[keyNeighborPairs[2], ]
+      y = subMat[keyNeighborPairs[2], ],
+      ZI = ZI
     )
 
     zi_spear_mat <- data.table(
@@ -78,7 +82,8 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, verbose 
       function(x) {
         scMACS:::weightedZISpearman(
           x = subMat[keyNeighborPairs[x, "Key"], ],
-          y = subMat[keyNeighborPairs[x, "Neighbor"], ]
+          y = subMat[keyNeighborPairs[x, "Neighbor"], ],
+          ZI = ZI
         )
       },
       mc.cores = numCores
