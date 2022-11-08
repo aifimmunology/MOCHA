@@ -27,7 +27,7 @@ Authors@R:
 Maintainer: 
         Imran McGrath <imran.mcgrath@alleninstitute.org>
 Description: A statistical framework and analysis tool for open chromatin analysis designed 
-              specifically for single cell ATAC-seq data, after cell type/cluster identification.
+              specifically for single cell ATAC-seq (Assay for Transposase-Accessible Chromatin) data, after cell type/cluster identification.
               These novel modules remove unwanted technical variation, identify 
               open chromatin, robustly models repeated measures in single cell data, 
               implement advanced statistical frameworks to model zero-inflation 
