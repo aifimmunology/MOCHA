@@ -49,13 +49,13 @@ subsetMOCHAObject <- function(Object,
     # To subset by cell type, first we have to verify that all cell type names were found within the  object.
     # then we simply do a simple subsetting process, like you would with a list.
     if (tolower(subsetBy) == "celltypes") {
-      if (!all(groupList %in% names(Object))) {
+      if (!all(groupList %in% names(SummarizedExperiment::assays(Object)))) {
         stop("Error: groupList includes celltypes not found within Object.")
       }
 
       keep <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
 
-      SummarizedExperiment::assays(object) <- SummarizedExperiment::assays(object)[keep]
+      SummarizedExperiment::assays(Object) <- SummarizedExperiment::assays(Object)[keep]
 
       return(Object)
     }
