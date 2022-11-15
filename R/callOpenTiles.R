@@ -247,8 +247,8 @@ setGeneric(
     
     if(length(emptyGroups) > 0){
       warning(
-        "The following celltype#sample groupings have too few cells (<5)",
-        "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
+        paste("The following celltype#sample groupings have too few cells (<5)",
+        "and will be ignored: ", names(tilesGRangesList)[emptyGroups])
       )
     }
     for (i in emptyGroups) {
@@ -473,8 +473,8 @@ setMethod(
     
     if(length(emptyGroups) > 0){
       warning(
-      "The following celltype#sample groupings have too few cells (<5)",
-      "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
+        paste("The following celltype#sample groupings have too few cells (<5)",
+              "and will be ignored: ", names(tilesGRangesList)[emptyGroups])
       )
     }
     for (i in emptyGroups) {
