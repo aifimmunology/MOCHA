@@ -44,6 +44,10 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
   	       "a tile. Set threshold to 0 to ",
   	       "explicitly keep the union of tiles across all samples.")
   	}
+    if (threshold==0){ 
+      # Treat zero as the union
+      threshold <- 1/nSamples
+    }
 	
     percentTruePeaks <- rowSums(samplePeakMat) / nSamples
 
@@ -79,6 +83,11 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
       samplesInGroupDF <- sampleData[sampleData[[groupColumn]] == group, ]
       samplesInGroup <- rownames(samplesInGroupDF)
       groupSamplePeakMat <- samplePeakMat[, samplesInGroup]
+      
+      if (threshold==0){ 
+        # Treat zero as the union within this group
+        threshold <- 1/length(samplesInGroup)
+      }
 
       # Keep only peaks with reproducibility above specified threshold
       percentTruePeaks <- rowSums(groupSamplePeakMat) / length(samplesInGroup)
