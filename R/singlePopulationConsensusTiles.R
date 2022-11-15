@@ -40,7 +40,7 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
 	
   	if(threshold <= 1/nSamples & !disableMinimum){
   	
-  	  warning("Threshold is will result in only one sample needed to keep ",
+  	  warning("Threshold will result in only one sample needed to keep ",
   	       "a tile. Set threshold to 0 to ",
   	       "explicitly keep the union of tiles across all samples.")
   	}
