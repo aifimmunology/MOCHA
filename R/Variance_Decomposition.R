@@ -23,7 +23,7 @@
 
 linearModeling <- function(Obj, formula, CellType, numCores = 1){
 
-    meta <- as.data.frame(SummarizedExperiment::colData(Obj))
+    meta1 <- as.data.frame(SummarizedExperiment::colData(Obj))
 
     if(length(CellType) == 1){
 
@@ -31,13 +31,30 @@ linearModeling <- function(Obj, formula, CellType, numCores = 1){
 
         mat1[is.na(mat1)] = 0
 
+        meta <- meta[meta$Sample %in% colnames(mat1),]
+
     }else{
 
+        allMatrices <- do.call('cbind', SummarizedExperiment::assays(Obj))
+        allMatrices[is.na(allMatrices)] = 0
 
+        colnames(allMatrices) <- apply(expand.grid(names(SummarizedExperiment::assays(Obj)), unique(colnames(allMatrices))), 1, 
+                                paste, collapse="__") %>% gsub(" ", "_", .)
+        mat1 <- allMatrices[,colSums(allMatrices) != 0]
+
+        meta <- parallel::mclapply(1:length(SummarizedExperiment::assays(Obj)), function(x){
+        
+                    meta1 %>% as.data.frame() %>%
+                        dplyr::mutate(Sample2 = paste(names(SummarizedExperiment::assays(Obj))[x], Sample, sep = "__"),
+                                    CellType = names(SummarizedExperiment::assays(Obj))[x]) %>%
+                        dplyr::mutate(Sample2 = gsub(" ","_", Sample2), 
+                                    CellType = gsub(" ", "_", CellType))
+        
+        }, mc.cores = numCores) %>% do.call('rbind', .)
+
+        meta <- meta[meta$Sample2 %in% colnames(mat1),]
 
     }
-
-    meta <- meta[meta$Sample %in% colnames(mat1),]
 
     suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
         function(x) {
