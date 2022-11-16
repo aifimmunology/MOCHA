@@ -27,8 +27,29 @@ runChromVar <- function(Obj, motifs,
     }else if(class(Obj)[1] == "RangedSummarizedExperiment"){
         
         if( !names(assays(Obj)) %in% 'counts'){
-        
 		
+		 assayList <- SummarizedExperiment::assays(STObj)
+        
+		newAssay <- do.call('cbind', as.list(assayList))
+		colnames(newAssay) <- apply(expand.grid(colnames(assayList[[1]]), names(assayList)), 1, 
+						paste, collapse="__") %>% gsub(" ", "_", .)
+
+		colData_tmp <- lapply(1:(length(assayList)), function(x) SummarizedExperiment::colData(STObj)) %>% do.call('rbind',.)
+		colData_tmp$CellType = unlist(lapply(names(assayList), function(x) { rep(x, nrow(colData(STObj))) } ))
+		rownames(colData_tmp) <- apply(expand.grid(rownames(SummarizedExperiment::colData(STObj)), names(assayList)), 1, 
+					paste, collapse="__") %>% gsub(" ", "_", .)                              
+		colData_tmp$Sample = rownames(colData_tmp)
+
+		allRanges <- SummarizedExperiment::rowRanges(STObj)
+		mcols(allRanges)$allCells = rep(TRUE, length(allRanges))
+
+		newObj <- SummarizedExperiment(
+		    assays = list('counts' = newAssay),
+		    colData = colData_tmp,
+		    rowRanges = allRanges,
+		    metadata = STObj@metadata
+		)
+
             
         }else if(class(motifs)[1] == 'GRangesList'){
             
