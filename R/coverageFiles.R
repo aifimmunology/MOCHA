@@ -11,7 +11,7 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
   score <- NULL
   if (length(normFactor) == 1) {
     normFactor <- rep(normFactor, length(popFrags))
-  }else if(length(normFactor) ~= length(popFrags)){
+  }else if(length(normFactor) != length(popFrags)){
   
     error('Length of normFactor is equal to length of popFrags. Please either give 1 value, or a vector of equal length to popFrags.')
     
