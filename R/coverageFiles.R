@@ -4,7 +4,6 @@
 # @popFrags - GRangesList of fragments for all sample/celltypes
 # @filterEmpty - True/False flag on whether or not to carry forward regions without coverage.
 # @numCores - number of cores to parallelize over
-
 getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCores = 1, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {
@@ -12,26 +11,26 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
   }
 
   # Summarize the coverage over the region window at a single basepair resolution
-  tmpCounts <- parallel::mclapply(seq_along(popFrags), function(x) {
+  popCounts <- parallel::mclapply(seq_along(popFrags), function(x) {
     if (verbose) {
       print(paste("Counting", names(popFrags)[x], sep = " "))
     }
 
-    Num <- normFactor[x]
-    tmp <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score / Num)
+    Num <- normFactor[[x]]
+    counts_gr <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score / Num)
 
-    GenomeInfoDb::seqinfo(tmp) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(tmp))]
+    GenomeInfoDb::seqinfo(counts_gr) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(counts_gr))]
 
     if (filterEmpty) {
-      plyranges::filter(tmp, score > 0)
+      plyranges::filter(counts_gr, score > 0)
     } else {
-      tmp
+      counts_gr
     }
   }, mc.cores = numCores)
 
-  names(tmpCounts) <- names(popFrags)
+  names(popCounts) <- names(popFrags)
 
-  return(tmpCounts)
+  return(popCounts)
 }
 
 
