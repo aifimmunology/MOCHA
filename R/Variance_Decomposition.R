@@ -21,22 +21,23 @@
 #' 
 #' 
 
-linearModeling <- function(Obj, formula, CellType, numCores = 1){
+linearModeling <- function(Obj, formula, CellType, NAtoZero = FALSE, numCores = 1){
 
     meta1 <- as.data.frame(SummarizedExperiment::colData(Obj))
 
     if(length(CellType) == 1){
 
-        mat1 <- MOCHA::getCellPopMatrix(Obj,CellType)
+        mat1 <- MOCHA::getCellPopMatrix(Obj,CellType,NAtoZero = FALSE, )
 
-        mat1[is.na(mat1)] = 0
-
-        meta <- meta[meta$Sample %in% colnames(mat1),]
+        meta <- meta1[meta1$Sample %in% colnames(mat1),]
 
     }else{
 
         allMatrices <- do.call('cbind', SummarizedExperiment::assays(Obj))
-        allMatrices[is.na(allMatrices)] = 0
+        if(NAtoZero){
+           allMatrices[is.na(allMatrices)] = 0
+        }
+
 
         colnames(allMatrices) <- apply(expand.grid(names(SummarizedExperiment::assays(Obj)), unique(colnames(allMatrices))), 1, 
                                 paste, collapse="__") %>% gsub(" ", "_", .)
