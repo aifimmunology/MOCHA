@@ -24,30 +24,32 @@ runChromVar <- function(Obj, motifs,
 
 	motifGRangesList = motifs
         
-    }else if(class(Obj)[1] == "RangedSummarizedExperiment"){
+    }else if(class(Obj)[1] == "RangedSummarizedExperiment" & grepl('GRangesList', class(motifs)[1])){
+	    
+	    motifGRangesList <- motifs
         
-        if( !names(assays(Obj)) %in% 'counts'){
+        if( !names( SummarizedExperiment::assays(Obj)) %in% 'counts'){
 		
-		 assayList <- SummarizedExperiment::assays(STObj)
+		 assayList <- SummarizedExperiment::assays(Obj)
         
 		newAssay <- do.call('cbind', as.list(assayList))
 		colnames(newAssay) <- apply(expand.grid(colnames(assayList[[1]]), names(assayList)), 1, 
 						paste, collapse="__") %>% gsub(" ", "_", .)
 
-		colData_tmp <- lapply(1:(length(assayList)), function(x) SummarizedExperiment::colData(STObj)) %>% do.call('rbind',.)
-		colData_tmp$CellType = unlist(lapply(names(assayList), function(x) { rep(x, nrow(colData(STObj))) } ))
-		rownames(colData_tmp) <- apply(expand.grid(rownames(SummarizedExperiment::colData(STObj)), names(assayList)), 1, 
+		colData_tmp <- lapply(1:(length(assayList)), function(x) SummarizedExperiment::colData(Obj)) %>% do.call('rbind',.)
+		colData_tmp$CellType = unlist(lapply(names(assayList), function(x) { rep(x, nrow(colData(Obj))) } ))
+		rownames(colData_tmp) <- apply(expand.grid(rownames(SummarizedExperiment::colData(Obj)), names(assayList)), 1, 
 					paste, collapse="__") %>% gsub(" ", "_", .)                              
 		colData_tmp$Sample = rownames(colData_tmp)
 
-		allRanges <- SummarizedExperiment::rowRanges(STObj)
+		allRanges <- SummarizedExperiment::rowRanges(Obj)
 		mcols(allRanges)$allCells = rep(TRUE, length(allRanges))
 
-		newObj <- SummarizedExperiment(
+		Obj1 <- SummarizedExperiment(
 		    assays = list('counts' = newAssay),
 		    colData = colData_tmp,
 		    rowRanges = allRanges,
-		    metadata = STObj@metadata
+		    metadata = Obj@metadata
 		)
 
             
