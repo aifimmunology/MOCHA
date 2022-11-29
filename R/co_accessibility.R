@@ -33,6 +33,22 @@
 #' head(ziSpear_mat)
 #'
 #' @noRd
+#' 
+#' 
+
+findPairs <- function(allRegions, index,numCores = 40, verbose = FALSE){
+
+  regionOfInterest <- allRegions[index]
+  allOtherRegions <- allRegions[-index]
+
+  # Var1 will always be our region of interest
+  keyNeighborPairs <- as.matrix(data.frame(
+    "Key" = regionOfInterest,
+    "Neighbor" = allOtherRegions
+  ))
+
+
+}
 
 co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRUE, verbose = FALSE) {
 

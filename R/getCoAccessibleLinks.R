@@ -43,7 +43,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   if(cellPopulation == 'All'){
   
-	  tileDF <- do.call('cbind', SummarizedExperiment::assays(SampleTileObj))
+	  tileDF <- do.call('cbind', as.list(SummarizedExperiment::assays(SampleTileObj)))
 	
   }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
   
@@ -61,50 +61,60 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   tileDF[is.na(tileDF)] = 0
 
+  tileNames <- rownames(tileDF)
+
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
   chr <- gsub("\\:.*", "", rownames(tileDF))
 
-  # Initialize correlation datatable
-  TileCorr <- NULL
-  pb <- utils::txtProgressBar(min = 0, max = length(regions), initial = 0, style = 3)
 
-  for (i in 1:length(regions)) {
-    utils::setTxtProgressBar(pb, i)
+  #Find all combinations to test
 
-    # Find all neighboring tiles in the window
-    windowIndexBool <- which(start > regionDF$start[i] - windowSize / 2 &
-      end < regionDF$end[i] + windowSize / 2 &
-      chr == regionDF$seqnames[i])
+  allCombinations <- pbapply::pblapply(1:dim(regionDF)[1], function(y){
 
-    if (length(windowIndexBool) > 1) {
+    keyTile <- which(start == regionDF$start[] &
+      end = regionDF$end[y]  &
+      chr == regionDF$seqnames[y])
 
-      # The region of interest should overlap with the tile at least partially.
-      keyTile <- which(
-        windowIndexBool == which(
-          ((start <= regionDF$start[i] & end >= regionDF$start[i]) |
-            (start >= regionDF$start[i] & end <= regionDF$end[i]) |
-            (start <= regionDF$end[i] & end >= regionDF$end[i])) &
-            chr %in% regionDF$seqnames[i]
-        )
-      )
-      nextCorr <- co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
-        filterPairs = TileCorr, numCores = numCores,
-        index = keyTile, verbose = verbose, ZI = ZI
-      )
-      # For first iteration, TileCorr is NULL so it will be ignored
-      TileCorr <- rbind(TileCorr, nextCorr)
-    } else if (verbose) {
-      warning(
-        "No neighboring tiles found for given region: ",
-        stringr::str_interp(
-          "${regionDF$seqnames[i]}:${regionDF$start[i]}-${regionDF$end[i]}"
-        ),
-        stringr::str_interp(" with windowSize ${windowSize} basepairs")
-      )
-    }
-  }
+    windowIndexBool <- which(start > regionDF$start[y] - windowSize / 2 &
+      end < regionDF$end[y] + windowSize / 2 &
+      chr == regionDF$seqnames[y])
 
-  close(pb)
-  TileCorr
+    windowIndexBool == windowIndexBool[windowIndexBool != keyTile]
+
+    regionOfInterest <- tileNames[keyTile]
+    allOtherRegions <- tileNames[indowIndexBool]
+
+    # Var1 will always be our region of interest
+    keyNeighborPairs <- data.frame(
+      "Key" = regionOfInterest,
+      "Neighbor" = allOtherRegions
+    )
+
+    keyNeighborPairs
+
+  }, cl = numCores) %>% do.call('rbind', .) %>% dplyr::distinct()
+
+
+  # General case for >1 pair
+  zero_inflated_spearman <- unlist(pbapply::(1:nrow(allCombinations),
+     function(x) {
+       weightedZISpearman(
+         x = tileDF[allCombinations[x, "Key"], ],
+         y = tileDF[allCombinations[x, "Neighbor"], ],
+         verbose = verbose,
+         ZI = ZI
+       )
+     },
+     cl = numCores
+   ))
+
+  # Create zero-inflated correlation matrix from correlation values
+  zi_spear_mat <- data.table(
+     Correlation = zero_inflated_spearman,
+     Tile1 = allCombinations[, "Key"],
+     Tile2 = allCombinations[, "Neighbor"]
+  )
+  
+  return(zi_spear_mat)
 }
