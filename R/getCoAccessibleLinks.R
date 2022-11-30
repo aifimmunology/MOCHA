@@ -109,7 +109,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
    ))
 
   # Create zero-inflated correlation matrix from correlation values
-  zi_spear_mat <- data.table(
+  zi_spear_mat <- data.table::data.table(
      Correlation = zero_inflated_spearman,
      Tile1 = allCombinations[, "Key"],
      Tile2 = allCombinations[, "Neighbor"]
