@@ -95,25 +95,37 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   }, cl = numCores) %>% do.call('rbind', .)   %>% dplyr::distinct()
 
-  # General case for >1 pair
-  zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(allCombinations),
-     function(x) {
-       weightedZISpearman(
-         x = tileDF[allCombinations[x, "Key"], ],
-         y = tileDF[allCombinations[x, "Neighbor"], ],
-         verbose = verbose,
-         ZI = ZI
-       )
-     },
-     cl = numCores
-   ))
+  chrNum <- unique(gsub(":.*", "", rownames(tileDF)))
 
-  # Create zero-inflated correlation matrix from correlation values
-  zi_spear_mat <- data.table::data.table(
-     Correlation = zero_inflated_spearman,
-     Tile1 = allCombinations[, "Key"],
-     Tile2 = allCombinations[, "Neighbor"]
-  )
+  zi_spear_mat <- NULL
   
+  for(i in chrNum){
+
+    subTileDF <- tileDF[grepl(i, rownames(tileDF)),]
+    subCombinations <- allCombinations[grepl(i, allCombinations$Key),]
+
+    # General case for >1 pair
+    zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
+      function(x) {
+        weightedZISpearman(
+          x = subTileDF[subCombinations[x, "Key"], ],
+          y = subTileDF[subCombinations[x, "Neighbor"], ],
+          verbose = verbose,
+          ZI = ZI
+        )
+      },
+      cl = numCores
+    ))
+
+    # Create zero-inflated correlation matrix from correlation values
+    zi_spear_mat_tmp <- data.table::data.table(
+      Correlation = zero_inflated_spearman,
+      Tile1 = subCombinations[, "Key"],
+      Tile2 = subCombinations[, "Neighbor"]
+    )
+
+    zi_spear_mat <- rbind(zi_spear_mat,zi_spear_mat_tmp)
+
+  }   
   return(zi_spear_mat)
 }
