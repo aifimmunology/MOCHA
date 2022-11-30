@@ -72,8 +72,8 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   allCombinations <- pbapply::pblapply(1:dim(regionDF)[1], function(y){
 
-    keyTile <- which(start == regionDF$start[] &
-      end = regionDF$end[y]  &
+    keyTile <- which(start == regionDF$start[y] &
+      end == regionDF$end[y]  &
       chr == regionDF$seqnames[y])
 
     windowIndexBool <- which(start > regionDF$start[y] - windowSize / 2 &
@@ -83,7 +83,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
     windowIndexBool == windowIndexBool[windowIndexBool != keyTile]
 
     regionOfInterest <- tileNames[keyTile]
-    allOtherRegions <- tileNames[indowIndexBool]
+    allOtherRegions <- tileNames[windowIndexBool]
 
     # Var1 will always be our region of interest
     keyNeighborPairs <- data.frame(
@@ -93,11 +93,10 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
     keyNeighborPairs
 
-  }, cl = numCores) %>% do.call('rbind', .) %>% dplyr::distinct()
-
+  }, cl = numCores) %>% do.call('rbind', .)   %>% dplyr::distinct()
 
   # General case for >1 pair
-  zero_inflated_spearman <- unlist(pbapply::(1:nrow(allCombinations),
+  zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(allCombinations),
      function(x) {
        weightedZISpearman(
          x = tileDF[allCombinations[x, "Key"], ],
