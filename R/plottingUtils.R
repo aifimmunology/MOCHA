@@ -181,7 +181,7 @@ counts_plot_samples <- function(countdf,
         hjust = 1,
         vjust = 1
       ) +
-      do.call(theme, theme_ls)
+      do.call(ggplot2::theme, theme_ls)
 
     # Conditional Plot Elements
     if (!is.null(counts_group_colors)) {
@@ -221,7 +221,7 @@ counts_plot_samples <- function(countdf,
         hjust = 1,
         vjust = 1
       ) +
-      do.call(theme, theme_ls)
+      do.call(ggplot2::theme, theme_ls)
 
     # Conditional Plot Elements
     if (!is.null(counts_group_colors)) {
@@ -263,7 +263,7 @@ counts_plot_samples <- function(countdf,
         hjust = 1,
         vjust = 1
       ) +
-      do.call(theme, theme_ls)
+      do.call(ggplot2::theme, theme_ls)
 
     # Conditional Plot Elements
     if (!is.null(counts_group_colors)) {
@@ -743,7 +743,7 @@ plot_whichGene <- function(newModel,
     ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) +
     ggplot2::theme_bw(base_size = base_size) +
     ggplot2::coord_cartesian(clip = "off") +
-    do.call(theme, theme_ls)
+    do.call(ggplot2::theme, theme_ls)
 
   return(p_gene)
 }
@@ -791,7 +791,7 @@ plot_geneBody <- function(organismdb,
     ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) +
     ggplot2::theme_bw(base_size = base_size) +
     ggplot2::coord_cartesian(clip = "off") +
-    do.call(theme, theme_ls)
+    do.call(ggplot2::theme, theme_ls)
 
 
   return(g_geneBody)
