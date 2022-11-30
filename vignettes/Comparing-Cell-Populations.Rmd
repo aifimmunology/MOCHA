@@ -165,4 +165,59 @@ compareCellTypes <- function(STObj, CellType_1, CellType_2, outputGRanges = TRUE
 
   return(diff)
 }
+
+
+getCellTypeMarkers2 <- function(STObj, outputGRanges = TRUE, threshold = 12, numCores = 25) {
+
+  # Extract all the Sample-Tile Matrices for each cell type
+  assayList <- SummarizedExperiment::assays(STObj)
+
+  # Let's generate a new assay, that will contain the
+  # the intensity for a given cell, as well as the
+  # median intensity per sample-tile for all other cell types (i.e. the background)
+
+  newAssay <- do.call('cbind', as.list(assayList))
+  colnames(newAssay) <- apply(expand.grid(colnames(assayList[[1]]), names(assayList)), 1, 
+                                paste, collapse="__") %>% gsub(" ", "_", .)
+
+  return(newAssay)
+  colData_tmp <- lapply(1:(length(assayList)), function(x) SummarizedExperiment::colData(STObj)) %>% do.call('rbind',.)
+  colData_tmp$CellType = unlist(lapply(names(assayList), function(x) { rep(x, nrow(colData(STObj))) } ))
+  rownames(colData_tmp) <- apply(expand.grid(rownames(SummarizedExperiment::colData(STObj)), names(assayList)), 1, 
+                                paste, collapse="__") %>% gsub(" ", "_", .)                              
+  colData_tmp$Sample = rownames(colData_tmp)
+
+  allRanges <- SummarizedExperiment::rowRanges(STObj)
+  mcols(allRanges)$allCells = rep(TRUE, length(allRanges))
+
+  newObj <- SummarizedExperiment(
+    assays = list(allCells = newAssay),
+    colData = colData_tmp,
+    rowRanges = allRanges,
+    metadata = STObj@metadata
+  )
+
+
+  allDifs <- lapply(names(assayList), function(x) {
+
+    colData(newObj)$Comparison <- ifelse(colData(newObj)$CellType == x, 'Foreground', 'Background')
+
+    getDifferentialAccessibleTiles(newObj,
+      cellPopulation = 'allCells',
+      groupColumn = "Comparison",
+      foreground = "Foreground",
+      background = "Background",
+      signalThreshold = threshold,
+      fdrToDisplay = 0.2,
+      outputGRanges = outputGRanges,
+      numCores = 25
+    )
+
+  })
+
+  names(allDifs) <- names(assayList)
+
+  return(allDifs)
+}
+
 ```

@@ -43,7 +43,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   if(cellPopulation == 'All'){
   
-	  tileDF <- do.call('cbind', SummarizedExperiment::assays(SampleTileObj))
+	  tileDF <- do.call('cbind', as.list(SummarizedExperiment::assays(SampleTileObj)))
 	
   }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
   
@@ -88,7 +88,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
             chr %in% regionDF$seqnames[i]
         )
       )
-      nextCorr <- co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
+      nextCorr <- MOCHA:::co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
         filterPairs = TileCorr, numCores = numCores,
         index = keyTile, verbose = verbose, ZI = ZI
       )
