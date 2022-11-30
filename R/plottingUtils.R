@@ -170,7 +170,7 @@ counts_plot_samples <- function(countdf,
         hjust = 1,
         vjust = 1
       ) +
-      do.call(theme, theme_ls)
+      do.call('theme', theme_ls)
 
     # Conditional Plot Elements
     if (!is.null(counts_group_colors)) {
