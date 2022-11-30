@@ -21,7 +21,7 @@
 #' 
 #' 
 
-linearModeling <- function(Obj, formula, CellType, threshold = 0.10, NAtoZero = FALSE, numCores = 1){
+linearModeling <- function(Obj, formula, CellType, threshold = 0, NAtoZero = FALSE, numCores = 1){
 
     meta1 <- as.data.frame(SummarizedExperiment::colData(Obj))
 
@@ -30,7 +30,7 @@ linearModeling <- function(Obj, formula, CellType, threshold = 0.10, NAtoZero = 
         mat1 <- MOCHA::getCellPopMatrix(Obj,CellType,NAtoZero = NAtoZero)
 
         meta <- meta1[meta1$Sample %in% colnames(mat1),]
-        rowsToKeep <- rowSums(is.na(mat1))/dim(mat1)[2] > threshold
+        rowsToKeep <- rowSums(!is.na(mat1))/dim(mat1)[2] > threshold
 
         mat1 <- mat1[rowsToKeep,]
 
@@ -82,6 +82,7 @@ linearModeling <- function(Obj, formula, CellType, threshold = 0.10, NAtoZero = 
             lmerTest::lmer(formula = formula, data = df)
         }, cl = numCores), classes = "message")
 
+    names(lmem_res) = rownames(mat1)
     return(lmem_res)
 
 }
