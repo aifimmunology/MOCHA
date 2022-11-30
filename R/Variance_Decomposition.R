@@ -27,9 +27,10 @@ linearModeling <- function(Obj, formula, CellType, NAtoZero = FALSE, numCores = 
 
     if(length(CellType) == 1){
 
-        mat1 <- MOCHA::getCellPopMatrix(Obj,CellType,NAtoZero = FALSE, )
+        mat1 <- MOCHA::getCellPopMatrix(Obj,CellType,NAtoZero = NAtoZero)
 
         meta <- meta1[meta1$Sample %in% colnames(mat1),]
+
 
     }else{
 
