@@ -77,7 +77,7 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
       # Filter sample-peak matrix to samples in this group
       samplesInGroupDF <- sampleData[sampleData[[groupColumn]] == group, ]
       samplesInGroup <- rownames(samplesInGroupDF)
-      groupSamplePeakMat <- samplePeakMat[, samplesInGroup]
+      groupSamplePeakMat <- samplePeakMat[, samplesInGroup, drop = FALSE]
 
       if (threshold == 0) {
         # Treat zero as the union within this group
