@@ -88,7 +88,9 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
+
   sampleTileMatrix <- sampleTileMatrix[, colnames(sampleTileMatrix) %in% c(foreground_samples, background_samples)]
+
 
   group <- as.numeric(colnames(sampleTileMatrix) %in% foreground_samples)
 
