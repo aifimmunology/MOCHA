@@ -137,7 +137,6 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     mc.cores = numCores
   )
 
-  return(res_pvals)
   # Combine results into single objects
   res_pvals <- do.call(rbind, res_pvals)
 
