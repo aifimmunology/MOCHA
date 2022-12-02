@@ -95,9 +95,11 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   }, cl = numCores) %>% do.call('rbind', .)   %>% dplyr::distinct()
 
-  chrNum <- unique(gsub(":.*", "", rownames(tileDF)))
+  chrNum <- paste(regionDF$chr,":",sep='')
 
   zi_spear_mat <- NULL
+
+  return(allCombinations)
   
   for(i in chrNum){
 
