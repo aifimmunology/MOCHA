@@ -29,7 +29,10 @@ determining consensus tiles within sample groups. Default is NULL, all
 samples will be used for determining consensus tiles.}
 
 \item{threshold}{Threshold for consensus tiles, the minimum \% of samples
-(within a sample group) that a peak must be called in to be retained.}
+(within a sample group, if groupColumn is set) that a peak must be called
+in to be retained. If set to 0, retain the union of all samples' peaks
+(this is equivalent to a threshold of 1/numSamples). It is recommended to 
+tune this parameter to omit potentially spurious peaks.}
 
 \item{log2Intensity}{Boolean, set to TRUE to return the log2 of the
 sample-tile intensity matrix. Optional, default is FALSE.}
