@@ -71,7 +71,7 @@ getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25) {
 
   names(newAssays) <- names(temp)
 
-  newAssays <- lapply(assays(newObj), as.matrix)
+  newAssays <- lapply(newAssays, as.matrix)
 
   colData_tmp <- colData(STObj)
   rownames(colData_tmp) <- paste(rownames(colData_tmp), "Bckgrnd", sep = "_")
@@ -82,8 +82,7 @@ getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25) {
   )
   newColData$Sample <- rownames(newColData)
 
-  newObj <- readRDS("tmp.RDS")
-  allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
+  allRanges <- SummarizedExperiment::rowRanges(STObj)
   for (i in names(temp)) {
     mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
   }
@@ -92,7 +91,7 @@ getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25) {
     assays = newAssays,
     colData = newColData,
     rowRanges = allRanges,
-    metadata = SampleTileObj@metadata
+    metadata = STObj@metadata
   )
 
   allDifs <- lapply(names(temp), function(x) {

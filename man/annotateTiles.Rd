@@ -4,29 +4,24 @@
 \alias{annotateTiles}
 \title{\code{annotateTiles}}
 \usage{
-annotateTiles(
-  SampleTileObj,
-  TxDb = NULL,
-  Org = NULL,
-  promoterRegion = c(2000, 100)
-)
+annotateTiles(Obj, TxDb = NULL, Org = NULL, promoterRegion = c(2000, 100))
 }
 \arguments{
-\item{SampleTileObj}{A RangedSummarizedExperiment generated from getSampleTileMatrix,
+\item{Obj}{A RangedSummarizedExperment generated from getSampleTileMatrix, 
 containing TxDb and Org in the metadata. This may also be a GRanges object.}
 
 \item{TxDb}{The annotation package for TxDb object for your genome.
-Optional, only required if SampleTileObj is a GRanges.}
+Optional, only required if Obj is a GRanges.}
 
 \item{Org}{The genome-wide annotation for your organism.
-Optional, only required if SampleTileObj is a GRanges.}
+Optional, only required if Obj is a GRanges.}
 
 \item{promoterRegion}{Optional list containing the window size in basepairs
 defining the promoter region. The format is (upstream, downstream).
 Default is (2000, 100).}
 }
 \value{
-SampleTileObj the input data structure with added gene annotations.
+Obj, the input data structure with added gene annotations (whether GRanges or SampleTileObj)
 }
 \description{
 \code{annotateTiles} annotates a set of sample-tile matrices

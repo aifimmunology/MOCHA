@@ -2,36 +2,42 @@
 ### getCoverage turns sample/celltype-specific fragments lists into
 ### sample-specific coverage files for each sample-celltype.
 # @popFrags - GRangesList of fragments for all sample/celltypes
+# @normFactor - Normalizaiton factor. Can be either be one, in which case all coverage files will be normalized by the same value, or the same length as the GRangesList
 # @filterEmpty - True/False flag on whether or not to carry forward regions without coverage.
 # @numCores - number of cores to parallelize over
+# @verbose - Boolean variable to determine verbosity of output. 
 
 getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCores = 1, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {
     normFactor <- rep(normFactor, length(popFrags))
+  }else if(length(normFactor) != length(popFrags)){
+  
+    error('Length of normFactor is equal to length of popFrags. Please either give 1 value, or a vector of equal length to popFrags.')
+    
   }
 
   # Summarize the coverage over the region window at a single basepair resolution
-  tmpCounts <- parallel::mclapply(seq_along(popFrags), function(x) {
+  popCounts <- parallel::mclapply(seq_along(popFrags), function(x) {
     if (verbose) {
       print(paste("Counting", names(popFrags)[x], sep = " "))
     }
 
-    Num <- normFactor[x]
-    tmp <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score / Num)
+    Num <- normFactor[[x]]
+    counts_gr <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score / Num)
 
-    GenomeInfoDb::seqinfo(tmp) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(tmp))]
+    GenomeInfoDb::seqinfo(counts_gr) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(counts_gr))]
 
     if (filterEmpty) {
-      plyranges::filter(tmp, score > 0)
+      plyranges::filter(counts_gr, score > 0)
     } else {
-      tmp
+      counts_gr
     }
   }, mc.cores = numCores)
 
-  names(tmpCounts) <- names(popFrags)
+  names(popCounts) <- names(popFrags)
 
-  return(tmpCounts)
+  return(popCounts)
 }
 
 

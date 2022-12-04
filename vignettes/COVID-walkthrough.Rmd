@@ -69,10 +69,6 @@ For more details on each of these parameters, view the help pages for each funct
 cellPopLabel <- "CellSubsets" 
 cellPopulations <- c("MAIT", "CD16 Mono", "DC") 
 numCores <- 20
-
-# Parameters for generating the sample-tile matrices
-threshold <- 0.34 # We only have 3 samples for each COVID status (3 positive and 3 negative)
-groupColumn <- "COVID_status" 
 ```
 
 #################################################### 
@@ -101,11 +97,36 @@ tileResults <- MOCHA::callOpenTiles(
 ...for all cell populations.
 
 These matrices are organized by cell population RangedSummarizedExperiment object and are the primary input to downstream analyses.
+An advantage of MOCHA's ability to call sample-specific open tiles is that we can determine a high-quality set of"consensus tiles determined as follows: each sample "votes" on whether a tile is open for that sample, and we keep tiles that are called open by a minimum percentage of samples.
+The minimum percentage of samples which a tile must be called in to be retained is controlled by `threshold`. 
+`groupColumn` can be provided to specify a metadata column that separates your data by sample groups, e.g. if you have a case and control groups. Consensus tiles will be computed for each group, and the union of consensus tiles from each group are retained. This should be used where there are expected biological differences between the sample groups. Currently it is best utilized when each group has a similar size, as `threshold` will be applied to evenly each group.
+By default, groupColumn is null and all samples will be pooled to vote on consensus tiles.
 
 #################################################### 
 
 ```{r}
-SampleTileMatrices <- MOCHA::getSampleTileMatrix(tileResults, cellPopulations = cellPopulations, groupColumn = groupColumn, threshold = threshold, log2Intensity = TRUE )
+# We have 6 samples total: 3 samples for each COVID status (3 positive and 3 negative).
+# Since these groupings may have unique biology and we expect differences
+# in accessibility, we want to compute consensus tiles on each 
+# group independently and take the union of consensus tiles from each group.
+groupColumn <- "COVID_status" 
+
+# We set the threshold to require a tile must be open in at least 2 samples
+# in its group to be retained (2/3=0.66)
+threshold <- 0.66
+
+# Alternatively, you can set the threshold to 0 to keep the union of
+# all samples' open tiles.
+# This is equivalent to setting a threshold that would retain
+# tiles that are open in at least one sample. 
+
+SampleTileMatrices <- MOCHA::getSampleTileMatrix(
+  tileResults, 
+  cellPopulations = cellPopulations[1], 
+  groupColumn = groupColumn, 
+  threshold = threshold, 
+  log2Intensity = TRUE
+)
 ```
 
 #################################################### 

@@ -6,10 +6,11 @@
 \usage{
 getCoAccessibleLinks(
   SampleTileObj,
-  cellPopulation,
+  cellPopulation = "All",
   regions,
   windowSize = 1 * 10^6,
   numCores = 1,
+  ZI = TRUE,
   verbose = FALSE
 )
 }
@@ -24,6 +25,8 @@ Can be the output from getDifferentialAccessibleTiles.}
 \item{windowSize}{the size of the window, in basepairs, around each input region to search for co-accessible links}
 
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+
+\item{ZI}{boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
