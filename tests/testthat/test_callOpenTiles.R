@@ -20,7 +20,8 @@ if (
           Org = Org,
           cellPopLabel = "Clusters",
           cellPopulations = c("C2", "C5"),
-          numCores = 1
+          numCores = 1,
+          outDir = tempdir()
         ),
         type = "message"
       )
@@ -44,14 +45,13 @@ if (
         genome = MOCHA::exampleGenome,
         TxDb = TxDb,
         Org = Org,
-        outDir = "./test_out",
+        outDir = tempdir(),
         cellPopLabel = "Clusters",
         cellPopulations = c("C2", "C5"),
         numCores = 1
       ),
       type = "message"
     )
-    unlink("./test_out", recursive = TRUE)
 
     expect_snapshot(
       tiles,
