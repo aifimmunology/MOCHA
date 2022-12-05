@@ -23,9 +23,9 @@
 #' @param TxDb is an AnnotationDbi object with transcript info for the organism.
 #' @param Org is the genome-wide annotation package for your organism.
 #' @param outDir is a string describing the output directory for coverage files
-#'   per sample/celltype. Must be a complete directory string. Default is NULL,
-#'   in which case it'll pull out a directory from ArchR and make a new fold
-#'   named MOCHA for saving files.
+#'   and TxDb/Org. Must be a complete directory string. With ArchR input,
+#'   set outDir to NULL to create a directory within the input ArchR project 
+#'   directory named MOCHA for saving files.
 #' @param fast Optional, set to TRUE to use a faster but more memory-intensive
 #   algorithm. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
@@ -338,14 +338,17 @@ setMethod(
                                  studySignal = NULL,
                                  TxDb,
                                  Org,
+                                 outDir = NULL,
                                  fast = FALSE,
                                  numCores = 30,
                                  verbose = TRUE,
                                  force = FALSE) {
-  outDir <- paste(ArchR::getOutputDirectory(ATACFragments), "/MOCHA", sep = "")
+  
+  if (is.null(outDir)){
+    outDir <- paste(ArchR::getOutputDirectory(ATACFragments), "/MOCHA", sep = "")
+  }
 
   if (!file.exists(outDir)) {
-    # Generate folder within ArchR for outputting results
     if (verbose) {
       message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
     }
