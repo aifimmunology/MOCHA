@@ -13,25 +13,29 @@
 #'   returnObj=TRUE. Default is 'Motifs'.
 #'
 #' @return the modified SE_Object with motifs added to the metadata
-#' 
+#'
 #' @importFrom magrittr %>%
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' # load a curated motif set from library(chromVARmotifs)
 #' # included with ArchR installation
 #' data(human_pwms_v2)
 #' SE_with_motifs <- addMotifSet(
-#'   SE_Object, pwms = human_pwms_v2, 
-#'   returnObj = TRUE, motifSetName = "Motifs", w = 7)
+#'   SE_Object,
+#'   pwms = human_pwms_v2,
+#'   returnObj = TRUE, motifSetName = "Motifs", w = 7
+#' )
 #' }
 #'
 #' @export
 
 addMotifSet <- function(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName = "Motifs") {
-  if (!requireNamespace("motifmatchr", quietly = TRUE)){
-    stop("Package 'motifmatchr' is required for addMotifSet. ",
-          "Please install 'motifmatchr' to proceed.")
+  if (!requireNamespace("motifmatchr", quietly = TRUE)) {
+    stop(
+      "Package 'motifmatchr' is required for addMotifSet. ",
+      "Please install 'motifmatchr' to proceed."
+    )
   }
   TotalPeakSet <- SummarizedExperiment::rowRanges(SE_Object)
   genome <- S4Vectors::metadata(SE_Object)$Genome

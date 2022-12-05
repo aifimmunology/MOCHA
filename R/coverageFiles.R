@@ -5,16 +5,14 @@
 # @normFactor - Normalizaiton factor. Can be either be one, in which case all coverage files will be normalized by the same value, or the same length as the GRangesList
 # @filterEmpty - True/False flag on whether or not to carry forward regions without coverage.
 # @numCores - number of cores to parallelize over
-# @verbose - Boolean variable to determine verbosity of output. 
+# @verbose - Boolean variable to determine verbosity of output.
 
 getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCores = 1, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {
     normFactor <- rep(normFactor, length(popFrags))
-  }else if(length(normFactor) != length(popFrags)){
-  
-    stop('Length of normFactor is equal to length of popFrags. Please either give 1 value, or a vector of equal length to popFrags.')
-    
+  } else if (length(normFactor) != length(popFrags)) {
+    stop("Length of normFactor is equal to length of popFrags. Please either give 1 value, or a vector of equal length to popFrags.")
   }
 
   # Summarize the coverage over the region window at a single basepair resolution

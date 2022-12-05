@@ -30,16 +30,18 @@ callTilesBySample <- function(blackList,
                               returnAllTiles = FALSE,
                               totalFrags,
                               fragsList,
-							                verbose = FALSE,
+                              verbose = FALSE,
                               StudypreFactor) {
 
   # Coefficients trained on ~ 3600 frags per cell
   # Future datasets need to be calibrated to
   # these coefficients
 
-  if(any(is.na(fragsList))){
-    if (verbose) {warning('No cells from this sample. Returning NULL.')}
-    return(NULL)  
+  if (any(is.na(fragsList))) {
+    if (verbose) {
+      warning("No cells from this sample. Returning NULL.")
+    }
+    return(NULL)
   }
 
   finalModelObject <- MOCHA::finalModelObject
@@ -55,7 +57,7 @@ callTilesBySample <- function(blackList,
     fragMat = fragsList,
     candidatePeaks = FinalBins,
     totalFrags = totalFrags,
-	verbose = verbose
+    verbose = verbose
   )
 
   countsMatrix$TotalIntensity <- countsMatrix$TotalIntensity * StudypreFactor

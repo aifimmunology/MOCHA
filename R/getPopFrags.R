@@ -26,7 +26,7 @@
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
 #'   population defined by cellSubsets (and sample, if
 #'   \code{sampleSpecific=TRUE})
-#'   
+#'
 #'
 #' @export
 
@@ -103,11 +103,10 @@ getPopFrags <- function(ArchRProj,
 
     # Extract fragments from all available regions
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-
-      if(verbose){
-        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))	
+      if (verbose) {
+        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
       }
-	  
+
       ArchR::getFragmentsFromArrow(
         ArrowFile = arrows[x],
         cellNames = cellNames,
@@ -140,16 +139,15 @@ getPopFrags <- function(ArchRProj,
       as.data.frame() %>%
       dplyr::select(.data$seqnames)
     fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-	
-		if(verbose){
-			message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
-				fragsGRanges <- ArchR::getFragmentsFromArrow(
-				ArrowFile = arrows[x],
-				cellNames = cellNames,
-				chr = as.character(chrom[, 1]),
-				verbose = FALSE
-			) %>% plyranges::join_overlap_intersect(regionGRanges)
-		}
+      if (verbose) {
+        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
+        fragsGRanges <- ArchR::getFragmentsFromArrow(
+          ArrowFile = arrows[x],
+          cellNames = cellNames,
+          chr = as.character(chrom[, 1]),
+          verbose = FALSE
+        ) %>% plyranges::join_overlap_intersect(regionGRanges)
+      }
 
       # Filter according to provided blacklist
       if (is.null(blackList)) {
@@ -214,7 +212,7 @@ getPopFrags <- function(ArchRProj,
 
   popFrags <- lapply(seq_along(barcodesByCellPop), function(x) {
     if (verbose) {
-    message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
+      message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
     }
     if (sum(fragsListIndex[[x]]) > 1) {
       tmp <- parallel::mclapply(which(fragsListIndex[[x]]), function(y) {

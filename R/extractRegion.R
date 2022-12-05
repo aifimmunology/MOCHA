@@ -92,17 +92,17 @@ extractRegion <- function(SampleTileObj,
     subGroups <- "All"
     subSamples <- list("All" = metaFile[, "Sample"])
   }
-  
+
   # Determine if binning is needed to simplify things
   if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
     if (verbose) {
-    message(stringr::str_interp("Size of region exceeds ${approxLimit}bp. Binning data over ${binSize}bp windows."))
+      message(stringr::str_interp("Size of region exceeds ${approxLimit}bp. Binning data over ${binSize}bp windows."))
     }
     binnedData <- regionGRanges %>%
       plyranges::tile_ranges(., binSize) %>%
       dplyr::mutate(idx = c(1:length(.)))
   }
-  
+
 
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
@@ -112,7 +112,7 @@ extractRegion <- function(SampleTileObj,
       keepSamples <- grepl(paste(y, collapse = "|"), sampleNames)
       subSampleList <- originalCovGRanges[keepSamples]
 
-	  
+
       # If we don't want sample-specific, then average and get a dataframe out.
       # else, get a sample-specific count dataframe out.
       if (!sampleSpecific) {
@@ -134,49 +134,44 @@ extractRegion <- function(SampleTileObj,
           plyranges::compute_coverage(weight = .$score / sampleCount) %>%
           plyranges::join_overlap_intersect(regionGRanges)
         if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-
           mergedCounts %>% plyranges::join_overlap_intersect(binnedData)
-
-        }else{ mergedCounts}
-		  
+        } else {
+          mergedCounts
+        }
       } else {
         tmpCounts <- lapply(subSampleList, function(z) {
-          tmpGR <-  plyranges::join_overlap_intersect(z, regionGRanges)
+          tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges)
           if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
             tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
               plyranges::group_by(idx) %>%
               plyranges::reduce_ranges(score = mean(score)) %>%
               dplyr::ungroup()
           }
-		      tmpGR
+          tmpGR
         })
-		
+
         unlist(tmpCounts)
       }
     }, mc.cores = numCores)
     names(cellPopSubsampleCov) <- subGroups
     cellPopSubsampleCov
-	
   })
   names(cellPopulation_Files) <- cellPopulations
   allGroups <- unlist(cellPopulation_Files)
- 
+
   ## Generate a data.frame for export.
 
   if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-	  
     allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
       subGroupdf <- as.data.frame(allGroups[[x]])
-      subGroupdf $Groups <- rep(names(allGroups)[x], length(allGroups[[x]]))
+      subGroupdf$Groups <- rep(names(allGroups)[x], length(allGroups[[x]]))
 
       covdf <- subGroupdf[, c("seqnames", "start", "score", "Groups")]
       colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
       covdf
     }, mc.cores = numCores)
-
-  }else{
-
+  } else {
     allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
       tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
       tmp$score <- allGroups[[x]]$score[tmp$partition]
@@ -190,7 +185,7 @@ extractRegion <- function(SampleTileObj,
   }
 
   names(allGroupsDF) <- names(allGroups)
-  
+
   countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
     metadata = SampleTileObj@metadata
   )

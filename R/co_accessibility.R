@@ -8,7 +8,7 @@
 #' @param filterPairs list of passed tile-pairs that have been tested. Used to remove already tested pairs.
 #' @param numCores integer to determine # of parallel cores
 #' @param ZI boolean that determines whether to use zero-inflated or normal spearman correlations
-#' @param verbose boolean to determine verbosity of the function call. 
+#' @param verbose boolean to determine verbosity of the function call.
 #'
 #' @return a 3-column data.frame containing
 #'         - Correlation = Zero-inflated Spearman Correlation
@@ -35,7 +35,6 @@
 #' @noRd
 
 co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRUE, verbose = FALSE) {
-
   regionOfInterest <- rownames(subMat)[index]
   allOtherRegions <- rownames(subMat)[-index]
 
@@ -55,7 +54,9 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
   # If only one pair of tiles left, then nrows will hit an error.
   # length()==2 is equivalent to one row (pair)
   if (length(keyNeighborPairs) == 0 & verbose) {
-    if (verbose){warning("Warning: No tiles found in neighborhood of region of interest")}
+    if (verbose) {
+      warning("Warning: No tiles found in neighborhood of region of interest")
+    }
   } else if (length(keyNeighborPairs) == 0) {
     return(NULL)
   } else if (length(keyNeighborPairs) == 2) {

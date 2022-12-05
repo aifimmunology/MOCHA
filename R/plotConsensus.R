@@ -23,9 +23,8 @@ plotConsensus <- function(tileObject,
                           returnPlotList = FALSE,
                           returnDFs = FALSE,
                           numCores = 1) {
-  
   Reproducibility <- PeakNumber <- groups <- GroupName <- NULL
-  
+
   if (length(cellPopulations) == 1 & all(tolower(cellPopulations) == "all")) {
     subTileResults <- tileObject
     cellPopulations <- names(tileObject)

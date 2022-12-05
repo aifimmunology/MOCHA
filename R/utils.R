@@ -23,7 +23,7 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel) {
   trueCols[[sampleLabel]] <- TRUE
   cellColDF <- as.data.frame(cellColDT)
 
-  sampleData <- dplyr::distinct(cellColDF[, names(which(trueCols)), drop=F])
+  sampleData <- dplyr::distinct(cellColDF[, names(which(trueCols)), drop = F])
 
   # Set sampleIDs as rownames
   rownames(sampleData) <- sampleData[[sampleLabel]]
@@ -93,7 +93,7 @@ validRegionString <- function(regionString) {
 #'
 #' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
 #'   into a GRanges object
-#'   
+#'
 #' @param regionString A string or list of strings each in the format chr1:100-200
 #' @return a GRanges object with ranges representing the input string(s)
 #'
@@ -125,7 +125,7 @@ StringsToGRanges <- function(regionString) {
 #'
 #' @description \code{GRangesToString} Turns a GRanges Object into
 #'  a list of strings in the format chr1:100-200
-#' 	
+#'
 #' @param GR_obj the GRanges object to convert to a string
 #' @return A string or list of strings in the format 'chr1:100-200' representing
 #'  ranges in the input GRanges

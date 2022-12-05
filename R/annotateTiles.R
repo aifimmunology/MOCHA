@@ -5,7 +5,7 @@
 #'   and available annotations can be found at Bioconductor:
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
-#' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix, 
+#' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix,
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
 #' @param TxDb The annotation package for TxDb object for your genome.
 #'   Optional, only required if Obj is a GRanges.
@@ -16,10 +16,10 @@
 #' Default is (2000, 100).
 #'
 #' @return Obj, the input data structure with added gene annotations (whether GRanges or SampleTileObj)
-#' 
+#'
 #' @importFrom magrittr %>%
-#' @importFrom rlang .data 
-#' 
+#' @importFrom rlang .data
+#'
 #' @examples
 #' \dontrun{
 #' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
@@ -56,7 +56,7 @@ annotateTiles <- function(Obj,
   promoterSet <- IRanges::stack(txList) %>%
     GenomicRanges::trim(.) %>%
     S4Vectors::unique(.) %>%
-   GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])
+    GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])
 
 
   getOverlapNameList <- function(rowTiles, annotGR) {

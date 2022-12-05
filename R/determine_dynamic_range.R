@@ -37,7 +37,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
     coreNum = 30
   )
 
-  if (!methods::is(binSize,"numeric") | binSize < 0) {
+  if (!methods::is(binSize, "numeric") | binSize < 0) {
     stop(paste('invalid binSize!: binSize must be an integer value > 0 indicating the width of the genomic region check "binSize=',
       binSize, '" input',
       sep = ""
@@ -56,7 +56,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
   RangeBins <- plyranges::stretch(plyranges::anchor_end(TotalRangesFilt),
     extend = GenomicRanges::start(TotalRangesFilt) %% binSize
   )
-  
+
   FinalBins <- plyranges::stretch(plyranges::anchor_start(RangeBins),
     extend = (binSize - IRanges::end(RangeBins) %% binSize)
   ) %>%

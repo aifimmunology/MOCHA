@@ -132,7 +132,7 @@ counts_plot_samples <- function(countdf,
   assertthat::assert_that("Locus" %in% names(countdf))
   assertthat::assert_that("Groups" %in% names(countdf))
   assertthat::assert_that(counts_color_var %in% names(countdf))
-  
+
   Locus <- Counts <- Groups <- Groups2 <- NULL
   # Fill in theme any unspecified theme options with defaults
   default_theme <- .counts_plot_default_theme
@@ -155,7 +155,7 @@ counts_plot_samples <- function(countdf,
 
   # Plots
   x <- y <- label <- theme <- NULL
-  
+
   if (tolower(plotType) == "overlaid") {
     # Conditional Theme
     if (is.null(legend.position)) {
@@ -318,7 +318,7 @@ counts_plot_samples <- function(countdf,
 #' defining breaks in scale_gradientn(), for example
 #' @param breaks vector of breaks
 #' @param x vector of weights
-#' 
+#'
 #' @noRd
 breaks_to_scaledbreaks <- function(breaks, x) {
   rescaled_weights <- scales::rescale(x)
@@ -349,7 +349,7 @@ cleanup_breaks <- function(breaks, x) {
 #'
 #' @param motifsList List of motifs
 #' @param countdf A counts data frame object from getPop
-#' 
+#'
 #' @noRd
 get_motifs_in_region <- function(motifsList, countdf) {
   . <- name <- index <- NULL
@@ -357,24 +357,23 @@ get_motifs_in_region <- function(motifsList, countdf) {
   startSite <- min(countdf$Locus)
   endSite <- max(countdf$Locus)
   regionGRanges <- GenomicRanges::GRanges(
-    seqnames = chrom, 
-    ranges = IRanges::IRanges(start = startSite, end = endSite), 
+    seqnames = chrom,
+    ranges = IRanges::IRanges(start = startSite, end = endSite),
     strand = "*"
   )
 
   specMotifs <- unlist(motifsList) %>%
     plyranges::mutate(name = gsub("_.*", "", names(.))) %>%
-    plyranges::join_overlap_intersect(regionGRanges) 
-	
-  if(length(specMotifs) > 0) { 
-  
-		specMotifs <- specMotifs %>%
-		plyranges::mutate(type = "exon") %>%
-		plyranges::mutate(index = seq(1, length(.), by = 1)) %>%
-		plyranges::mutate(labels = paste(name, index, sep = "_"))
-	
+    plyranges::join_overlap_intersect(regionGRanges)
 
-  }else{ specMotifs= NULL }
+  if (length(specMotifs) > 0) {
+    specMotifs <- specMotifs %>%
+      plyranges::mutate(type = "exon") %>%
+      plyranges::mutate(index = seq(1, length(.), by = 1)) %>%
+      plyranges::mutate(labels = paste(name, index, sep = "_"))
+  } else {
+    specMotifs <- NULL
+  }
 
   return(specMotifs)
 }
@@ -399,7 +398,7 @@ get_motifs_in_region <- function(motifsList, countdf) {
 #' @param motif_line_size Numeric value, default 1. Size of motif lines.
 #' @param motif_line_alpha Numeric value, default 0.25. Alpha for motif lines.
 #' @return The input ggplot object with motif labels overlaid
-#' 
+#'
 #' @importFrom magrittr %>%
 #' @noRd
 counts_plot_motif_overlay <- function(p1,
@@ -414,7 +413,6 @@ counts_plot_motif_overlay <- function(p1,
                                       motif_lab_alpha = 0.25,
                                       motif_line_size = 0.75,
                                       motif_line_alpha = 0.25) {
-
   mweight <- name <- NULL
 
   # Retrieve annotations in region and format
@@ -422,12 +420,12 @@ counts_plot_motif_overlay <- function(p1,
     countdf = countdf,
     motifsList = motifsList
   )
-  
-  if(is.null(specMotifs)){ 
-		warning('No motifs found for this region')
-		return(p1)
-	}
-  
+
+  if (is.null(specMotifs)) {
+    warning("No motifs found for this region")
+    return(p1)
+  }
+
   reduceMotifs <- plyranges::reduce_ranges(specMotifs, count = plyranges::n(), names = paste(labels, collapse = ","))
   splitMotifs <- strsplit(reduceMotifs$names, split = ",")
 
@@ -469,7 +467,7 @@ counts_plot_motif_overlay <- function(p1,
         paste(utils::head(unique(stats::na.omit(tmp_motifdf$label)), 3), collapse = ", ")
       ))
     }
-    
+
     tmp_motifdf <- tmp_motifdf %>%
       dplyr::mutate(mweight = ifelse(labels %in% names(motif_weights), motif_weights[labels], NA)) %>%
       dplyr::mutate(mweight = ifelse(!all(is.na(mweight)), max(mweight, na.rm = T), NA)) %>% # still grouped by name. this ensures weights are applied to each row of same motif
@@ -479,81 +477,78 @@ counts_plot_motif_overlay <- function(p1,
         is.na(.data$mweight) ~ as.numeric(NA),
         TRUE ~ .data$mweight
       ))
-	  
+
     # Plot
     p1 <- p1 +
-    ggplot2::geom_line(
-    data = tmp_motifdf,
-    ggplot2::aes(x = x, y = y, group = name, color = mweight),
-    alpha = motif_line_alpha,
-    size = motif_line_size
-    )	+
-    # vertical labels
-    ggrepel::geom_text_repel(
-      data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
-      ggplot2::aes(x = x, y = y, label = labels, color = mweight),
-      direction = "x",
-      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
-      alpha = motif_lab_alpha,
-      size = motif_lab_size,
-      segment.size = 0.25,
-      max.overlaps = 50,
-      min.segment.length = 0
-    ) +
-    # motif labels along x-axis
-    ggrepel::geom_text_repel(
-      data = tmp_motifdf[tmp_motifdf$y == 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
-      ggplot2::aes(x = x, y = y, label = labels, color = mweight),
-      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
-      alpha = motif_lab_alpha,
-      size = motif_lab_size,
-      direction = "y",
-      segment.size = 0.25,
-      min.segment.length = 0,
-      nudge_y = -max(countdf$Counts) / 20
-    ) +
-    ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
-    ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
-
-
+      ggplot2::geom_line(
+        data = tmp_motifdf,
+        ggplot2::aes(x = x, y = y, group = name, color = mweight),
+        alpha = motif_line_alpha,
+        size = motif_line_size
+      ) +
+      # vertical labels
+      ggrepel::geom_text_repel(
+        data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
+        ggplot2::aes(x = x, y = y, label = labels, color = mweight),
+        direction = "x",
+        arrow = grid::arrow(length = grid::unit(0.5, "mm")),
+        alpha = motif_lab_alpha,
+        size = motif_lab_size,
+        segment.size = 0.25,
+        max.overlaps = 50,
+        min.segment.length = 0
+      ) +
+      # motif labels along x-axis
+      ggrepel::geom_text_repel(
+        data = tmp_motifdf[tmp_motifdf$y == 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
+        ggplot2::aes(x = x, y = y, label = labels, color = mweight),
+        arrow = grid::arrow(length = grid::unit(0.5, "mm")),
+        alpha = motif_lab_alpha,
+        size = motif_lab_size,
+        direction = "y",
+        segment.size = 0.25,
+        min.segment.length = 0,
+        nudge_y = -max(countdf$Counts) / 20
+      ) +
+      ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
+      ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
   } else {
-    #tmp_motifdf$mweight <-  1
-	
+    # tmp_motifdf$mweight <-  1
+
     # Plot
     p1 <- p1 +
-    ggplot2::geom_line(
-      data = tmp_motifdf,
-      ggplot2::aes(x = x, y = y, group = name),
-      alpha = motif_line_alpha,
-      size = motif_line_size
-    )	+
-    # vertical labels
-    ggrepel::geom_text_repel(
-      data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
-      ggplot2::aes(x = x, y = y, label = labels),
-      direction = "x",
-      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
-      alpha = motif_lab_alpha,
-      size = motif_lab_size,
-      segment.size = 0.25,
-      max.overlaps = 50,
-      min.segment.length = 0
-    ) +
-    # motif labels along x-axis
-    ggrepel::geom_text_repel(
-      data = tmp_motifdf[tmp_motifdf$y == 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
-      ggplot2::aes(x = x, y = y, label = labels),
-      arrow = grid::arrow(length = grid::unit(0.5, "mm")),
-      alpha =  motif_lab_alpha,
-      size = motif_lab_size,
-      direction = "y",
-      segment.size = 0.25,
-      min.segment.length = 0,
-      nudge_y = -max(countdf$Counts) / 20
-    ) +
-    ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
-    ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
-
+      ggplot2::geom_line(
+        data = tmp_motifdf,
+        ggplot2::aes(x = x, y = y, group = name),
+        alpha = motif_line_alpha,
+        size = motif_line_size
+      ) +
+      # vertical labels
+      ggrepel::geom_text_repel(
+        data = tmp_motifdf[tmp_motifdf$y > 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
+        ggplot2::aes(x = x, y = y, label = labels),
+        direction = "x",
+        arrow = grid::arrow(length = grid::unit(0.5, "mm")),
+        alpha = motif_lab_alpha,
+        size = motif_lab_size,
+        segment.size = 0.25,
+        max.overlaps = 50,
+        min.segment.length = 0
+      ) +
+      # motif labels along x-axis
+      ggrepel::geom_text_repel(
+        data = tmp_motifdf[tmp_motifdf$y == 0 & !is.na(tmp_motifdf$labels), ], # removed the NA rows to prevent warnings for intentionally missing labels
+        ggplot2::aes(x = x, y = y, label = labels),
+        arrow = grid::arrow(length = grid::unit(0.5, "mm")),
+        alpha =  motif_lab_alpha,
+        size = motif_lab_size,
+        direction = "y",
+        segment.size = 0.25,
+        min.segment.length = 0,
+        nudge_y = -max(countdf$Counts) / 20
+      ) +
+      ggplot2::ylim(-max(countdf$Counts) / 10, max(countdf$Counts)) +
+      ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
   }
 
   # Color text by motif weights
@@ -565,11 +560,11 @@ counts_plot_motif_overlay <- function(p1,
       na.value = "gray", # may want to parameterize this
       name = motif_weight_name
     )
-  } #else {
-   # p1 <- p1 #scale_color_gradient(low = "black", high = "black", na.value = "gray", name = motif_weight_name, guide = "none")
-	#scale_color_manual(values = "gray", breaks = 1, na.value = "gray", name = motif_weight_name, guide = "none")
-	#scale_color_discrete("gray", name = motif_weight_name, guide = "none")
-  #}
+  } # else {
+  # p1 <- p1 #scale_color_gradient(low = "black", high = "black", na.value = "gray", name = motif_weight_name, guide = "none")
+  # scale_color_manual(values = "gray", breaks = 1, na.value = "gray", name = motif_weight_name, guide = "none")
+  # scale_color_discrete("gray", name = motif_weight_name, guide = "none")
+  # }
 
   return(p1)
 }
@@ -665,7 +660,7 @@ get_gene_body_model <- function(whichGene,
         model = "exon"
       )
     }
-    
+
     newModel <- rbind(newGRangesf, beginexon, endexon) %>%
       plyranges::mutate(nameList = paste(whichGene, tx_name, sep = ": ")) %>%
       GenomicRanges::makeGRangesListFromDataFrame(., split.field = "nameList", keep.extra.columns = TRUE)
@@ -713,7 +708,7 @@ plot_whichGene <- function(newModel,
                            base_size = 12,
                            theme_ls = .gene_plot_theme) {
   model <- theme <- NULL
-  
+
   # if(is.null(x_min)){
   #     xmin = min(newModel$
   # }
@@ -757,7 +752,7 @@ plot_whichGene <- function(newModel,
 #' @param collapseGenes Logical value, default FALSE. If TRUE will collapse all genes into one line.
 #' sites into a single row
 #' @return A ggplot object
-#' 
+#'
 #' @noRd
 plot_geneBody <- function(organismdb,
                           geneBody_gr,
@@ -806,7 +801,7 @@ plot_geneBody <- function(organismdb,
 #' @noRd
 simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
   len <- tx_len <- utr5_len <- utr3_len <- gene_id <- tx_id <- . <- NULL
-  
+
   # retrieve transcript lengths
   txlen <- GenomicFeatures::transcriptLengths(TxDb, with.utr5_len = TRUE, with.utr3_len = TRUE)
   setDT(txlen)
@@ -824,7 +819,8 @@ simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
   txb$genes <- as.data.frame(txb$genes[txb$genes$tx_id %in% ltx, ])
   chrominfo <- as.data.frame(GenomeInfoDb::seqinfo(TxDb)) %>%
     dplyr::mutate(chrom = rownames(.data)) %>%
-    dplyr::rename(length = .data$seqlengths, is_circular = .data$isCircular) %>% as.data.frame()
+    dplyr::rename(length = .data$seqlengths, is_circular = .data$isCircular) %>%
+    as.data.frame()
   txb2 <- GenomicFeatures::makeTxDb(txb$transcripts, txb$splicings, txb$genes, chrominfo,
     metadata =
       dplyr::filter(
@@ -841,17 +837,17 @@ simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
 
 
 #' Generate a link plot from a dataframe of co-accessible links
-#' 
+#'
 #' @param regionGRanges GRanges containing the regions to plot
 #' @param legend.position legend.position
 #' @param relativeHeights named list of tracks and relative track heights
 #' @param linkdf Dataframe of co-accessible links from getCoAccessibleLinks
-#' 
+#'
 #' @noRd
 get_link_plot <- function(regionGRanges, legend.position = NULL,
                           relativeHeights, linkdf) {
   start <- end <- y <- Correlation <- NULL
-  
+
   linkdf2 <- dplyr::filter(linkdf, .data$start + 250 > GenomicRanges::start(regionGRanges) & end - 250 < GenomicRanges::end(regionGRanges))
 
   ## Set Curvature to fit window
@@ -864,7 +860,7 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
   } else {
     curveVal <- 0.4
   }
-  
+
   p5 <- ggplot2::ggplot() +
     ggplot2::geom_curve(ggplot2::aes(
       x = start + 250, xend = end - 250,

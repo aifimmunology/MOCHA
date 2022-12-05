@@ -32,7 +32,6 @@ dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, c
   AllFrags <- plyranges::bind_ranges(AllFragsList) %>% plyranges::reduce_ranges(counts = sum(counts))
 
   if (doBin) {
-
     SmallFrags <- AllFrags[IRanges::width(AllFrags) <= GeneralWindowSize + WindowSizeRange]
 
     BigFrags <- AllFrags[IRanges::width(AllFrags) > GeneralWindowSize + WindowSizeRange] %>%

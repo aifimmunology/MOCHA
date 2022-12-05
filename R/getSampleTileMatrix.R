@@ -17,7 +17,7 @@
 #' @param threshold Threshold for consensus tiles, the minimum \% of samples
 #'   (within a sample group, if groupColumn is set) that a peak must be called
 #'   in to be retained. If set to 0, retain the union of all samples' peaks
-#'   (this is equivalent to a threshold of 1/numSamples). It is recommended to 
+#'   (this is equivalent to a threshold of 1/numSamples). It is recommended to
 #'   tune this parameter to omit potentially spurious peaks.
 #' @param log2Intensity Boolean, set to TRUE to return the log2 of the
 #'   sample-tile intensity matrix. Optional, default is FALSE.
@@ -50,7 +50,6 @@ getSampleTileMatrix <- function(tileResults,
                                 log2Intensity = TRUE,
                                 numCores = 1,
                                 verbose = FALSE) {
-
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
   }
@@ -96,21 +95,24 @@ getSampleTileMatrix <- function(tileResults,
     )
   }, mc.cores = numCores)
 
-  errorMessages <- parallel::mclapply(tilesByCellPop, function(x){ 
-      if(any(grepl('Error', x))){ x[grep('Error', x)] }
-      else{ NA}
+  errorMessages <- parallel::mclapply(tilesByCellPop, function(x) {
+    if (any(grepl("Error", x))) {
+      x[grep("Error", x)]
+    } else {
+      NA
+    }
   }, mc.cores = numCores)
 
   names(errorMessages) <- names(subTileResults)
 
-  if(any(!is.na(errorMessages))){
-
-    stop('Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again',
-          'If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types, ',
-          'Or, you can lower the threshold. ',
-          'The following cell types were impacted:',
-          paste(names(errorMessages)[!is.na(errorMessages)], collapse = ', '))
-
+  if (any(!is.na(errorMessages))) {
+    stop(
+      "Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again",
+      "If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types, ",
+      "Or, you can lower the threshold. ",
+      "The following cell types were impacted:",
+      paste(names(errorMessages)[!is.na(errorMessages)], collapse = ", ")
+    )
   }
 
   allTiles <- sort(unique(do.call("c", tilesByCellPop)))
@@ -128,12 +130,12 @@ getSampleTileMatrix <- function(tileResults,
       log2Intensity
     )
   }, mc.cores = numCores)
-    
+
   # Order sampleData rows to match the same order as the columns
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
   colOrder <- colnames(sampleTileIntensityMatList[[maxMat]])
-  sampleData <- sampleData[match(colOrder, rownames(sampleData)),]
-  
+  sampleData <- sampleData[match(colOrder, rownames(sampleData)), ]
+
   . <- NULL
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
     do.call("cbind", .) %>%
