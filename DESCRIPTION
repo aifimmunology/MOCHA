@@ -37,9 +37,9 @@ Description: A statistical framework and analysis tool for open chromatin
   MOCHA provides a statistical foundation for complex downstream analysis to 
   help advance the potential of single cell ATAC-seq for applied studies. 
   Methods for zero-inflated statistics are as described in: 
-  Ghazanfar, S., Lin, Y., Su, X. et al. (2020) <doi:10.1038/s41592-020-0885>.
+  Ghazanfar, S., Lin, Y., Su, X. et al. (2020) <doi:10.1038/s41592-020-0885-x>.
   Pimentel, Ronald Silva, "Kendall's Tau and Spearman's Rho for Zero-Inflated 
-  Data" (2009) <https://scholarworks.wmich.edu/dissertations/721>.
+  Data" (2009) <https://scholarworks.wmich.edu/dissertations/721/>.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
