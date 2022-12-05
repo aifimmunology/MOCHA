@@ -145,7 +145,7 @@ TxDb = TxDb,
 Org = Org,
 outDir = "./test_out",
 cellPopLabel = "Clusters",
-cellPopulations = c("C1", "C2"),
+cellPopulations = c("C2", "C5"),
 numCores = 1
 )
 }

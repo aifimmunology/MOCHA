@@ -52,15 +52,15 @@
 #' 
 #' # Starting from GRangesList
 #' tiles <- MOCHA::callOpenTiles(
-#' ATACFragments = MOCHA:::ATACFragments,
-#' cellColData = MOCHA:::cellColData,
-#' blackList = MOCHA:::blackList,
-#' genome = MOCHA:::genome,
+#' ATACFragments = MOCHA::exampleFragments,
+#' cellColData = MOCHA::exampleCellColData,
+#' blackList = MOCHA::exampleBlackList,
+#' genome = MOCHA::exampleGenome,
 #' TxDb = TxDb,
 #' Org = Org,
 #' outDir = "./test_out",
 #' cellPopLabel = "Clusters",
-#' cellPopulations = c("C1", "C2"),
+#' cellPopulations = c("C2", "C5"),
 #' numCores = 1
 #' )
 #' }
