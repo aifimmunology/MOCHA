@@ -45,17 +45,17 @@ getCoAccessibleLinks <- function(SampleTileObj,
   
 	  tileDF <- do.call('cbind', SummarizedExperiment::assays(SampleTileObj))
 	
-  }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
+  }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))){
   
- 	  tileDF <- do.call('cbind', assays(SampleTileObj)[names(assays(SampleTileObj)) %in% cellPopulation])
+ 	  tileDF <- do.call('cbind', SummarizedExperiment::assays(SampleTileObj)[names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation])
 	
-  }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
+  }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))){
   
  	  tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
 	
   }else{
   
-	  error('Cell type not found within SampleTileObj')
+	  stop('Cell type not found within SampleTileObj')
   
   }
 

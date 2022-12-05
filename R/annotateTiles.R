@@ -32,6 +32,7 @@ annotateTiles <- function(Obj,
                           TxDb = NULL,
                           Org = NULL,
                           promoterRegion = c(2000, 100)) {
+  . <- Type <- NULL
   if (class(Obj)[1] == "RangedSummarizedExperiment" & is.null(TxDb) & is.null(Org)) {
     if (!all(c("TxDb", "Org") %in% names(S4Vectors::metadata(Obj)))) {
       stop("Error: TxDb and/or Org are missing from SampleTileObj. SampleTileObj as a RangedSummarizedExperiment must contain a TxDb and Org in the metadata.")
@@ -78,11 +79,11 @@ annotateTiles <- function(Obj,
       TRUE ~ "Distal"
     )) %>%
     dplyr::left_join(promo_overlaps, by = c("Index" = "queryHits")) %>%
-    dplyr::rename("Promo" = Genes) %>%
+    dplyr::rename("Promo" = .data$Genes) %>%
     dplyr::left_join(txs_overlaps, by = c("Index" = "queryHits")) %>%
-    dplyr::rename("Txs" = Genes) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Promoter", Promo, NA)) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Intragenic", Txs, Genes))
+    dplyr::rename("Txs" = .data$Genes) %>%
+    dplyr::mutate(Genes = ifelse(Type == "Promoter", .data$Promo, NA)) %>%
+    dplyr::mutate(Genes = ifelse(Type == "Intragenic", .data$Txs, .data$Genes))
 
   tileGRanges$tileType <- tileType$Type
   tileGRanges$Gene <- tileType$Genes
