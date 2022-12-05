@@ -23,7 +23,7 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel) {
   trueCols[[sampleLabel]] <- TRUE
   cellColDF <- as.data.frame(cellColDT)
 
-  sampleData <- dplyr::distinct(cellColDF[, names(which(trueCols))])
+  sampleData <- dplyr::distinct(cellColDF[, names(which(trueCols)), drop=F])
 
   # Set sampleIDs as rownames
   rownames(sampleData) <- sampleData[[sampleLabel]]
