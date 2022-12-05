@@ -7,6 +7,8 @@
 #' @param cellPopulation A string denoting the cell population of interest, which must be present in SampleTileObj
 #' @param regions a GRanges object or vector or strings containing the regions on which to compute co-accessible links. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
 #'   Can be the output from getDifferentialAccessibleTiles.
+#' @param chrChunks This functions subsets by groups of chromosome, and then parallelizes within each group of chromosomes when running correlations. This method keeps memory
+#'   low. To speed things up on high performing platforms, you can chunk out more than one chromosome at a time. Default is chrChunks = 1, so only one chromosome at a time. 
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -28,17 +30,29 @@
 getCoAccessibleLinks <- function(SampleTileObj, 
                                  cellPopulation = 'All', 
                                  regions, 
+                                 chrChunks = 1,
                                  windowSize = 1 * 10^6, 
                                  numCores = 1, 
                                  ZI = TRUE,
                                  verbose = FALSE) {
 
+  #verify input
   if (methods::is(regions, "GRanges")) {
     regionDF <- as.data.frame(regions)
   } else if (methods::is(regions,"character")) {
     regionDF <- MOCHA::StringsToGRanges(regions) %>% as.data.frame()
   } else {
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
+  }
+
+  if(!methods::is(chrChunks,'numeric')){
+
+    stop('chrChunks is not numeric')
+  
+  }else if(chrChunks %% 1 != 0 | chrChunks <= 0){
+
+    stop('chrChunks is not a positive integer value. Please set chrChunks to be a positive integer.')
+
   }
 
   if(cellPopulation == 'All'){
@@ -95,19 +109,23 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   }, cl = numCores) %>% do.call('rbind', .)   %>% dplyr::distinct()
 
+  # Determine chromosomes to search over, and the number of iterations to run through. 
   chrNum <- paste(regionDF$chr,":",sep='')
+  numChunks <- length(chrNum) %/% chrChunks 
+  numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks + 1, numChunks)
 
-  zi_spear_mat <- NULL
-
-  return(allCombinations)
+  #Initialize zi_spear_mat for iterations
+  zi_spear_mat = NULL
   
-  for(i in chrNum){
+  for(i in 1:numChunks){
 
-    subTileDF <- tileDF[grepl(i, rownames(tileDF)),]
-    subCombinations <- allCombinations[grepl(i, allCombinations$Key),]
+    specChr <- paste0(chrNum[which(c(1:numChunks) >= (i-1)*numChunks & c(1:numChunks < i*numChunks))], collapse = "|")
+
+    subTileDF <- tileDF[grepl(specChr, rownames(tileDF)),]
+    subCombinations <- allCombinations[grepl(specChr, allCombinations$Key),]
 
     # General case for >1 pair
-    zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
+    MOCHA:::zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
       function(x) {
         weightedZISpearman(
           x = subTileDF[subCombinations[x, "Key"], ],
