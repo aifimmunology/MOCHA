@@ -21,6 +21,7 @@
 #'  FALSE. Default is TRUE.
 #' @param numCores The number of cores to use with multiprocessing.
 #'  Default is 1.
+#' @param verbose Display additional messaging. Default is TRUE.
 #'
 #' @return full_results The differential accessibility results as a GRanges or
 #'   matrix data.frame depending on the flag `outputGRanges`.
@@ -57,13 +58,16 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
-                                           numCores = 2) {
+                                           numCores = 2,
+                                           verbose = TRUE) {
   if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
   }
 
   if (signalThreshold < 1) {
+    if (verbose) {
     warning("Setting the signalThreshold too low will reduce statistical power. You may inspect the distribution of intensities to set a threshold that will remove highly sparse regions.")
+    }
   }
 
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
@@ -187,10 +191,10 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   )]
 
   discoveries <- sum(full_results$FDR <= fdrToDisplay, na.rm = TRUE)
-  message(
+  if (verbose) {message(
     discoveries, " differential regions found at FDR ",
     fdrToDisplay
-  )
+  )}
 
   if (outputGRanges) {
     full_results <- MOCHA::differentialsToGRanges(full_results)

@@ -55,8 +55,7 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
   # If only one pair of tiles left, then nrows will hit an error.
   # length()==2 is equivalent to one row (pair)
   if (length(keyNeighborPairs) == 0 & verbose) {
-    warning("Warning: No tiles found in neighborhood of region of interest")
-    return(NULL)
+    if (verbose){warning("Warning: No tiles found in neighborhood of region of interest")}
   } else if (length(keyNeighborPairs) == 0) {
     return(NULL)
   } else if (length(keyNeighborPairs) == 2) {

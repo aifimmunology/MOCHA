@@ -20,7 +20,7 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
   # Summarize the coverage over the region window at a single basepair resolution
   popCounts <- parallel::mclapply(seq_along(popFrags), function(x) {
     if (verbose) {
-      print(paste("Counting", names(popFrags)[x], sep = " "))
+      message(paste("Counting", names(popFrags)[x], sep = " "))
     }
 
     Num <- normFactor[[x]]

@@ -134,7 +134,9 @@ setGeneric(
   }
   
   if (!file.exists(outDir)) {
-    message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    if (verbose) {
+      message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    }
     dir.create(outDir)
   }
   
@@ -159,12 +161,14 @@ setGeneric(
   
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
+    if (verbose) {
     message(
       "studySignal was not provided. ",
       "Calculating study signal on cellColData as the median ",
       "nFrags with the assumption that all cell populations are ",
       "present in cellColData."
     )
+    }
     studySignal <- stats::median(cellColData$nFrags)
   }
   study_prefactor <- 3668 / studySignal # Training median
@@ -172,7 +176,7 @@ setGeneric(
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in cellPopulations) {
-    message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
+    if (verbose) {message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))}
     
     # Get our fragments for this cellPop
     frags <- ATACFragments[grep(cellPop, names(ATACFragments))]
@@ -246,10 +250,10 @@ setGeneric(
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
     
     if(length(emptyGroups) > 0){
-      warning(
+      if (verbose) {warning(
         paste("The following celltype#sample groupings have too few cells (<5)",
         "and will be ignored: ", names(tilesGRangesList)[emptyGroups])
-      )
+      )}
     }
     for (i in emptyGroups) {
       # This is an empty region placeholder that represents an empty sample
@@ -340,7 +344,9 @@ setMethod(
 
   if (!file.exists(outDir)) {
     # Generate folder within ArchR for outputting results
-    message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    if (verbose) {
+      message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    }
     dir.create(outDir)
   }
 
@@ -385,12 +391,14 @@ setMethod(
   
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
-    message(
-      "studySignal was not provided. ",
-      "Calculating study signal on ArchR project as the median ",
-      "nFrags with the assumption that all cell populations are ",
-      "present in ArchR project."
-    )
+    if (verbose) {
+      message(
+        "studySignal was not provided. ",
+        "Calculating study signal on ArchR project as the median ",
+        "nFrags with the assumption that all cell populations are ",
+        "present in ArchR project."
+      )
+    }
     studySignal <- stats::median(cellColData$nFrags)
   }
   study_prefactor <- 3668 / studySignal # Training median
@@ -398,8 +406,9 @@ setMethod(
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in cellPopulations) {
+    if (verbose) {
     message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
-
+    }
     # Get our fragments for this cellPop
     frags <- MOCHA::getPopFrags(
       ArchRProj = ATACFragments,
@@ -472,10 +481,10 @@ setMethod(
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
     
     if(length(emptyGroups) > 0){
-      warning(
+      if (verbose) {warning(
         paste("The following celltype#sample groupings have too few cells (<5)",
               "and will be ignored: ", names(tilesGRangesList)[emptyGroups])
-      )
+      )}
     }
     for (i in emptyGroups) {
       # This is an empty region placeholder that represents an empty sample
@@ -569,10 +578,10 @@ callOpenTilesFast <- function(ArchRProj,
   emptyGroups <- gsub("__.*", "", emptyGroups)
 
   if (length(emptyGroups) == 0) {
-    warning(
+    if (verbose) {warning(
       "The following celltype#sample groupings have no fragments",
       "and will be ignored: ", emptyGroups
-    )
+    )}
   }
 
   prefilterCellPops <- unique(sapply(strsplit(names(frags), "#"), `[`, 1))
@@ -593,8 +602,9 @@ callOpenTilesFast <- function(ArchRProj,
   # here we rename the fragments with the original cell populations labels.
   # Fragments maintain their order by cell population.
   names(splitFrags) <- finalCellPopulations
+  if (verbose) {
   message("Cell populations for peak calling: ", paste(names(splitFrags), collapse = ", "))
-
+  }
 
   if (is.null(outDir)) {
     # Generate folder within ArchR project for outputting results
@@ -605,18 +615,22 @@ callOpenTilesFast <- function(ArchRProj,
   }
 
   if (!file.exists(outDir)) {
+    if (verbose) {
     message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
-    dir.create(outDir)
+    }
+      dir.create(outDir)
   }
   
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
+    if (verbose) {
     message(
       "studySignal was not provided. ",
       "Calculating study signal on ArchR project as the median ",
       "nFrags with the assumption that all cell populations are ",
       "present in ArchR project."
     )
+    }
     studySignal <- stats::median(cellColData$nFrags)
   }
   study_prefactor <- 3668 / studySignal # Training median
@@ -624,8 +638,9 @@ callOpenTilesFast <- function(ArchRProj,
   # Main loop over all cell populations
   experimentList <- list()
   for (cellPop in names(splitFrags)) {
+    if (verbose) {
     message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
-
+    }
     # Get our fragments for this cellPop
     popFrags <- unlist(splitFrags[[cellPop]])
 

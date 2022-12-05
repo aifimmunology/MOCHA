@@ -16,6 +16,7 @@
 #' @param binSize Optional, size of bins in basepairs when binning is used. Default is 250.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
+#' @param verbose Display additional messaging
 #'
 #' @return countSE a SummarizedExperiment containing coverage for the given input cell populations.
 #'
@@ -42,7 +43,8 @@ extractRegion <- function(SampleTileObj,
                           sampleSpecific = FALSE,
                           approxLimit = 100000,
                           binSize = 250,
-                          numCores = 1) {
+                          numCores = 1,
+                          verbose = TRUE) {
   . <- idx <- score <- NULL
 
   cellNames <- names(SummarizedExperiment::assays(SampleTileObj))
@@ -93,7 +95,9 @@ extractRegion <- function(SampleTileObj,
   
   # Determine if binning is needed to simplify things
   if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
+    if (verbose) {
     message(stringr::str_interp("Size of region exceeds ${approxLimit}bp. Binning data over ${binSize}bp windows."))
+    }
     binnedData <- regionGRanges %>%
       plyranges::tile_ranges(., binSize) %>%
       dplyr::mutate(idx = c(1:length(.)))

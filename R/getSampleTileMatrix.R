@@ -91,7 +91,8 @@ getSampleTileMatrix <- function(tileResults,
       x,
       sampleData,
       threshold,
-      groupColumn
+      groupColumn,
+      verbose = verbose
     )
   }, mc.cores = numCores)
 
@@ -104,7 +105,6 @@ getSampleTileMatrix <- function(tileResults,
 
   if(any(!is.na(errorMessages))){
 
-    print(errorMessages[!is.na(errorMessages)])
     stop('Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again',
           'If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types, ',
           'Or, you can lower the threshold. ',

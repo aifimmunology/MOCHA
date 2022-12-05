@@ -213,8 +213,9 @@ getPopFrags <- function(ArchRProj,
   # Sort fragments into a list by cell population
 
   popFrags <- lapply(seq_along(barcodesByCellPop), function(x) {
-
+    if (verbose) {
     message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
+    }
     if (sum(fragsListIndex[[x]]) > 1) {
       tmp <- parallel::mclapply(which(fragsListIndex[[x]]), function(y) {
         subset_Frag(barcodesByCellPop[[x]], fragsList[[y]])

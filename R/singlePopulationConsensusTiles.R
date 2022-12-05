@@ -8,7 +8,8 @@
 singlePopulationConsensusTiles <- function(peaksExperiment,
                                            sampleData,
                                            threshold,
-                                           groupColumn = NULL) {
+                                           groupColumn = NULL,
+                                           verbose = TRUE) {
   if (threshold == 0) {
     disableMinimum <- TRUE
   } else {
@@ -37,11 +38,13 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
     # Count the number of TRUE peaks in each row and divide by nSamples
 
     if (threshold <= 1 / nSamples & !disableMinimum) {
+      if (verbose) {
       warning(
         "Threshold will result in only one sample needed to keep ",
         "a tile. Set threshold to 0 to ",
         "explicitly keep the union of tiles across all samples."
       )
+    }
     }
     if (threshold == 0) {
       # Treat zero as the union
@@ -60,11 +63,13 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
 
     # We need to throw an error if there are too few samples for a given group to meet threshold
     if (any(threshold <= 1 / table(sampleData[[groupColumn]])) & !disableMinimum) {
+      if (verbose) {
       warning(
         "Threshold will result in only one sample needed to keep",
         " a tile within one or more of your groups. Set threshold to 0 to ",
         "explicitly keep the union of tiles across all samples."
       )
+      }
     }
 
     # The user may accidentally provide a groupColumn that includes NAs - which would mean that a set of Samples would be ignored entirely for peak calling.

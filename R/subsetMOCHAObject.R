@@ -30,7 +30,9 @@ subsetMOCHAObject <- function(Object,
     }
 
     if ((subsetBy %in% colnames(sampleData)) & tolower(subsetBy) == "celltypes") {
-      warning("subsetBy is set to CellTypes, but that is also a column name within the Sample metadata. The object will be filtered by cell type annotation, not by sample metadata.")
+      if (verbose) {
+        warning("subsetBy is set to CellTypes, but that is also a column name within the Sample metadata. The object will be filtered by cell type annotation, not by sample metadata.")
+      }
     }
 
     # To subset by cell type, first we have to verify that all cell type names were found within the  object.

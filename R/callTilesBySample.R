@@ -38,7 +38,7 @@ callTilesBySample <- function(blackList,
   # these coefficients
 
   if(any(is.na(fragsList))){
-    warning('No cells from this sample. Returning NULL.')
+    if (verbose) {warning('No cells from this sample. Returning NULL.')}
     return(NULL)  
   }
 

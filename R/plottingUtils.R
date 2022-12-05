@@ -623,9 +623,6 @@ get_gene_body_model <- function(whichGene,
   # Pull specified database and table for the transcripts
   # This requires package "RMariaDB" available on CRAN and corresponding linux library "libmariadb-dev"
   newTxDB <- GenomicFeatures::makeTxDbFromUCSC(genome = "hg38", tablename = "refGene", transcript_ids = txList)
-  if (verbose) {
-    print(txList)
-  }
 
   # Get granges object from database and intersect with region granges
   newTxDBgenes <- unlist(GenomicFeatures::genes(newTxDB, single.strand.genes.only = FALSE)) %>%
@@ -685,7 +682,7 @@ get_gene_body_model <- function(whichGene,
 
     return(newModel)
   } else {
-    print("Warning: whichGene did not contain genes names for any genes in the window. Plotting all transcripts")
+    warning("whichGene did not contain genes names for any genes in the window. Plotting all transcripts.")
     return(NULL)
   }
 }

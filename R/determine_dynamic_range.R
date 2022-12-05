@@ -44,10 +44,6 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
     ))
   }
 
-  if (binSize > 5000) {
-    warning("binSize is > 5,000bp. Do you want to set the tile size smaller for peakcalling?")
-  }
-
   if (!methods::is(doBin, "logical")) {
     stop("doBin user-input must be a TRUE/FALSE boolean input")
   }

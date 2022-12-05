@@ -270,7 +270,6 @@ plotRegion <- function(countSE,
           )
         )
       } else {
-        print("No gene body in range")
         # Empty gene track to prevent errors resulting from p2 nonexistence
         p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
           ggplot2::theme_void()
@@ -284,7 +283,6 @@ plotRegion <- function(countSE,
     relativeHeights["Genes"] <- 0.1
   }
 
-  ## TODO process additional granges
   if (!is.null(additionalGRangesTrack)) {
 
     # Check for name metadata column
@@ -293,21 +291,17 @@ plotRegion <- function(countSE,
       overlapGRanges <- verbf(plyranges::join_overlap_intersect(additionalGRangesTrack, regionGRanges))
       if (length(overlapGRanges) > 0) {
         # Use the subset within our region as the track we want to plot
-        print("GRanges has overlap")
         # Assign exon status to each row
         GenomicRanges::mcols(overlapGRanges)$type <- rep("exon", each = length(overlapGRanges))
         # split into list of GRanges -> GRangesList named for the names metadata col
         additionalGRangesTrack <- split(overlapGRanges, overlapGRanges$name)
       } else {
-        print(length(overlapGRanges))
-        print("No overlap of additional GRanges and this region")
         additionalGRangesTrack <- NULL
         # Avoids the following error:
         # Error: Faceting variables must have at least one value
         # Error in deparse(x[[i]], nlines = nlines) :   no slot of name "elementType" for this object of class "GRanges"
       }
     } else {
-      print("Additional GRanges does not have `name` in metadata - ignoring additional track")
       additionalGRangesTrack <- NULL
     }
   }
@@ -331,7 +325,6 @@ plotRegion <- function(countSE,
   # Additional GRanges track is user-defined and labeled according to its
   # 'names' metadata column
   # 4: AdditionalGRanges
-  ## TODO
 
   # Construct Named plot list top to Bottom by appending to track list if present
   track_list <- list()
@@ -357,7 +350,6 @@ plotRegion <- function(countSE,
 
   # Additional Ranges
   if (!is.null(additionalGRangesTrack)) {
-    print("Combining base tracks with an additional GRanges track")
     p4 <- verbf(ggbio::autoplot(additionalGRangesTrack)) + ggplot2::theme_minimal()
     track_list <- c(track_list, list("AdditionalGRanges" = p4))
   }
