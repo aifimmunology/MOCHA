@@ -36,15 +36,6 @@
 #'
 "exampleFragments"
 
-#' exampleTileResults
-#'
-#' Example output of MOCHA::callOpenTiles using exampleFragments.
-#' Contains results on two cell populations: Clusters C2 and C5
-#' @format A MultiAssayExperiment object of 2 experiments
-#'
-"exampleTileResults"
-
-
 #' exampleCellColData
 #'
 #' Example input of cellColData extracted from the PBMC_Small dataset
@@ -65,12 +56,3 @@
 #'
 "exampleBlackList"
 
-#' exampleGenome
-#'
-#' Example input of a genome extracted from the PBMC_Small dataset
-#' consisting of 2k cells and spanning chr1 and 2 (~2-300MB).
-#' The data is publicly available with the ArchR package at
-#' <https://www.archrproject.com/reference/getTestProject.html>
-#' @format A BSgenome object containing annotations for the hg19 genome
-#'
-"exampleGenome"

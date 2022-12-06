@@ -11,7 +11,7 @@ testProj <- ArchR::loadArchRProject("PBMCSmall")
 TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene 
 Org <- org.Hs.eg.db
 
-exampleTileResults <- MOCHA::callOpenTiles(
+testTileResults <- MOCHA::callOpenTiles(
   ATACFragments = testProj,
   TxDb = TxDb,
   Org = Org,
@@ -36,14 +36,19 @@ exampleCellColData <- ArchR::getCellColData(testProj)
 exampleCellColData <- cellColData[c("Sample", "nFrags", "Clusters")]
 
 exampleBlackList <- ArchR::getBlacklist(testProj)
-exampleGenome <- ArchR::validBSgenome(ArchR::getGenome(testProj))
 
 usethis::use_data(
-  exampleTileResults,
   exampleFragments,
   exampleCellColData,
   exampleBlackList,
-  exampleGenome,
   internal = FALSE,
-  overwrite = TRUE
+  overwrite = TRUE,
+  compress = "xz"
+)
+
+usethis::use_data(
+  testTileResults,
+  internal = TRUE,
+  overwrite = TRUE,
+  compress = "xz"
 )

@@ -3,7 +3,7 @@ test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   cellPopulations = c("C2", "C5")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
-      MOCHA::exampleTileResults,
+      MOCHA:::testTileResults,
       cellPopulations = cellPopulations,
       threshold = 0
     )

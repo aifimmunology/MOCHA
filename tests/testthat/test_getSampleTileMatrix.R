@@ -4,7 +4,7 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
   
   capture.output(
     tilemat <- MOCHA::getSampleTileMatrix(
-      MOCHA::exampleTileResults,
+      MOCHA:::testTileResults,
       cellPopulations = cellPopulations,
       threshold = 0
     ),
