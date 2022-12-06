@@ -1,14 +1,14 @@
 #' @title \code{co_accessibility}
 #'
 #' @description \code{co_accessibility} allows you to determine whether 2 tiles
-#'              are co-accessible using a zero-inflated spearman correlation.
+#'              are co-accessible using a zero-inflated Spearman correlation.
 #'
 #'
 #' @param subMat sample-tile matrix with regions to analyze
 #' @param filterPairs list of passed tile-pairs that have been tested. Used to remove already tested pairs.
 #' @param numCores integer to determine # of parallel cores
-#' @param ZI boolean that determines whether to use zero-inflated or normal spearman correlations
-#' @param verbose boolean to determine verbosity of the function call.
+#' @param ZI boolean that determines whether to use zero-inflated or normal Spearman correlations
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return a 3-column data.frame containing
 #'         - Correlation = Zero-inflated Spearman Correlation
@@ -24,13 +24,6 @@
 #'          while the implementation (scHOT R package), can be found here:
 #'               http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
 #'
-#' @references XX
-#' @examples
-#' Generate
-#' mat1 <- matrix(pmax(0, rnorm(1000)), ncol = 100)
-#' row.names(mat1) <- paste("A", 1:10, sep = "_")
-#' ziSpear_mat <- co_accessibility(mat1, numCores = 5)
-#' head(ziSpear_mat)
 #'
 #' @noRd
 

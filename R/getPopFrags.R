@@ -38,7 +38,7 @@ getPopFrags <- function(ArchRProj,
                         sampleSpecific = TRUE,
                         NormMethod = "nfrags",
                         blackList = NULL,
-                        verbose = TRUE,
+                        verbose = FALSE,
                         overlapList = 50) {
   nFrags <- NULL
   # Turn off ArchR logging messages

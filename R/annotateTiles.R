@@ -22,8 +22,12 @@
 #'
 #' @examples
 #' \dontrun{
+#' library(TxDb.Hsapiens.UCSC.hg38.refGene)
+#' library(org.Hs.eg.db) 
 #' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
-#'   SampleTileMatrices
+#'   SampleTileMatrices,
+#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+#'   Org = org.Hs.eg.db
 #' )
 #' }
 #'
@@ -35,7 +39,7 @@ annotateTiles <- function(Obj,
   . <- Type <- NULL
   if (class(Obj)[1] == "RangedSummarizedExperiment" & is.null(TxDb) & is.null(Org)) {
     if (!all(c("TxDb", "Org") %in% names(S4Vectors::metadata(Obj)))) {
-      stop("Error: TxDb and/or Org are missing from SampleTileObj. SampleTileObj as a RangedSummarizedExperiment must contain a TxDb and Org in the metadata.")
+      stop("Error: SampleTileObj as a RangedSummarizedExperiment does not contain a TxDb and/or Org in the metadata. Please provide these as input.")
     }
     tileGRanges <- SummarizedExperiment::rowRanges(Obj)
     TxDb <- AnnotationDbi::loadDb(S4Vectors::metadata(Obj)$TxDb)
@@ -43,7 +47,7 @@ annotateTiles <- function(Obj,
   } else if (class(Obj)[[1]] == "GRanges" & !is.null(TxDb) & !is.null(Org)) {
     tileGRanges <- Obj
   } else {
-    stop("Error: Invalid inputs. Verify Obj is a RangedSummarizedExperiment. If Obj is a GRanges, TxDb and Org must be provided.")
+    stop("Error: Invalid inputs. Verify Obj is a RangedSummarizedExperiment and tiles were called from an ArchR project. If Obj is a GRanges or callOpenTiles was ran on GRanges input, TxDb and Org must be provided.")
   }
 
   txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ("gene")))

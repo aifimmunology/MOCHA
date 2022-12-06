@@ -11,6 +11,7 @@
 #'   should be used to subset the Object
 #' @param na.rm removes groups that are NA if set to true. If set to false, then
 #'   you filter for everything in the groupList and also NA values.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return Object the input Object, filtered down to either the cell type or
 #'   samples desired.
@@ -21,7 +22,8 @@
 subsetMOCHAObject <- function(Object,
                               subsetBy,
                               groupList,
-                              na.rm = TRUE) {
+                              na.rm = TRUE,
+                              verbose = FALSE) {
   if (class(Object)[1] == "MultiAssayExperiment") {
     sampleData <- MultiAssayExperiment::colData(Object)
 

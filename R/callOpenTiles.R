@@ -40,29 +40,37 @@
 #' @examples
 #' \dontrun{
 #' # Starting from an ArchR Project:
+#' library(TxDb.Hsapiens.UCSC.hg38.refGene)
+#' library(org.Hs.eg.db)
 #' tileResults <- MOCHA::callOpenTiles(
 #'   ArchRProj = myArchRProj,
 #'   cellPopLabel = "celltype_labeling",
 #'   cellPopulations = "CD4",
 #'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
 #'   Org = org.Hs.eg.db,
-#'   numCores = 10,
-#'   fast = FALSE
+#'   numCores = 1
 #' )
-#'
+#' }
+#' \donttest{
 #' # Starting from GRangesList
+#' if (
+#'   require(BSgenome.Hsapiens.UCSC.hg19) && 
+#'   require(TxDb.Hsapiens.UCSC.hg38.refGene) && 
+#'   require(org.Hs.eg.db)
+#' ) {
 #' tiles <- MOCHA::callOpenTiles(
 #'   ATACFragments = MOCHA::exampleFragments,
 #'   cellColData = MOCHA::exampleCellColData,
 #'   blackList = MOCHA::exampleBlackList,
-#'   genome = MOCHA::exampleGenome,
-#'   TxDb = TxDb,
-#'   Org = Org,
-#'   outDir = "./test_out",
+#'   genome = BSgenome.Hsapiens.UCSC.hg19,
+#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+#'   Org = org.Hs.eg.db,
+#'   outDir = tempdir(),
 #'   cellPopLabel = "Clusters",
 #'   cellPopulations = c("C2", "C5"),
 #'   numCores = 1
 #' )
+#' }
 #' }
 #'
 #' @export
@@ -82,13 +90,12 @@ setGeneric(
            outDir,
            fast = FALSE,
            numCores = 30,
-           verbose = TRUE,
+           verbose = FALSE,
            force = FALSE) {
     standardGeneric("callOpenTiles")
   },
   signature = "ATACFragments"
 )
-
 
 # @title \code{callOpenTiles} Perform peak-calling on a set of scATAC fragments.
 #
@@ -113,7 +120,7 @@ setGeneric(
                                    Org,
                                    outDir,
                                    numCores = 30,
-                                   verbose = TRUE,
+                                   verbose = FALSE,
                                    force = FALSE) {
   validGRanges <- sapply(ATACFragments, function(obj) {
     methods::is(obj, "GRanges")
@@ -341,7 +348,7 @@ setMethod(
                                  outDir = NULL,
                                  fast = FALSE,
                                  numCores = 30,
-                                 verbose = TRUE,
+                                 verbose = FALSE,
                                  force = FALSE) {
   
   if (is.null(outDir)){
@@ -365,7 +372,8 @@ setMethod(
       outDir,
       numCores,
       force,
-      studySignal
+      studySignal,
+      verbose = verbose
     )
     return(tileResults)
   }
@@ -552,7 +560,8 @@ callOpenTilesFast <- function(ArchRProj,
                               outDir = NULL,
                               numCores = 30,
                               force = FALSE,
-                              studySignal = NULL) {
+                              studySignal = NULL,
+                              verbose = FALSE) {
 
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
