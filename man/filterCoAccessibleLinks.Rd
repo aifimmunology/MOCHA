@@ -24,6 +24,7 @@ FilteredTileCorr The filtered correlation table with chr,
 }
 \examples{
 \dontrun{
+# links is the output of MOCHA::getCoAccessibleLinks
 MOCHA::filterCoAccessibleLinks(links, threshold = 0.5)
 }
 

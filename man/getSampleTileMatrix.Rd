@@ -31,7 +31,7 @@ samples will be used for determining consensus tiles.}
 \item{threshold}{Threshold for consensus tiles, the minimum \% of samples
 (within a sample group, if groupColumn is set) that a peak must be called
 in to be retained. If set to 0, retain the union of all samples' peaks
-(this is equivalent to a threshold of 1/numSamples). It is recommended to 
+(this is equivalent to a threshold of 1/numSamples). It is recommended to
 tune this parameter to omit potentially spurious peaks.}
 
 \item{log2Intensity}{Boolean, set to TRUE to return the log2 of the
@@ -52,16 +52,32 @@ SampleTileMatrices a MultiAssayExperiment containing a sample-tile
   intensity at each tile.
 }
 \examples{
-\dontrun{
-SampleTileMatrices <- MOCHA::getSampleTileMatrix(
-  tileResults,
-  cellPopulations = cellPopulations,
-  groupColumn = groupColumn,
-  threshold = threshold,
-  join = join,
-  NAtoZero = TRUE,
-  log2Intensity = TRUE
+\donttest{
+# Starting from GRangesList
+if (
+  require(BSgenome.Hsapiens.UCSC.hg19) && 
+  require(TxDb.Hsapiens.UCSC.hg38.refGene) && 
+  require(org.Hs.eg.db)
+) {
+tiles <- MOCHA::callOpenTiles(
+  ATACFragments = MOCHA::exampleFragments,
+  cellColData = MOCHA::exampleCellColData,
+  blackList = MOCHA::exampleBlackList,
+  genome = BSgenome.Hsapiens.UCSC.hg19,
+  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+  Org = org.Hs.eg.db,
+  outDir = tempdir(),
+  cellPopLabel = "Clusters",
+  cellPopulations = c("C2", "C5"),
+  numCores = 1
 )
+
+SampleTileMatrices <- MOCHA::getSampleTileMatrix(
+  tiles,
+  cellPopulations = c('C2', 'C5'),
+  threshold = 0 # Take union of all samples' open tiles
+)
+}
 }
 
 }
