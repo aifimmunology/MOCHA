@@ -83,6 +83,7 @@ Suggests:
     BiocManager,
     TxDb.Hsapiens.UCSC.hg38.refGene,
     org.Hs.eg.db,
+    BSgenome.Hsapiens.UCSC.hg19,
     withr,
     knitr,
     rmarkdown,
