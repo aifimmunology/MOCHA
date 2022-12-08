@@ -69,7 +69,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
 	
   }else{
   
-	  error('Cell type not found within SampleTileObj')
+	  stop()('Cell type not found within SampleTileObj')
   
   }
 
@@ -118,12 +118,13 @@ getCoAccessibleLinks <- function(SampleTileObj,
   #Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
   combList <-pbapply::pblapply(1:numChunks, function(y){
 
-      specChr <- paste0(chrNum[which(c(1:numChunks) >= (i-1)*numChunks & c(1:numChunks < i*numChunks))], collapse = "|")
+      specChr <- paste0(chrNum[which(c(1:length(chrNum)) >= (y-1)*numChunks & 
+                          c(1:length(chrNum) < y*numChunks))], collapse = "|")
 
       tileIndices <- grep(specChr, tileNames)
       combIndices <- grep(specChr, allCombinations$Key)
 
-      infoList <- list(tileIdices, combIndices, specChr)
+      infoList <- list(tileIndices, combIndices, specChr)
 
       infoList
 
@@ -135,18 +136,18 @@ getCoAccessibleLinks <- function(SampleTileObj,
   
   for(i in 1:numChunks){
 
-    print(i)
-    print(any(grepl(specChr, tileNames)))
-    print(any(grepl(specChr, allCombinations$Key)))
+   # print(i)
+   # print(any(grepl(specChr, tileNames)))
+   # print(any(grepl(specChr, allCombinations$Key)))
 
     subTileDF <- tileDF[combList[[i]][[1]],]
     subCombinations <- allCombinations[combList[[i]][[2]],]
 
-    if(!all(subCombinations[, "Key"] %in% rownames(subTileDF))){
-
-      return(list(subCombinations, subTileDF))
-    
-    }
+#    if(!all(subCombinations[, "Key"] %in% rownames(subTileDF))){
+ # 
+ #     return(list(subCombinations, subTileDF))
+ #   
+ #   }
 
     message(paste('Finding correlations for Chromosome(s)', gsub("|", ", ", combList[[i]][[3]]), sep =''))
 
