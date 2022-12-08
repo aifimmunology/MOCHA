@@ -55,17 +55,17 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   }
 
-  if(cellPopulation == 'All'){
-  
+ if(cellPopulation == 'All'){
+
 	  tileDF <- do.call('cbind', as.list(SummarizedExperiment::assays(SampleTileObj)))
 	
   }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
   
- 	  tileDF <- do.call('cbind', assays(SampleTileObj)[names(assays(SampleTileObj)) %in% cellPopulation])
+ 	  tileDF <- do.call('cbind', assays(SampleTileObj)[names(assays(SampleTileObj)) %in% cellPopulation])#
 	
   }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
   
- 	  tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
+ 	  tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)#
 	
   }else{
   
@@ -77,12 +77,14 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   tileNames <- rownames(tileDF)
 
-  start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
-  end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
-  chr <- gsub("\\:.*", "", rownames(tileDF))
+  start <- as.numeric(gsub("chr.*\\:|\\-.*", "", tileNames))
+  end <- as.numeric(gsub("chr.*\\:|.*\\-", "", tileNames))
+  chr <- gsub("\\:.*", "", tileNames)
 
 
   #Find all combinations to test
+
+  message('Finding all tile pairs to correlate.')
 
   allCombinations <- pbapply::pblapply(1:dim(regionDF)[1], function(y){
 
@@ -94,15 +96,12 @@ getCoAccessibleLinks <- function(SampleTileObj,
       end < regionDF$end[y] + windowSize / 2 &
       chr == regionDF$seqnames[y])
 
-    windowIndexBool == windowIndexBool[windowIndexBool != keyTile]
-
-    regionOfInterest <- tileNames[keyTile]
-    allOtherRegions <- tileNames[windowIndexBool]
+    windowIndexBool = windowIndexBool[windowIndexBool != keyTile]
 
     # Var1 will always be our region of interest
     keyNeighborPairs <- data.frame(
-      "Key" = regionOfInterest,
-      "Neighbor" = allOtherRegions
+      "Key" = tileNames[keyTile],
+      "Neighbor" = tileNames[windowIndexBool]
     )
 
     keyNeighborPairs
@@ -110,22 +109,49 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }, cl = numCores) %>% do.call('rbind', .)   %>% dplyr::distinct()
 
   # Determine chromosomes to search over, and the number of iterations to run through. 
-  chrNum <- paste(regionDF$chr,":",sep='')
+  chrNum <- paste(unique(regionDF$chr),":", sep='')
   numChunks <- length(chrNum) %/% chrChunks 
   numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks + 1, numChunks)
 
+  message('Finding subsets of pairs for testing.')
+
+  #Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
+  combList <-pbapply::pblapply(1:numChunks, function(y){
+
+      specChr <- paste0(chrNum[which(c(1:numChunks) >= (i-1)*numChunks & c(1:numChunks < i*numChunks))], collapse = "|")
+
+      tileIndices <- grep(specChr, tileNames)
+      combIndices <- grep(specChr, allCombinations$Key)
+
+      infoList <- list(tileIdices, combIndices, specChr)
+
+      infoList
+
+  }, cl = numCores)
+
   #Initialize zi_spear_mat for iterations
   zi_spear_mat = NULL
+
   
   for(i in 1:numChunks){
 
-    specChr <- paste0(chrNum[which(c(1:numChunks) >= (i-1)*numChunks & c(1:numChunks < i*numChunks))], collapse = "|")
+    print(i)
+    print(any(grepl(specChr, tileNames)))
+    print(any(grepl(specChr, allCombinations$Key)))
 
-    subTileDF <- tileDF[grepl(specChr, rownames(tileDF)),]
-    subCombinations <- allCombinations[grepl(specChr, allCombinations$Key),]
+    subTileDF <- tileDF[combList[[i]][[1]],]
+    subCombinations <- allCombinations[combList[[i]][[2]],]
+
+    if(!all(subCombinations[, "Key"] %in% rownames(subTileDF))){
+
+      return(list(subCombinations, subTileDF))
+    
+    }
+
+    message(paste('Finding correlations for Chromosome(s)', gsub("|", ", ", combList[[i]][[3]]), sep =''))
 
     # General case for >1 pair
-    MOCHA:::zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
+    zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
       function(x) {
         weightedZISpearman(
           x = subTileDF[subCombinations[x, "Key"], ],
