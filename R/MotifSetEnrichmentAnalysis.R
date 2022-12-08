@@ -22,18 +22,14 @@
 # @ stat_threshold : Significance threshold used to select significant motif set
 # @ verbose: Prints the n-all, n-1, m-all, and m-1
 
-PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment, specLigand, motifColumn = "feature", 
-                           stat_threshold = 2,
+PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment,
+                            specLigand, 
+                            motifColumn = "feature", 
+                            stat_column = 'log10Padj',
+                            stat_threshold = 2,
                            verbose = FALSE){
                            
     MotifEnrichment <- as.data.frame(MotifEnrichment)
-    
-    
-    #This data frame might include motifs that are up and down regulated. 
-    #Let's group by Transcription factor and take the largest mlog10Padj
-    
-    MotifEnrichment <- MotifEnrichment %>% group_by(.data[[ motifColumn ]]) %>%
-                            summarize(mlog10Padj = max(mlog10Padj)) 
     
     allMotifNames <- MotifEnrichment[,motifColumn]
     
@@ -90,7 +86,7 @@ PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment, specLigand, motifC
     n1 <- sum(allTFsByAnyLigand[,specLigand] > 0)
 
     #Filter to just significantly enriched motif 
-    mergedDF_f <- mergedDF %>% filter(mlog10Padj > stat_threshold)
+    mergedDF_f <-  mergedDF[mergedDF[,stat_column] > stat_threshold,]
     
     #Number of significantly enrichment motifs
     mall <- length(unique(mergedDF_f$TranscriptionFactor)) 
@@ -129,7 +125,8 @@ PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment, specLigand, motifC
 
 MSEA <- function(ligand_tf_matrix, MotifEnrichment, 
                                        motifColumn = "feature", 
-				 ligands,
+				                        ligands,
+                                        stat_column = 'mlog10Padj',
                                        stat_threshold = 2, 
                                        annotationName = 'CellType', annotation = "none", 
                                        numCores = 1, verbose = FALSE){
@@ -143,7 +140,9 @@ MSEA <- function(ligand_tf_matrix, MotifEnrichment,
      specificLigands <- mclapply(ligands, function(x){
     
             
-        PHyperLigandTF(ligand_tf_matrix,MotifEnrichment, x, motifColumn = motifColumn, verbose = verbose) 
+        PHyperLigandTF(ligand_tf_matrix,MotifEnrichment, x, motifColumn = motifColumn, 
+                                stat_column = stat_column,
+                                stat_threshold = stat_threshold, verbose = verbose) 
                 
     
             }, mc.cores = numCores)
