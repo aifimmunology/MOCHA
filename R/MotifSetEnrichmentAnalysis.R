@@ -80,13 +80,15 @@ PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment,
     otherMotifs <- "TranscriptionFactor" 
     mergedDF <- inner_join(MotifEnrichment, TFMat, by = structure(names = motifColumn, .Data = otherMotifs)) %>% 
                     pivot_longer(cols = colnames(.)[c((dim(.)[2] - dim(allTFsByAnyLigand)[2] +1):dim(.)[2])], 
-                                 names_to = 'Ligand', values_to = 'Score')
+                                 names_to = 'Ligand', values_to = 'Score') %>% as.data.frame()
+
+    #return(mergedDF)
     
     nall <- dim(allTFsByAnyLigand)[1]
     n1 <- sum(allTFsByAnyLigand[,specLigand] > 0)
 
     #Filter to just significantly enriched motif 
-    mergedDF_f <-  mergedDF[mergedDF[,stat_column] > stat_threshold,]
+    mergedDF_f <-  mergedDF[as.numeric(mergedDF[,stat_column]) > stat_threshold,]
     
     #Number of significantly enrichment motifs
     mall <- length(unique(mergedDF_f$TranscriptionFactor)) 
