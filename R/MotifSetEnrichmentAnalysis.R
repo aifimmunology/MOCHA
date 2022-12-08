@@ -130,6 +130,7 @@ MSEA <- function(ligand_tf_matrix, MotifEnrichment,
 				                        ligands,
                                         stat_column = 'mlog10Padj',
                                        stat_threshold = 2, 
+                                       method = 'fdr',
                                        annotationName = 'CellType', annotation = "none", 
                                        numCores = 1, verbose = FALSE){
     
@@ -155,14 +156,14 @@ MSEA <- function(ligand_tf_matrix, MotifEnrichment,
     if(any(specDF$p_val == 0, na.rm =TRUE)){
         specDF$p_val[specDF$p_val == 0] = rep(1e-323, sum(specDF$p_val == 0))
     }
-    specDF$adjp_val <- p.adjust(specDF$p_val)
+    specDF$adjp_val <- p.adjust(specDF$p_val, method = method)
     
     #Subset ligand matrix down to all TFs related to ligands
     subsetMat <- ligand_tf_matrix[rownames(ligand_tf_matrix) %in% MotifEnrichment[,motifColumn], 
                                   colnames(ligand_tf_matrix) %in% ligands]
 	
     #Identify Significant motifs
-    sigMotifs <- unlist(unique(MotifEnrichment[MotifEnrichment$mlog10Padj > stat_threshold,motifColumn]))
+    sigMotifs <- unlist(unique(MotifEnrichment[MotifEnrichment[,stat_column] > stat_threshold,motifColumn]))
 	
     #Subset ligand matrix down to Significant motifs that are associated with ligands
     sigSubsetMat <- ligand_tf_matrix[rownames(ligand_tf_matrix) %in% sigMotifs, 
