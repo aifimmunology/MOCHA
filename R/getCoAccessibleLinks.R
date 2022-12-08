@@ -109,7 +109,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }, cl = numCores) %>% do.call('rbind', .)   %>% dplyr::distinct()
 
   # Determine chromosomes to search over, and the number of iterations to run through. 
-  chrNum <- paste(unique(regionDF$chr),":", sep='')
+  chrNum <- paste(unique(regionDF$seqnames),":", sep='')
   numChunks <- length(chrNum) %/% chrChunks 
   numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks + 1, numChunks)
 
@@ -136,6 +136,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   
   for(i in 1:numChunks){
 
+    browser()
    # print(i)
    # print(any(grepl(specChr, tileNames)))
    # print(any(grepl(specChr, allCombinations$Key)))
