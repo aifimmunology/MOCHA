@@ -106,20 +106,22 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
     keyNeighborPairs
 
-  }, cl = numCores) %>% do.call('rbind', .)   %>% dplyr::distinct()
+  }, cl = numCores) %>% do.call('rbind', .)  %>% dplyr::distinct()
 
   # Determine chromosomes to search over, and the number of iterations to run through. 
   chrNum <- paste(unique(regionDF$seqnames),":", sep='')
   numChunks <- length(chrNum) %/% chrChunks 
-  numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks + 1, numChunks)
+  numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks, numChunks +1 )
 
+  browser()
   message('Finding subsets of pairs for testing.')
 
   #Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
   combList <-pbapply::pblapply(1:numChunks, function(y){
 
-      specChr <- paste0(chrNum[which(c(1:length(chrNum)) >= (y-1)*numChunks & 
-                          c(1:length(chrNum) < y*numChunks))], collapse = "|")
+
+      specChr <- paste0(chrNum[which(c(1:length(chrNum)) >= (y-1)*chrChunks & 
+                          c(1:length(chrNum) < y*chrChunks))], collapse = "|")
 
       tileIndices <- grep(specChr, tileNames)
       combIndices <- grep(specChr, allCombinations$Key)
@@ -150,7 +152,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
  #   
  #   }
 
-    message(paste('Finding correlations for Chromosome(s)', gsub("|", ", ", combList[[i]][[3]]), sep =''))
+    message(paste('Finding correlations for Chromosome(s)', gsub("chr", "", combList[[i]][[3]]), sep =''))
 
     # General case for >1 pair
     zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
