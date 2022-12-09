@@ -101,6 +101,7 @@ PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment,
             print(paste("TF Overlap: ",NicheNet_Motif_overlap, sep = ""))
             print(paste("All TF by Any Ligand: ",nall, sep = ""))
             print(paste("Significantly Enriched Motifs: ",mall, sep = ""))
+            print(paste("TFs linked to Ligand: ",n1, sep = ""))
             print(paste("Enriched TF Downstream of Ligand: ",m1, sep = ""))
     }
     phyper(m1, n1, nall-n1, mall, lower.tail=F, log.p=F)   
