@@ -113,15 +113,14 @@ getCoAccessibleLinks <- function(SampleTileObj,
   numChunks <- length(chrNum) %/% chrChunks 
   numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks, numChunks +1 )
 
-  browser()
   message('Finding subsets of pairs for testing.')
 
   #Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
   combList <-pbapply::pblapply(1:numChunks, function(y){
 
 
-      specChr <- paste0(chrNum[which(c(1:length(chrNum)) >= (y-1)*chrChunks & 
-                          c(1:length(chrNum) < y*chrChunks))], collapse = "|")
+      specChr <- paste0(chrNum[which(c(1:length(chrNum)) > (y-1)*chrChunks & 
+                          c(1:length(chrNum) <= y*chrChunks))], collapse = "|")
 
       tileIndices <- grep(specChr, tileNames)
       combIndices <- grep(specChr, allCombinations$Key)
@@ -138,7 +137,6 @@ getCoAccessibleLinks <- function(SampleTileObj,
   
   for(i in 1:numChunks){
 
-    browser()
    # print(i)
    # print(any(grepl(specChr, tileNames)))
    # print(any(grepl(specChr, allCombinations$Key)))
