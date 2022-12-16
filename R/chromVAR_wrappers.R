@@ -64,7 +64,7 @@ runChromVAR <- function(TSAM_Object,
 
         for(i in names(SummarizedExperiment::assays(TSAM_Object))){
 
-            accMat <- MOCHA::getCellPopMatrix(STM_All, cellPopulation = i, dropSamples = TRUE, NAtoZero = TRUE)
+            accMat <- MOCHA::getCellPopMatrix(TSAM_Object, cellPopulation = i, dropSamples = TRUE, NAtoZero = TRUE)
             if(dim(accMat)[2] <= 3){
                 messages('Three or less samples found. Skipping a cell type')
                 
@@ -72,11 +72,11 @@ runChromVAR <- function(TSAM_Object,
 
             }else{
 
-                sampleData <- SummarizedExperiment::colData(STM_All)
+                sampleData <- SummarizedExperiment::colData(TSAM_Object)
 
                 sampleData_filtered <- sampleData[rownames(sampleData) %in% colnames(accMat), ]
 
-                subRanges <- rowRanges(STM_All)[unlist(mcols(rowRanges(STM_All))[i])]
+                subRanges <- rowRanges(TSAM_Object)[unlist(mcols(rowRanges(TSAM_Object))[i])]
 
                 Obj1 <- SummarizedExperiment(
                     assays = list('counts' = accMat),
@@ -85,11 +85,11 @@ runChromVAR <- function(TSAM_Object,
                     metadata = STM@metadata
                 )
 
-                CisbpAnno <- chromVAR::getAnnotations(TSAM_Object@metadata[motifSetName],
+                CisbpAnno <- chromVAR::getAnnotations(S4Vectors::metadata(TSAM_Object)[[motifSetName]],
                                                     rowRanges = subRanges)
 
-                Obj1 <- chromVAR::addGCBias(Obj1, genome = metadata(TSAM_Object)$Genome)
-                backPeaks <- getBackgroundPeaks(Obj1) 
+                Obj1 <- chromVAR::addGCBias(Obj1, genome = S4Vectors::metadata(TSAM_Object)$Genome)
+                backPeaks <- chromVAR::getBackgroundPeaks(Obj1) 
                                             
                 dev <- chromVAR::computeDeviations(object = Obj1, 
                                         annotations = CisbpAnno)
@@ -100,7 +100,7 @@ runChromVAR <- function(TSAM_Object,
 
         }
 
-        names(devList) <- names(SummarizedExperiment::assays(STM_All))
+        names(devList) <- names(SummarizedExperiment::assays(TSAM_Object))
               
         return(devList)
 
