@@ -11,19 +11,19 @@ testProj <- ArchR::loadArchRProject("PBMCSmall")
 TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene 
 Org <- org.Hs.eg.db
 
-tileResults <- MOCHA::callOpenTiles(
+testTileResults <- MOCHA::callOpenTiles(
   ATACFragments = testProj,
   TxDb = TxDb,
   Org = Org,
   cellPopLabel = "Clusters",
-  cellPopulations = c("C1", "C2"),
+  cellPopulations = c("C2", "C5"),
   numCores = 1
 )
 
-ATACFragments <- MOCHA::getPopFrags(
+exampleFragments <- MOCHA::getPopFrags(
   ArchRProj = testProj,
   metaColumn = "Clusters",
-  cellSubsets = c("C1", "C2"),
+  cellSubsets = c("C2", "C5"),
   region = NULL,
   numCores = 10,
   sampleSpecific = TRUE,
@@ -32,16 +32,23 @@ ATACFragments <- MOCHA::getPopFrags(
   overlapList = 50
 )
 
-cellColData <- ArchR::getCellColData(testProj)
-blackList <- ArchR::getBlacklist(testProj)
-genome <- ArchR::validBSgenome(ArchR::getGenome(testProj))
+exampleCellColData <- ArchR::getCellColData(testProj)
+exampleCellColData <- cellColData[c("Sample", "nFrags", "Clusters")]
+
+exampleBlackList <- ArchR::getBlacklist(testProj)
 
 usethis::use_data(
-  tileResults,
-  ATACFragments,
-  cellColData,
-  blackList,
-  genome,
+  exampleFragments,
+  exampleCellColData,
+  exampleBlackList,
+  internal = FALSE,
+  overwrite = TRUE,
+  compress = "xz"
+)
+
+usethis::use_data(
+  testTileResults,
   internal = TRUE,
-  overwrite = TRUE
+  overwrite = TRUE,
+  compress = "xz"
 )

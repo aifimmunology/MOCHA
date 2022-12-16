@@ -23,11 +23,8 @@
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
                                   totalFrags,
-								  verbose = FALSE
-                                  )
-{
-
-  if (!methods::is(fragMat, "GRanges")){
+                                  verbose = FALSE) {
+  if (!methods::is(fragMat, "GRanges")) {
     stop("Input fragMat must be a Genomic Ranges (GRanges) object")
   }
 
@@ -136,8 +133,10 @@ calculate_intensities <- function(fragMat,
   ), with = F]
 
   ### Rename "bin" identifier as "tileID"
-  colnames(countsByBin)[1] <- 'tileID'
-  if(verbose){  message(' ---> Analysis finished on ', numCells, ' cells') }
+  colnames(countsByBin)[1] <- "tileID"
+  if (verbose) {
+    message(" ---> Analysis finished on ", numCells, " cells")
+  }
 
   return(countsByBin)
 }

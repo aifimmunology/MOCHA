@@ -21,29 +21,32 @@
 #'  FALSE. Default is TRUE.
 #' @param numCores The number of cores to use with multiprocessing.
 #'  Default is 1.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return full_results The differential accessibility results as a GRanges or
 #'   matrix data.frame depending on the flag `outputGRanges`.
 #'
 #' @examples
 #' \dontrun{
-#' regions <- head(differentials, 10)
-#'
-#' # Alternatively, define regions as a character vector
-#' # of region strings in the format "chr:start-end"
-#' regions <- c(
-#'   "chrY:7326500-7326999",
-#'   "chrY:7327000-7327499",
-#'   "chrY:7339500-7339999",
-#'   "chrY:7344500-7344999"
-#' )
-#' links <- MOCHA::getCoAccessibleLinks(
-#'   SampleTileObj = SampleTileMatricesAnnotated,
-#'   cellPopulation = cellPopulation,
-#'   regions = regions,
-#'   windowSize = 1 * 10^6,
-#'   numCores = numCores,
-#'   verbose = TRUE
+#' cellPopulation <- "MAIT"
+#' foreground <- "Positive"
+#' background <- "Negative" 
+#' # Standard output will display the number of tiles found below a false-discovery rate threshold.
+#' # This parameter does not filter results and only affects the aforementioned message. 
+#' fdrToDisplay <- 0.2
+#' # Choose to output a GRanges or data.frame.
+#' # Default is TRUE
+#' outputGRanges <- TRUE
+#' # SampleTileMatrices is the output of MOCHA::getSampleTileMatrix
+#' differentials <- MOCHA::getDifferentialAccessibleTiles(
+#'   SampleTileObj = SampleTileMatrices, 
+#'   cellPopulation = cellPopulation, 
+#'   groupColumn = groupColumn, 
+#'   foreground = foreground, 
+#'   background = background, 
+#'   fdrToDisplay = fdrToDisplay, 
+#'   outputGRanges = outputGRanges, 
+#'   numCores = numCores
 #' )
 #' }
 #' @export
@@ -57,13 +60,16 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
-                                           numCores = 2) {
+                                           numCores = 2,
+                                           verbose = FALSE) {
   if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
   }
 
   if (signalThreshold < 1) {
-    warning("Setting the signalThreshold too low will reduce statistical power. You may inspect the distribution of intensities to set a threshold that will remove highly sparse regions.")
+    if (verbose) {
+      warning("Setting the signalThreshold too low will reduce statistical power. You may inspect the distribution of intensities to set a threshold that will remove highly sparse regions.")
+    }
   }
 
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
@@ -84,8 +90,8 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   background_samples <- metaFile[metaFile[, groupColumn] == background, "Sample"]
 
   # This will only include called tiles
-  sampleTileMatrix <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = FALSE )
-  
+  sampleTileMatrix <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = FALSE)
+
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
 
@@ -102,21 +108,23 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   # We need to enforce that NAs were set to zeros in getSampleTileMatrix
   sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
- 
-  zero_A <- rowMeans(sampleTileMatrix[, which(group == 1)] ==0)
-  zero_B <- rowMeans(sampleTileMatrix[, which(group == 0)] ==0)
+
+  zero_A <- rowMeans(sampleTileMatrix[, which(group == 1)] == 0)
+  zero_B <- rowMeans(sampleTileMatrix[, which(group == 0)] == 0)
 
   diff0s <- abs(zero_A - zero_B)
-  
+
   Log2Intensity <- SampleTileObj@metadata$Log2Intensity
   log2FC_filter <- ifelse(Log2Intensity, signalThreshold, 2^signalThreshold)
-  
+
   idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
 
   ############################################################################
   # Estimate differential accessibility
-  
-  if(!Log2Intensity){ sampleTileMatrix <- log2(sampleTileMatrix+1) }
+
+  if (!Log2Intensity) {
+    sampleTileMatrix <- log2(sampleTileMatrix + 1)
+  }
 
   res_pvals <- parallel::mclapply(rownames(sampleTileMatrix),
     function(x) {
@@ -187,10 +195,12 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   )]
 
   discoveries <- sum(full_results$FDR <= fdrToDisplay, na.rm = TRUE)
-  message(
-    discoveries, " differential regions found at FDR ",
-    fdrToDisplay
-  )
+  if (verbose) {
+    message(
+      discoveries, " differential regions found at FDR ",
+      fdrToDisplay
+    )
+  }
 
   if (outputGRanges) {
     full_results <- MOCHA::differentialsToGRanges(full_results)

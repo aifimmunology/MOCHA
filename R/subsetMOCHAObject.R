@@ -11,6 +11,7 @@
 #'   should be used to subset the Object
 #' @param na.rm removes groups that are NA if set to true. If set to false, then
 #'   you filter for everything in the groupList and also NA values.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return Object the input Object, filtered down to either the cell type or
 #'   samples desired.
@@ -21,7 +22,8 @@
 subsetMOCHAObject <- function(Object,
                               subsetBy,
                               groupList,
-                              na.rm = TRUE) {
+                              na.rm = TRUE,
+                              verbose = FALSE) {
   if (class(Object)[1] == "MultiAssayExperiment") {
     sampleData <- MultiAssayExperiment::colData(Object)
 
@@ -30,7 +32,9 @@ subsetMOCHAObject <- function(Object,
     }
 
     if ((subsetBy %in% colnames(sampleData)) & tolower(subsetBy) == "celltypes") {
-      warning("subsetBy is set to CellTypes, but that is also a column name within the Sample metadata. The object will be filtered by cell type annotation, not by sample metadata.")
+      if (verbose) {
+        warning("subsetBy is set to CellTypes, but that is also a column name within the Sample metadata. The object will be filtered by cell type annotation, not by sample metadata.")
+      }
     }
 
     # To subset by cell type, first we have to verify that all cell type names were found within the  object.

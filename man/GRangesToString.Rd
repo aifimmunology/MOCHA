@@ -9,7 +9,11 @@ GRangesToString(GR_obj)
 \arguments{
 \item{GR_obj}{the GRanges object to convert to a string}
 }
+\value{
+A string or list of strings in the format 'chr1:100-200' representing
+ ranges in the input GRanges
+}
 \description{
 \code{GRangesToString} Turns a GRanges Object into
-	a list of strings in the format chr1:100-200
+ a list of strings in the format chr1:100-200
 }

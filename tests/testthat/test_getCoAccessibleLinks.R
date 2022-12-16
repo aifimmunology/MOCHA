@@ -1,15 +1,15 @@
 test_that("FindCoAccessibleLinks works on a 1 sample test dataset", {
   
-  cellPopulations = c("C1", "C2")
+  cellPopulations = c("C2", "C5")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
-      MOCHA:::tileResults,
+      MOCHA:::testTileResults,
       cellPopulations = cellPopulations,
       threshold = 0
     )
   )
 
-  cellPopulation <- "C1"
+  cellPopulation <- "C2"
   regions <- MOCHA::StringsToGRanges(c(
     "chr1:102368000-102368499",
     "chr1:101873000-101873499"

@@ -1,10 +1,10 @@
 test_that("getSampleTileMatrices works on a 1 sample test dataset", {
   
-  cellPopulations = c("C1", "C2")
+  cellPopulations = c("C2", "C5")
   
   capture.output(
     tilemat <- MOCHA::getSampleTileMatrix(
-      MOCHA:::tileResults,
+      MOCHA:::testTileResults,
       cellPopulations = cellPopulations,
       threshold = 0
     ),
@@ -18,7 +18,7 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
   
   expect_equal(
     names(SummarizedExperiment::assays(tilemat)),
-    c("C1","C2")
+    c("C2", "C5")
   )
  
   # expect_snapshot_value(

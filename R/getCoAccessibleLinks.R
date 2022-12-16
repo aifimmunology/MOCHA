@@ -11,7 +11,7 @@
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
-#' 
+#'
 #' @return TileCorr A data.table correlation matrix
 #'
 #' @details The technical details of the zero-inflated correlation can be
@@ -25,41 +25,32 @@
 #'
 #'
 #' @export
-getCoAccessibleLinks <- function(SampleTileObj, 
-                                 cellPopulation = 'All', 
-                                 regions, 
-                                 windowSize = 1 * 10^6, 
-                                 numCores = 1, 
+getCoAccessibleLinks <- function(SampleTileObj,
+                                 cellPopulation = "All",
+                                 regions,
+                                 windowSize = 1 * 10^6,
+                                 numCores = 1,
                                  ZI = TRUE,
                                  verbose = FALSE) {
-
   if (methods::is(regions, "GRanges")) {
     regionDF <- as.data.frame(regions)
-  } else if (methods::is(regions,"character")) {
+  } else if (methods::is(regions, "character")) {
     regionDF <- MOCHA::StringsToGRanges(regions) %>% as.data.frame()
   } else {
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
   }
 
-  if(cellPopulation == 'All'){
-  
-	  tileDF <- do.call('cbind', SummarizedExperiment::assays(SampleTileObj))
-	
-  }else if(length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
-  
- 	  tileDF <- do.call('cbind', assays(SampleTileObj)[names(assays(SampleTileObj)) %in% cellPopulation])
-	
-  }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
-  
- 	  tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
-	
-  }else{
-  
-	  error('Cell type not found within SampleTileObj')
-  
+  if (cellPopulation == "All") {
+    tileDF <- do.call("cbind", SummarizedExperiment::assays(SampleTileObj))
+  } else if (length(cellPopulation) > 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
+    tileDF <- do.call("cbind", SummarizedExperiment::assays(SampleTileObj)[names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation])
+  } else if (length(cellPopulation) == 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
+    tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
+  } else {
+    stop("Cell type not found within SampleTileObj")
   }
 
-  tileDF[is.na(tileDF)] = 0
+  tileDF[is.na(tileDF)] <- 0
 
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
