@@ -64,9 +64,10 @@ runChromVAR <- function(TSAM_Object,
 
         for(i in names(SummarizedExperiment::assays(TSAM_Object))){
 
+            message(paste('Running ChromVAR on ', i, sep =''))
             accMat <- MOCHA::getCellPopMatrix(TSAM_Object, cellPopulation = i, dropSamples = TRUE, NAtoZero = TRUE)
             if(dim(accMat)[2] <= 3){
-                messages('Three or less samples found. Skipping a cell type')
+                message('Three or less samples found. Skipping this cell type')
                 
                 devList <- append(devList, list(NA))
 
