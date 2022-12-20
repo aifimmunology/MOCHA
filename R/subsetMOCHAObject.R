@@ -11,6 +11,8 @@
 #'   should be used to subset the Object
 #' @param na.rm removes groups that are NA if set to true. If set to false, then
 #'   you filter for everything in the groupList and also NA values.
+#' @param subsetPeaks If subsetting by cell types, then you need to decide if you want to subset the tile set down to tiles 
+#'   only called in those cell types. The default is TRUE. 
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return Object the input Object, filtered down to either the cell type or
@@ -23,6 +25,7 @@ subsetMOCHAObject <- function(Object,
                               subsetBy,
                               groupList,
                               na.rm = TRUE,
+                              subsetPeaks = TRUE,
                               verbose = FALSE) {
   if (class(Object)[1] == "MultiAssayExperiment") {
     sampleData <- MultiAssayExperiment::colData(Object)
@@ -58,8 +61,20 @@ subsetMOCHAObject <- function(Object,
       }
 
       keep <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
-
       SummarizedExperiment::assays(Object) <- SummarizedExperiment::assays(Object)[keep]
+
+      #subset peaks:
+      if(subsetPeaks){
+
+        rowMeta <- mcols(rowRanges(Object))[,groupList]
+
+        if(!is.null(dim(rowMeta))){
+
+          rowMeta = rowSums(as.data.frame(rowMeta)) > 0
+
+        }
+        Object <- Object[rowMeta,]
+      }
 
       return(Object)
     }
