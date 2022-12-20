@@ -69,7 +69,7 @@ runChromVAR <- function(TSAM_Object,
             if(dim(accMat)[2] <= 3){
                 message('Three or less samples found. Skipping this cell type')
                 
-                devList <- append(devList, list(NA))
+                devList <- append(devList, list(NULL))
 
             }else{
 
@@ -95,7 +95,7 @@ runChromVAR <- function(TSAM_Object,
                 dev <- chromVAR::computeDeviations(object = Obj1, 
                                         annotations = CisbpAnno)
 
-                devList <- append(devList, dev)
+                devList <- append(devList, list(dev))
 
             }
 

@@ -18,6 +18,6 @@
 
 correctGenome<- function(TSAM, genome){
 
-    S4Vectors::metadata(TSAM)$Genome <- Genome
+    S4Vectors::metadata(TSAM)$Genome <- genome
     return(TSAM)
 }
