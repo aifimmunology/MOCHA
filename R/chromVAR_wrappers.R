@@ -23,36 +23,53 @@ runChromVAR <- function(TSAM_Object,
                               cellTypeSpecific = FALSE){
 
     if(!cellTypeSpecific){
-        assayList <- do.call('cbind', SummarizedExperiment::assays(TSAM_Object))
-        newSamplesNames <- unlist(lapply(names(SummarizedExperiment::assays(TSAM_Object)), function(x){
-    
-                        paste(x, colnames(TSAM_Object), sep = "_")
-                
-        }))
 
-        colnames(assayList) <- newSamplesNames
+        if(length(assays(TSAM_Object)) > 1){
+            assayList <- do.call('cbind', SummarizedExperiment::assays(TSAM_Object))
+            newSamplesNames <- unlist(lapply(names(SummarizedExperiment::assays(TSAM_Object)), function(x){
+        
+                            paste(x, colnames(TSAM_Object), sep = "_")
+                    
+            }))
 
-        nonEmptySamples <- apply(assayList, 2, function(x) !all(is.na(x)))
-        assayList <- assayList[,nonEmptySamples]
+            colnames(assayList) <- newSamplesNames
 
-        allSampleData <- do.call('rbind', lapply(1:length(SummarizedExperiment::assays(TSAM_Object)), function(x) colData(TSAM_Object)))
+            nonEmptySamples <- apply(assayList, 2, function(x) !all(is.na(x)))
+            assayList <- assayList[,nonEmptySamples]
 
-        allSampleData$Sample = newSamplesNames
+            allSampleData <- do.call('rbind', lapply(1:length(SummarizedExperiment::assays(TSAM_Object)), function(x) colData(TSAM_Object)))
 
-        allSampleData <-  allSampleData[nonEmptySamples,]
+            allSampleData$Sample = newSamplesNames
 
-        Obj1 <- SummarizedExperiment(
-            assays = list('counts' = assayList),
-            colData = allSampleData,
-            rowRanges = rowRanges(TSAM_Object),
-            metadata = TSAM_Object@metadata
-        )
+            allSampleData <-  allSampleData[nonEmptySamples,]
 
-        CisbpAnno <- chromVAR::getAnnotations(TSAM_Object@metadata[motifSetName],
+            Obj1 <- SummarizedExperiment(
+                assays = list('counts' = assayList),
+                colData = allSampleData,
+                rowRanges = rowRanges(TSAM_Object),
+                metadata = TSAM_Object@metadata
+            )
+        }else{
+
+            Obj1 <- TSAM_Object
+            names(assays(Obj1)) <- 'counts'
+            assays(Obj1)$counts[is.na(assays(Obj1)$counts)] = 0
+
+        }
+
+        CisbpAnno <- chromVAR::getAnnotations(TSAM_Object@metadata[[motifSetName]],
                                             rowRanges = rowRanges(Obj1))
 
         Obj1 <- chromVAR::addGCBias(Obj1, genome = metadata(TSAM_Object)$Genome)
-        backPeaks <- getBackgroundPeaks(Obj1) 
+
+        if(any(is.na(SummarizedExperiment::rowData(Obj1)$bias))){
+
+            naList <- is.na(SummarizedExperiment::rowData(Obj1)$bias)
+            message(paste(sum(naList), "NaNs found within GC Bias", sep =" "))
+
+            SummarizedExperiment::rowData(Obj1)$bias[which(naList)] = mean(rowData(Obj1)$bias, na.rm = TRUE)
+
+        }
                                     
         dev <- chromVAR::computeDeviations(object = Obj1, 
                                 annotations = CisbpAnno)
@@ -62,9 +79,15 @@ runChromVAR <- function(TSAM_Object,
 
         devList <- NULL
 
-        for(i in names(SummarizedExperiment::assays(TSAM_Object))){
+        motifList <- S4Vectors::metadata(TSAM_Object)[[motifSetName]]
+
+        cellTypes <- names(SummarizedExperiment::assays(TSAM_Object))
+        cellTypes <- cellTypes[cellTypes %in% colnames(GenomicRanges::mcols(SummarizedExperiment::rowRanges(TSAM_Object)))]
+
+        for(i in cellTypes){
 
             message(paste('Running ChromVAR on ', i, sep =''))
+
             accMat <- MOCHA::getCellPopMatrix(TSAM_Object, cellPopulation = i, dropSamples = TRUE, NAtoZero = TRUE)
             if(dim(accMat)[2] <= 3){
                 message('Three or less samples found. Skipping this cell type')
@@ -77,23 +100,30 @@ runChromVAR <- function(TSAM_Object,
 
                 sampleData_filtered <- sampleData[rownames(sampleData) %in% colnames(accMat), ]
 
-                subRanges <- rowRanges(TSAM_Object)[unlist(mcols(rowRanges(TSAM_Object))[i])]
+                subRanges <- MOCHA::StringsToGRanges(rownames(accMat))
 
-                Obj1 <- SummarizedExperiment(
+                Obj1 <- SummarizedExperiment::SummarizedExperiment(
                     assays = list('counts' = accMat),
                     colData = sampleData_filtered,
                     rowRanges = subRanges,
                     metadata = STM@metadata
                 )
 
-                CisbpAnno <- chromVAR::getAnnotations(S4Vectors::metadata(TSAM_Object)[[motifSetName]],
+                Anno <- chromVAR::getAnnotations(motifList,
                                                     rowRanges = subRanges)
 
                 Obj1 <- chromVAR::addGCBias(Obj1, genome = S4Vectors::metadata(TSAM_Object)$Genome)
-                backPeaks <- chromVAR::getBackgroundPeaks(Obj1) 
+                if(any(is.na(SummarizedExperiment::rowData(Obj1)$bias))){
+
+                    naList <- is.na(SummarizedExperiment::rowData(Obj1)$bias)
+                    message(paste(sum(naList), "NaNs found within GC Bias", sep =" "))
+
+                    SummarizedExperiment::rowData(Obj1)$bias[which(naList)] = mean(rowData(Obj1)$bias, na.rm = TRUE)
+
+                }
                                             
                 dev <- chromVAR::computeDeviations(object = Obj1, 
-                                        annotations = CisbpAnno)
+                                        annotations = Anno)
 
                 devList <- append(devList, list(dev))
 
@@ -101,7 +131,7 @@ runChromVAR <- function(TSAM_Object,
 
         }
 
-        names(devList) <- names(SummarizedExperiment::assays(TSAM_Object))
+        names(devList) <- cellTypes
               
         return(devList)
 
