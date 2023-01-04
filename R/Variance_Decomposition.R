@@ -81,6 +81,7 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
         }, cl = numCores), classes = "message")
 
     names(lmem_res) = rownames(mat1)
+    gc()
     return(lmem_res)
 
 }
