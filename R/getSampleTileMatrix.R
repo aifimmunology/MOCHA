@@ -79,7 +79,7 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
 
-  if (length(cellPopulations) == 1 & any(cellPopulations == "ALL")) {
+  if (length(cellPopulations) == 1 & any(tolower(cellPopulations) == "all")) {
     subTileResults <- tileResults
     cellPopulations <- names(tileResults)
   } else {

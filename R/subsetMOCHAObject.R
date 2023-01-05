@@ -27,6 +27,7 @@ subsetMOCHAObject <- function(Object,
                               na.rm = TRUE,
                               subsetPeaks = TRUE,
                               verbose = FALSE) {
+
   if (class(Object)[1] == "MultiAssayExperiment") {
     sampleData <- MultiAssayExperiment::colData(Object)
 
@@ -50,6 +51,7 @@ subsetMOCHAObject <- function(Object,
       keep <- MultiAssayExperiment::subsetByAssay(Object, groupList)
       return(keep)
     }
+    
   } else if (class(Object)[1] == "RangedSummarizedExperiment") {
     sampleData <- SummarizedExperiment::colData(Object)
 
@@ -63,7 +65,7 @@ subsetMOCHAObject <- function(Object,
       keep <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
       SummarizedExperiment::assays(Object) <- SummarizedExperiment::assays(Object)[keep]
 
-      #subset peaks:
+      # Subset peaks
       if(subsetPeaks){
 
         rowMeta <- mcols(rowRanges(Object))[,groupList]
