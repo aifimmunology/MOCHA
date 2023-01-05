@@ -27,7 +27,7 @@ test_that("getDifferentialAccessibleTiles works on a 3 sample test dataset", {
     variant = "differentials"
   )
   expect_snapshot_output(
-    nrow(differentials),
-    variant = "nrows"
+    length(differentials),
+    variant = "length"
   )
 })
