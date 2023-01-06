@@ -88,6 +88,8 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     names(lmem_res) = rownames(mat1)
 
+    stopCluster(cl)
+
     return(lmem_res)
 
 }
@@ -99,7 +101,7 @@ calculateVarDecomp <- function(Obj, CellType, variableList, rowsToKeep = NA, NAt
     formula1 <- as.formula(paste('exp ~ ',varForm, sep = ''))
 
     linRes <- linearModeling(Obj, formula = formula1, CellType, rowsToKeep, NAtoZero, numCores)
-
+    
     varDecomp <- getVarDecomp(linRes, numCores)
 
     return(varDecomp)
@@ -131,6 +133,8 @@ getVarDecomp <- function(lmemList, numCores = 1){
         normVar
 
      }, cl = cl), classes = "message") %>% do.call('rbind',.)
+
+    stopCluster(cl)
 
     gc()
 
