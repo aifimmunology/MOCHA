@@ -75,19 +75,19 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     }
 
-    rm(Obj)
-    rm(meta1)
-    gc()
+    cl <- parallel::makeCluster(numCores)
+
+    parallel::clusterExport(cl=cl, varlist=c("meta", "formula", "mat1"), envir=environment())
 
     suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
         function(x) {
-            df <- data.frame(exp = as.numeric(mat1[x, ]), 
+            df <- data.frame(exp = as.numeric(mat1[x,]), 
                 meta, stringsAsFactors = FALSE)
             lmerTest::lmer(formula = formula, data = df)
-        }, cl = numCores), classes = "message")
+        }, cl = cl), classes = "message")
 
     names(lmem_res) = rownames(mat1)
-    gc()
+
     return(lmem_res)
 
 }
@@ -99,10 +99,9 @@ calculateVarDecomp <- function(Obj, CellType, variableList, rowsToKeep = NA, NAt
     formula1 <- as.formula(paste('exp ~ ',varForm, sep = ''))
 
     linRes <- linearModeling(Obj, formula = formula1, CellType, rowsToKeep, NAtoZero, numCores)
-    gc()
+
     varDecomp <- getVarDecomp(linRes, numCores)
-    rm(linRes)
-    gc()
+
     return(varDecomp)
 }
 
@@ -111,6 +110,10 @@ calculateVarDecomp <- function(Obj, CellType, variableList, rowsToKeep = NA, NAt
 getVarDecomp <- function(lmemList, numCores = 1){
 
     variableList <- names(summary(lmemList[[1]])$ngrps)
+
+    cl <- parallel::makeCluster(numCores)
+
+    parallel::clusterExport(cl=cl, varlist=c("lmemList"), envir=environment())
 
     varDecompRes <- suppressMessages(lmem_res <- pbapply::pblapply(seq_along(lmemList),
         function(x) {
@@ -127,7 +130,7 @@ getVarDecomp <- function(lmemList, numCores = 1){
 
         normVar
 
-     }, cl = numCores), classes = "message") %>% do.call('rbind',.)
+     }, cl = cl), classes = "message") %>% do.call('rbind',.)
 
     gc()
 
