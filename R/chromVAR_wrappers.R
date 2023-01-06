@@ -226,13 +226,17 @@ modelDeviations <- function(Obj, formula, type = 'z', numCores = 1){
     mat1 <- SummarizedExperiment::assays(Obj)[[type]] 
 
     meta <- meta1[meta1$Sample %in% colnames(mat1),]
+
+    cl <- parallel::makeCluster(numCores)
+
+    parallel::clusterExport(cl=cl, varlist=c("meta", "formula", "mat1"), envir=environment())
     
     suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
         function(x) {
             df <- data.frame(exp = as.numeric(mat1[x, ]), 
                 meta, stringsAsFactors = FALSE)
             lmerTest::lmer(formula = formula, data = df)
-        }, cl = numCores), classes = "message")
+        }, cl = cl), classes = "message")
 
     return(lmem_res)
 
