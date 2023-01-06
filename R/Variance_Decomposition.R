@@ -30,7 +30,7 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
         mat1 <- MOCHA::getCellPopMatrix(Obj,CellType,NAtoZero = NAtoZero)
 
         meta <- meta1[meta1$Sample %in% colnames(mat1),]
-       
+        
         if(!all(is.na(rowsToKeep))){
 
             mat1 <- mat1[rowsToKeep,]
@@ -50,7 +50,9 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
         colnames(allMatrices) <- apply(expand.grid(names(SummarizedExperiment::assays(Obj)), unique(colnames(allMatrices))), 1, 
                                 paste, collapse="__") %>% gsub(" ", "_", .)
         mat1 <- allMatrices[,colSums(allMatrices) != 0]
-
+        rm(allMatrices)
+        
+        gc()
         meta <- parallel::mclapply(1:length(SummarizedExperiment::assays(Obj)), function(x){
         
                     meta1 %>% as.data.frame() %>%
@@ -73,6 +75,10 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     }
 
+    rm(Obj)
+    rm(meta1)
+    gc()
+
     suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
         function(x) {
             df <- data.frame(exp = as.numeric(mat1[x, ]), 
@@ -93,9 +99,10 @@ calculateVarDecomp <- function(Obj, CellType, variableList, rowsToKeep = NA, NAt
     formula1 <- as.formula(paste('exp ~ ',varForm, sep = ''))
 
     linRes <- linearModeling(Obj, formula = formula1, CellType, rowsToKeep, NAtoZero, numCores)
-
+    gc()
     varDecomp <- getVarDecomp(linRes, numCores)
-
+    rm(linRes)
+    gc()
     return(varDecomp)
 }
 
