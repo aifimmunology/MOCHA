@@ -238,6 +238,8 @@ modelDeviations <- function(Obj, formula, type = 'z', numCores = 1){
             lmerTest::lmer(formula = formula, data = df)
         }, cl = cl), classes = "message")
 
+    stopCluster(cl)
+    
     return(lmem_res)
 
     
