@@ -159,3 +159,14 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }
   return(zi_spear_mat)
 }
+
+findPairs <- function(allRegions, index, numCores = 40, verbose = FALSE) {
+  regionOfInterest <- allRegions[index]
+  allOtherRegions <- allRegions[-index]
+
+  # Var1 will always be our region of interest
+  keyNeighborPairs <- as.matrix(data.frame(
+    "Key" = regionOfInterest,
+    "Neighbor" = allOtherRegions
+  ))
+}
