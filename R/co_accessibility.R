@@ -8,7 +8,7 @@
 #' @param filterPairs list of passed tile-pairs that have been tested. Used to remove already tested pairs.
 #' @param numCores integer to determine # of parallel cores
 #' @param ZI boolean that determines whether to use zero-inflated or normal spearman correlations
-#' @param verbose boolean to determine verbosity of the function call. 
+#' @param verbose boolean to determine verbosity of the function call.
 #'
 #' @return a 3-column data.frame containing
 #'         - Correlation = Zero-inflated Spearman Correlation
@@ -33,11 +33,10 @@
 #' head(ziSpear_mat)
 #'
 #' @noRd
-#' 
-#' 
+#'
+#'
 
-findPairs <- function(allRegions, index,numCores = 40, verbose = FALSE){
-
+findPairs <- function(allRegions, index, numCores = 40, verbose = FALSE) {
   regionOfInterest <- allRegions[index]
   allOtherRegions <- allRegions[-index]
 
@@ -46,12 +45,9 @@ findPairs <- function(allRegions, index,numCores = 40, verbose = FALSE){
     "Key" = regionOfInterest,
     "Neighbor" = allOtherRegions
   ))
-
-
 }
 
 co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRUE, verbose = FALSE) {
-
   regionOfInterest <- rownames(subMat)[index]
   allOtherRegions <- rownames(subMat)[-index]
 
@@ -62,7 +58,6 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
   ))
 
   if (!is.null(filterPairs) & nrow(keyNeighborPairs) > 1) {
-
     # Filter out any of our neighboring regions (Var2) that were previous "regions of interest".
     # These will be the "Var1/Tile1"s in previous results.
     keyNeighborPairs <- keyNeighborPairs[!(keyNeighborPairs[, "Neighbor"] %in% filterPairs$Tile1), ]
@@ -76,7 +71,6 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
   } else if (length(keyNeighborPairs) == 0) {
     return(NULL)
   } else if (length(keyNeighborPairs) == 2) {
-
     # If only one pair of tiles to test, then it's no longer a data.frame, but a vector.
     zero_inflated_spearman <- weightedZISpearman(
       x = subMat[keyNeighborPairs[1], ],
@@ -91,7 +85,6 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
       Tile2 = keyNeighborPairs[2]
     )
   } else {
-
     # General case for >1 pair
     zero_inflated_spearman <- unlist(parallel::mclapply(1:nrow(keyNeighborPairs),
       function(x) {
