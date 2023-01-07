@@ -70,8 +70,9 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
 
   # Find all combinations to test
-
-  message("Finding all tile pairs to correlate.")
+  if (verbose) {
+    message("Finding all tile pairs to correlate.")
+  }
 
   allCombinations <- pbapply::pblapply(1:dim(regionDF)[1], function(y) {
     keyTile <- which(start == regionDF$start[y] &
@@ -100,7 +101,9 @@ getCoAccessibleLinks <- function(SampleTileObj,
   numChunks <- length(chrNum) %/% chrChunks
   numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks, numChunks + 1)
 
-  message("Finding subsets of pairs for testing.")
+  if (verbose) {
+    message("Finding subsets of pairs for testing.")
+  }
 
   # Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
   combList <- pbapply::pblapply(1:numChunks, function(y) {
@@ -124,7 +127,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
     # print(any(grepl(specChr, tileNames)))
     # print(any(grepl(specChr, allCombinations$Key)))
 
-    subTileDF <- tileDF[combList[[i]][[1]], ]
+    subTileDF <- tileDF[combList[[i]][[1]], , drop = FALSE]
     subCombinations <- allCombinations[combList[[i]][[2]], ]
 
     #    if(!all(subCombinations[, "Key"] %in% rownames(subTileDF))){
@@ -133,7 +136,9 @@ getCoAccessibleLinks <- function(SampleTileObj,
     #
     #   }
 
-    message(paste("Finding correlations for Chromosome(s)", gsub("chr", "", combList[[i]][[3]]), sep = ""))
+    if (verbose) {
+      message(paste("Finding correlations for Chromosome(s)", gsub("chr", "", combList[[i]][[3]]), sep = " "))
+    }
 
     # General case for >1 pair
     zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
