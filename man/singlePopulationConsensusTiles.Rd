@@ -8,7 +8,8 @@ singlePopulationConsensusTiles(
   peaksExperiment,
   sampleData,
   threshold,
-  groupColumn = NULL
+  groupColumn = NULL,
+  verbose = TRUE
 )
 }
 \description{

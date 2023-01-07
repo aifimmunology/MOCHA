@@ -7,7 +7,7 @@
 #' @param group is a vector containing the two groups for comparison (in binary, 0,1)
 #' @param test which type of test to use, "t.test" or "wilcoxon"
 #' @param point.mass point mass
-#' 
+#'
 #' @return ans is a list containing the test statistic & p-value corresponding to the
 #'         two-part Wilcoxon test.
 #'

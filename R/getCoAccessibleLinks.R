@@ -13,7 +13,7 @@
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
-#' 
+#'
 #' @return TileCorr A data.table correlation matrix
 #'
 #' @details The technical details of the zero-inflated correlation can be
@@ -27,6 +27,7 @@
 #'
 #'
 #' @export
+
 getCoAccessibleLinks <- function(SampleTileObj, 
                                  cellPopulation = 'All', 
                                  regions, 
@@ -39,7 +40,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   #verify input
   if (methods::is(regions, "GRanges")) {
     regionDF <- as.data.frame(regions)
-  } else if (methods::is(regions,"character")) {
+  } else if (methods::is(regions, "character")) {
     regionDF <- MOCHA::StringsToGRanges(regions) %>% as.data.frame()
   } else {
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
@@ -73,7 +74,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   
   }
 
-  tileDF[is.na(tileDF)] = 0
+  tileDF[is.na(tileDF)] <- 0
 
   tileNames <- rownames(tileDF)
 

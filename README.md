@@ -1,5 +1,4 @@
 # MOCHA: Model-based single cell Open CHromatin Analysis
-[![R-CMD-check](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check-manual.yml/badge.svg?branch=docs-and-style)](https://github.com/aifimmunology/MOCHA/actions/workflows/R-CMD-check-manual.yml)
 ------------------------------------------------------------------------
 
 ## Table of Contents

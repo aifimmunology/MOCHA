@@ -22,7 +22,7 @@ callOpenTiles(
   outDir,
   fast = FALSE,
   numCores = 30,
-  verbose = TRUE,
+  verbose = FALSE,
   force = FALSE
 )
 
@@ -38,7 +38,7 @@ callOpenTiles(
   Org,
   outDir,
   numCores = 30,
-  verbose = TRUE,
+  verbose = FALSE,
   force = FALSE
 )
 
@@ -54,7 +54,7 @@ callOpenTiles(
   Org,
   outDir,
   numCores = 30,
-  verbose = TRUE,
+  verbose = FALSE,
   force = FALSE
 )
 
@@ -65,9 +65,10 @@ callOpenTiles(
   studySignal = NULL,
   TxDb,
   Org,
+  outDir = NULL,
   fast = FALSE,
   numCores = 30,
-  verbose = TRUE,
+  verbose = FALSE,
   force = FALSE
 )
 }
@@ -99,9 +100,9 @@ not a subset).}
 \item{Org}{is the genome-wide annotation package for your organism.}
 
 \item{outDir}{is a string describing the output directory for coverage files
-per sample/celltype. Must be a complete directory string. Default is NULL,
-in which case it'll pull out a directory from ArchR and make a new fold
-named MOCHA for saving files.}
+and TxDb/Org. Must be a complete directory string. With ArchR input,
+set outDir to NULL to create a directory within the input ArchR project 
+directory named MOCHA for saving files.}
 
 \item{fast}{Optional, set to TRUE to use a faster but more memory-intensive}
 
@@ -125,29 +126,37 @@ tileResults A MultiAssayExperiment object containing ranged data for
 \examples{
 \dontrun{
 # Starting from an ArchR Project:
+library(TxDb.Hsapiens.UCSC.hg38.refGene)
+library(org.Hs.eg.db)
 tileResults <- MOCHA::callOpenTiles(
   ArchRProj = myArchRProj,
   cellPopLabel = "celltype_labeling",
   cellPopulations = "CD4",
   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
   Org = org.Hs.eg.db,
-  numCores = 10,
-  fast = FALSE
+  numCores = 1
 )
-
+}
+\donttest{
 # Starting from GRangesList
+if (
+  require(BSgenome.Hsapiens.UCSC.hg19) && 
+  require(TxDb.Hsapiens.UCSC.hg38.refGene) && 
+  require(org.Hs.eg.db)
+) {
 tiles <- MOCHA::callOpenTiles(
-ATACFragments = MOCHA:::ATACFragments,
-cellColData = MOCHA:::cellColData,
-blackList = MOCHA:::blackList,
-genome = MOCHA:::genome,
-TxDb = TxDb,
-Org = Org,
-outDir = "./test_out",
-cellPopLabel = "Clusters",
-cellPopulations = c("C1", "C2"),
-numCores = 1
+  ATACFragments = MOCHA::exampleFragments,
+  cellColData = MOCHA::exampleCellColData,
+  blackList = MOCHA::exampleBlackList,
+  genome = BSgenome.Hsapiens.UCSC.hg19,
+  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+  Org = org.Hs.eg.db,
+  outDir = tempdir(),
+  cellPopLabel = "Clusters",
+  cellPopulations = c("C2", "C5"),
+  numCores = 1
 )
+}
 }
 
 }

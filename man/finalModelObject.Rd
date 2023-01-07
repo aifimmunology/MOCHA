@@ -5,7 +5,7 @@
 \alias{finalModelObject}
 \title{finalModelObject}
 \format{
-A list of lists containing 2 items: "Loess" and "Linear" each with "Total" "Max" and "Intercept"  
+A list of lists containing 2 items: "Loess" and "Linear" each with "Total" "Max" and "Intercept"
 \describe{
 \item{Loess}{LOESS model}
 \item{Linear}{Linear model}

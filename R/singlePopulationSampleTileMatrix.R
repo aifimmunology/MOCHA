@@ -51,11 +51,7 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
     sampleTileIntensityMat <- rbind(sampleTileIntensityMat, emptyMat)
   }
   currDims <- dim(sampleTileIntensityMat)
-  message(
-    "\tDimensions of sample-tile matrix\n",
-    "\tbefore and after consensus tiles:\n",
-    stringr::str_interp("\t${prevDims} before to ${currDims} after")
-  )
+
   sampleTileIntensityMat <- sampleTileIntensityMat[
     order(rownames(sampleTileIntensityMat)),
     order(colnames(sampleTileIntensityMat)),

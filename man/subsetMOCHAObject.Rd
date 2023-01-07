@@ -4,7 +4,7 @@
 \alias{subsetMOCHAObject}
 \title{\code{subsetObject}}
 \usage{
-subsetMOCHAObject(Object, subsetBy, groupList, na.rm = TRUE)
+subsetMOCHAObject(Object, subsetBy, groupList, na.rm = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{Object}{A MultiAssayExperiment or RangedSummarizedExperiment,}
@@ -17,6 +17,8 @@ should be used to subset the Object}
 
 \item{na.rm}{removes groups that are NA if set to true. If set to false, then
 you filter for everything in the groupList and also NA values.}
+
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
 Object the input Object, filtered down to either the cell type or
