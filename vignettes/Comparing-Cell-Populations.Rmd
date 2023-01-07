@@ -45,7 +45,7 @@ allMarkers <- getCellTypeMarkers(SampleTileObj, outputGRanges = TRUE, numCores =
 getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25) {
 
   # Extract all the Sample-Tile Matrices for each cell type
-  temp <- assays(STObj)
+  temp <- SummarizedExperiment::assays(STObj)
 
   cl <- parallel::makeCluster(numCores)
   # Let's generate a new assay, that will contain the
@@ -102,7 +102,7 @@ getCellTypeMarkers <- function(STObj, outputGRanges = TRUE, numCores = 25) {
       background = "Background",
       fdrToDisplay = 0.2,
       outputGRanges = outputGRanges,
-      numCores = 25
+      numCores = numCores
     )
   })
 
