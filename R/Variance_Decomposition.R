@@ -47,7 +47,7 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
         }
 
 
-        colnames(allMatrices) <- apply(expand.grid(names(SummarizedExperiment::assays(Obj)), unique(colnames(allMatrices))), 1, 
+        colnames(allMatrices) <- apply(expand.grid(colnames(Obj),names(SummarizedExperiment::assays(Obj))), 1, 
                                 paste, collapse="__") %>% gsub(" ", "_", .)
         mat1 <- allMatrices[,colSums(allMatrices) != 0]
         rm(allMatrices)
