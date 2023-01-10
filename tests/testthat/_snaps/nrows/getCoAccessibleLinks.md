@@ -1,5 +1,4 @@
 # FindCoAccessibleLinks works on a 1 sample test dataset
 
-    [1] 460
-
+    [1] 55
 
