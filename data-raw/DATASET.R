@@ -17,6 +17,7 @@ testTileResults <- MOCHA::callOpenTiles(
   Org = Org,
   cellPopLabel = "Clusters",
   cellPopulations = c("C2", "C5"),
+  outDir = NULL,
   numCores = 1
 )
 
