@@ -11,6 +11,9 @@
 #'   should be used to subset the Object
 #' @param na.rm removes groups that are NA if set to true. If set to false, then
 #'   you filter for everything in the groupList and also NA values.
+#' @param subsetPeaks If subsetting by cell types, then you need to decide if you want to subset the tile set down to tiles 
+#'   only called in those cell types. The default is TRUE. 
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return Object the input Object, filtered down to either the cell type or
 #'   samples desired.
@@ -21,7 +24,10 @@
 subsetMOCHAObject <- function(Object,
                               subsetBy,
                               groupList,
-                              na.rm = TRUE) {
+                              na.rm = TRUE,
+                              subsetPeaks = TRUE,
+                              verbose = FALSE) {
+
   if (class(Object)[1] == "MultiAssayExperiment") {
     sampleData <- MultiAssayExperiment::colData(Object)
 
@@ -30,7 +36,9 @@ subsetMOCHAObject <- function(Object,
     }
 
     if ((subsetBy %in% colnames(sampleData)) & tolower(subsetBy) == "celltypes") {
-      warning("subsetBy is set to CellTypes, but that is also a column name within the Sample metadata. The object will be filtered by cell type annotation, not by sample metadata.")
+      if (verbose) {
+        warning("subsetBy is set to CellTypes, but that is also a column name within the Sample metadata. The object will be filtered by cell type annotation, not by sample metadata.")
+      }
     }
 
     # To subset by cell type, first we have to verify that all cell type names were found within the  object.
@@ -43,6 +51,7 @@ subsetMOCHAObject <- function(Object,
       keep <- MultiAssayExperiment::subsetByAssay(Object, groupList)
       return(keep)
     }
+    
   } else if (class(Object)[1] == "RangedSummarizedExperiment") {
     sampleData <- SummarizedExperiment::colData(Object)
 
@@ -54,8 +63,20 @@ subsetMOCHAObject <- function(Object,
       }
 
       keep <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
-
       SummarizedExperiment::assays(Object) <- SummarizedExperiment::assays(Object)[keep]
+
+      # Subset peaks
+      if(subsetPeaks){
+
+        rowMeta <- mcols(rowRanges(Object))[,groupList]
+
+        if(!is.null(dim(rowMeta))){
+
+          rowMeta = rowSums(as.data.frame(rowMeta)) > 0
+
+        }
+        Object <- Object[rowMeta,]
+      }
 
       return(Object)
     }

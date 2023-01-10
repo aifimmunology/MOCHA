@@ -13,7 +13,7 @@ getPopFrags(
   sampleSpecific = TRUE,
   NormMethod = "nfrags",
   blackList = NULL,
-  verbose = TRUE,
+  verbose = FALSE,
   overlapList = 50
 )
 }

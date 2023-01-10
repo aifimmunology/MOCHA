@@ -14,7 +14,8 @@ getDifferentialAccessibleTiles(
   minZeroDiff = 0.5,
   fdrToDisplay = 0.2,
   outputGRanges = TRUE,
-  numCores = 2
+  numCores = 2,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ FALSE. Default is TRUE.}
 
 \item{numCores}{The number of cores to use with multiprocessing.
 Default is 1.}
+
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
 full_results The differential accessibility results as a GRanges or
@@ -56,23 +59,25 @@ full_results The differential accessibility results as a GRanges or
 }
 \examples{
 \dontrun{
-regions <- head(differentials, 10)
-
-# Alternatively, define regions as a character vector
-# of region strings in the format "chr:start-end"
-regions <- c(
-  "chrY:7326500-7326999",
-  "chrY:7327000-7327499",
-  "chrY:7339500-7339999",
-  "chrY:7344500-7344999"
-)
-links <- MOCHA::getCoAccessibleLinks(
-  SampleTileObj = SampleTileMatricesAnnotated,
-  cellPopulation = cellPopulation,
-  regions = regions,
-  windowSize = 1 * 10^6,
-  numCores = numCores,
-  verbose = TRUE
+cellPopulation <- "MAIT"
+foreground <- "Positive"
+background <- "Negative" 
+# Standard output will display the number of tiles found below a false-discovery rate threshold.
+# This parameter does not filter results and only affects the aforementioned message. 
+fdrToDisplay <- 0.2
+# Choose to output a GRanges or data.frame.
+# Default is TRUE
+outputGRanges <- TRUE
+# SampleTileMatrices is the output of MOCHA::getSampleTileMatrix
+differentials <- MOCHA::getDifferentialAccessibleTiles(
+  SampleTileObj = SampleTileMatrices, 
+  cellPopulation = cellPopulation, 
+  groupColumn = groupColumn, 
+  foreground = foreground, 
+  background = background, 
+  fdrToDisplay = fdrToDisplay, 
+  outputGRanges = outputGRanges, 
+  numCores = numCores
 )
 }
 }

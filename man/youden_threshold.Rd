@@ -11,14 +11,14 @@ A list of 18 regression variables
 youden_threshold
 }
 \description{
-Trained regression model for predicting a cutoff threshold 
+Trained regression model for predicting a cutoff threshold
 for peak calling.
 Call:
 loess(formula = OptimalCutpoint ~ Ncells, data = thresh_df)
 }
 \details{
-Number of Observations: 27 
-Equivalent Number of Parameters: 5.98 
+Number of Observations: 27
+Equivalent Number of Parameters: 5.98
 Residual Standard Error: 0.02121
 }
 \keyword{datasets}

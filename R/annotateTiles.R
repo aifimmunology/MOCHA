@@ -5,7 +5,7 @@
 #'   and available annotations can be found at Bioconductor:
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
-#' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix, 
+#' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix,
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
 #' @param TxDb The annotation package for TxDb object for your genome.
 #'   Optional, only required if Obj is a GRanges.
@@ -16,14 +16,18 @@
 #' Default is (2000, 100).
 #'
 #' @return Obj, the input data structure with added gene annotations (whether GRanges or SampleTileObj)
-#' 
+#'
 #' @importFrom magrittr %>%
-#' @importFrom rlang .data 
-#' 
+#' @importFrom rlang .data
+#'
 #' @examples
 #' \dontrun{
+#' library(TxDb.Hsapiens.UCSC.hg38.refGene)
+#' library(org.Hs.eg.db) 
 #' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
-#'   SampleTileMatrices
+#'   SampleTileMatrices,
+#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+#'   Org = org.Hs.eg.db
 #' )
 #' }
 #'
@@ -32,9 +36,10 @@ annotateTiles <- function(Obj,
                           TxDb = NULL,
                           Org = NULL,
                           promoterRegion = c(2000, 100)) {
+  . <- Type <- NULL
   if (class(Obj)[1] == "RangedSummarizedExperiment" & is.null(TxDb) & is.null(Org)) {
     if (!all(c("TxDb", "Org") %in% names(S4Vectors::metadata(Obj)))) {
-      stop("Error: TxDb and/or Org are missing from SampleTileObj. SampleTileObj as a RangedSummarizedExperiment must contain a TxDb and Org in the metadata.")
+      stop("Error: SampleTileObj as a RangedSummarizedExperiment does not contain a TxDb and/or Org in the metadata. Please provide these as input.")
     }
     tileGRanges <- SummarizedExperiment::rowRanges(Obj)
     TxDb <- AnnotationDbi::loadDb(S4Vectors::metadata(Obj)$TxDb)
@@ -42,7 +47,7 @@ annotateTiles <- function(Obj,
   } else if (class(Obj)[[1]] == "GRanges" & !is.null(TxDb) & !is.null(Org)) {
     tileGRanges <- Obj
   } else {
-    stop("Error: Invalid inputs. Verify Obj is a RangedSummarizedExperiment. If Obj is a GRanges, TxDb and Org must be provided.")
+    stop("Error: Invalid inputs. Verify Obj is a RangedSummarizedExperiment and tiles were called from an ArchR project. If Obj is a GRanges or callOpenTiles was ran on GRanges input, TxDb and Org must be provided.")
   }
 
   txList <- suppressWarnings(GenomicFeatures::transcriptsBy(TxDb, by = ("gene")))
@@ -55,7 +60,7 @@ annotateTiles <- function(Obj,
   promoterSet <- IRanges::stack(txList) %>%
     GenomicRanges::trim(.) %>%
     S4Vectors::unique(.) %>%
-   GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])
+    GenomicRanges::promoters(., upstream = promoterRegion[1], downstream = promoterRegion[2])
 
 
   getOverlapNameList <- function(rowTiles, annotGR) {
@@ -78,11 +83,11 @@ annotateTiles <- function(Obj,
       TRUE ~ "Distal"
     )) %>%
     dplyr::left_join(promo_overlaps, by = c("Index" = "queryHits")) %>%
-    dplyr::rename("Promo" = Genes) %>%
+    dplyr::rename("Promo" = .data$Genes) %>%
     dplyr::left_join(txs_overlaps, by = c("Index" = "queryHits")) %>%
-    dplyr::rename("Txs" = Genes) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Promoter", Promo, NA)) %>%
-    dplyr::mutate(Genes = ifelse(Type == "Intragenic", Txs, Genes))
+    dplyr::rename("Txs" = .data$Genes) %>%
+    dplyr::mutate(Genes = ifelse(Type == "Promoter", .data$Promo, NA)) %>%
+    dplyr::mutate(Genes = ifelse(Type == "Intragenic", .data$Txs, .data$Genes))
 
   tileGRanges$tileType <- tileType$Type
   tileGRanges$Gene <- tileType$Genes

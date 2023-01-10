@@ -19,6 +19,4 @@ if (requireNamespace("ArchR", quietly = TRUE) && dir.exists("PBMCSmall")) {
   # Remove additional empty directories
   withr::defer(unlink(file.path(outdir, "__MACOSX"), recursive = TRUE), teardown_env())
   withr::defer(unlink(file.path(outdir, "ArchRLogs"), recursive = TRUE), teardown_env())
-} else {
-  message("Skipping tests involving ArchR project")
-}
+} 

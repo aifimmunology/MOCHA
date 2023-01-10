@@ -33,8 +33,10 @@ the modified SE_Object with motifs added to the metadata
 # included with ArchR installation
 data(human_pwms_v2)
 SE_with_motifs <- addMotifSet(
-  SE_Object, pwms = human_pwms_v2, 
-  returnObj = TRUE, motifSetName = "Motifs", w = 7)
+  SE_Object,
+  pwms = human_pwms_v2,
+  returnObj = TRUE, motifSetName = "Motifs", w = 7
+)
 }
 
 }
