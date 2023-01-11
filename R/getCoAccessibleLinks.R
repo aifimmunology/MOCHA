@@ -7,6 +7,8 @@
 #' @param cellPopulation A string denoting the cell population of interest, which must be present in SampleTileObj
 #' @param regions a GRanges object or vector or strings containing the regions on which to compute co-accessible links. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
 #'   Can be the output from getDifferentialAccessibleTiles.
+#' @param chrChunks This functions subsets by groups of chromosome, and then parallelizes within each group of chromosomes when running correlations. This method keeps memory
+#'   low. To speed things up on high performing platforms, you can chunk out more than one chromosome at a time. Default is chrChunks = 1, so only one chromosome at a time.
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -28,10 +30,12 @@
 getCoAccessibleLinks <- function(SampleTileObj,
                                  cellPopulation = "All",
                                  regions,
+                                 chrChunks = 1,
                                  windowSize = 1 * 10^6,
                                  numCores = 1,
                                  ZI = TRUE,
                                  verbose = FALSE) {
+  # verify input
   if (methods::is(regions, "GRanges")) {
     regionDF <- as.data.frame(regions)
   } else if (methods::is(regions, "character")) {
@@ -40,62 +44,134 @@ getCoAccessibleLinks <- function(SampleTileObj,
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
   }
 
+  if (!methods::is(chrChunks, "numeric")) {
+    stop("chrChunks is not numeric")
+  } else if (chrChunks %% 1 != 0 | chrChunks <= 0) {
+    stop("chrChunks is not a positive integer value. Please set chrChunks to be a positive integer.")
+  }
+
   if (cellPopulation == "All") {
-    tileDF <- do.call("cbind", SummarizedExperiment::assays(SampleTileObj))
-  } else if (length(cellPopulation) > 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
-    tileDF <- do.call("cbind", SummarizedExperiment::assays(SampleTileObj)[names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation])
-  } else if (length(cellPopulation) == 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
-    tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE)
+    tileDF <- do.call("cbind", as.list(SummarizedExperiment::assays(SampleTileObj)))
+  } else if (length(cellPopulation) > 1 & all(cellPopulation %in% names(assays(SampleTileObj)))) {
+    tileDF <- do.call("cbind", assays(SampleTileObj)[names(assays(SampleTileObj)) %in% cellPopulation]) #
+  } else if (length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))) {
+    tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE) #
   } else {
-    stop("Cell type not found within SampleTileObj")
+    stop()("Cell type not found within SampleTileObj")
   }
 
   tileDF[is.na(tileDF)] <- 0
 
-  start <- as.numeric(gsub("chr.*\\:|\\-.*", "", rownames(tileDF)))
-  end <- as.numeric(gsub("chr.*\\:|.*\\-", "", rownames(tileDF)))
-  chr <- gsub("\\:.*", "", rownames(tileDF))
+  tileNames <- rownames(tileDF)
 
-  # Initialize correlation datatable
-  TileCorr <- NULL
-  pb <- utils::txtProgressBar(min = 0, max = length(regions), initial = 0, style = 3)
+  start <- as.numeric(gsub("chr.*\\:|\\-.*", "", tileNames))
+  end <- as.numeric(gsub("chr.*\\:|.*\\-", "", tileNames))
+  chr <- gsub("\\:.*", "", tileNames)
 
-  for (i in 1:length(regions)) {
-    utils::setTxtProgressBar(pb, i)
 
-    # Find all neighboring tiles in the window
-    windowIndexBool <- which(start > regionDF$start[i] - windowSize / 2 &
-      end < regionDF$end[i] + windowSize / 2 &
-      chr == regionDF$seqnames[i])
-
-    if (length(windowIndexBool) > 1) {
-
-      # The region of interest should overlap with the tile at least partially.
-      keyTile <- which(
-        windowIndexBool == which(
-          ((start <= regionDF$start[i] & end >= regionDF$start[i]) |
-            (start >= regionDF$start[i] & end <= regionDF$end[i]) |
-            (start <= regionDF$end[i] & end >= regionDF$end[i])) &
-            chr %in% regionDF$seqnames[i]
-        )
-      )
-      nextCorr <- co_accessibility(tileDF[windowIndexBool, , drop = FALSE],
-        filterPairs = TileCorr, numCores = numCores,
-        index = keyTile, verbose = verbose, ZI = ZI
-      )
-      # For first iteration, TileCorr is NULL so it will be ignored
-      TileCorr <- rbind(TileCorr, nextCorr)
-    } else if (verbose) {
-      warning(
-        "No neighboring tiles found for given region: ",
-        stringr::str_interp(
-          "${regionDF$seqnames[i]}:${regionDF$start[i]}-${regionDF$end[i]}"
-        ),
-        stringr::str_interp(" with windowSize ${windowSize} basepairs")
-      )
-    }
+  # Find all combinations to test
+  if (verbose) {
+    message("Finding all tile pairs to correlate.")
   }
 
-  close(pb)
-  TileCorr
+  allCombinations <- pbapply::pblapply(1:dim(regionDF)[1], function(y) {
+    keyTile <- which(start == regionDF$start[y] &
+      end == regionDF$end[y] &
+      chr == regionDF$seqnames[y])
+
+    windowIndexBool <- which(start > regionDF$start[y] - windowSize / 2 &
+      end < regionDF$end[y] + windowSize / 2 &
+      chr == regionDF$seqnames[y])
+
+    windowIndexBool <- windowIndexBool[windowIndexBool != keyTile]
+
+    # Var1 will always be our region of interest
+    keyNeighborPairs <- data.frame(
+      "Key" = tileNames[keyTile],
+      "Neighbor" = tileNames[windowIndexBool]
+    )
+
+    keyNeighborPairs
+  }, cl = numCores) %>%
+    do.call("rbind", .) %>%
+    dplyr::distinct()
+
+  # Determine chromosomes to search over, and the number of iterations to run through.
+  chrNum <- paste(unique(regionDF$seqnames), ":", sep = "")
+  numChunks <- length(chrNum) %/% chrChunks
+  numChunks <- ifelse(length(chrNum) %% chrChunks == 0, numChunks, numChunks + 1)
+
+  if (verbose) {
+    message("Finding subsets of pairs for testing.")
+  }
+
+  # Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
+  combList <- pbapply::pblapply(1:numChunks, function(y) {
+    specChr <- paste0(chrNum[which(c(1:length(chrNum)) > (y - 1) * chrChunks &
+      c(1:length(chrNum) <= y * chrChunks))], collapse = "|")
+
+    tileIndices <- grep(specChr, tileNames)
+    combIndices <- grep(specChr, allCombinations$Key)
+
+    infoList <- list(tileIndices, combIndices, specChr)
+
+    infoList
+  }, cl = numCores)
+
+  # Initialize zi_spear_mat for iterations
+  zi_spear_mat <- NULL
+
+
+  for (i in 1:numChunks) {
+    # print(i)
+    # print(any(grepl(specChr, tileNames)))
+    # print(any(grepl(specChr, allCombinations$Key)))
+
+    subTileDF <- tileDF[combList[[i]][[1]], , drop = FALSE]
+    subCombinations <- allCombinations[combList[[i]][[2]], ]
+
+    #    if(!all(subCombinations[, "Key"] %in% rownames(subTileDF))){
+    #
+    #     return(list(subCombinations, subTileDF))
+    #
+    #   }
+
+    if (verbose) {
+      message(paste("Finding correlations for Chromosome(s)", gsub("chr", "", combList[[i]][[3]]), sep = " "))
+    }
+
+    # General case for >1 pair
+    zero_inflated_spearman <- unlist(pbapply::pblapply(1:nrow(subCombinations),
+      function(x) {
+        weightedZISpearman(
+          x = subTileDF[subCombinations[x, "Key"], ],
+          y = subTileDF[subCombinations[x, "Neighbor"], ],
+          verbose = verbose,
+          ZI = ZI
+        )
+      },
+      cl = numCores
+    ))
+
+    # Create zero-inflated correlation matrix from correlation values
+    zi_spear_mat_tmp <- data.table::data.table(
+      Correlation = zero_inflated_spearman,
+      Tile1 = subCombinations[, "Key"],
+      Tile2 = subCombinations[, "Neighbor"]
+    )
+
+    zi_spear_mat <- rbind(zi_spear_mat, zi_spear_mat_tmp)
+  }
+  return(zi_spear_mat)
+}
+
+findPairs <- function(allRegions, index, numCores = 40, verbose = FALSE) {
+  regionOfInterest <- allRegions[index]
+  allOtherRegions <- allRegions[-index]
+
+  # Var1 will always be our region of interest
+  keyNeighborPairs <- as.matrix(data.frame(
+    "Key" = regionOfInterest,
+    "Neighbor" = allOtherRegions
+  ))
 }

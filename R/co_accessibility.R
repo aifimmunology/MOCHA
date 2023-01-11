@@ -26,6 +26,8 @@
 #'
 #'
 #' @noRd
+#'
+#'
 
 co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRUE, verbose = FALSE) {
   regionOfInterest <- rownames(subMat)[index]
@@ -38,7 +40,6 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
   ))
 
   if (!is.null(filterPairs) & nrow(keyNeighborPairs) > 1) {
-
     # Filter out any of our neighboring regions (Var2) that were previous "regions of interest".
     # These will be the "Var1/Tile1"s in previous results.
     keyNeighborPairs <- keyNeighborPairs[!(keyNeighborPairs[, "Neighbor"] %in% filterPairs$Tile1), ]
@@ -53,7 +54,6 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
   } else if (length(keyNeighborPairs) == 0) {
     return(NULL)
   } else if (length(keyNeighborPairs) == 2) {
-
     # If only one pair of tiles to test, then it's no longer a data.frame, but a vector.
     zero_inflated_spearman <- weightedZISpearman(
       x = subMat[keyNeighborPairs[1], ],
@@ -68,7 +68,6 @@ co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRU
       Tile2 = keyNeighborPairs[2]
     )
   } else {
-
     # General case for >1 pair
     zero_inflated_spearman <- unlist(parallel::mclapply(1:nrow(keyNeighborPairs),
       function(x) {
