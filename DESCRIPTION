@@ -92,4 +92,5 @@ Additional_repositories: https://imran-aifi.github.io/drat
 biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://aifimmunology.github.io/MOCHA/
+URL: https://aifimmunology.github.io/MOCHA/, https://github.com/aifimmunology/MOCHA
+BugReports: https://github.com/aifimmunology/MOCHA/issues
