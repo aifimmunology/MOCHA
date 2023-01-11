@@ -228,10 +228,10 @@ getCellTypeMarkers <- function(SampleTileObj, cellPopulation = 'All',
       combinedObj <- getBackGroundObj(SampleTileObj)
 
       fullMat <- SummarizedExperiment::assays(combinedObj)[[1]]
-      
+      metaData <- SummarizedExperiment::colData(combinedObj)
 
       cl <- parallel::makeCluster(numCores)
-      parallel
+      parallel::clusterExport(cl, varlist = c('fullMat','metaData'), envir = environment(()))
 
       if(cellPopulation == 'All'){
 
@@ -240,18 +240,68 @@ getCellTypeMarkers <- function(SampleTileObj, cellPopulation = 'All',
 
       }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
 
+        normDiff <- pblapply::pblapply(1:nrows(fullMat), function(x){
+
+
+
+        })
+
 
 
       }else{ error("cellPopulation must be set to 'All' or one specific population found in the SampleTileObj")}
 
-      
+    
+}
 
 
 
 
+getCellTypeMarkers2 <- function(SampleTileObj,
+                                           numCores = 1,
+                                           verbose = FALSE) {
 
+
+      combinedObj <- getBackGroundObj(SampleTileObj)
+
+      fullMat <- SummarizedExperiment::assays(combinedObj)[[1]]
+      metaData <- SummarizedExperiment::colData(combinedObj)
+
+
+      if(cellPopulation == 'All'){
+
+        cl <- parallel::makeCluster(numCores)
+
+        formula1 = as.formula('exp ~ (1|CellType)')
+        parallel::clusterExport(cl, varlist = c('fullMat','metaData','formula1'), envir = environment(()))
+        suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
+              function(x) {
+                  df <- data.frame(exp = as.numeric(mat1[x,]), 
+                      meta, stringsAsFactors = FALSE)
+                  lmerTest::lmer(formula = formula1, data = df)
+              }, cl = cl), classes = "message")
+
+        names(lmem_res) = rownames(fullMat)
+
+        stopCluster(cl)
+
+        return(lmem_res)
+
+
+      }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
+
+        normDiff <- pblapply::pblapply(1:nrows(fullMat), function(x){
+
+
+
+        })
+
+
+
+      }else{ error("cellPopulation must be set to 'All' or one specific population found in the SampleTileObj")}
+    
 
 }
+
 
 getBackGroundObj <- function(STObj, NAtoZero = TRUE){
 
