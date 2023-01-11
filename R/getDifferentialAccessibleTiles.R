@@ -213,3 +213,109 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   full_results
 }
+
+
+######
+
+
+getCellTypeMarkers <- function(SampleTileObj, cellPopulation = 'All',
+                                           signalThreshold = 12,
+                                           outputGRanges = TRUE,
+                                           numCores = 1,
+                                           verbose = FALSE) {
+
+
+      combinedObj <- getBackGroundObj(SampleTileObj)
+
+      fullMat <- SummarizedExperiment::assays(combinedObj)[[1]]
+      
+
+      cl <- parallel::makeCluster(numCores)
+      parallel
+
+      if(cellPopulation == 'All'){
+
+
+
+
+      }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
+
+
+
+      }else{ error("cellPopulation must be set to 'All' or one specific population found in the SampleTileObj")}
+
+      
+
+
+
+
+
+
+}
+
+getBackGroundObj <- function(STObj, NAtoZero = TRUE){
+
+  # Extract all the Sample-Tile Matrices for each cell type
+  temp <- SummarizedExperiment::assays(STObj)
+
+  meta1 <- SummarizedExperiment::colData(STObj)
+  
+  # Let's generate a new assay, that will contain the
+  # the intensity for a given cell, as well as the
+  # median intensity per sample-tile for all other cell types (i.e. the background)
+
+   	  
+
+  newAssays <- list(do.call('cbind', temp))
+  newSamplesNames <- unlist(lapply(names(temp), function(x){
+                            paste(x, colnames(STObj), sep = "__") %>% gsub(" ","",.)
+            }))
+
+  names(newAssays) <- 'counts'
+  colnames(newAssays[[1]]) = newSamplesNames
+
+  if(NAtoZero){  
+    newAssays[[1]][is.na(newAssays[[1]])] = 0 
+  }
+
+
+  allSampleData <- do.call('rbind', lapply(names(temp), function(x){
+
+		tmp_meta = meta1
+		 tmp_meta$Sample <- paste(x,tmp_meta$Sample, sep = "__") %>% gsub(" ","",.)
+                 tmp_meta$CellType = rep(x, dim(tmp_meta)[1])
+		 rownames(tmp_meta) <- tmp_meta$Sample
+		 tmp_meta
+	}
+  ))
+
+
+  
+  allRanges <- SummarizedExperiment::rowRanges(STObj)
+  for (i in names(temp)) {
+    mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
+  }
+
+  #return(list(newAssays, allSampleData, allRanges))
+
+  newObj <- SummarizedExperiment(
+    assays = newAssays,
+    colData =  allSampleData,
+    rowRanges = allRanges,
+    metadata = metadata(STObj)
+  )
+
+  newObj <- chromVAR::addGCBias(newObj, genome = metadata(STObj)$Genome)
+
+   if(any(is.na(SummarizedExperiment::rowData(newObj)$bias))){
+
+                    naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
+                    message(paste(sum(naList), "NaNs found within GC Bias", sep =" "))
+
+                    SummarizedExperiment::rowData(newObj)$bias[which(naList)] = mean(rowData(newObj)$bias, na.rm = TRUE)
+
+                }
+
+  return(newObj)
+
+}
