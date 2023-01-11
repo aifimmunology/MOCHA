@@ -3,6 +3,8 @@ MOChA: Model-based single-cell Open Chromatin Analysis
 
 MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
+Find out more by visiting the [MOCHA website](https://aifimmunology.github.io/MOCHA/).
+
 ------------------------------------------------------------------------
 
 ### Table of Contents
@@ -10,7 +12,6 @@ MOCHA is an R package containing a novel single-cell peak-calling algorithm that
 -   [Installation](#installation)
 -   [Overview](#overview)
 -   [Contact](#contact)
--   [License](#license)
 
 
 -----------------------------------------------------------------------
@@ -41,8 +42,4 @@ The example usage demonstrates this workflow:
 
 ## <a name="contact"></a> Contact
 
-To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs.
-
-## <a name="license"></a> License
-
-MOCHA follows the Allen Institute Software License - full information about the license can be found on the LICENSE file.
+To contact the developers on issues and feature requests, please contact us via GitHub's discussions tab for feature requests, or open issues for any bugs.
