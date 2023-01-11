@@ -28,16 +28,26 @@ runChromVAR <- function(TSAM_Object,
             assayList <- do.call('cbind', SummarizedExperiment::assays(TSAM_Object))
             newSamplesNames <- unlist(lapply(names(SummarizedExperiment::assays(TSAM_Object)), function(x){
         
-                            paste(x, colnames(TSAM_Object), sep = "_")
+                            paste(x, colnames(TSAM_Object), sep = "__") %>% gsub(" ","",.)
                     
             }))
+
+            meta1 <- SummarizedExperiment::colData(TSAM_Object)
 
             colnames(assayList) <- newSamplesNames
 
             nonEmptySamples <- apply(assayList, 2, function(x) !all(is.na(x)))
             assayList <- assayList[,nonEmptySamples]
 
-            allSampleData <- do.call('rbind', lapply(1:length(SummarizedExperiment::assays(TSAM_Object)), function(x) colData(TSAM_Object)))
+            allSampleData <- do.call('rbind', lapply(1:length(SummarizedExperiment::assays(TSAM_Object)), function(x){ 
+                    
+                    tmp_meta = meta1
+                    tmp_meta$Sample <- paste(x,tmp_meta$Sample, sep = "__") %>% gsub(" ","",.)
+                    tmp_meta$CellType = rep(x, dim(tmp_meta)[1])
+                    rownames(tmp_meta) <- tmp_meta$Sample
+                    tmp_meta
+                }
+            ))
 
             allSampleData$Sample = newSamplesNames
 
