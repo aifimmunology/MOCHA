@@ -5,7 +5,7 @@ testCoAccessibility <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, ba
 
     if(length(tile1) != length(tile2)){
 
-        error('tile1 and tile2 must be the same length.')
+        stop('tile1 and tile2 must be the same length.')
 
     }
 
@@ -25,26 +25,32 @@ testCoAccessibility <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, ba
         tile1 = rownames(fullObj)[nTile1]
         tile2 = rownames(fullObj)[nTile2]
 
-    }else{error('tile1 and tile 2 must both be either numbers (indices) or strings')}
+    }else{stop('tile1 and tile 2 must both be either numbers (indices) or strings')}
 
-    if(backNumber > 2500){
-        backNumber = 2500
+    if(backNumber > 2450){
+        backNumber = 2450
         warning('backNumber too high. Reset to 2500')
 
     }else if(backNumber <= 10){
       
-      error('backNumber too low (<=10). We recommend at least 100.')
+      stop('backNumber too low (<=10). We recommend at least 100.')
 
     }
 
     cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(cl, varlist = c('nTile1', 'nTile2','backPeaks'), envir = environment())
     
+    message('Finding background peak pairs.')
+
     backgroundCombos <- pbapply::pblapply(seq_along(nTile1), function(x){
-            expand.grid(backPeaks[nTile1,], backPeaks[nTile2,])[sample.int(2500, backNumber),]
+        tmpMat <- expand.grid(backPeaks[nTile1[x],], backPeaks[nTile2[x],])
+        tmpMat <- tmpMat[tmpMat[,1] != tmpMat[,2],] 
+        tmpMat[sample.int(dim(tmpMat)[1], backNumber),] 
     }, cl = cl)
 
     parallel::stopCluster()
+
+    gc()
 
     cl <- parallel::makeCluster(numCores)
 
@@ -54,10 +60,16 @@ testCoAccessibility <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, ba
     combPairs <- data.frame(tile1, tile2)
     subAccMat <- accMat[unique(c(nTile1, nTile2)),]
 
+    message('Identifying foreground.')
     parallel::clusterExport(cl, varlist = c('subAccMat', "combPairs"), envir = environment())
     foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
     parallel::stopCluster()
+
+    gc()
+
     ## Now we need to test the background set
+
+    message('Identifying background correlations.')
 
     if(highMem){
 
@@ -101,6 +113,8 @@ testCoAccessibility <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, ba
           
           parallel::stopCluster(cl)
 
+          gc()
+
           backGround <- append(backGround, tmp_background)
       }
 
@@ -126,6 +140,106 @@ testCoAccessibility <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, ba
         
     },cl =cl) %>% unlist()
     parallel::stopCluster(cl)
+
+    gc()
+
+    foreGround$pValues <- pValues
+
+    return(foreGround)
+
+}
+
+
+testCoAccessibility2 <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, backNumber = 1000, highMem = FALSE, verbose = TRUE){
+
+    if(length(tile1) != length(tile2)){
+
+        stop('tile1 and tile2 must be the same length.')
+
+    }
+
+    fullObj <- getBackGroundObj(STObj)
+
+    #backPeaks <- chromVAR::getBackgroundPeaks(fullObj)
+
+    if(is.character(tile1) & is.character(tile2)){
+
+        nTile1 = match(tile1, rownames(fullObj))
+        nTile2 = match(tile1, rownames(fullObj))
+    }else if(is.numeric(tile1) & is.numeric(tile2)){
+
+        nTile1 = tile1
+        nTile2 = tile2
+
+        tile1 = rownames(fullObj)[nTile1]
+        tile2 = rownames(fullObj)[nTile2]
+
+    }else{stop('tile1 and tile 2 must both be either numbers (indices) or strings')}
+
+    if(backNumber >=  length(rownames(fullObj)) - c(length(tile1) + length(tile2))){
+        backNumber = length(rownames(fullObj)) - c(length(tile1) + length(tile2))
+        warning('backNumber too high. Reset to all background combinations.')
+
+    }else if(backNumber <= 10){
+      
+      stop('backNumber too low (<=10). We recommend 1000.')
+
+    }
+
+    cl <- parallel::makeCluster(numCores)
+
+    accMat <- SummarizedExperiment::assays(fullObj)[[1]]
+    
+    ## Test original pairs of locations
+    combPairs <- data.frame(tile1, tile2)
+    subAccMat <- accMat[unique(c(nTile1, nTile2)),]
+
+    message('Identifying foreground.')
+    parallel::clusterExport(cl, varlist = c('subAccMat', "combPairs"), envir = environment())
+    foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
+    parallel::stopCluster()
+
+    gc()
+    
+    message('Finding background peak pairs.')
+
+    backGroundTiles <- rownames(fullObj)[!rownames(fullObj) %in% c(tile1, tile2)]
+    
+    backgroundCombos <- data.frame(Tile1 = sample(backGroundTiles, backNumber),
+                          Tile2 = sample(backGroundTiles, backNumber))
+    backgroundCombos <- backgroundCombos[backgroundCombos[,1] != backgroundCombos[,2],] 
+
+    ## Now we need to test the background set
+
+    message('Identifying background correlations.')
+
+    cl <- parallel::makeCluster(numCores)
+    subAccMatB <- accMat[c(backgroundCombos$Tile1, backgroundCombos$nTile2),]
+    parallel::clusterExport(cl, varlist = c('backgroundCombos','subAccMatB'), envir = environment())
+    backGround <- runCoAccessibility(subAccMatB, backgroundCombos, ZI, verbose, cl)
+    parallel::stopCluster()
+
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(cl, varlist = c('backGround','foreGround'), envir = environment())
+
+    pValues <- pbapply::pblapply(1:length(tile1), function(x){
+    
+        cor1 <- foreGround$Correlation[x]
+        
+        if(cor1 >= 0){
+            
+            sum(cor1 > backGround$Correlation)/length(backGround$Correlation)
+            
+        }else if(cor1 < 0){
+            
+            sum(cor1 < backGround$Correlation)/length(backGround$Correlation)
+            
+        }
+        
+    },cl = cl) %>% unlist()
+    parallel::stopCluster(cl)
+
+    gc()
 
     foreGround$pValues <- pValues
 
