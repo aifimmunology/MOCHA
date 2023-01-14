@@ -18,7 +18,7 @@ test_that("getDifferentialAccessibleTiles works on a 3 sample test dataset", {
       foreground = "scATAC_BMMC_R1",
       background = "scATAC_CD34_BMMC_R1",
       outputGRanges = TRUE,
-      numCores = detectCores(),
+      numCores = 4,
       verbose = FALSE
     )
   )         
