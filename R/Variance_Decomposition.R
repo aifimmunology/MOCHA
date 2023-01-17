@@ -120,17 +120,7 @@ getVarDecomp <- function(lmemList, numCores = 1){
     varDecompRes <- suppressMessages(lmem_res <- pbapply::pblapply(seq_along(lmemList),
         function(x) {
 
-        lmem_re <- as.data.frame(lme4::VarCorr(lmemList[[x]]))
-        row.names(lmem_re) <- c(lmem_re$grp)
-
-        lmem_re <- lmem_re[c(variableList,'Residual'), ]
-        fix_effect <- lme4::fixef(lmemList[[x]])  #get fixed effect
-        lmem_re$CV <- lmem_re$sdcor/fix_effect
-
-        normVar <- (lmem_re$vcov)/sum(lmem_re$vcov)
-        names(normVar) <- row.names(lmem_re) 
-
-        normVar
+            extractVarDecomp(lmemList[[x]], variableList)
 
      }, cl = cl), classes = "message") %>% do.call('rbind',.)
 
@@ -140,5 +130,22 @@ getVarDecomp <- function(lmemList, numCores = 1){
 
     output_df <- cbind(data.frame(Tiles = names(lmemList)), varDecompRes)
     return(output_df)
+
+}
+
+
+extractVarDecomp <- function(lmem1, variableList){
+
+    lmem_re <- as.data.frame(lme4::VarCorr(lmem1))
+    row.names(lmem_re) <- c(lmem_re$grp)
+
+    lmem_re <- lmem_re[c(variableList,'Residual'), ]
+    fix_effect <- lme4::fixef(lmem1)  #get fixed effect
+    lmem_re$CV <- lmem_re$sdcor/fix_effect
+
+    normVar <- (lmem_re$vcov)/sum(lmem_re$vcov)
+    names(normVar) <- row.names(lmem_re) 
+
+    return(normVar)
 
 }
