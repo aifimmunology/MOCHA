@@ -257,49 +257,53 @@ getCellTypeMarkers <- function(SampleTileObj, cellPopulation = 'All',
 
 
 getCellTypeMarkers2 <- function(SampleTileObj,
+                                  cellPopulation = 'All',
                                            numCores = 1,
                                            verbose = FALSE) {
+      
 
+    if(cellPopulation == 'All'){
 
-      combinedObj <- getBackGroundObj(SampleTileObj)
+      STM <- SampleTileObj
+      combinedObj <- getBackGroundObj(STM)
 
-      fullMat <- SummarizedExperiment::assays(combinedObj)[[1]]
-      metaData <- SummarizedExperiment::colData(combinedObj)
+      
+    }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
 
+      STM <- MOCHA::subsetMOCHAObject(SampleTileObj, subsetBy = 'CellTypes', groupList = cellPopulation)
+      combinedObj <- getBackGroundObj(STM)
 
-      if(cellPopulation == 'All'){
-
-        cl <- parallel::makeCluster(numCores)
-
-        formula1 = as.formula('exp ~ (1|CellType)')
-        parallel::clusterExport(cl, varlist = c('fullMat','metaData','formula1'), envir = environment(()))
-        suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
-              function(x) {
-                  df <- data.frame(exp = as.numeric(mat1[x,]), 
-                      meta, stringsAsFactors = FALSE)
-                  lmerTest::lmer(formula = formula1, data = df)
-              }, cl = cl), classes = "message")
-
-        names(lmem_res) = rownames(fullMat)
-
-        stopCluster(cl)
-
-        return(lmem_res)
-
-
-      }else if(length(cellPopulation) == 1 & all(cellPopulation %in% names(assays(SampleTileObj)))){
-
-        normDiff <- pblapply::pblapply(1:nrows(fullMat), function(x){
-
-
-
-        })
-
-
-
-      }else{ error("cellPopulation must be set to 'All' or one specific population found in the SampleTileObj")}
+    }else{ error("cellPopulation must be set to 'All' or one specific population found in the SampleTileObj")}
     
+    fullMat <- SummarizedExperiment::assays(combinedObj)[[1]]
+    metaData <- SummarizedExperiment::colData(combinedObj) %>% as.data.frame() %>%
+              dplyr::select(Sample, CellType, Freq)
+    
+    matList <- lapply(c(1:nrow(fullMat)), function(x){
+                          df <- data.frame(exp = as.numeric(fullMat[x,]), 
+                      metaData, stringsAsFactors = FALSE) })
 
+    cl <- parallel::makeCluster(55)
+
+    formula1 = as.formula('exp ~ (1|CellType) + (1|Freq)')
+
+    parallel::clusterExport(cl, varlist = c('formula1'), envir = environment())
+
+    suppressMessages(lmem_res <- pbapply::pblapply(matList,
+                  function(x) {
+                      tryCatch({ 
+                          tmp <- lmerTest::lmer(formula = formula1, data = x)
+                          MOCHA::extractVarDecomp(tmp, c('CellType','Freq'))
+                      }, 
+                    error = function(e){c('CellType' = 0, 'Freq' = 0, 'Residual' = 0)})
+    }, cl = cl), classes = "message")
+
+    names(lmem_res) <- rownames(fullMat)
+    parallel::stopCluster(cl)
+
+    varComp <- do.call('rbind', lmem_res)
+
+    return(varComp)
 }
 
 
