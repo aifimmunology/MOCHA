@@ -2,8 +2,6 @@ url: https://aifimmunology.github.io/MOCHA/
 template:
   bootstrap: 5
   bootswatch: materia
-  bslib:
-    pkgdown-nav-height: 100px
   navbar:
     structure:
       left:  [intro, reference, articles, tutorials, news]
