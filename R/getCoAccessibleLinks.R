@@ -36,7 +36,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
                                  ZI = TRUE,
                                  verbose = FALSE) {
   # verify input
-  if (methods::is(regions, "GRanges")) {
+  if (methods::is(regions, "GenomicRanges")) {
     regionDF <- as.data.frame(regions)
   } else if (methods::is(regions, "character")) {
     regionDF <- MOCHA::StringsToGRanges(regions) %>% as.data.frame()
