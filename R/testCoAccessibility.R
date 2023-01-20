@@ -1,7 +1,26 @@
+#' @title \code{testCoAccessibilityChromVar}
+#'
+#' @description \code{testCoAccessibilityChromVar} takes an input set of tile pairs and tests whether they are significantly different compared to a background set found via ChromVAR
+#'
+#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
+#' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)
+#' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
+#' @param backNumber number of ChromVAR-matched background pairs. Default is 1000.
+#' @param highMem Boolean to control memory usage. Default is FALSE. Only set highMem to TRUE if you have plenty of memory and want to run this function faster.s
+#' @param 
+#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
+#'
+#' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value for that correlation compared to the background
+#'
+#' @example 
+#'            testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, backNumber = 1000, highMem = FALSE, verbose = TRUE){
+#'
+#'
+#' @export
 
-## tile1 and tile2 should be the numeric indices of the TSAM to test
-
-testCoAccessibility <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, backNumber = 100, highMem = FALSE, verbose = TRUE){
+testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, backNumber = 1000, highMem = FALSE, verbose = TRUE){
 
     if(length(tile1) != length(tile2)){
 
@@ -149,8 +168,26 @@ testCoAccessibility <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, ba
 
 }
 
+#' @title \code{testCoAccessibilityRandom}
+#'
+#' @description \code{testCoAccessibilityRandom} takes an input set of tile pairs and tests whether they are significantly different compared to random, non-overlapping background set. 
+#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
+#' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)
+#' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
+#' @param backNumber number of ChromVAR-matched background pairs. Default is 1000.
+#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
+#'
+#' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value for that correlation compared to the background
+#'
+#' @example 
+#'            testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, backNumber = 1000, highMem = FALSE, verbose = TRUE){
+#'
+#'
+#' @export
 
-testCoAccessibility2 <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, backNumber = 1000, highMem = FALSE, verbose = TRUE){
+testCoAccessibilityRandom <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, backNumber = 1000, verbose = TRUE){
 
     if(length(tile1) != length(tile2)){
 
@@ -159,8 +196,6 @@ testCoAccessibility2 <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, b
     }
 
     fullObj <- getBackGroundObj(STObj)
-
-    #backPeaks <- chromVAR::getBackgroundPeaks(fullObj)
 
     if(is.character(tile1) & is.character(tile2)){
 
@@ -247,6 +282,21 @@ testCoAccessibility2 <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, b
 
 }
 
+#' @title \code{testCoAccessibilityChromVar}
+#'
+#' @description \code{testCoAccessibilityChromVar} takes an input set of tile pairs and tests whether they are significantly different compared to a background set found via ChromVAR
+#'
+#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
+#' @param accMat accessibility matrix to use for correlations
+#' @param pairs data.frame for pairs of tiles to test. Must be tileNames (chrX:100-200).
+#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
+#'
+#' @return zi_spear_mat_tmp a data.table of tile pairs with associated correlations. 
+#'
+#' @examples runCoAccessibility(assays(SampleTileObj)[[1]], pairs = data.frame(Tile1 = c('chrX:1000-1499', 'chr21:1000-1499'), TIle2 = c('chrX:1500-1999', 'chr21:1500-1999'))
+#' @noRD
 
 runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCores = 1){
 
@@ -273,6 +323,26 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 
 }
 
+
+#' @title \code{getBackGroundObj}
+#'
+#' @description \code{getBackGroundObj} combines all celltypes in a SampleTileMatrix object into a SummarizedExperiment with one single matrix across all cell types and samples.
+#'
+#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
+#' @param NAToZero 
+#' @return TileCorr A data.table correlation matrix
+#'
+#' @details The technical details of the zero-inflated correlation can be
+#'          found here:
+#'
+#'               Pimentel, Ronald Silva, "Kendall's Tau and Spearman's Rho
+#'               for Zero-Inflated Data" (2009). Dissertations.
+#'
+#'          while the implementation (scHOT R package), can be found here:
+#'               http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
+#'
+#'
+#' @export
 
 getBackGroundObj <- function(STObj, NAtoZero = TRUE){
 
