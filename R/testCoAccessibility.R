@@ -197,7 +197,7 @@ testCoAccessibility2 <- function(STObj, tile1, tile2, numCores = 1, ZI = TRUE, b
     message('Identifying foreground.')
     parallel::clusterExport(cl, varlist = c('subAccMat', "combPairs"), envir = environment())
     foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
-    parallel::stopCluster()
+    parallel::stopCluster(cl)
 
     gc()
     
