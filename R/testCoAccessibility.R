@@ -302,12 +302,14 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 
     zero_inflated_spearman <- unlist(pbapply::pblapply(1:dim(pairs)[1],
       function(x) {
-        MOCHA:::weightedZISpearman(
-          x = accMat[pairs[x, 1], ],
-          y = accMat[pairs[x, 2], ],
-          verbose = verbose,
-          ZI = ZI
-        )
+        tryCatch({
+          MOCHA:::weightedZISpearman(
+            x = accMat[pairs[x, 1], ],
+            y = accMat[pairs[x, 2], ],
+            verbose = verbose,
+            ZI = ZI
+          )
+        }, error = function(e){NA})
       },
       cl = numCores
     ))
@@ -332,15 +334,7 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 #' @param NAToZero 
 #' @return TileCorr A data.table correlation matrix
 #'
-#' @details The technical details of the zero-inflated correlation can be
-#'          found here:
-#'
-#'               Pimentel, Ronald Silva, "Kendall's Tau and Spearman's Rho
-#'               for Zero-Inflated Data" (2009). Dissertations.
-#'
-#'          while the implementation (scHOT R package), can be found here:
-#'               http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
-#'
+#' @example
 #'
 #' @export
 
