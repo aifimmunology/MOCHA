@@ -12,6 +12,7 @@
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param approximateTile If set to TRUE, it will use all tiles that overlap with the regions given, instead of finding an exact match to the regions variable. Default is FALSE. 
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
 #'
 #' @return TileCorr A data.table correlation matrix
@@ -144,7 +145,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   # Initialize zi_spear_mat for iterations
   zi_spear_mat <- NULL
 
-
+  #return(list(combList, tileDF, allCombinations))
 
   for (i in 1:numChunks) {
     print(i)
