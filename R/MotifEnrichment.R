@@ -111,80 +111,93 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores 
 
 ## @TSS_Sites - GRanges objects that are the list of TSS sites of interest. 
 ##              Must include a column 'name' which has the associated gene name
-## @allPeaks - GRanges object of all peaks 
-## @TSS_Links - a data.table object that record all the peak-peak links by co-accessibility
-##              Must include columns named 'Peak1' and 'Peak2' which contain a string describing
-##              each peak in the format 'chr1:100-2000' and must be identical to peaks listed in
-##              allPeaks
+## @allTiles - GRanges object of all tiles 
+## @TSS_Links - a data.table object that record all the Tile-Tile links by co-accessibility
+##              Must include columns named 'Tile1' and 'Tile2' which contain a string describing
+##              each Tile in the format 'chr1:100-2000' and must be identical to Tiles listed in
+##              allTiles
 ## @motifPosList - a GRangesList, which each index is a GRanges of all positions 
 ##                  for a given motif. GRangesList must be named. 
 ## @numCores - number of cores to multithread over. 
     
     
-Gene2Motif <- function(TSS_Sites, allPeaks, TSS_Links, motifPosList, 
+Gene2Motif <- function(TSS_Sites, allTiles, TSS_Links, motifPosList, 
                        numCores = 1, verbose = FALSE){
     
-    if(verbose){ print('Generating TSS-Peak Network.')}
+    if(verbose){ print('Generating TSS-Tile Network.')}
     
-    TSS_Network <- c(TSS_Links$Peak1, TSS_Links$Peak2, 
-                           GRangesToString(TSS_Sites)) %>%
+    TSS_Network <- c(TSS_Links$Tile1, TSS_Links$Tile2, 
+                           MOCHA::GRangesToString(TSS_Sites)) %>%
                    unique() %>%
                   StringsToGRanges(.) %>% 
-                plyranges::filter_by_overlaps(allPeaks, .)
+                plyranges::filter_by_overlaps(allTiles, .)
     
-    if(verbose){ print('Finding all motifs related to each peak within the TSS-Peak Network.')}
-    ##Let's find all the motifs that overlap with each peak within the altTSS Network
-    tmpOverlap <- mclapply(seq_along(motifPosList), function(x){
+    if(verbose){ print('Finding all motifs related to each Tile within the TSS-Tile Network.')}
+    ##Let's find all the motifs that overlap with each Tile within the altTSS Network
+
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(cl, varlist = c('motifPosList', 'TSS_Network'), envir = environment())
+
+    tmpOverlap <- pbapply::pblapply(seq_along(motifPosList), function(x){
     
-        ifelse(count_overlaps(TSS_Network, motifPosList[[x]]) > 0,
+        avgWidth = mean(GenomicRanges::width(motifPosList[[x]]))
+        ifelse(plyranges::count_overlaps(TSS_Network, motifPosList[[x]], minoverlap= avgWidth) > 0,
            names(motifPosList)[x], NA)
     
-    }, mc.cores= numCores)
-    
+    }, cl = cl)
     
     overlap_df <- do.call('cbind', tmpOverlap)
-    motifList <- mclapply(c(1:dim(overlap_df)[1]), function(x){
+    colnames(overlap_df) = names(motifPosList)
+    rownames(overlap_df) = MOCHA::GRangesToString(TSS_Network)
+
+    parallel::clusterExport(cl, varlist = c('overlap_df'), envir = environment())
+
+    motifList <- pbapply::pblapply(c(1:dim(overlap_df)[1]), function(x){
         
         
         ifelse(any(!is.na(overlap_df[x,])),
             list(overlap_df[x,which(!is.na(overlap_df[x,]))]),
             NA)
     
-    }, mc.cores= numCores)
+    }, cl = cl)
 
-    if(verbose){ print('Finding all peaks related to each gene within the TSS-Peak Network.')}
-    ##Find all the peaks related to each gene. 
+    if(verbose){ print('Finding all Tiles related to each gene within the TSS-Tile Network.')}
+
+    parallel::clusterExport(cl, varlist = c('TSS_Sites', 'allTiles'), envir = environment())
     
-    Peak2Gene <- mclapply(unique(TSS_Sites$name), function(x){
+    Tile2Gene <-  pbapply::pblapply(unique(TSS_Sites$name), function(x){
     
-        geneTSS <- plyranges::filter(TSS_Sites, name == x)  %>% 
-                plyranges::filter_by_overlaps(allPeaks, .) %>%
-            plyranges::ungroup() %>%
-            GRangesToString(.)
-    
-        tmp <- TSS_Links[Peak1 %in% geneTSS | Peak2 %in% geneTSS,]
+        filtTSS <- plyranges::filter(TSS_Sites, name == x) 
+        geneTSS <-  MOCHA::GRangesToString(plyranges::filter_by_overlaps(allTiles, filtTSS))
+
+        tmp <- TSS_Links[Tile1 %in% geneTSS | Tile2 %in% geneTSS,]
     
         if(dim(tmp)[1] > 0){ 
-            unique(c(tmp$Peak1, tmp$Peak2, geneTSS))
+            unique(c(tmp$Tile1, tmp$Tile2, geneTSS))
         }else{
                geneTSS
         }
     
-    }, mc.cores = numCores)
-    names(Peak2Gene) <- unique(TSS_Sites$name)
+    }, cl = cl)
+    names(Tile2Gene) <- unique(TSS_Sites$name)
     
-    
+   
 
-    if(verbose){ print('Linking Motifs to each gene within the TSS-Peak Network')}
-    ## Link all the genes to motifs via Peak2Gene and the motifList
-    Gene2Motif <- mclapply(Peak2Gene, function(x){
+    if(verbose){ print('Linking Motifs to each gene within the TSS-Tile Network')}
+    ## Link all the genes to motifs via Tile2Gene and the motifList
+
+    parallel::clusterExport(cl, varlist = c('TSS_Network', 'motifList'), envir = environment())
+
+    Gene2Motif <- pbapply::pblapply(Tile2Gene, function(x){
     
         #Find which indices of the AltTSS Network GRanges are linked to that Gene
-        tmp <- findOverlaps(StringsToGRanges(x), TSS_Network)
+        tmp <- GenomicRanges::findOverlaps(MOCHA::StringsToGRanges(x), TSS_Network)
         #Pull up and unlist all the motifs associated with those tiles.
-        unlist(motifList[subjectHits(tmp)])
+        unlist(motifList[S4Vectors::subjectHits(tmp)])
     
-    }, mc.cores = numCores)
+    }, cl = cl)
+
+     parallel::stopCluster(cl)
     
     return(Gene2Motif)
     
