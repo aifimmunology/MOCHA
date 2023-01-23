@@ -100,7 +100,7 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores 
 
     parallel::stopCluster(cl)
 
-    df_final$FDR <- p.adjust(df_final$p_value, method = 'fdr')
+    df_final$adjp_val <- p.adjust(df_final$p_value, method = 'fdr')
     df_final$mlog10Padj <- -log10(df_final$adjp_val)
     
     return(df_final)
