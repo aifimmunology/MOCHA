@@ -145,8 +145,6 @@ getCoAccessibleLinks <- function(SampleTileObj,
   # Initialize zi_spear_mat for iterations
   zi_spear_mat <- NULL
 
-  #return(list(combList, tileDF, allCombinations))
-
   for (i in 1:numChunks) {
     print(i)
 
@@ -179,7 +177,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
     gc()
 
     zi_spear_mat <- rbind(zi_spear_mat, zi_spear_mat_tmp)
-    #zi_spear_mat <- rbind(zi_spear_mat, list(subTileDF,subCombinations))
+
   }
   return(zi_spear_mat)
 }
