@@ -34,7 +34,7 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
         return(t(dt_table))
         
     }else if(returnTable & 
-             sum(c(colnames(mcols(Group1)),colnames(mcols(Group2))) %in% type) == 2 &
+             sum(c(colnames(GenomicRanges::mcols(Group1)),colnames(GenomicRanges::mcols(Group2))) %in% type) == 2 &
              length(type) == 1){
         
        dt_table <- data.frame(Group1 = c(length(unique(GenomicRanges::mcols(Group1Cat)[,type])), 
@@ -60,17 +60,17 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
 
        enrichment <- (length(Group1Cat)/length(Group1))/(length(Group2Cat)/length(Group2))
         
-    }else if(sum(c(colnames(mcols(Group1)),colnames(mcols(Group2))) %in% type) == 2 &
+    }else if(sum(c(colnames(GenomicRanges::mcols(Group1)),colnames(GenomicRanges::mcols(Group2))) %in% type) == 2 &
              length(type) == 1){
         
-       pVal <- phyper(q = length(unique(mcols(Group1Cat)[,type])), 
-           m = length(unique(mcols(Group1)[,type])), 
-           n = length(unique(mcols(Group2)[,type])),
-           k = length(unique(mcols(Group1Cat)[,type])) + length(unique(mcols(Group2Cat)[,type])),
+       pVal <- phyper(q = length(unique(GenomicRanges::mcols(Group1Cat)[,type])), 
+           m = length(unique(GenomicRanges::mcols(Group1)[,type])), 
+           n = length(unique(GenomicRanges::mcols(Group2)[,type])),
+           k = length(unique(GenomicRanges::mcols(Group1Cat)[,type])) + length(unique(GenomicRanges::mcols(Group2Cat)[,type])),
                      lower.tail=FALSE)
         
-       enrichment <- (length(unique(mcols(Group1Cat)[,type]))/length(unique(mcols(Group1)[,type])))/
-                    (length(unique(mcols(Group2Cat)[,type]))/length(unique(mcols(Group2)[,type])))
+       enrichment <- (length(unique(GenomicRanges::mcols(Group1Cat)[,type]))/length(unique(GenomicRanges::mcols(Group1)[,type])))/
+                    (length(unique(GenomicRanges::mcols(Group2Cat)[,type]))/length(unique(GenomicRanges::mcols(Group2)[,type])))
         
     }else{
         
@@ -100,7 +100,7 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores 
 
     parallel::stopCluster(cl)
 
-    df_final$adjp_val <- p.adjust(df_final$p_value)
+    df_final$FDR <- p.adjust(df_final$p_value, method = 'fdr')
     df_final$mlog10Padj <- -log10(df_final$adjp_val)
     
     return(df_final)
