@@ -19,8 +19,6 @@
 #'   in to be retained. If set to 0, retain the union of all samples' peaks
 #'   (this is equivalent to a threshold of 1/numSamples). It is recommended to
 #'   tune this parameter to omit potentially spurious peaks.
-#' @param log2Intensity Boolean, set to TRUE to return the log2 of the
-#'   sample-tile intensity matrix. Optional, default is FALSE.
 #' @param numCores Optional, the number of cores to use with multiprocessing.
 #'   Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -62,7 +60,6 @@ getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
                                 groupColumn = NULL,
                                 threshold = 0.2,
-                                log2Intensity = TRUE,
                                 numCores = 1,
                                 verbose = FALSE) {
   if (class(tileResults)[1] != "MultiAssayExperiment") {
@@ -141,8 +138,7 @@ getSampleTileMatrix <- function(tileResults,
     singlePopulationSampleTileMatrix(
       x,
       allTiles,
-      NAtoZero = FALSE,
-      log2Intensity
+      NAtoZero = FALSE
     )
   }, mc.cores = numCores)
 
@@ -162,10 +158,7 @@ getSampleTileMatrix <- function(tileResults,
     sampleTileIntensityMatList,
     rowRanges = allTilesGR,
     colData = sampleData,
-    metadata = append(
-      list("Log2Intensity" = log2Intensity),
-      MultiAssayExperiment::metadata(tileResults)
-    )
+    metadata = MultiAssayExperiment::metadata(tileResults)
   )
   return(results)
 }
