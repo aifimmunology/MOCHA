@@ -177,6 +177,14 @@ setGeneric(
         "present in cellColData."
       )
     }
+    if (!("nFrags" %in% colnames(cellColData))) {
+      stop(
+        "cellColData is missing fragment count information. ",
+        "To calculate study signal, cellColData must contain a column 'nFrags' ",
+        "representing the number of fragments per cell. Alternatively, ",
+        "provide a value for the parameter 'studySignal'."
+      )
+    }
     studySignal <- stats::median(cellColData$nFrags)
   }
   study_prefactor <- 3668 / studySignal # Training median
@@ -410,6 +418,14 @@ setMethod(
         "Calculating study signal on ArchR project as the median ",
         "nFrags with the assumption that all cell populations are ",
         "present in ArchR project."
+      )
+    }
+    if (!("nFrags" %in% colnames(cellColData))) {
+      stop(
+        "cellColData is missing fragment count information. ",
+        "To calculate study signal, cellColData must contain a column 'nFrags' ",
+        "representing the number of fragments per cell. Alternatively, ",
+        "provide a value for the parameter 'studySignal'."
       )
     }
     studySignal <- stats::median(cellColData$nFrags)
@@ -647,6 +663,14 @@ callOpenTilesFast <- function(ArchRProj,
         "Calculating study signal on ArchR project as the median ",
         "nFrags with the assumption that all cell populations are ",
         "present in ArchR project."
+      )
+    }
+    if (!("nFrags" %in% colnames(cellColData))) {
+      stop(
+        "cellColData is missing fragment count information. ",
+        "To calculate study signal, cellColData must contain a column 'nFrags' ",
+        "representing the number of fragments per cell. Alternatively, ",
+        "provide a value for the parameter 'studySignal'."
       )
     }
     studySignal <- stats::median(cellColData$nFrags)
