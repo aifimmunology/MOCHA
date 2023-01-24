@@ -1,12 +1,13 @@
-#' @title \code{varDecomp}
+#' @title \code{linearModeling}
 #'
-#' @description \code{varDecomp} Runs PALMO to model variance decomposition along the variables needed. 
+#' @description \code{linearModeling} Runs linear modeling on a cell type or across all celltypes according to the formula of interest. effect variables must be in colData of object.
 #'
 #' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix
-#' @param Donor_col The metadata column with donor information.
-#' @param Time_col The metadata column with longitudinal information
-#' @param Group_col The metadata column with group information. Default is NULL, in which case it will attempt to use celltype as a proxy. Do not run group and cell type at the same time. 
-#' @param returnObj Boolean flag for whether or not you want the full PALMO object. Default is FALSE, in which case it returns the variance decomposition data.frame. 
+#' @param formula Formula for the GLM
+#' @param CellType Celltype whose data you want to run the GLM on. If you don't give it one specific cell type, it will run over all cell types
+#' @param rowsToKeep  Optional variable, which will only run the model on the rows you specify. 
+#' @param NAtoZero Boolean to determine whether to set NAs in the matrix to zero (i.e. ignore or include empty measurements.)
+#' @param numCores Number of cores to parallelize over. 
 #'
 #' @return variance decomposition matrix
 #' 
@@ -85,6 +86,7 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     parallel::clusterExport(cl=cl, varlist=c("meta", "formula", "mat1"), envir=environment())
 
+
     suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
         function(x) {
             df <- data.frame(exp = as.numeric(mat1[x,]), 
@@ -94,12 +96,13 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     names(lmem_res) = rownames(mat1)
 
-    stopCluster(cl)
+    parallel::stopCluster(cl)
 
     return(lmem_res)
 
 }
 
+## external facing function tahat will calculate the variance decomposition across all variables in the variableList. 
 
 calculateVarDecomp <- function(Obj, CellType, variableList, rowsToKeep = NA, NAtoZero = FALSE, numCores = 1){
 
@@ -113,7 +116,7 @@ calculateVarDecomp <- function(Obj, CellType, variableList, rowsToKeep = NA, NAt
     return(varDecomp)
 }
 
-
+## external funciton that accepts a list of linear model (must be meant for variance decomposition), and extracts the variance of each random factor. 
 
 getVarDecomp <- function(lmemList, numCores = 1){
 
@@ -139,6 +142,7 @@ getVarDecomp <- function(lmemList, numCores = 1){
 
 }
 
+##Internal function for extracting variance decomposition results from a linear model. 
 
 extractVarDecomp <- function(lmem1, variableList){
 
