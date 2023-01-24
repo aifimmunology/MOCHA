@@ -40,7 +40,6 @@ ipython_config.py
 # R Environment Variables
 .Renviron
 # pkgdown site
-docs/
 # translation temp files
 po/*~
 # RStudio Connect folder
