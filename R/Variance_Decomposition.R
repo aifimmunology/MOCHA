@@ -53,7 +53,11 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
         rm(allMatrices)
         
         gc()
-        meta <- parallel::mclapply(1:length(SummarizedExperiment::assays(Obj)), function(x){
+
+        cl <- parallel::makeCluster(numCores)
+        parallel::clusterExport(cl, varlist = c('meta1', 'Obj'), envir = environment())
+
+        meta <- pbapply::pblapply(1:length(SummarizedExperiment::assays(Obj)), function(x){
         
                     meta1 %>% as.data.frame() %>%
                         dplyr::mutate(Sample2 = paste(names(SummarizedExperiment::assays(Obj))[x], Sample, sep = "__"),
@@ -61,7 +65,9 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
                         dplyr::mutate(Sample2 = gsub(" ","_", Sample2), 
                                     CellType = gsub(" ", "_", CellType))
         
-        }, mc.cores = numCores) %>% do.call('rbind', .)
+        }, cl = cl) %>% do.call('rbind', .)
+
+        parallel::stopCluster(cl)
 
         meta <- meta[meta$Sample2 %in% colnames(mat1),]
 
