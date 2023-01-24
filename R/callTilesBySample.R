@@ -32,7 +32,6 @@ callTilesBySample <- function(blackList,
                               fragsList,
                               verbose = FALSE,
                               StudypreFactor) {
-
   # Coefficients trained on ~ 3600 frags per cell
   # Future datasets need to be calibrated to
   # these coefficients
@@ -52,7 +51,7 @@ callTilesBySample <- function(blackList,
     binSize = 500,
     doBin = FALSE
   )
-  if (length(FinalBins)==0) {
+  if (length(FinalBins) == 0) {
     stop(
       "Could not bin fragments into 500bp tiles. ",
       "Verify that input fragments are not all in a blacklisted region."
@@ -74,12 +73,12 @@ callTilesBySample <- function(blackList,
     "maxIntensity",
     "numCells"
   )
-  
+
   # Validate the countsMatrix from calculateIntensities
-  if (!all(names(countsMatrix)==expected_names)){
+  if (!all(names(countsMatrix) == expected_names)) {
     stop("countsMatrix is missing required columns")
   }
-  if (dim(countsMatrix)[1]==0){
+  if (dim(countsMatrix)[1] == 0) {
     stop("countsMatrix is empty")
   }
 

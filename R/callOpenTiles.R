@@ -24,7 +24,7 @@
 #' @param Org is the genome-wide annotation package for your organism.
 #' @param outDir is a string describing the output directory for coverage files
 #'   and TxDb/Org. Must be a complete directory string. With ArchR input,
-#'   set outDir to NULL to create a directory within the input ArchR project 
+#'   set outDir to NULL to create a directory within the input ArchR project
 #'   directory named MOCHA for saving files.
 #' @param fast Optional, set to TRUE to use a faster but more memory-intensive
 #   algorithm. Default is FALSE.
@@ -54,22 +54,22 @@
 #' \donttest{
 #' # Starting from GRangesList
 #' if (
-#'   require(BSgenome.Hsapiens.UCSC.hg19) && 
-#'   require(TxDb.Hsapiens.UCSC.hg38.refGene) && 
-#'   require(org.Hs.eg.db)
+#'   require(BSgenome.Hsapiens.UCSC.hg19) &&
+#'     require(TxDb.Hsapiens.UCSC.hg38.refGene) &&
+#'     require(org.Hs.eg.db)
 #' ) {
-#' tiles <- MOCHA::callOpenTiles(
-#'   ATACFragments = MOCHA::exampleFragments,
-#'   cellColData = MOCHA::exampleCellColData,
-#'   blackList = MOCHA::exampleBlackList,
-#'   genome = BSgenome.Hsapiens.UCSC.hg19,
-#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'   Org = org.Hs.eg.db,
-#'   outDir = tempdir(),
-#'   cellPopLabel = "Clusters",
-#'   cellPopulations = c("C2", "C5"),
-#'   numCores = 1
-#' )
+#'   tiles <- MOCHA::callOpenTiles(
+#'     ATACFragments = MOCHA::exampleFragments,
+#'     cellColData = MOCHA::exampleCellColData,
+#'     blackList = MOCHA::exampleBlackList,
+#'     genome = BSgenome.Hsapiens.UCSC.hg19,
+#'     TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+#'     Org = org.Hs.eg.db,
+#'     outDir = tempdir(),
+#'     cellPopLabel = "Clusters",
+#'     cellPopulations = c("C2", "C5"),
+#'     numCores = 1
+#'   )
 #' }
 #' }
 #'
@@ -358,8 +358,7 @@ setMethod(
                                  numCores = 30,
                                  verbose = FALSE,
                                  force = FALSE) {
-  
-  if (is.null(outDir)){
+  if (is.null(outDir)) {
     outDir <- paste(ArchR::getOutputDirectory(ATACFragments), "/MOCHA", sep = "")
   }
 
@@ -578,7 +577,6 @@ callOpenTilesFast <- function(ArchRProj,
                               force = FALSE,
                               studySignal = NULL,
                               verbose = FALSE) {
-
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
