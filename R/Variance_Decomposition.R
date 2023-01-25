@@ -91,7 +91,8 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
         function(x) {
             df <- data.frame(exp = as.numeric(mat1[x,]), 
                 meta, stringsAsFactors = FALSE)
-            lmerTest::lmer(formula = formula, data = df)
+
+            tryCatch({lmerTest::lmer(formula = formula, data = df)}, error = function(e){NULL})
         }, cl = cl), classes = "message")
 
     names(lmem_res) = rownames(mat1)
