@@ -84,15 +84,18 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     cl <- parallel::makeCluster(numCores)
 
-    parallel::clusterExport(cl=cl, varlist=c("meta", "formula", "mat1"), envir=environment())
+    parallel::clusterExport(cl=cl, varlist=c("formula"), envir=environment())
 
+    matList <- lapply(1:nrow(mat1), function(x){
 
-    suppressMessages(lmem_res <- pbapply::pblapply(c(1:nrow(mat1)),
-        function(x) {
-            df <- data.frame(exp = as.numeric(mat1[x,]), 
+        data.frame(exp = as.numeric(mat1[x,]), 
                 meta, stringsAsFactors = FALSE)
+    })
 
-            tryCatch({lmerTest::lmer(formula = formula, data = df)}, error = function(e){NULL})
+
+    suppressMessages(lmem_res <- pbapply::pblapply(matList,
+        function(x) {
+            tryCatch({lmerTest::lmer(formula = formula, data = x}, error = function(e){NULL})
         }, cl = cl), classes = "message")
 
     names(lmem_res) = rownames(mat1)
