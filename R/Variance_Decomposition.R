@@ -95,7 +95,7 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     suppressMessages(lmem_res <- pbapply::pblapply(matList,
         function(x) {
-            tryCatch({lmerTest::lmer(formula = formula, data = x}, error = function(e){NULL})
+            tryCatch({lmerTest::lmer(formula = formula, data = x)}, error = function(e){NULL})
         }, cl = cl), classes = "message")
 
     names(lmem_res) = rownames(mat1)
