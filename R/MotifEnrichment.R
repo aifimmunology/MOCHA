@@ -84,21 +84,17 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
     
 ######## Test all motifs for enrichment.
     ## @export 
+    ## removed multithreading because it actually made it slower.
 
-MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL, numCores = 1){
+MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL){
     
-    cl <- parallel::makeCluster(numCores)
-
-    parallel::clusterExport(cl, varlist = c('Group1', 'Group2', 'type','EnrichedRanges'), envir = environment())
 
     allEnrichmentList <- pbapply::pblapply(motifPosList, function(x){
         
         tmp_df <- EnrichedRanges(Group1, Group2, Category = x, type = type)
         
-    }, cl = cl)
+    }, cl = 1)
     df_final <- do.call('rbind',  allEnrichmentList)
-
-    parallel::stopCluster(cl)
 
     df_final$adjp_val <- p.adjust(df_final$p_value, method = 'fdr')
     df_final$mlog10Padj <- -log10(df_final$adjp_val)
