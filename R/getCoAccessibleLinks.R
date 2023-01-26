@@ -12,7 +12,7 @@
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param approximateTile If set to TRUE, it will use all tiles that overlap with the regions given, instead of finding an exact match to the regions variable. Default is FALSE. 
+#' @param approximateTile If set to TRUE, it will use all tiles that overlap with the regions given, instead of finding an exact match to the regions variable. Default is FALSE.
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
 #'
 #' @return TileCorr A data.table correlation matrix
@@ -34,9 +34,11 @@ getCoAccessibleLinks <- function(SampleTileObj,
                                  chrChunks = 1,
                                  windowSize = 1 * 10^6,
                                  numCores = 1,
-                                 ZI = TRUE, 
+                                 ZI = TRUE,
                                  approximateTile = FALSE,
                                  verbose = FALSE) {
+  . <- NULL
+
   # verify input
   if (methods::is(regions, "GenomicRanges")) {
     regionDF <- as.data.frame(regions)
@@ -47,20 +49,22 @@ getCoAccessibleLinks <- function(SampleTileObj,
     stop('Invalid input type for "region": must be either "GRanges" or a character vector')
   }
 
-  if(approximateTile){
-
+  if (approximateTile) {
     regions <- plyranges::filter_by_overlaps(SummarizedExperiment::rowRanges(SampleTileObj), regions)
     regionDF <- as.data.frame(regions)
-
-  } else if(!all(widths(regions) == 500)){
-    stop("The candidate regions don't match exact tiles from the MOCHA project. Do you want to find the closest overlapping tiles? Set approxiamte to TRUE")
+  } else if (
+    (!(all(IRanges::width(regions) == 500) &
+      all((IRanges::end(regions) + 1) %% 500 == 0)))
+  ) {
+    # MOCHA tiles always end at 1 less than a
+    # number divisible by 500 e.g. 499.
+    # Using end positions in the case that 0-499 is a tile.
+    stop("The candidate regions don't match exact tiles from MOCHA. To find the closest overlapping tiles, set approximate to TRUE")
   }
-
-
 
   if (!methods::is(chrChunks, "numeric")) {
     stop("chrChunks is not numeric")
-  } else if (chrChunks %% 1 != 0 | chrChunks <= 0) {
+  } else if (chrChunks %% 1 != 0 || chrChunks <= 0) {
     stop("chrChunks is not a positive integer value. Please set chrChunks to be a positive integer.")
   }
 
@@ -87,8 +91,12 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }
 
   cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(cl, varlist = c('regionDF', 'start','end','chr','windowSize'), envir = environment())
-  allCombinations <- pbapply::pblapply(1:dim(regionDF)[1], function(y) {
+  parallel::clusterExport(
+    cl,
+    varlist = c("regionDF", "start", "end", "chr", "windowSize"),
+    envir = environment()
+  )
+  allCombinations <- pbapply::pblapply(seq_len(dim(regionDF)[1]), function(y) {
     keyTile <- which(start == regionDF$start[y] &
       end == regionDF$end[y] &
       chr == regionDF$seqnames[y])
@@ -99,22 +107,23 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
     windowIndexBool <- windowIndexBool[windowIndexBool != keyTile]
 
-   
-
-    if(length(windowIndexBool) > 0){
-       # Var1 will always be our region of interest
+    if (length(windowIndexBool) > 0) {
+      # Var1 will always be our region of interest
       keyNeighborPairs <- data.frame(
         "Key" = tileNames[keyTile],
         "Neighbor" = tileNames[windowIndexBool]
       )
-    }else{ keyNeighborPairs <- NULL }
+    } else {
+      keyNeighborPairs <- NULL
+    }
 
     keyNeighborPairs
-    
   }, cl = cl) %>%
     do.call("rbind", .) %>%
     dplyr::distinct()
-parallel::stopCluster(cl)
+  
+  parallel::stopCluster(cl)
+  
   # Determine chromosomes to search over, and the number of iterations to run through.
   chrNum <- paste(unique(regionDF$seqnames), ":", sep = "")
   numChunks <- length(chrNum) %/% chrChunks
@@ -123,13 +132,14 @@ parallel::stopCluster(cl)
   if (verbose) {
     message("Finding subsets of pairs for testing.")
   }
-
-  parallel::clusterExport(cl, varlist = c('chrNum','chrChunks'), envir = environment())
+  
+  cl <- parallel::makeCluster(numCores)
+  parallel::clusterExport(cl, varlist = c("chrNum", "chrChunks"), envir = environment())
 
   # Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
   combList <- pbapply::pblapply(1:numChunks, function(y) {
-    specChr <- paste0(chrNum[which(c(1:length(chrNum)) > (y - 1) * chrChunks &
-      c(1:length(chrNum) <= y * chrChunks))], collapse = "|")
+    specChr <- paste0(chrNum[which(c(seq_along(chrNum)) > (y - 1) * chrChunks &
+      c(seq_along(chrNum) <= y * chrChunks))], collapse = "|")
 
     tileIndices <- grep(specChr, tileNames)
     combIndices <- grep(specChr, allCombinations$Key)
@@ -140,54 +150,37 @@ parallel::stopCluster(cl)
   }, cl = cl)
 
   parallel::stopCluster(cl)
-    
+
 
   # Initialize zi_spear_mat for iterations
   zi_spear_mat <- NULL
 
   for (i in 1:numChunks) {
-
     subTileDF <- tileDF[combList[[i]][[1]], , drop = FALSE]
     subCombinations <- allCombinations[combList[[i]][[2]], ]
 
 
-    if(!all(subCombinations[, "Key"] %in% rownames(subTileDF))){
-    
-         return(list(subCombinations, subTileDF))
+    if (!all(subCombinations[, "Key"] %in% rownames(subTileDF))) {
+      return(list(subCombinations, subTileDF))
     }
-
-    
 
     if (verbose) {
       message(paste("Finding correlations for Chromosome(s)", gsub("chr", "", combList[[i]][[3]]), sep = " "))
     }
 
-    if (!all(subCombinations[,1] %in% rownames(subTileDF) | subCombinations[,2] %in% rownames(subTileDF))) {
-      stop('subset of pair combinations and tile data.frame does not match.')
+    if (!all(subCombinations[, 1] %in% rownames(subTileDF) | subCombinations[, 2] %in% rownames(subTileDF))) {
+      stop("subset of pair combinations and tile data.frame does not match.")
     }
-
 
     cl <- parallel::makeCluster(numCores)
 
-    parallel::clusterExport(cl, varlist = c('subTileDF', "subCombinations"), envir = environment())
+    parallel::clusterExport(cl, varlist = c("subTileDF", "subCombinations"), envir = environment())
     zi_spear_mat_tmp <- runCoAccessibility(subTileDF, subCombinations, ZI, verbose, cl)
     parallel::stopCluster(cl)
 
     gc()
 
     zi_spear_mat <- rbind(zi_spear_mat, zi_spear_mat_tmp)
-
   }
   return(zi_spear_mat)
-}
-
-findPairs <- function(allRegions, index, numCores = 40, verbose = FALSE) {
-  regionOfInterest <- allRegions[index]
-  allOtherRegions <- allRegions[-index]
-
-  # Var1 will always be our region of interest
-  keyNeighborPairs <- as.matrix(data.frame(
-    "Key" = regionOfInterest,
-    "Neighbor" = allOtherRegions
-  ))
 }
