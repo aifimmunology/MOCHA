@@ -34,21 +34,21 @@ testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = 
 
     if(is.character(tile1) & is.character(tile2)){
 
-        nTile1 = match(tile1, rownames(fullObj))
-        nTile2 = match(tile1, rownames(fullObj))
+        nTile1 <- match(tile1, rownames(fullObj))
+        nTile2 <- match(tile1, rownames(fullObj))
     }else if(is.numeric(tile1) & is.numeric(tile2)){
 
-        nTile1 = tile1
-        nTile2 = tile2
+        nTile1 <- tile1
+        nTile2 <- tile2
 
-        tile1 = rownames(fullObj)[nTile1]
-        tile2 = rownames(fullObj)[nTile2]
+        tile1 <- rownames(fullObj)[nTile1]
+        tile2 <- rownames(fullObj)[nTile2]
 
     }else{stop('tile1 and tile 2 must both be either numbers (indices) or strings')}
 
     if(backNumber > 2450){
-        backNumber = 2450
-        warning('backNumber too high. Reset to 2500')
+        backNumber <- 2450
+        warning('backNumber too high, setting to maximum of 2450.')
 
     }else if(backNumber <= 10){
       
@@ -67,7 +67,7 @@ testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = 
         tmpMat[sample.int(dim(tmpMat)[1], backNumber),] 
     }, cl = cl)
 
-    parallel::stopCluster()
+    parallel::stopCluster(cl)
 
     gc()
 
@@ -82,7 +82,7 @@ testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = 
     message('Identifying foreground.')
     parallel::clusterExport(cl, varlist = c('subAccMat', "combPairs"), envir = environment())
     foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
-    parallel::stopCluster()
+    parallel::stopCluster(cl)
 
     gc()
 
@@ -101,7 +101,7 @@ testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = 
       
       subAccMat <- accMat[unique(c(uniqueBackCombos[,1],uniqueBackCombos[,2])),]
 
-      cl <- paralle::makeCluster(numCores)
+      cl <- parallel::makeCluster(numCores)
       message(paste('Generating Background correlations for all', length(tile1), 'pairs', sep = " "))
       parallel::clusterExport(cl, varlist = c('subAccMat', "combPairs"), envir = environment())
 
@@ -109,7 +109,7 @@ testCoAccessibilityChromVar <- function(STObj, tile1, tile2, numCores = 1, ZI = 
 
       backGround <- dplyr::left_join(allBackCombos, ) %>%  group_by(row_number() %/% backNumber) %>% group_map(~ .x) 
 
-      parallel::stopCluster()
+      parallel::stopCluster(cl)
 
     }else{
 
@@ -252,7 +252,7 @@ testCoAccessibilityRandom <- function(STObj, tile1, tile2, numCores = 1, ZI = TR
     subAccMatB <- accMat[c(backgroundCombos$Tile1, backgroundCombos$nTile2),]
     parallel::clusterExport(cl, varlist = c('backgroundCombos','subAccMatB'), envir = environment())
     backGround <- runCoAccessibility(subAccMatB, backgroundCombos, ZI, verbose, cl)
-    parallel::stopCluster()
+    parallel::stopCluster(cl)
 
     cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(cl, varlist = c('backGround','foreGround'), envir = environment())
@@ -386,7 +386,6 @@ getBackGroundObj <- function(STObj, NAtoZero = TRUE){
     mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
   }
 
-  #return(list(newAssays, allSampleData, allRanges))
 
   newObj <- SummarizedExperiment(
     assays = newAssays,

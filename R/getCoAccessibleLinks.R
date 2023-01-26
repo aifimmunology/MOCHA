@@ -114,7 +114,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }, cl = cl) %>%
     do.call("rbind", .) %>%
     dplyr::distinct()
-
+parallel::stopCluster(cl)
   # Determine chromosomes to search over, and the number of iterations to run through.
   chrNum <- paste(unique(regionDF$seqnames), ":", sep = "")
   numChunks <- length(chrNum) %/% chrChunks
@@ -146,7 +146,6 @@ getCoAccessibleLinks <- function(SampleTileObj,
   zi_spear_mat <- NULL
 
   for (i in 1:numChunks) {
-    print(i)
 
     subTileDF <- tileDF[combList[[i]][[1]], , drop = FALSE]
     subCombinations <- allCombinations[combList[[i]][[2]], ]
