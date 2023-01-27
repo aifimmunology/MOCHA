@@ -25,7 +25,7 @@ testCoAccessibilityRandom(
 
 \item{ZI}{boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.}
 
-\item{backNumber}{number of ChromVAR-matched background pairs. Default is 1000.}
+\item{backNumber}{number of background pairs. Default is 1000.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }

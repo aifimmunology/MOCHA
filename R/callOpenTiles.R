@@ -229,11 +229,18 @@ setGeneric(
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
-
-    # This mclapply will parallelize over each sample within a celltype.
+    
+    # This parLapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    tilesGRangesList <- parallel::mclapply(
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+      cl=cl, 
+      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
+      envir=environment()
+    )
+    tilesGRangesList <- parallel::parLapply(
+      cl,
       1:length(frags),
       function(x) {
         callTilesBySample(
@@ -244,9 +251,9 @@ setGeneric(
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
-      },
-      mc.cores = numCores
+      }
     )
+    parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- names(frags)
 
@@ -471,10 +478,17 @@ setMethod(
       rm(covFiles)
     }
 
-    # This mclapply will parallelize over each sample within a celltype.
+    # This parLapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    tilesGRangesList <- parallel::mclapply(
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+      cl=cl, 
+      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
+      envir=environment()
+    )
+    tilesGRangesList <- parallel::parLapply(
+      cl,
       1:length(frags),
       function(x) {
         callTilesBySample(
@@ -485,9 +499,9 @@ setMethod(
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
-      },
-      mc.cores = numCores
+      }
     )
+    parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- names(frags)
 
@@ -703,22 +717,30 @@ callOpenTilesFast <- function(ArchRProj,
       rm(covFiles)
     }
 
-    # This mclapply will parallelize over each sample within a celltype.
+    # This parLapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    tilesGRangesList <- parallel::mclapply(
-      1:length(popFrags),
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+      cl=cl, 
+      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
+      envir=environment()
+    )
+    tilesGRangesList <- parallel::parLapply(
+      cl,
+      1:length(frags),
       function(x) {
         callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
-          fragsList = popFrags[[x]],
+          fragsList = frags[[x]],
+          verbose = verbose,
           StudypreFactor = study_prefactor
         )
-      },
-      mc.cores = numCores
+      }
     )
+    parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- sampleNames
 

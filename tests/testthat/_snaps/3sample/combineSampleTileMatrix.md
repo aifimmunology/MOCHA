@@ -1,8 +1,8 @@
-# getBackGroundObj works on a 3-sample dataset
+# combineSampleTileMatrix works on a 3-sample dataset
 
     class: RangedSummarizedExperiment 
     dim: 22775 6 
-    metadata(6): Log2Intensity CellCounts ... Org Directory
+    metadata(5): CellCounts Genome TxDb Org Directory
     assays(1): counts
     rownames(22775): chr10:100083000-100083499 chr10:100206500-100206999
       ... chrY:23153000-23153499 chrY:2884500-2884999
