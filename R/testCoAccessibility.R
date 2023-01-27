@@ -348,26 +348,24 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 #'
 #' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
 #' @param NAToZero Set NA values in the sample-tile matrix to zero
-#'
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @return TileCorr A data.table correlation matrix
 #'
 #'
 #' @export
-getBackGroundObj <- function(STObj, NAtoZero = TRUE) {
+getBackGroundObj <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
 
   Sample <- Freq <- . <- NULL
   # Extract all the Sample-Tile Matrices for each cell type
   assays <- SummarizedExperiment::assays(STObj)
 
-  meta <- SummarizedExperiment::colData(STObj)
-
+  coldata <- SummarizedExperiment::colData(STObj)
+  
   # Let's generate a new assay, that will contain the
   # the intensity for a given cell, as well as the
   # median intensity per sample-tile for all other cell types (i.e. the background)
 
-
-
-  newAssays <- list(do.call("cbind", assays))
+  newAssays <- list(do.call("cbind", as(assays, "list")))
   newSamplesNames <- unlist(lapply(names(assays), function(x) {
     paste(x, colnames(STObj), sep = "__") %>% gsub(" ", "", .)
   }))
@@ -381,13 +379,14 @@ getBackGroundObj <- function(STObj, NAtoZero = TRUE) {
 
 
   allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
-    tmp_meta <- meta
+    tmp_meta <- coldata
     tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "", .)
     tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
   }))
-
+  
+  cellTypeLabelList <- Var1 <- NULL
   cellCounts <- as.data.frame(S4Vectors::metadata(STObj)$CellCounts) %>%
     dplyr::mutate(
       Sample = gsub(" ", "", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
@@ -407,13 +406,21 @@ getBackGroundObj <- function(STObj, NAtoZero = TRUE) {
     rowRanges = allRanges,
     metadata = S4Vectors::metadata(STObj)
   )
-
-  newObj <- chromVAR::addGCBias(newObj, genome = S4Vectors::metadata(STObj)$Genome)
-
+  
+  tryCatch({
+      newObj <- chromVAR::addGCBias(newObj, genome = S4Vectors::metadata(STObj)$Genome)
+  }, error = function(e) {
+    warning("The BSgenome for your organism is not installed")
+    stop(e)
+  })
+  
   if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
     naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
-    message(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
-
+    
+    if (verbose) {
+      message(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
+    }
+    
     SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(rowData(newObj)$bias, na.rm = TRUE)
   }
 
