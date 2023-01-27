@@ -128,8 +128,8 @@ testCoAccessibilityChromVar <- function(STObj,
 
     uniquebackGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
 
-    backGround <- dplyr::left_join(allBackCombos, ) %>%
-      group_by(row_number() %/% backNumber) %>%
+    backGround <- dplyr::left_join(allBackCombos, uniquebackGround) %>%
+      group_by(row_number(.) %/% backNumber) %>%
       group_map(~.x)
 
     parallel::stopCluster(cl)
