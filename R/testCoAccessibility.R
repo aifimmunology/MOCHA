@@ -7,7 +7,6 @@
 #' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
 #' @param backNumber number of ChromVAR-matched background pairs. Default is 1000.
 #' @param highMem Boolean to control memory usage. Default is FALSE. Only set highMem to TRUE if you have plenty of memory and want to run this function faster.s
-#' @param
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
@@ -16,7 +15,6 @@
 #'
 #'
 #' @export
-
 testCoAccessibilityChromVar <- function(STObj,
                                         tile1,
                                         tile2,
@@ -25,7 +23,7 @@ testCoAccessibilityChromVar <- function(STObj,
                                         backNumber = 1000,
                                         highMem = FALSE,
                                         verbose = TRUE) {
-  
+
   if (length(tile1) != length(tile2)) {
     stop("tile1 and tile2 must be the same length.")
   }
@@ -34,10 +32,10 @@ testCoAccessibilityChromVar <- function(STObj,
 
   backPeaks <- chromVAR::getBackgroundPeaks(fullObj)
 
-  if (is.character(tile1) & is.character(tile2)) {
+  if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
     nTile2 <- match(tile1, rownames(fullObj))
-  } else if (is.numeric(tile1) & is.numeric(tile2)) {
+  } else if (is.numeric(tile1) && is.numeric(tile2)) {
     nTile1 <- tile1
     nTile2 <- tile2
 
@@ -311,7 +309,7 @@ testCoAccessibilityRandom <- function(STObj,
 #'     Tile2 = c("chrX:1500-1999", "chr21:1500-1999")
 #'   )
 #' )
-#' @noRD
+#' @noRd
 #'
 runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCores = 1) {
   zero_inflated_spearman <- unlist(pbapply::pblapply(seq_len(dim(pairs)[1]),
@@ -349,19 +347,19 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 #' @description \code{getBackGroundObj} combines all celltypes in a SampleTileMatrix object into a SummarizedExperiment with one single matrix across all cell types and samples.
 #'
 #' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
-#' @param NAToZero
+#' @param NAToZero Set NA values in the sample-tile matrix to zero
+#'
 #' @return TileCorr A data.table correlation matrix
 #'
 #'
 #' @export
-
 getBackGroundObj <- function(STObj, NAtoZero = TRUE) {
-  
-  Sample <- Freq <- NULL
-  # Extract all the Sample-Tile Matrices for each cell type
-  temp <- SummarizedExperiment::assays(STObj)
 
-  meta1 <- SummarizedExperiment::colData(STObj)
+  Sample <- Freq <- . <- NULL
+  # Extract all the Sample-Tile Matrices for each cell type
+  assays <- SummarizedExperiment::assays(STObj)
+
+  meta <- SummarizedExperiment::colData(STObj)
 
   # Let's generate a new assay, that will contain the
   # the intensity for a given cell, as well as the
@@ -369,8 +367,8 @@ getBackGroundObj <- function(STObj, NAtoZero = TRUE) {
 
 
 
-  newAssays <- list(do.call("cbind", temp))
-  newSamplesNames <- unlist(lapply(names(temp), function(x) {
+  newAssays <- list(do.call("cbind", assays))
+  newSamplesNames <- unlist(lapply(names(assays), function(x) {
     paste(x, colnames(STObj), sep = "__") %>% gsub(" ", "", .)
   }))
 
@@ -382,8 +380,8 @@ getBackGroundObj <- function(STObj, NAtoZero = TRUE) {
   }
 
 
-  allSampleData <- do.call("rbind", lapply(names(temp), function(x) {
-    tmp_meta <- meta1
+  allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
+    tmp_meta <- meta
     tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "", .)
     tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
     rownames(tmp_meta) <- tmp_meta$Sample
@@ -391,17 +389,17 @@ getBackGroundObj <- function(STObj, NAtoZero = TRUE) {
   }))
 
   cellCounts <- as.data.frame(S4Vectors::metadata(STObj)$CellCounts) %>%
-    dplyr::mutate(Sample = gsub(" ", "", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
+    dplyr::mutate(
+      Sample = gsub(" ", "", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
     dplyr::select(Sample, Freq)
 
-  allSampleData <- dplyr::left_join(as.data.frame(allSampleData), cellCounts, by = "Sample")
-
+  allSampleData <- dplyr::left_join(
+    as.data.frame(allSampleData), cellCounts, by = "Sample")
 
   allRanges <- SummarizedExperiment::rowRanges(STObj)
-  for (i in names(temp)) {
+  for (i in names(assays)) {
     GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
   }
-
 
   newObj <- SummarizedExperiment::SummarizedExperiment(
     assays = newAssays,
