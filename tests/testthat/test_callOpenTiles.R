@@ -55,6 +55,10 @@ if (
       tiles,
       variant = "list"
     )
+    expect_snapshot(
+      metadata(tiles)$CellCounts,
+      variant = "CellCounts"
+    )
   })
 
   test_that("We throw a warning when a sample has less than 5 cells", {

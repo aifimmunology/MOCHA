@@ -159,7 +159,7 @@ setGeneric(
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
     stop("Error: cellPopulations not all found in cellColData")
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations]
+    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
   }
 
   # Genome and TxDb annotation info is added to the metadata of
@@ -400,7 +400,7 @@ setMethod(
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations]
+    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
   }
 
   # Genome and TxDb annotation info is added to the metadata of

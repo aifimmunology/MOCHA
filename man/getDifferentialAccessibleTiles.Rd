@@ -61,22 +61,22 @@ full_results The differential accessibility results as a GRanges or
 \dontrun{
 cellPopulation <- "MAIT"
 foreground <- "Positive"
-background <- "Negative" 
+background <- "Negative"
 # Standard output will display the number of tiles found below a false-discovery rate threshold.
-# This parameter does not filter results and only affects the aforementioned message. 
+# This parameter does not filter results and only affects the aforementioned message.
 fdrToDisplay <- 0.2
 # Choose to output a GRanges or data.frame.
 # Default is TRUE
 outputGRanges <- TRUE
 # SampleTileMatrices is the output of MOCHA::getSampleTileMatrix
 differentials <- MOCHA::getDifferentialAccessibleTiles(
-  SampleTileObj = SampleTileMatrices, 
-  cellPopulation = cellPopulation, 
-  groupColumn = groupColumn, 
-  foreground = foreground, 
-  background = background, 
-  fdrToDisplay = fdrToDisplay, 
-  outputGRanges = outputGRanges, 
+  SampleTileObj = SampleTileMatrices,
+  cellPopulation = cellPopulation,
+  groupColumn = groupColumn,
+  foreground = foreground,
+  background = background,
+  fdrToDisplay = fdrToDisplay,
+  outputGRanges = outputGRanges,
   numCores = numCores
 )
 }
