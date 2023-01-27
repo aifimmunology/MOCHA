@@ -29,7 +29,7 @@ testCoAccessibilityChromVar <- function(STObj,
     stop("tile1 and tile2 must be the same length.")
   }
 
-  fullObj <- getBackGroundObj(STObj)
+  fullObj <- combineSampleTileMatrix(STObj)
 
   backPeaks <- chromVAR::getBackgroundPeaks(fullObj)
 
@@ -128,14 +128,14 @@ testCoAccessibilityChromVar <- function(STObj,
 
     uniquebackGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
 
-   allBackCombos2 <- data.frame(
+    allBackCombosDF <- data.frame(
       Tile1 = rownames(accMat)[allBackCombos[, 1]],
       Tile2 = rownames(accMat)[allBackCombos[, 2]]
     ) 
-    
-    backGround <- dplyr::left_join(allBackCombos2, uniquebackGround, by = c('Tile1' = 'Tile1', 'Tile2' = 'Tile2')) %>%
-      group_by(row_number(.) %/% backNumber) %>%
-      group_map(~.x)
+
+    backGround <- dplyr::left_join(allBackCombosDF, uniquebackGround, by = c('Tile1' = 'Tile1', 'Tile2' = 'Tile2')) %>%
+      dplyr::group_by(dplyr::row_number() %/% (backNumber+1)) %>%
+      dplyr::group_map(~.x)
 
     parallel::stopCluster(cl)
   } else {
@@ -198,7 +198,7 @@ testCoAccessibilityChromVar <- function(STObj,
 #' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
 #' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)
 #' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
-#' @param backNumber number of ChromVAR-matched background pairs. Default is 1000.
+#' @param backNumber number of background pairs. Default is 1000.
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
@@ -221,7 +221,7 @@ testCoAccessibilityRandom <- function(STObj,
     stop("tile1 and tile2 must be the same length.")
   }
 
-  fullObj <- getBackGroundObj(STObj)
+  fullObj <- combineSampleTileMatrix(STObj)
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
@@ -368,9 +368,9 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 }
 
 
-#' @title \code{getBackGroundObj}
+#' @title \code{combineSampleTileMatrix}
 #'
-#' @description \code{getBackGroundObj} combines all celltypes in a SampleTileMatrix object into a SummarizedExperiment with one single matrix across all cell types and samples.
+#' @description \code{combineSampleTileMatrix} combines all celltypes in a SampleTileMatrix object into a SummarizedExperiment with one single matrix across all cell types and samples.
 #'
 #' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
 #' @param NAToZero Set NA values in the sample-tile matrix to zero
@@ -379,7 +379,7 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 #'
 #'
 #' @export
-getBackGroundObj <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
+combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
 
   Sample <- Freq <- . <- NULL
   # Extract all the Sample-Tile Matrices for each cell type
