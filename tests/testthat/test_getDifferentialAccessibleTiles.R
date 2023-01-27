@@ -1,6 +1,5 @@
 test_that("getDifferentialAccessibleTiles works on a 3 sample test dataset", {
-
-  cellPopulations = c("C3")
+  cellPopulations <- c("C3")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
       MOCHA:::testTileResultsMultisample,
@@ -11,7 +10,7 @@ test_that("getDifferentialAccessibleTiles works on a 3 sample test dataset", {
 
   cellPopulation <- "C3"
   capture.output(
-      differentials <- MOCHA::getDifferentialAccessibleTiles(
+    differentials <- MOCHA::getDifferentialAccessibleTiles(
       SampleTileMatrix,
       cellPopulation,
       groupColumn = "Sample",

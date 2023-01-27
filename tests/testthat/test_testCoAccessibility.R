@@ -1,6 +1,5 @@
 test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
-  
-  cellPopulations = c("C2", "C5")
+  cellPopulations <- c("C2", "C5")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
       MOCHA:::testTileResults,
@@ -19,40 +18,38 @@ test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
     regions,
     verbose = FALSE
   )
-  
+
   results <- MOCHA::testCoAccessibilityChromVar(
-      SampleTileMatrix,
-      tile1 = links$Tile1,
-      tile2 = links$Tile2,
-      numCores = 1,
-      ZI = TRUE,
-      backNumber = 1000,
-      highMem = FALSE,
-      verbose = FALSE
+    SampleTileMatrix,
+    tile1 = links$Tile1,
+    tile2 = links$Tile2,
+    numCores = 1,
+    ZI = TRUE,
+    backNumber = 1000,
+    highMem = FALSE,
+    verbose = FALSE
   )
-  
+
   expect_snapshot(
-      results,
-      variant = "1sample"
-    )
-  
+    results,
+    variant = "1sample"
+  )
+
   # All foreground correlations are undefined
   expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
-      SampleTileMatrix,
-      tile1 = links$Tile1,
-      tile2 = links$Tile2,
-      numCores = 1,
-      ZI = TRUE,
-      backNumber = 1000,
-      highMem = FALSE,
-      verbose = TRUE
+    SampleTileMatrix,
+    tile1 = links$Tile1,
+    tile2 = links$Tile2,
+    numCores = 1,
+    ZI = TRUE,
+    backNumber = 1000,
+    highMem = FALSE,
+    verbose = TRUE
   ))
-
 })
 
 test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
-  
-  cellPopulations = c("C2", "C3")
+  cellPopulations <- c("C2", "C3")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
       MOCHA:::testTileResultsMultisample,
@@ -71,41 +68,39 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
     regions,
     verbose = FALSE
   )
-  
+
   results <- MOCHA::testCoAccessibilityChromVar(
-      SampleTileMatrix,
-      tile1 = links$Tile1,
-      tile2 = links$Tile2,
-      numCores = 1,
-      ZI = TRUE,
-      backNumber = 1000,
-      highMem = FALSE,
-      verbose = FALSE
+    SampleTileMatrix,
+    tile1 = links$Tile1,
+    tile2 = links$Tile2,
+    numCores = 1,
+    ZI = TRUE,
+    backNumber = 1000,
+    highMem = FALSE,
+    verbose = FALSE
   )
-  
+
   expect_snapshot(
-      results,
-      variant = "3sample"
-    )
-  
+    results,
+    variant = "3sample"
+  )
+
   # All foreground correlations are undefined
   expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
-      SampleTileMatrix,
-      tile1 = links$Tile1,
-      tile2 = links$Tile2,
-      numCores = 1,
-      ZI = TRUE,
-      backNumber = 1000,
-      highMem = FALSE,
-      verbose = TRUE
+    SampleTileMatrix,
+    tile1 = links$Tile1,
+    tile2 = links$Tile2,
+    numCores = 1,
+    ZI = TRUE,
+    backNumber = 1000,
+    highMem = FALSE,
+    verbose = TRUE
   ))
-
 })
 
 
 test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=TRUE", {
-  
-  cellPopulations = c("C2", "C3")
+  cellPopulations <- c("C2", "C3")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
       MOCHA:::testTileResultsMultisample,
@@ -124,34 +119,32 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
     regions,
     verbose = FALSE
   )
-  
+
   results <- MOCHA::testCoAccessibilityChromVar(
-      SampleTileMatrix,
-      tile1 = links$Tile1,
-      tile2 = links$Tile2,
-      numCores = 1,
-      ZI = TRUE,
-      backNumber = 1000,
-      highMem = TRUE,
-      verbose = FALSE
+    SampleTileMatrix,
+    tile1 = links$Tile1,
+    tile2 = links$Tile2,
+    numCores = 1,
+    ZI = TRUE,
+    backNumber = 1000,
+    highMem = TRUE,
+    verbose = FALSE
   )
-  
+
   expect_snapshot(
-      results,
-      variant = "3sample"
-    )
-  
+    results,
+    variant = "3sample"
+  )
+
   # All foreground correlations are undefined
   expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
-      SampleTileMatrix,
-      tile1 = links$Tile1,
-      tile2 = links$Tile2,
-      numCores = 1,
-      ZI = TRUE,
-      backNumber = 1000,
-      highMem = FALSE,
-      verbose = TRUE
+    SampleTileMatrix,
+    tile1 = links$Tile1,
+    tile2 = links$Tile2,
+    numCores = 1,
+    ZI = TRUE,
+    backNumber = 1000,
+    highMem = FALSE,
+    verbose = TRUE
   ))
-
 })
-
