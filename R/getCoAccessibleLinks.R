@@ -53,7 +53,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
     regions <- plyranges::filter_by_overlaps(SummarizedExperiment::rowRanges(SampleTileObj), regions)
     regionDF <- as.data.frame(regions)
   } else if (
-    (!(all(IRanges::width(regions) == 500) &
+    (!(all(IRanges::width(regions) == 500) &&
       all((IRanges::end(regions) + 1) %% 500 == 0)))
   ) {
     # MOCHA tiles always end at 1 less than a
@@ -70,9 +70,9 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   if (cellPopulation == "All") {
     tileDF <- do.call("cbind", as.list(SummarizedExperiment::assays(SampleTileObj)))
-  } else if (length(cellPopulation) > 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
+  } else if (length(cellPopulation) > 1 && all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
     tileDF <- do.call("cbind", SummarizedExperiment::assays(SampleTileObj)[names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation]) #
-  } else if (length(cellPopulation) == 1 & all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
+  } else if (length(cellPopulation) == 1 && all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))) {
     tileDF <- MOCHA::getCellPopMatrix(SampleTileObj, cellPopulation, NAtoZero = TRUE) #
   } else {
     stop("Cell type not found within SampleTileObj")
@@ -150,7 +150,6 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }, cl = cl)
 
   parallel::stopCluster(cl)
-
 
   # Initialize zi_spear_mat for iterations
   zi_spear_mat <- NULL
