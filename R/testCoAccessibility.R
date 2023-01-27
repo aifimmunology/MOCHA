@@ -23,6 +23,7 @@ testCoAccessibilityChromVar <- function(STObj,
                                         backNumber = 1000,
                                         highMem = FALSE,
                                         verbose = TRUE) {
+  . <- NULL
 
   if (length(tile1) != length(tile2)) {
     stop("tile1 and tile2 must be the same length.")
@@ -85,6 +86,11 @@ testCoAccessibilityChromVar <- function(STObj,
 
   parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
   foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
+  if (any(is.na(foreGround$Correlation))) {
+    if (verbose) {
+      warning("All foreground correlations are undefined")
+    }
+  }
   parallel::stopCluster(cl)
 
   gc()
@@ -141,7 +147,9 @@ testCoAccessibilityChromVar <- function(STObj,
       subAccMat <- accMat[unique(c(backgroundCombos[[i]][, 1], backgroundCombos[[i]][, 2])), ]
 
       cl <- parallel::makeCluster(numCores)
-      message(paste("Generating Background correlations for", i, "of", length(tile1), "pairs", sep = " "))
+      if (verbose) {
+        message(paste("Generating Background correlations for", i, "of", length(tile1), "pairs", sep = " "))
+      }
       parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
 
       tmp_background <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
@@ -150,7 +158,8 @@ testCoAccessibilityChromVar <- function(STObj,
 
       gc()
 
-      backGround <- append(backGround, tmp_background)
+      # backGround <- append(backGround, tmp_background)
+      backGround <- append(backGround, list(tmp_background))
     }
   }
 
@@ -160,8 +169,10 @@ testCoAccessibilityChromVar <- function(STObj,
 
   pValues <- pbapply::pblapply(seq_along(backGround), function(x) {
     cor1 <- foreGround$Correlation[x]
-
-    if (cor1 >= 0) {
+    
+    if (is.na(cor1)){
+      NA
+    } else if (cor1 >= 0) {
       sum(cor1 > backGround[[x]]$Correlation) / length(backGround[[x]]$Correlation)
     } else if (cor1 < 0) {
       sum(cor1 < backGround[[x]]$Correlation) / length(backGround[[x]]$Correlation)
@@ -199,16 +210,18 @@ testCoAccessibilityRandom <- function(STObj,
                                       ZI = TRUE,
                                       backNumber = 1000,
                                       verbose = TRUE) {
+  . <- NULL
+  
   if (length(tile1) != length(tile2)) {
     stop("tile1 and tile2 must be the same length.")
   }
 
   fullObj <- getBackGroundObj(STObj)
 
-  if (is.character(tile1) & is.character(tile2)) {
+  if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
     nTile2 <- match(tile1, rownames(fullObj))
-  } else if (is.numeric(tile1) & is.numeric(tile2)) {
+  } else if (is.numeric(tile1) && is.numeric(tile2)) {
     nTile1 <- tile1
     nTile2 <- tile2
 
@@ -240,8 +253,14 @@ testCoAccessibilityRandom <- function(STObj,
   }
   parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
   foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
+  
+  if (any(is.na(foreGround$Correlation))) {
+    if (verbose) {
+      warning("All foreground correlations are undefined")
+    }
+  }
+  
   parallel::stopCluster(cl)
-
   gc()
 
   if (verbose) {
@@ -268,12 +287,14 @@ testCoAccessibilityRandom <- function(STObj,
   parallel::stopCluster(cl)
 
   cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(cl, varlist = c("backGround", "foreGround"), envir = environment())
+  parallel::clusterExport(cl, varlist = c("foreGround", "backGround"), envir = environment())
 
   pValues <- pbapply::pblapply(seq_along(tile1), function(x) {
     cor1 <- foreGround$Correlation[x]
-
-    if (cor1 >= 0) {
+    
+    if (is.na(cor1)){
+      NA
+    } else if (cor1 >= 0) {
       sum(cor1 > backGround$Correlation) / length(backGround$Correlation)
     } else if (cor1 < 0) {
       sum(cor1 < backGround$Correlation) / length(backGround$Correlation)
