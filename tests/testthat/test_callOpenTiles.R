@@ -59,5 +59,9 @@ if (
       tiles,
       variant = "list"
     )
+    expect_snapshot(
+      metadata(tiles)$CellCounts,
+      variant = "CellCounts"
+    )
   })
 }
