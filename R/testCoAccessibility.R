@@ -102,7 +102,7 @@ testCoAccessibilityChromVar <- function(STObj,
   }
 
   if (highMem) {
-    allBackCombos <- do.call("rbind", .)
+    allBackCombos <- do.call("rbind", backgroundCombos)
 
     uniqueBackCombos <- unique(allBackCombos)
 
