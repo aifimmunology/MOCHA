@@ -1,5 +1,5 @@
 test_that("getDifferentialAccessibleTiles works on a 3 sample test dataset", {
-  
+
   cellPopulations = c("C3")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
@@ -21,7 +21,7 @@ test_that("getDifferentialAccessibleTiles works on a 3 sample test dataset", {
       numCores = 4,
       verbose = FALSE
     )
-  )         
+  )
   expect_snapshot_output(
     differentials,
     variant = "differentials"

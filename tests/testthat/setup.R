@@ -6,6 +6,14 @@ if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
   library(org.Hs.eg.db)
 }
 
+if (requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)) {
+  library(BSgenome.Hsapiens.UCSC.hg19)
+}
+
+TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
+Org <- org.Hs.eg.db
+genome <- BSgenome.Hsapiens.UCSC.hg19
+
 if (requireNamespace("ArchR", quietly = TRUE) && dir.exists("PBMCSmall")) {
   library(ArchR)
   # ArchR is installed and the test project is downloaded,
