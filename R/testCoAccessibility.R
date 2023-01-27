@@ -128,7 +128,12 @@ testCoAccessibilityChromVar <- function(STObj,
 
     uniquebackGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
 
-    backGround <- dplyr::left_join(allBackCombos, uniquebackGround) %>%
+   allBackCombos2 <- data.frame(
+      Tile1 = rownames(accMat)[allBackCombos[, 1]],
+      Tile2 = rownames(accMat)[allBackCombos[, 2]]
+    ) 
+    
+    backGround <- dplyr::left_join(allBackCombos2, uniquebackGround, by = c('Tile1' = 'Tile1', 'Tile2' = 'Tile2')) %>%
       group_by(row_number(.) %/% backNumber) %>%
       group_map(~.x)
 
