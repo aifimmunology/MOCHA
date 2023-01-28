@@ -82,9 +82,6 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     }
 
-    
-    gc()
-
     cl <- parallel::makeCluster(numCores)
 
     parallel::clusterExport(cl=cl, varlist=c("formula","mat1", "meta"), envir=environment())
@@ -101,7 +98,7 @@ linearModeling <- function(Obj, formula, CellType, rowsToKeep = NA, NAtoZero = F
 
     parallel::stopCluster(cl)
 
-    gc
+    gc()
 
     return(lmem_res)
 
@@ -114,11 +111,94 @@ calculateVarDecomp <- function(Obj, CellType, variableList, rowsToKeep = NA, NAt
     varForm <- paste0(unlist(lapply(variableList, function(x) paste('(1|',x,')',sep=''))), collapse = ' + ')
     formula1 <- as.formula(paste('exp ~ ',varForm, sep = ''))
 
-    linRes <- linearModeling(Obj, formula = formula1, CellType, rowsToKeep, NAtoZero, numCores)
-    
-    varDecomp <- getVarDecomp(linRes, numCores)
+    meta1 <- as.data.frame(SummarizedExperiment::colData(Obj))
 
-    return(varDecomp)
+    if(length(CellType) == 1){
+
+        mat1 <- MOCHA::getCellPopMatrix(Obj,CellType,NAtoZero = NAtoZero)
+
+        meta <- meta1[meta1$Sample %in% colnames(mat1),]
+        
+        if(!all(is.na(rowsToKeep))){
+
+            mat1 <- mat1[rowsToKeep,]
+
+        }
+
+        
+
+    }else{
+
+        allMatrices <- do.call('cbind', SummarizedExperiment::assays(Obj))
+        if(NAtoZero){
+           allMatrices[is.na(allMatrices)] = 0
+        }
+
+
+        colnames(allMatrices) <- apply(expand.grid(colnames(Obj),names(SummarizedExperiment::assays(Obj))), 1, 
+                                paste, collapse="__") %>% gsub(" ", "_", .)
+        mat1 <- allMatrices[,colSums(allMatrices) != 0]
+        rm(allMatrices)
+        
+        gc()
+
+        cl <- parallel::makeCluster(numCores)
+        parallel::clusterExport(cl, varlist = c('meta1', 'Obj'), envir = environment())
+
+        meta <- pbapply::pblapply(1:length(SummarizedExperiment::assays(Obj)), function(x){
+        
+                    meta1 %>% as.data.frame() %>%
+                        dplyr::mutate(Sample2 = paste(names(SummarizedExperiment::assays(Obj))[x], Sample, sep = "__"),
+                                    CellType = names(SummarizedExperiment::assays(Obj))[x]) %>%
+                        dplyr::mutate(Sample2 = gsub(" ","_", Sample2), 
+                                    CellType = gsub(" ", "_", CellType))
+        
+        }, cl = cl) %>% do.call('rbind', .)
+
+        parallel::stopCluster(cl)
+
+        meta <- meta[meta$Sample2 %in% colnames(mat1),]
+
+        if(!all(is.na(rowsToKeep))){
+
+            mat1 <- mat1[rowsToKeep,]
+
+        }
+
+        mat1 <- mat1[rowsToKeep,]
+
+    }
+
+    cl <- parallel::makeCluster(numCores)
+
+    parallel::clusterExport(cl=cl, varlist=c("formula","mat1", "meta", 'variableList','extractVarDecomp'), envir=environment())
+
+    suppressMessages(varDecompRes <- pbapply::pblapply(c(1:dim(mat1)[1]),
+        function(x) {
+           
+           tryCatch({
+                df1 <-  data.frame(exp = as.numeric(mat1[x,]), 
+                meta, stringsAsFactors = FALSE)
+                lmem1 <- lmerTest::lmer(formula = formula1, data = df1)
+                tmp_df <- extractVarDecomp(lmem1, variableList)
+                rm(lmem1, df1)
+                tmp_df
+           }, error = function(e){
+                tmp_df <- rep(NA, (length(variableList) + 1)) 
+                names(tmp_df) <- c(variableList, 'Residual')
+                tmp_df
+           })
+
+        }, cl = cl), classes = "message")
+    varDecomp_df <- do.call('rbind',varDecompRes)
+
+    output_df <- cbind(data.frame(Tiles = rownames(mat1)), varDecomp_df)
+
+    parallel::stopCluster(cl)
+
+    gc()
+
+    return(output_df)
 }
 
 ## external funciton that accepts a list of linear model (must be meant for variance decomposition), and extracts the variance of each random factor. 
@@ -138,7 +218,7 @@ getVarDecomp <- function(lmemList, numCores = 1){
 
      }, cl = cl), classes = "message") %>% do.call('rbind',.)
 
-    stopCluster(cl)
+    parallel::stopCluster(cl)
 
     gc()
 
