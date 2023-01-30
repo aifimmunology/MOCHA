@@ -1,11 +1,11 @@
 pandoc: 2.19.2
-pkgdown: 2.0.6
+pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   COVID-walkthrough: COVID-walkthrough.html
   Comparing-Cell-Populations: Comparing-Cell-Populations.html
   Results-Tips: Results-Tips.html
-last_built: 2023-01-24T00:48Z
+last_built: 2023-01-24T18:00Z
 urls:
   reference: https://aifimmunology.github.io/MOCHA/reference
   article: https://aifimmunology.github.io/MOCHA/articles
