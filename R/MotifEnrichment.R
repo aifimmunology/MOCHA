@@ -28,7 +28,7 @@ EnrichedRanges <- function(Group1,
   OnlyGroup1 <- plyranges::filter_by_non_overlaps(Group1, Category)
   OnlyGroup2 <- plyranges::filter_by_non_overlaps(Group2, Category)
 
-  if (returnTable & is.null(type)) {
+  if (returnTable && is.null(type)) {
     dt_table <- data.frame(
       Group1 = c(length(Group1Cat), length(OnlyGroup1)),
       Group2 = c(length(Group2Cat), length(OnlyGroup2)),
@@ -52,7 +52,7 @@ EnrichedRanges <- function(Group1,
     )
     return(t(dt_table))
   } else if (returnTable) {
-    stop("Error: Incorrect method or column name. Please check input")
+    stop("Incorrect method or column name. Please check input")
   }
 
   if (is.null(type)) {

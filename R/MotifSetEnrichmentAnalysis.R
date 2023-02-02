@@ -87,8 +87,12 @@ PHyperLigandTF <- function(ligandTFMatrix,
   # Merge data into one.
 
   otherMotifs <- "TranscriptionFactor"
-  joinedDF <- dplyr::inner_join(motifEnrichmentDF, TFMat, by = structure(names = motifColumn, .Data = otherMotifs))
-  return(joinedDF)
+  joinedDF <- dplyr::inner_join(
+    motifEnrichmentDF,
+    TFMat,
+    by = structure(names = motifColumn, .Data = otherMotifs)
+  )
+
   mergedDF <- tidyr::pivot_longer(joinedDF,
     cols = colnames(joinedDF)[c(
       (dim(joinedDF)[2] - dim(allTFsByAnyLigand)[2] + 1):dim(joinedDF)[2]
@@ -199,9 +203,9 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
   )
 
   if (any(specDF$p_val == 0, na.rm = TRUE)) {
-    specDF$p_val[specDF$p_val == 0] <- rep(1e-323, sum(specDF$p_val == 0))
+    specDF$p_val[specDF$p_val == 0] <- 1e-323
   }
-  specDF$adjp_val <- p.adjust(specDF$p_val)
+  specDF$adjp_val <- p.adjust(specDF$p_val, method = "holm")
 
   # Subset ligand matrix down to all TFs related to ligands
   subsetMat <- ligandTFMatrix[
@@ -226,8 +230,8 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
   # Calculate percentage of significant motifs that interact with a given ligand against the background of all significant motifs
   specDF$PercInNicheNet <- colSums(sigSubsetMat > 0) /
     length(sigMotifs)
+
   # Label these values
-  # specDF[, annotationName] <- rep(annotation, nrow(specDF))
   specDF[, annotationName] <- annotation
   specDF
 }
