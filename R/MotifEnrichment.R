@@ -17,7 +17,11 @@
 #'
 #' @noRd
 #'
-EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = FALSE) {
+EnrichedRanges <- function(Group1,
+                           Group2,
+                           Category,
+                           type = NULL,
+                           returnTable = FALSE) {
   Group1Cat <- plyranges::filter_by_overlaps(Group1, Category)
   Group2Cat <- plyranges::filter_by_overlaps(Group2, Category)
 
@@ -30,11 +34,11 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
       Group2 = c(length(Group2Cat), length(OnlyGroup2)),
       row.names = c("In Category", "Not in Category")
     )
-
     return(t(dt_table))
-  } else if (returnTable &
-    sum(c(colnames(GenomicRanges::mcols(Group1)), colnames(GenomicRanges::mcols(Group2))) %in% type) == 2 &
-    length(type) == 1) {
+  } else if (returnTable && sum(c(
+    colnames(GenomicRanges::mcols(Group1)),
+    colnames(GenomicRanges::mcols(Group2))
+  ) %in% type) == 2 && length(type) == 1) {
     dt_table <- data.frame(
       Group1 = c(
         length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
@@ -46,7 +50,6 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
       ),
       row.names = c("In Category", "Not in Category")
     )
-
     return(t(dt_table))
   } else if (returnTable) {
     stop("Error: Incorrect method or column name. Please check input")
@@ -60,22 +63,31 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
       k = length(Group1Cat) + length(Group2Cat),
       lower.tail = FALSE
     )
-
-    enrichment <- (length(Group1Cat) / length(Group1)) / (length(Group2Cat) / length(Group2))
-  } else if (sum(c(colnames(GenomicRanges::mcols(Group1)), colnames(GenomicRanges::mcols(Group2))) %in% type) == 2 &
-    length(type) == 1) {
+    enrichment <- (
+      (length(Group1Cat) / length(Group1)) /
+        (length(Group2Cat) / length(Group2))
+    )
+  } else if (sum(c(
+    colnames(GenomicRanges::mcols(Group1)),
+    colnames(GenomicRanges::mcols(Group2))
+  ) %in% type) == 2 && length(type) == 1) {
     pVal <- phyper(
       q = length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
       m = length(unique(GenomicRanges::mcols(Group1)[, type])),
       n = length(unique(GenomicRanges::mcols(Group2)[, type])),
-      k = length(unique(GenomicRanges::mcols(Group1Cat)[, type])) + length(unique(GenomicRanges::mcols(Group2Cat)[, type])),
+      k = (length(unique(GenomicRanges::mcols(Group1Cat)[, type]))
+      + length(unique(GenomicRanges::mcols(Group2Cat)[, type]))),
       lower.tail = FALSE
     )
 
-    enrichment <- (length(unique(GenomicRanges::mcols(Group1Cat)[, type])) / length(unique(GenomicRanges::mcols(Group1)[, type]))) /
-      (length(unique(GenomicRanges::mcols(Group2Cat)[, type])) / length(unique(GenomicRanges::mcols(Group2)[, type])))
+    enrichment <- (
+      (length(unique(GenomicRanges::mcols(Group1Cat)[, type]))
+      / length(unique(GenomicRanges::mcols(Group1)[, type]))) /
+        (length(unique(GenomicRanges::mcols(Group2Cat)[, type]))
+        / length(unique(GenomicRanges::mcols(Group2)[, type])))
+    )
   } else {
-    stop("Error: Incorrect method or column name. Please check input")
+    stop("Incorrect method or column name. Please check input")
   }
 
   return(data.frame(p_value = pVal, enrichment = enrichment))
@@ -103,7 +115,7 @@ EnrichedRanges <- function(Group1, Group2, Category, type = NULL, returnTable = 
 MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
   allEnrichmentList <- pbapply::pblapply(motifPosList, function(x) {
     tmp_df <- EnrichedRanges(Group1, Group2, Category = x, type = type)
-  }, cl = 1)
+  }, cl = 1) # cl = 1 to disable multiprocessing as it is not much faster
   df_final <- do.call("rbind", allEnrichmentList)
 
   df_final$adjp_val <- p.adjust(df_final$p_value, method = "fdr")
@@ -132,11 +144,11 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
 #' @return
 #'
 #' @export
-#' 
+#'
 Gene2Motif <- function(TSS_Sites, allTiles, TSS_Links, motifPosList,
                        numCores = 1, verbose = FALSE) {
   if (verbose) {
-    print("Generating TSS-Tile Network.")
+    message("Generating TSS-Tile Network.")
   }
 
   TSS_Network <- c(
@@ -148,17 +160,29 @@ Gene2Motif <- function(TSS_Sites, allTiles, TSS_Links, motifPosList,
     plyranges::filter_by_overlaps(allTiles, .)
 
   if (verbose) {
-    print("Finding all motifs related to each Tile within the TSS-Tile Network.")
+    message(
+      "Finding all motifs related to each Tile within the ",
+      "TSS-Tile Network."
+    )
   }
-  ## Let's find all the motifs that overlap with each Tile within the altTSS Network
 
+  # Let's find all the motifs that overlap with each Tile
+  # within the altTSS Network
   cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(cl, varlist = c("motifPosList", "TSS_Network"), envir = environment())
+  parallel::clusterExport(cl,
+    varlist = c("motifPosList", "TSS_Network"),
+    envir = environment()
+  )
 
   tmpOverlap <- pbapply::pblapply(seq_along(motifPosList), function(x) {
     avgWidth <- mean(GenomicRanges::width(motifPosList[[x]]))
-    ifelse(plyranges::count_overlaps(TSS_Network, motifPosList[[x]], minoverlap = avgWidth) > 0,
-      names(motifPosList)[x], NA
+    ifelse(
+      plyranges::count_overlaps(
+        TSS_Network, motifPosList[[x]],
+        minoverlap = avgWidth
+      ) > 0,
+      names(motifPosList)[x],
+      NA
     )
   }, cl = cl)
 
@@ -166,9 +190,12 @@ Gene2Motif <- function(TSS_Sites, allTiles, TSS_Links, motifPosList,
   colnames(overlap_df) <- names(motifPosList)
   rownames(overlap_df) <- MOCHA::GRangesToString(TSS_Network)
 
-  parallel::clusterExport(cl, varlist = c("overlap_df"), envir = environment())
+  parallel::clusterExport(cl,
+    varlist = c("overlap_df"),
+    envir = environment()
+  )
 
-  motifList <- pbapply::pblapply(c(1:dim(overlap_df)[1]), function(x) {
+  motifList <- pbapply::pblapply(c(seq_len(dim(overlap_df)[1])), function(x) {
     ifelse(any(!is.na(overlap_df[x, ])),
       list(overlap_df[x, which(!is.na(overlap_df[x, ]))]),
       NA
@@ -176,14 +203,23 @@ Gene2Motif <- function(TSS_Sites, allTiles, TSS_Links, motifPosList,
   }, cl = cl)
 
   if (verbose) {
-    print("Finding all Tiles related to each gene within the TSS-Tile Network.")
+    message(
+      "Finding all Tiles related to each gene within the ",
+      "TSS-Tile Network."
+    )
   }
 
-  parallel::clusterExport(cl, varlist = c("TSS_Sites", "allTiles"), envir = environment())
+  parallel::clusterExport(cl,
+    varlist = c("TSS_Sites", "allTiles"),
+    envir = environment()
+  )
 
+  name <- Tile1 <- Tile2
   Tile2Gene <- pbapply::pblapply(unique(TSS_Sites$name), function(x) {
     filtTSS <- plyranges::filter(TSS_Sites, name == x)
-    geneTSS <- MOCHA::GRangesToString(plyranges::filter_by_overlaps(allTiles, filtTSS))
+    geneTSS <- MOCHA::GRangesToString(
+      plyranges::filter_by_overlaps(allTiles, filtTSS)
+    )
 
     tmp <- TSS_Links[Tile1 %in% geneTSS | Tile2 %in% geneTSS, ]
 
@@ -198,11 +234,14 @@ Gene2Motif <- function(TSS_Sites, allTiles, TSS_Links, motifPosList,
 
 
   if (verbose) {
-    print("Linking Motifs to each gene within the TSS-Tile Network")
+    message("Linking Motifs to each gene within the TSS-Tile Network")
   }
   ## Link all the genes to motifs via Tile2Gene and the motifList
 
-  parallel::clusterExport(cl, varlist = c("TSS_Network", "motifList"), envir = environment())
+  parallel::clusterExport(cl,
+    varlist = c("TSS_Network", "motifList"),
+    envir = environment()
+  )
 
   Gene2Motif <- pbapply::pblapply(Tile2Gene, function(x) {
     # Find which indices of the AltTSS Network GRanges are linked to that Gene
