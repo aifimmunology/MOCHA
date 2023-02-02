@@ -243,7 +243,7 @@ setGeneric(
       cl,
       1:length(frags),
       function(x) {
-        callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
@@ -491,7 +491,7 @@ setMethod(
       cl,
       1:length(frags),
       function(x) {
-        callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
@@ -730,7 +730,7 @@ callOpenTilesFast <- function(ArchRProj,
       cl,
       1:length(frags),
       function(x) {
-        callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
