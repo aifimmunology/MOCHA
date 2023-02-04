@@ -58,7 +58,7 @@ getAltTSS <- function(completeDAPs,
                       threshold = 0.2,
                       TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
                       Org = org.Hs.eg.db) {
-  . <- exactTSS <- NULL
+  . <- exactTSS <- name <- FDR <- Log2FC_C <- strand <- seqnames <- NULL
   if (grepl("data.table|SummarizedExperiment", class(completeDAPs)[1])) {
     DAP_GRanges <- ExtractGR(completeDAPs)
   } else if (class(completeDAPs)[1] == "GRanges") {
@@ -99,15 +99,18 @@ getAltTSS <- function(completeDAPs,
     plyranges::filter(ifelse(all(FDR <= threshold, na.rm = TRUE) & !any(is.na(FDR)),
       !all(Log2FC_C > 0) & !all(Log2FC_C < 0), TRUE
     )) %>%
-    ungroup() %>%
+    plyranges::ungroup() %>%
     sort()
 
   if (nuancedTSS) {
     nuancedGenes <- split(altTSS, as.character(altTSS$name)) %>%
       parallel::mclapply(., function(x) {
-        tmp <- gaps(x) %>%
-          filter(seqnames == seqnames(x) & strand == strand(x)) %>%
-          width(.)
+        tmp <- IRanges::gaps(x) %>%
+          filter(
+            seqnames == GenomeInfoDb::seqnames(x) &
+            strand == GenomicRanges::strand(x)
+          ) %>%
+          IRanges::width(.)
         ifelse(length(tmp) == 3 & tmp[2] < nuancedTSSGap, FALSE, TRUE)
       }) %>%
       unlist()
