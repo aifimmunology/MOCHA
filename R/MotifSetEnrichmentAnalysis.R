@@ -202,6 +202,7 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
     p_val = unlist(specificLigands)
   )
 
+  #The PHyperLigandTF function will return 0, which is simply because it's a small number than R can record. The function will set these values to the e-323, which is close to the lower limit in R, so the -log10 of the pvalue doesn't generate an error. 
   if (any(specDF$p_val == 0, na.rm = TRUE)) {
     specDF$p_val[specDF$p_val == 0] <- 1e-323
   }
