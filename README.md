@@ -1,7 +1,7 @@
 # MOCHA: Model-based single-cell Open Chromatin Analysis
 
 
-MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
+MOCHA is an R package meant to enable robust sample-specific scATAC analysis by providing a novel single-cell peak-calling algorithm and leveraging the latest in zero-inflated statistical methods. We hope this package will enable translational research on scATAC datasets by addressing statistical issues around peak calling, differential accessibility, co-accessibility, and repeated measures. Our goal is to enable intuitive and robust identification of open chromatin, differential accessibility, and co-accessibility so that biomedical researchers can leverage scATAC datasets to identify the therapeutic targets. 
 
 Find out more by visiting the [MOCHA website](https://aifimmunology.github.io/MOCHA/).
 
