@@ -11,7 +11,7 @@
 #' @param type Optional, name of a metadata column in Group1 and Group2 to test
 #'   for enrichment the number of unique entries in column given by 'type'.
 #'   Default is NULL, which tests the number of number of Ranges.
-#' @param returnTable
+#' @param returnTable Optional parameter. Will return the table used for the hypergeometric enrichment test instead of the p-value. 
 #'
 #' @return A data.frame of enrichment
 #'
