@@ -206,7 +206,7 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
   if (any(specDF$p_val == 0, na.rm = TRUE)) {
     specDF$p_val[specDF$p_val == 0] <- 1e-323
   }
-  specDF$adjp_val <- p.adjust(specDF$p_val, method = "holm")
+  specDF$adjp_val <- p.adjust(specDF$p_val, method = "fdr")
 
   # Subset ligand matrix down to all TFs related to ligands
   subsetMat <- ligandTFMatrix[
