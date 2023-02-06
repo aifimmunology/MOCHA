@@ -19,13 +19,19 @@
 #'
 MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
   allEnrichmentList <- pbapply::pblapply(motifPosList, function(x) {
-    tmp_df <- EnrichedRanges(Group1, Group2, Category = x, type = type)
+    EnrichedRanges(
+      Group1,
+      Group2,
+      Category = x,
+      type = type,
+      returnTable = FALSE
+    )
   }, cl = 1) # cl = 1 to disable multiprocessing as it is not much faster
   df_final <- do.call("rbind", allEnrichmentList)
-  
+
   df_final$adjp_val <- p.adjust(df_final$p_value, method = "fdr")
   df_final$mlog10Padj <- -log10(df_final$adjp_val)
-  
+
   return(df_final)
 }
 
@@ -43,11 +49,11 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
 #' @param type Optional, name of a metadata column in Group1 and Group2 to test
 #'   for enrichment the number of unique entries in column given by 'type'.
 #'   Default is NULL, which tests the number of number of Ranges.
-#' @param returnTable If TRUE, return the table used for the hypergeometric 
-#'   enrichment test. Default is FALSE, return the p-value result from the 
+#' @param returnTable If TRUE, return the table used for the hypergeometric
+#'   enrichment test. Default is FALSE, return the p-value result from the
 #'   hypergeometric test.
 #'
-#' @return A data.frame Table of enrichment
+#' @return A data.frame table of enrichment
 #'
 #' @noRd
 #'
@@ -61,35 +67,18 @@ EnrichedRanges <- function(Group1,
 
   OnlyGroup1 <- plyranges::filter_by_non_overlaps(Group1, Category)
   OnlyGroup2 <- plyranges::filter_by_non_overlaps(Group2, Category)
-
-  if (returnTable && is.null(type)) {
-    dt_table <- data.frame(
-      Group1 = c(length(Group1Cat), length(OnlyGroup1)),
-      Group2 = c(length(Group2Cat), length(OnlyGroup2)),
-      row.names = c("In Category", "Not in Category")
-    )
-    return(t(dt_table))
-  } else if (returnTable && sum(c(
-    colnames(GenomicRanges::mcols(Group1)),
-    colnames(GenomicRanges::mcols(Group2))
-  ) %in% type) == 2 && length(type) == 1) {
-    dt_table <- data.frame(
-      Group1 = c(
-        length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
-        length(unique(GenomicRanges::mcols(OnlyGroup1)[, type]))
-      ),
-      Group2 = c(
-        length(unique(GenomicRanges::mcols(Group2Cat)[, type])),
-        length(unique(GenomicRanges::mcols(OnlyGroup2)[, type]))
-      ),
-      row.names = c("In Category", "Not in Category")
-    )
-    return(t(dt_table))
-  } else if (returnTable) {
-    stop("Incorrect method or column name. Please check input")
-  }
-
+  
+  # Conduct hypergeometric test and return p-value+enrichment score
   if (is.null(type)) {
+    if (returnTable) {
+      dt_table <- data.frame(
+        Group1 = c(length(Group1Cat), length(OnlyGroup1)),
+        Group2 = c(length(Group2Cat), length(OnlyGroup2)),
+        row.names = c("In Category", "Not in Category")
+      )
+      return(t(dt_table))
+    }
+
     pVal <- phyper(
       q = length(Group1Cat),
       m = length(Group1),
@@ -105,6 +94,21 @@ EnrichedRanges <- function(Group1,
     colnames(GenomicRanges::mcols(Group1)),
     colnames(GenomicRanges::mcols(Group2))
   ) %in% type) == 2 && length(type) == 1) {
+    if (returnTable) {
+      dt_table <- data.frame(
+        Group1 = c(
+          length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
+          length(unique(GenomicRanges::mcols(OnlyGroup1)[, type]))
+        ),
+        Group2 = c(
+          length(unique(GenomicRanges::mcols(Group2Cat)[, type])),
+          length(unique(GenomicRanges::mcols(OnlyGroup2)[, type]))
+        ),
+        row.names = c("In Category", "Not in Category")
+      )
+      return(t(dt_table))
+    }
+
     pVal <- phyper(
       q = length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
       m = length(unique(GenomicRanges::mcols(Group1)[, type])),
@@ -121,7 +125,10 @@ EnrichedRanges <- function(Group1,
         / length(unique(GenomicRanges::mcols(Group2)[, type])))
     )
   } else {
-    stop("Incorrect method or column name. Please check input")
+    stop(
+      "Invalid 'type' or Group1 or Group2 input. Given 'type' must be ",
+      "the name of a column in the metadata of both Group1 and Group2."
+    )
   }
 
   return(data.frame(p_value = pVal, enrichment = enrichment))
