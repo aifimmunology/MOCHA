@@ -1,8 +1,8 @@
 #' @title \code{getAltTSS} Annotate Peaks falling in TSS Sites, and identify alternatively regulated TSSs for each gene. 
 #'
 #' @description \code{getAltTSS} Pulls out all peaks that fall in TSS sites, annotates them with the name of gene, and identifies genes that have evidence for alternatively regulated TSSs, 
-@'       including both type i (only some of the open TSSs for a gene are significantly more (or less) accessible), and type ii (multiple TSSs are significant different, with some being more accessible and others less).
-@'        Alternatively, this function  will return all open TSSs with differential measurements if the returnAllTSS flag is set to TRUE. 
+#'       including both type i (only some of the open TSSs for a gene are significantly more (or less) accessible), and type ii (multiple TSSs are significant different, with some being more accessible and others less).
+#'        Alternatively, this function  will return all open TSSs with differential measurements if the returnAllTSS flag is set to TRUE. 
 #'
 #' @param completeDAPs GRanges object that contains the differential measurements across all peaks (unfiltered DAPs). Will also work with data.frame or data.table version of a GRanges object. Must include a column names 'FDR', and 'Log2FC_C', which is standard for MOCHA differentials.
 #' @param returnAllTSS Flag to return all TSS sites with DAPs measurements, without filtering for alternative TSS usage. If multiple TSSs fall within the same tile, then that tile will be repeated for each TSS.
