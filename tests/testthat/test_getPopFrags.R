@@ -10,12 +10,12 @@ test_that(
   }
 )
 
-if(dir.exists("PBMCSmall")){
+if (dir.exists("PBMCSmall")) {
   # Load ArchR project
   capture.output(testProj <- ArchR::loadArchRProject("PBMCSmall"), type = "message")
   outdir <- dirname(ArchR::getOutputDirectory(testProj))
   metaColumn <- "Clusters" # Column with cell population groups
-  
+
   # # Test getPopFrags with full genome and all normalization methods
   # # Includes snapshot test for output
   # for (sampleSpecific in c(TRUE, FALSE)) {
@@ -36,10 +36,10 @@ if(dir.exists("PBMCSmall")){
   #           ),
   #           type = "message"
   #         )
-  #         
+  #
   #         # Test population+sample names are as expected
   #         populations <- sort(unique(getCellColData(testProj)[[metaColumn]]))
-  #         
+  #
   #         if (sampleSpecific) {
   #           samples <- unique(testProj$Sample)
   #           combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
@@ -49,12 +49,12 @@ if(dir.exists("PBMCSmall")){
   #         }
   #         sampleNames <- names(popFrags)
   #         actual_names <- sort(gsub("__.*", "", sampleNames))
-  #         
+  #
   #         expect_equal(actual_names, expected_names)
-  #         
+  #
   #         # Remove population+sample names and check that the content is equal
   #         names(popFrags) <- NULL
-  #         
+  #
   #         snapshotVariant <- str_interp("${NormMethod}")
   #         if (sampleSpecific) {
   #           snapshotVariant <- paste(snapshotVariant, "sampleSpecific", sep = "_")
@@ -67,8 +67,8 @@ if(dir.exists("PBMCSmall")){
   #     )
   #   }
   # }
-  
-  
+
+
   # Test getPopFrags with specific region
   test_that(
     "getPopFrags works with a specific region when NormMethod='Raw'",
@@ -91,7 +91,7 @@ if(dir.exists("PBMCSmall")){
       expect_equal(actual_names, expected_names)
     }
   )
-  
+
   # Test getPopFrags with the wrong NormMethod when specifying a region
   for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
     test_that(
@@ -111,7 +111,7 @@ if(dir.exists("PBMCSmall")){
       }
     )
   }
-  
+
   # Test getPopFrags with an incorrectly formatted region string
   test_that(
     stringr::str_interp("getPopFrags throws an error for an incorrectly formatted region string"),
@@ -147,8 +147,8 @@ if(dir.exists("PBMCSmall")){
       )
     }
   )
-  
-  
+
+
   # Test getPopFrags with a metaColumn not in cellColData
   test_that(
     stringr::str_interp("getPopFrags throws an error for a metaColumn not in cellColData"),
@@ -167,7 +167,7 @@ if(dir.exists("PBMCSmall")){
       )
     }
   )
-  
+
   # Test getPopFrags with nonexistent cell subsets
   test_that(
     stringr::str_interp("getPopFrags throws an error for missing cellSubsets"),
