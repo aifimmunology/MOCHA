@@ -62,6 +62,11 @@ EnrichedRanges <- function(Group1,
                            Category,
                            type = NULL,
                            returnTable = FALSE) {
+  
+  if (class(Group1) != "GRanges" || class(Group2) != "GRanges"){
+    stop("Input Group1 and/or Group2 are not class 'GRanges'. Group1 and ",
+         "Group2 must be GRanges objects.")
+  }
   Group1Cat <- plyranges::filter_by_overlaps(Group1, Category)
   Group2Cat <- plyranges::filter_by_overlaps(Group2, Category)
 
