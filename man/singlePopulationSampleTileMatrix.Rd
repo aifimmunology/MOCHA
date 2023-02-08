@@ -7,8 +7,7 @@
 singlePopulationSampleTileMatrix(
   peaksExperiment,
   consensusTiles,
-  NAtoZero = FALSE,
-  log2Intensity = TRUE
+  NAtoZero = FALSE
 )
 }
 \arguments{

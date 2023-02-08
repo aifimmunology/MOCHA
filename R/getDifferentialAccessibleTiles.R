@@ -113,18 +113,12 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   zero_B <- rowMeans(sampleTileMatrix[, which(group == 0), drop = FALSE] == 0)
 
   diff0s <- abs(zero_A - zero_B)
-
-  Log2Intensity <- SampleTileObj@metadata$Log2Intensity
-  log2FC_filter <- ifelse(Log2Intensity, signalThreshold, 2^signalThreshold)
-
+  log2FC_filter <- 2^signalThreshold
   idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
 
   ############################################################################
   # Estimate differential accessibility
-
-  if (!Log2Intensity) {
-    sampleTileMatrix <- log2(sampleTileMatrix + 1)
-  }
+  sampleTileMatrix <- log2(sampleTileMatrix + 1)
 
   res_pvals <- parallel::mclapply(
     rownames(sampleTileMatrix),

@@ -19,7 +19,7 @@
 #'
 
 make_prediction <- function(X, finalModelObject) {
-
+  
   ### Model was trained on varying
   ### cell abundances. Identify
   ### Number of cells in the sample
@@ -30,7 +30,7 @@ make_prediction <- function(X, finalModelObject) {
   ### We do not make predictions
 
   if(cell_model < 5){
-      return(NULL)
+    return(NULL)
   } else {
 
     ### Apply model fit based on the

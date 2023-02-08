@@ -18,8 +18,8 @@
 
 singlePopulationSampleTileMatrix <- function(peaksExperiment,
                                              consensusTiles,
-                                             NAtoZero = FALSE,
-                                             log2Intensity = TRUE) {
+                                             NAtoZero = FALSE
+                                            ) {
 
   # Extract matrices of samples by peak tileIDs with TotalIntensity
   sampleTileIntensityMat <- RaggedExperiment::compactAssay(
@@ -30,10 +30,6 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
   if (NAtoZero) {
     # Replace NAs with zeroes for zero-inflated hypothesis testing
     sampleTileIntensityMat[is.na(sampleTileIntensityMat)] <- 0
-  }
-
-  if (log2Intensity) {
-    sampleTileIntensityMat <- log2(sampleTileIntensityMat + 1)
   }
 
   # Filter to just peaks in the given consensusTiles.
