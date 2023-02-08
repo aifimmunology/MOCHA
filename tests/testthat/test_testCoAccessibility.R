@@ -13,21 +13,26 @@ test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
     "chr1:102368000-102368499",
     "chr1:101873000-101873499"
   ))
-  links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
-    cellPopulation,
-    regions,
-    verbose = FALSE
+  capture.output(
+    links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
+      cellPopulation,
+      regions,
+      verbose = FALSE
+    )
   )
 
-  results <- MOCHA::testCoAccessibilityChromVar(
-    SampleTileMatrix,
-    tile1 = links$Tile1,
-    tile2 = links$Tile2,
-    numCores = 1,
-    ZI = TRUE,
-    backNumber = 1000,
-    highMem = FALSE,
-    verbose = FALSE
+  capture.output(
+    results <- MOCHA::testCoAccessibilityChromVar(
+      SampleTileMatrix,
+      tile1 = links$Tile1,
+      tile2 = links$Tile2,
+      genome = BSgenome.Hsapiens.UCSC.hg19,
+      numCores = 1,
+      ZI = TRUE,
+      backNumber = 1000,
+      highMem = FALSE,
+      verbose = FALSE
+    )
   )
 
   expect_snapshot(
@@ -40,6 +45,7 @@ test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
     SampleTileMatrix,
     tile1 = links$Tile1,
     tile2 = links$Tile2,
+    genome = BSgenome.Hsapiens.UCSC.hg19,
     numCores = 1,
     ZI = TRUE,
     backNumber = 1000,
@@ -63,39 +69,46 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
     "chr1:101775000-101775499",
     "chr1:111174000-111174499"
   ))
-  links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
-    cellPopulation,
-    regions,
-    verbose = FALSE
+  
+  capture.output(
+    links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
+      cellPopulation,
+      regions,
+      verbose = FALSE
+    )
   )
 
-  results <- MOCHA::testCoAccessibilityChromVar(
-    SampleTileMatrix,
-    tile1 = links$Tile1,
-    tile2 = links$Tile2,
-    numCores = 1,
-    ZI = TRUE,
-    backNumber = 1000,
-    highMem = FALSE,
-    verbose = FALSE
+  capture.output(
+    results <- MOCHA::testCoAccessibilityChromVar(
+      SampleTileMatrix,
+      tile1 = links$Tile1,
+      tile2 = links$Tile2,
+      genome = BSgenome.Hsapiens.UCSC.hg19,
+      numCores = 1,
+      ZI = TRUE,
+      backNumber = 1000,
+      highMem = FALSE,
+      verbose = FALSE
+    )
   )
-
+  
   expect_snapshot(
     results,
     variant = "3sample"
   )
 
   # All foreground correlations are undefined
-  expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
+  capture.output(expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
     SampleTileMatrix,
     tile1 = links$Tile1,
     tile2 = links$Tile2,
+    genome = BSgenome.Hsapiens.UCSC.hg19,
     numCores = 1,
     ZI = TRUE,
     backNumber = 1000,
     highMem = FALSE,
     verbose = TRUE
-  ))
+  )))
 })
 
 
@@ -114,21 +127,26 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
     "chr1:101775000-101775499",
     "chr1:111174000-111174499"
   ))
-  links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
-    cellPopulation,
-    regions,
-    verbose = FALSE
+  capture.output(
+    links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
+      cellPopulation,
+      regions,
+      verbose = FALSE
+    )
   )
-
-  results <- MOCHA::testCoAccessibilityChromVar(
-    SampleTileMatrix,
-    tile1 = links$Tile1,
-    tile2 = links$Tile2,
-    numCores = 1,
-    ZI = TRUE,
-    backNumber = 1000,
-    highMem = TRUE,
-    verbose = FALSE
+  
+  capture.output(
+    results <- MOCHA::testCoAccessibilityChromVar(
+      SampleTileMatrix,
+      tile1 = links$Tile1,
+      tile2 = links$Tile2,
+      genome = BSgenome.Hsapiens.UCSC.hg19,
+      numCores = 1,
+      ZI = TRUE,
+      backNumber = 1000,
+      highMem = TRUE,
+      verbose = FALSE
+    )
   )
 
   expect_snapshot(
@@ -137,14 +155,16 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
   )
 
   # All foreground correlations are undefined
-  expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
+  capture.output(expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
     SampleTileMatrix,
     tile1 = links$Tile1,
     tile2 = links$Tile2,
+    genome = BSgenome.Hsapiens.UCSC.hg19,
     numCores = 1,
     ZI = TRUE,
     backNumber = 1000,
     highMem = FALSE,
     verbose = TRUE
-  ))
+  )))
+
 })
