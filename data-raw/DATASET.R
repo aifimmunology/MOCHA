@@ -139,10 +139,15 @@ miniSamplePeaks <- samplePeaks[
 miniSamplePeaks$FDR <- round(runif(nrow(miniSamplePeaks)),2)
 
 
-testTileResults <- MOCHA:::testTileResults
-testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
 testPeaks <- miniSamplePeaks
 testPosList <- smallPosList
+
+# Uncomment to preserve current versions of test data
+# testTileResults <- MOCHA:::testTileResults
+# testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
+# testPeaks <- MOCHA:::testPeaks
+# testPosList <- MOCHA:::testPosList
+
 # Save internal data
 usethis::use_data(
   testTileResults,
