@@ -110,9 +110,45 @@ for (x in 1:length(experiments)) {
   testTileResultsMultisample[[x]] <- exp[randIdx]
 }
 
+# Motif list for MotifEnrichment
+requireNamespace("chromVAR", quietly = TRUE)
+requireNamespace("chromVARmotifs", quietly = TRUE)
+requireNamespace("motifmatchr", quietly = TRUE)
+requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)
+library(BSgenome.Hsapiens.UCSC.hg19)
+
+STM <- MOCHA::addMotifSet(
+  testSampleTileMatrix,
+  chromVARmotifs::human_pwms_v2,
+  genome = BSgenome.Hsapiens.UCSC.hg19,
+  motifSetName = 'CISBP'
+)
+posList <- STM@metadata$CISBP
+smallPosList <- posList[1:10]
+
+# Create a small peakset based on plasmablast peaks from Samir
+samplePeaks <- readRDS(
+  "/Users/imran.mcgrath/Downloads/1137_cells_sample_1_peaks.rds"
+)[[1]]
+samplePeaks <- samplePeaks[samplePeaks$seqnames %in% c("chr1", "chr2")]
+samplePeaks <- samplePeaks[samplePeaks$peak == TRUE]
+miniSamplePeaks <- samplePeaks[
+  sample(nrow(samplePeaks), size=floor(nrow(samplePeaks)/3))
+]
+# Spoof FDR column, making 10% of FDR <0.1
+miniSamplePeaks$FDR <- round(runif(nrow(miniSamplePeaks)),2)
+
+
+testTileResults <- MOCHA:::testTileResults
+testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
+testPeaks <- miniSamplePeaks
+testPosList <- smallPosList
+# Save internal data
 usethis::use_data(
   testTileResults,
   testTileResultsMultisample,
+  testPeaks,
+  testPosList,
   internal = TRUE,
   overwrite = TRUE,
   compress = "xz"
