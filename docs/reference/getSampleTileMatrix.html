@@ -14,7 +14,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,6 +30,7 @@
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/COVID-walkthrough.html">COVID-walkthrough</a>
     <a class="dropdown-item" href="../articles/Comparing-Cell-Populations.html">Comparing-Cell-Populations</a>
+    <a class="dropdown-item" href="../articles/Dev-Lessons.html">Lessons from Development</a>
     <a class="dropdown-item" href="../articles/Results-Tips.html">Results-Tips</a>
   </div>
 </li>
@@ -70,7 +71,6 @@
 <span>  cellPopulations <span class="op">=</span> <span class="st">"ALL"</span>,</span>
 <span>  groupColumn <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  threshold <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>  log2Intensity <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  numCores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -103,11 +103,6 @@ samples will be used for determining consensus tiles.</p></dd>
 in to be retained. If set to 0, retain the union of all samples' peaks
 (this is equivalent to a threshold of 1/numSamples). It is recommended to
 tune this parameter to omit potentially spurious peaks.</p></dd>
-
-
-<dt>log2Intensity</dt>
-<dd><p>Boolean, set to TRUE to return the log2 of the
-sample-tile intensity matrix. Optional, default is FALSE.</p></dd>
 
 
 <dt>numCores</dt>

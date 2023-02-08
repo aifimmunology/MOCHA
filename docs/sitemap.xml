@@ -13,6 +13,9 @@
     <loc>https://aifimmunology.github.io/MOCHA/articles/Comparing-Cell-Populations.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/articles/Dev-Lessons.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/articles/Results-Tips.html</loc>
   </url>
   <url>
@@ -44,6 +47,9 @@
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/callOpenTiles-methods.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/combineSampleTileMatrix.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/differentialsToGRanges.html</loc>
@@ -104,6 +110,12 @@
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/subsetMOCHAObject.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/testCoAccessibilityChromVar.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/testCoAccessibilityRandom.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/youden_threshold.html</loc>

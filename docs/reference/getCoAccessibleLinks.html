@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,6 +26,7 @@
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/COVID-walkthrough.html">COVID-walkthrough</a>
     <a class="dropdown-item" href="../articles/Comparing-Cell-Populations.html">Comparing-Cell-Populations</a>
+    <a class="dropdown-item" href="../articles/Dev-Lessons.html">Lessons from Development</a>
     <a class="dropdown-item" href="../articles/Results-Tips.html">Results-Tips</a>
   </div>
 </li>
@@ -63,9 +64,11 @@
 <span>  <span class="va">SampleTileObj</span>,</span>
 <span>  cellPopulation <span class="op">=</span> <span class="st">"All"</span>,</span>
 <span>  <span class="va">regions</span>,</span>
+<span>  chrChunks <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  windowSize <span class="op">=</span> <span class="fl">1</span> <span class="op">*</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span>,</span>
 <span>  numCores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  ZI <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  approximateTile <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -85,6 +88,11 @@
 Can be the output from getDifferentialAccessibleTiles.</p></dd>
 
 
+<dt>chrChunks</dt>
+<dd><p>This functions subsets by groups of chromosome, and then parallelizes within each group of chromosomes when running correlations. This method keeps memory
+low. To speed things up on high performing platforms, you can chunk out more than one chromosome at a time. Default is chrChunks = 1, so only one chromosome at a time.</p></dd>
+
+
 <dt>windowSize</dt>
 <dd><p>the size of the window, in basepairs, around each input region to search for co-accessible links</p></dd>
 
@@ -95,6 +103,10 @@ Can be the output from getDifferentialAccessibleTiles.</p></dd>
 
 <dt>ZI</dt>
 <dd><p>boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.</p></dd>
+
+
+<dt>approximateTile</dt>
+<dd><p>If set to TRUE, it will use all tiles that overlap with the regions given, instead of finding an exact match to the regions variable. Default is FALSE.</p></dd>
 
 
 <dt>verbose</dt>
