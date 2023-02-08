@@ -2,6 +2,10 @@ if (requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
   library(TxDb.Hsapiens.UCSC.hg38.refGene)
 }
 
+if (requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)) {
+  library(BSgenome.Hsapiens.UCSC.hg19)
+}
+
 if (requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
   library(org.Hs.eg.db)
 }
