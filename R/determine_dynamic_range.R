@@ -13,9 +13,7 @@
 # if the fragment is not evenly divisible by GeneralWindowSize. If that smaller window is less than or equal to
 # WindowSizeRange, then it will be merged with the preceding window to great a larger window. This means that
 # longer fragments will be broken up into bins that are between WindowSizeRange and WindowSizeRange+GeneralWindowSize in length.
-#' @param coreNum an integer indicating the number of cores to use
 #' @param doBins is a boolean variable. When true, then it will into windows according to GeneralWindowSize and WindowSizeRange.
-
 #' @return a data.table, countsByBin, that returns the two intensity parameters required
 #' to calculate the probability of a (+) peak
 #'
@@ -33,8 +31,7 @@ determine_dynamic_range <- function(AllFragmentsList, blackList, binSize = 500, 
 
   TotalRange <- dynamic_bins(
     AllFragmentsList = AllFragmentsList,
-    doBin = doBin,
-    coreNum = 30
+    doBin = doBin
   )
 
   if (!methods::is(binSize, "numeric") | binSize < 0) {

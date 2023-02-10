@@ -1,18 +1,21 @@
 #' @title \code{addMotifSet}
 #'
-#' @description \code{addMotifSet}Identify motifs within peakset
+#' @description \code{addMotifSet} Identify motifs within your peakset.
 #'
-#' @param SE_Object your MOCHA SummarizedExperiment. Requires Genome
-#'   AnnotationDbi object within the metadata added by getSampleTileMatrix
-#' @param pwms a pwms object for the motif database. Either PFMatrix,
-#'   PFMatrixList, PWMatrix, or PWMatrixLis'
-#' @param w the width for motifmatchr
-#' @param returnObj if TRUE, return the modified SE_Object with motif set added
-#'   to metadata (default). If FALSE, return the motifs from motifmatchr.
-#' @param motifSetName name of the motifList in the SE_object's metadata if
-#'   returnObj=TRUE. Default is 'Motifs'.
+#' @param SampleTileMatrix A SummarizedExperiment, specifically the output of
+#'   getSampleTileMatrix
+#' @param motifPWMs A pwms object for the motif database. Either PFMatrix,
+#'   PFMatrixList, PWMatrix, or PWMatrixList
+#' @param genome BSgenome object, DNAStringSet, or FaFile, or short string
+#'   signifying genome build recognized by [BSgenome::getBSgenome()]
+#' @param w Parameter for motifmatchr controlling size in basepairs of window for filtration.
+#'   Default is 7.
+#' @param returnSTM If TRUE, return the modified SampleTileMatrix with motif set
+#'   added to metadata (default). If FALSE, return just the motifs from motifmatchr.
+#' @param motifSetName Name to give motifList in the SampleTileMatrix's metadata
+#'   if `returnSTM=TRUE`. Default is 'Motifs'.
 #'
-#' @return the modified SE_Object with motifs added to the metadata
+#' @return the modified SampleTileMatrix with motifs added to the metadata
 #'
 #' @importFrom magrittr %>%
 #'
@@ -22,29 +25,39 @@
 #' # included with ArchR installation
 #' data(human_pwms_v2)
 #' SE_with_motifs <- addMotifSet(
-#'   SE_Object,
-#'   pwms = human_pwms_v2,
-#'   returnObj = TRUE, motifSetName = "Motifs", w = 7
+#'   SampleTileMatrix,
+#'   motifPWMs = human_pwms_v2,
+#'   returnSTM = TRUE, motifSetName = "Motifs", w = 7
 #' )
 #' }
 #'
 #' @export
-
-addMotifSet <- function(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName = "Motifs") {
+#'
+addMotifSet <- function(SampleTileMatrix, 
+                        motifPWMs, 
+                        genome = NULL,
+                        w = 7, 
+                        returnSTM = TRUE, 
+                        motifSetName = "Motifs") {
   if (!requireNamespace("motifmatchr", quietly = TRUE)) {
     stop(
       "Package 'motifmatchr' is required for addMotifSet. ",
       "Please install 'motifmatchr' to proceed."
     )
   }
-  TotalPeakSet <- SummarizedExperiment::rowRanges(SE_Object)
-  genome <- S4Vectors::metadata(SE_Object)$Genome
+  TotalPeakSet <- SummarizedExperiment::rowRanges(SampleTileMatrix)
+  
+  if (is.null(genome)) {
+    warning("Genome not provided - looking for genome in metadata of the ",
+            "provided SampleTileMatrix")
+    genome <- S4Vectors::metadata(SampleTileMatrix)$Genome
+  }
   motif_ix <- motifmatchr::matchMotifs(
-    pwms = pwms,
-    TotalPeakSet,
+    pwms = motifPWMs,
+    subject = TotalPeakSet,
     genome = genome,
-    out = "positions", w = w
-  )
+    out = "positions", w = w)
+
   . <- NULL
   names(motif_ix) <- sub("_D_.*|_I_.*", "", names(motif_ix)) %>%
     sub("_I$|_D$", "", .) %>%
@@ -54,9 +67,11 @@ addMotifSet <- function(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName =
   motifList <- list(motif_ix)
   names(motifList) <- motifSetName
 
-  if (returnObj) {
-    S4Vectors::metadata(SE_Object) <- append(S4Vectors::metadata(SE_Object), motifList)
-    return(SE_Object)
+  if (returnSTM) {
+    S4Vectors::metadata(SampleTileMatrix) <- append(
+      S4Vectors::metadata(SampleTileMatrix), motifList
+    )
+    return(SampleTileMatrix)
   } else {
     return(motif_ix)
   }

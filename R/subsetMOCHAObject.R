@@ -31,11 +31,11 @@ subsetMOCHAObject <- function(Object,
   if (class(Object)[1] == "MultiAssayExperiment") {
     sampleData <- MultiAssayExperiment::colData(Object)
 
-    if (!(subsetBy %in% colnames(sampleData)) & tolower(subsetBy) != "celltypes") {
+    if (!(subsetBy %in% colnames(sampleData)) & !grepl('celltype', tolower(subsetBy))) {
       stop("Error: subsetBy must either be a column name within colData(Objects), or 'celltype'.")
     }
 
-    if ((subsetBy %in% colnames(sampleData)) & tolower(subsetBy) == "celltypes") {
+    if ((subsetBy %in% colnames(sampleData)) & grepl('celltype', tolower(subsetBy))) {
       if (verbose) {
         warning("subsetBy is set to CellTypes, but that is also a column name within the Sample metadata. The object will be filtered by cell type annotation, not by sample metadata.")
       }
@@ -43,7 +43,7 @@ subsetMOCHAObject <- function(Object,
 
     # To subset by cell type, first we have to verify that all cell type names were found within the  object.
     # then we simply do a simple subsetting process, like you would with a list.
-    if (tolower(subsetBy) == "celltypes") {
+    if (grepl('celltype', tolower(subsetBy))) {
       if (!all(groupList %in% names(Object))) {
         stop("Error: groupList includes celltypes not found within Object.")
       }
@@ -57,7 +57,7 @@ subsetMOCHAObject <- function(Object,
 
     # To subset by cell type, first we have to verify that all cell type names were found within the  object.
     # then we simply do a simple subsetting process, like you would with a list.
-    if (tolower(subsetBy) == "celltypes") {
+    if (grepl('celltype', tolower(subsetBy))) {
       if (!all(groupList %in% names(SummarizedExperiment::assays(Object)))) {
         stop("Error: groupList includes celltypes not found within Object.")
       }

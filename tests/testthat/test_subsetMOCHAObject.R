@@ -1,5 +1,4 @@
 test_that("We can subset a tileResults object by celltypes", {
-  
   capture.output(
     obj <- subsetMOCHAObject(
       MOCHA:::testTileResultsMultisample,
@@ -7,9 +6,10 @@ test_that("We can subset a tileResults object by celltypes", {
       groupList = c("C3"),
       na.rm = TRUE,
       subsetPeaks = FALSE,
-      verbose = FALSE)
+      verbose = FALSE
+    )
   )
-   
+
   expect_snapshot_output(
     obj,
     variant = "tileResults"
@@ -17,7 +17,6 @@ test_that("We can subset a tileResults object by celltypes", {
 })
 
 test_that("We can subset a sampleTileMatrix object by celltypes", {
-  
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
       MOCHA:::testTileResultsMultisample,
@@ -25,7 +24,7 @@ test_that("We can subset a sampleTileMatrix object by celltypes", {
       threshold = 0
     )
   )
-  
+
   capture.output(
     obj <- subsetMOCHAObject(
       SampleTileMatrix,
@@ -33,9 +32,10 @@ test_that("We can subset a sampleTileMatrix object by celltypes", {
       groupList = c("C3"),
       na.rm = TRUE,
       subsetPeaks = FALSE,
-      verbose = FALSE)
+      verbose = FALSE
+    )
   )
-   
+
   expect_snapshot_output(
     obj,
     variant = "sampleTileMatrix"
@@ -44,7 +44,6 @@ test_that("We can subset a sampleTileMatrix object by celltypes", {
 
 
 test_that("We can subset a sampleTileMatrix object - and peaks - by celltypes", {
-  
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
       MOCHA:::testTileResultsMultisample,
@@ -52,7 +51,7 @@ test_that("We can subset a sampleTileMatrix object - and peaks - by celltypes", 
       threshold = 0
     )
   )
-  
+
   capture.output(
     obj <- subsetMOCHAObject(
       SampleTileMatrix,
@@ -60,9 +59,10 @@ test_that("We can subset a sampleTileMatrix object - and peaks - by celltypes", 
       groupList = c("C3"),
       na.rm = TRUE,
       subsetPeaks = TRUE,
-      verbose = FALSE)
+      verbose = FALSE
+    )
   )
-   
+
   expect_snapshot_output(
     obj,
     variant = "sampleTileMatrix_peaks"

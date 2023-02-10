@@ -24,7 +24,7 @@
 #' @param Org is the genome-wide annotation package for your organism.
 #' @param outDir is a string describing the output directory for coverage files
 #'   and TxDb/Org. Must be a complete directory string. With ArchR input,
-#'   set outDir to NULL to create a directory within the input ArchR project 
+#'   set outDir to NULL to create a directory within the input ArchR project
 #'   directory named MOCHA for saving files.
 #' @param fast Optional, set to TRUE to use a faster but more memory-intensive
 #   algorithm. Default is FALSE.
@@ -54,22 +54,22 @@
 #' \donttest{
 #' # Starting from GRangesList
 #' if (
-#'   require(BSgenome.Hsapiens.UCSC.hg19) && 
-#'   require(TxDb.Hsapiens.UCSC.hg38.refGene) && 
-#'   require(org.Hs.eg.db)
+#'   require(BSgenome.Hsapiens.UCSC.hg19) &&
+#'     require(TxDb.Hsapiens.UCSC.hg38.refGene) &&
+#'     require(org.Hs.eg.db)
 #' ) {
-#' tiles <- MOCHA::callOpenTiles(
-#'   ATACFragments = MOCHA::exampleFragments,
-#'   cellColData = MOCHA::exampleCellColData,
-#'   blackList = MOCHA::exampleBlackList,
-#'   genome = BSgenome.Hsapiens.UCSC.hg19,
-#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'   Org = org.Hs.eg.db,
-#'   outDir = tempdir(),
-#'   cellPopLabel = "Clusters",
-#'   cellPopulations = c("C2", "C5"),
-#'   numCores = 1
-#' )
+#'   tiles <- MOCHA::callOpenTiles(
+#'     ATACFragments = MOCHA::exampleFragments,
+#'     cellColData = MOCHA::exampleCellColData,
+#'     blackList = MOCHA::exampleBlackList,
+#'     genome = BSgenome.Hsapiens.UCSC.hg19,
+#'     TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
+#'     Org = org.Hs.eg.db,
+#'     outDir = tempdir(),
+#'     cellPopLabel = "Clusters",
+#'     cellPopulations = c("C2", "C5"),
+#'     numCores = 1
+#'   )
 #' }
 #' }
 #'
@@ -159,7 +159,7 @@ setGeneric(
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
     stop("Error: cellPopulations not all found in cellColData")
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations]
+    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
   }
 
   # Genome and TxDb annotation info is added to the metadata of
@@ -175,6 +175,14 @@ setGeneric(
         "Calculating study signal on cellColData as the median ",
         "nFrags with the assumption that all cell populations are ",
         "present in cellColData."
+      )
+    }
+    if (!("nFrags" %in% colnames(cellColData))) {
+      stop(
+        "cellColData is missing fragment count information. ",
+        "To calculate study signal, cellColData must contain a column 'nFrags' ",
+        "representing the number of fragments per cell. Alternatively, ",
+        "provide a value for the parameter 'studySignal'."
       )
     }
     studySignal <- stats::median(cellColData$nFrags)
@@ -221,14 +229,21 @@ setGeneric(
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
-
-    # This mclapply will parallelize over each sample within a celltype.
+    
+    # This parLapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    tilesGRangesList <- parallel::mclapply(
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+      cl=cl, 
+      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
+      envir=environment()
+    )
+    tilesGRangesList <- parallel::parLapply(
+      cl,
       1:length(frags),
       function(x) {
-        callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
@@ -236,9 +251,9 @@ setGeneric(
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
-      },
-      mc.cores = numCores
+      }
     )
+    parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- names(frags)
 
@@ -350,8 +365,7 @@ setMethod(
                                  numCores = 30,
                                  verbose = FALSE,
                                  force = FALSE) {
-  
-  if (is.null(outDir)){
+  if (is.null(outDir)) {
     outDir <- paste(ArchR::getOutputDirectory(ATACFragments), "/MOCHA", sep = "")
   }
 
@@ -393,7 +407,7 @@ setMethod(
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations]
+    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
   }
 
   # Genome and TxDb annotation info is added to the metadata of
@@ -410,6 +424,14 @@ setMethod(
         "Calculating study signal on ArchR project as the median ",
         "nFrags with the assumption that all cell populations are ",
         "present in ArchR project."
+      )
+    }
+    if (!("nFrags" %in% colnames(cellColData))) {
+      stop(
+        "cellColData is missing fragment count information. ",
+        "To calculate study signal, cellColData must contain a column 'nFrags' ",
+        "representing the number of fragments per cell. Alternatively, ",
+        "provide a value for the parameter 'studySignal'."
       )
     }
     studySignal <- stats::median(cellColData$nFrags)
@@ -456,13 +478,20 @@ setMethod(
       rm(covFiles)
     }
 
-    # This mclapply will parallelize over each sample within a celltype.
+    # This parLapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    tilesGRangesList <- parallel::mclapply(
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+      cl=cl, 
+      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
+      envir=environment()
+    )
+    tilesGRangesList <- parallel::parLapply(
+      cl,
       1:length(frags),
       function(x) {
-        callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
@@ -470,9 +499,9 @@ setMethod(
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
-      },
-      mc.cores = numCores
+      }
     )
+    parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- names(frags)
 
@@ -562,7 +591,6 @@ callOpenTilesFast <- function(ArchRProj,
                               force = FALSE,
                               studySignal = NULL,
                               verbose = FALSE) {
-
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
@@ -649,6 +677,14 @@ callOpenTilesFast <- function(ArchRProj,
         "present in ArchR project."
       )
     }
+    if (!("nFrags" %in% colnames(cellColData))) {
+      stop(
+        "cellColData is missing fragment count information. ",
+        "To calculate study signal, cellColData must contain a column 'nFrags' ",
+        "representing the number of fragments per cell. Alternatively, ",
+        "provide a value for the parameter 'studySignal'."
+      )
+    }
     studySignal <- stats::median(cellColData$nFrags)
   }
   study_prefactor <- 3668 / studySignal # Training median
@@ -681,22 +717,30 @@ callOpenTilesFast <- function(ArchRProj,
       rm(covFiles)
     }
 
-    # This mclapply will parallelize over each sample within a celltype.
+    # This parLapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    tilesGRangesList <- parallel::mclapply(
-      1:length(popFrags),
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+      cl=cl, 
+      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
+      envir=environment()
+    )
+    tilesGRangesList <- parallel::parLapply(
+      cl,
+      1:length(frags),
       function(x) {
-        callTilesBySample(
+        MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
           totalFrags = normalization_factors[x],
-          fragsList = popFrags[[x]],
+          fragsList = frags[[x]],
+          verbose = verbose,
           StudypreFactor = study_prefactor
         )
-      },
-      mc.cores = numCores
+      }
     )
+    parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- sampleNames
 

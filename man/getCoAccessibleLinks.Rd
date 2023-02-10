@@ -8,9 +8,11 @@ getCoAccessibleLinks(
   SampleTileObj,
   cellPopulation = "All",
   regions,
+  chrChunks = 1,
   windowSize = 1 * 10^6,
   numCores = 1,
   ZI = TRUE,
+  approximateTile = FALSE,
   verbose = FALSE
 )
 }
@@ -22,11 +24,16 @@ getCoAccessibleLinks(
 \item{regions}{a GRanges object or vector or strings containing the regions on which to compute co-accessible links. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
 Can be the output from getDifferentialAccessibleTiles.}
 
+\item{chrChunks}{This functions subsets by groups of chromosome, and then parallelizes within each group of chromosomes when running correlations. This method keeps memory
+low. To speed things up on high performing platforms, you can chunk out more than one chromosome at a time. Default is chrChunks = 1, so only one chromosome at a time.}
+
 \item{windowSize}{the size of the window, in basepairs, around each input region to search for co-accessible links}
 
 \item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
 
 \item{ZI}{boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.}
+
+\item{approximateTile}{If set to TRUE, it will use all tiles that overlap with the regions given, instead of finding an exact match to the regions variable. Default is FALSE.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
