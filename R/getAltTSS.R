@@ -1,7 +1,7 @@
-#' @title \code{getAltTSS} Annotate Peaks falling in TSS Sites, and identify
-#'   alternatively regulated TSSs for each gene.
+#' @title \code{getAltTSS} Annotate Peaks falling in Transcription Start Sites
+#'   (TSS) and identify alternatively regulated TSSs for each gene.
 #'
-#' @description \code{getAltTSS} Pulls out all peaks that fall in TSS sites,
+#' @description \code{getAltTSS} Pulls out all peaks that fall in TSS,
 #'   annotates them with the name of gene, and identifies genes that have
 #'   evidence for alternatively regulated TSSs, including both type i (only some
 #'   of the open TSSs for a gene are significantly more (or less) accessible),
@@ -15,7 +15,7 @@
 #'   data.frame or data.table version of a GRanges object. If you want
 #'   alternatively regulated TSSs, the object must include a column names 'FDR',
 #'   and 'Log2FC_C', which is standard for MOCHA differentials.
-#' @param returnAllTSS Flag to return all TSS sites with DAPs measurements,
+#' @param returnAllTSS Flag to return all TSSs with DAPs measurements,
 #'   without filtering for alternative TSS usage. If multiple TSSs fall within
 #'   the same tile, then that tile will be repeated for each TSS.
 #' @param nuancedTSS True/False flag to determine if alternative TSS genes
@@ -28,7 +28,7 @@
 #' @param threshold FDR Threshold for determining significant vs non-significant
 #'   changes in accessibility. Following MOCHA's standards, default is 0.2.
 #'
-#' @return tpeaks A GRanges containing annotated peaks falling in TSS sites.
+#' @return tpeaks A GRanges containing annotated peaks falling in TSS
 #'
 #' @export
 #'
@@ -55,33 +55,33 @@ getAltTSS <- function(completeDAPs,
     )
   }
 
-  tss1 <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ("gene")))
-
-  names(tss1) <- AnnotationDbi::mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
-
-  allT <- IRanges::stack(tss1) %>%
-    GenomicRanges::trim(.) %>%
-    GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
-    plyranges::mutate(exactTSS = start(.)) %>%
-    plyranges::filter(!duplicated(exactTSS)) %>%
-    plyranges::anchor_3p(.) %>%
-    plyranges::stretch(., extend = 125) %>%
-    GenomicRanges::trim()
-
-  tpeaks <- plyranges::join_overlap_intersect(allT, DAP_GRanges)
-
-  if (returnAllTSS) {
-    return(tpeaks)
-  }
-
   if (!all(
-    colnames(GenomicRanges::mcols(DAP_GRanges)) %in% c("FDR", "Log2FC_C")
+    c("FDR", "Log2FC_C") %in% colnames(GenomicRanges::mcols(DAP_GRanges))
   )) {
     stop(
       "GRanges input does not include columns for FDR and Log2FC_C, so ",
       "alternatively regulated TSSs cannot be identified. Please provide an",
       " object with those columns for filtering."
     )
+  }
+
+  tss1 <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ("gene")))
+
+  names(tss1) <- AnnotationDbi::mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
+
+  allT <- suppressWarnings(IRanges::stack(tss1) %>%
+    GenomicRanges::trim(.) %>%
+    GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
+    plyranges::mutate(exactTSS = start(.)) %>%
+    plyranges::filter(!duplicated(exactTSS)) %>%
+    plyranges::anchor_3p(.) %>%
+    plyranges::stretch(., extend = 125) %>%
+    GenomicRanges::trim())
+
+  tpeaks <- plyranges::join_overlap_intersect(allT, DAP_GRanges)
+
+  if (returnAllTSS) {
+    return(tpeaks)
   }
 
   # We want to select all the genes that have multiple TSSs (duplicated(name))
@@ -105,19 +105,25 @@ getAltTSS <- function(completeDAPs,
     sort()
 
   if (nuancedTSS) {
-    nuancedGenes <- split(altTSS, as.character(altTSS$name)) %>%
-      parallel::mclapply(., function(x) {
-        tmp <- IRanges::gaps(x) %>%
-          filter(
-            seqnames == GenomeInfoDb::seqnames(x) &
-              strand == GenomicRanges::strand(x)
-          ) %>%
-          IRanges::width(.)
-        ifelse(length(tmp) == 3 & tmp[2] < nuancedTSSGap, FALSE, TRUE)
-      }) %>%
-      unlist()
+    suppressWarnings(
+      nuancedGenes <- split(altTSS, as.character(altTSS$name)) %>%
+        lapply(., function(x) {
+          tmp <- IRanges::gaps(x) %>%
+            plyranges::filter(
+              seqnames == GenomeInfoDb::seqnames(x) &
+                strand == GenomicRanges::strand(x)
+            ) %>%
+            IRanges::width(.)
 
-    altTSS <- altTSS %>% filter(name %in% names(nuancedGenes)[nuancedGenes])
+          ifelse(length(tmp) == 3 & tmp[2] < nuancedTSSGap, FALSE, TRUE)
+        }) %>%
+        unlist()
+    )
+
+    altTSS <- plyranges::filter(
+      altTSS,
+      name %in% names(nuancedGenes)[nuancedGenes]
+    )
   }
   return(altTSS)
 }
