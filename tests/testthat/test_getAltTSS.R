@@ -65,7 +65,7 @@ test_that("getAltTSS works with different input formats", {
   
 })
 
-test_that("getAltTSS works with returnAllTSS=TRUE", {
+test_that("getAltTSS works with returnAllTSS = TRUE", {
   
   testPeakDT <- MOCHA:::testPeaks
   set.seed(2023)
