@@ -161,7 +161,7 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   substr(x, 1L, nchar(.ORGDB_PREFIX)) == .ORGDB_PREFIX
 }
 
-#' @title \code{getAnnotationDb} Loads and attaches an installed TxDb or 
+#' @title \code{getAnnotationDbFromInstalledPkgname} Loads and attaches an installed TxDb or 
 #'   OrgDb-class Annotation database package.
 #'
 #' @description See \link[BSgenome]{getBSgenome}
