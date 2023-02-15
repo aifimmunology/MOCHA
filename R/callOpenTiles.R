@@ -1,4 +1,5 @@
-#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an ArchR Project.
+#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an 
+#'   ArchR Project.
 #'
 #' @description \code{callOpenTiles} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
@@ -13,19 +14,32 @@
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
-#' @param cellColData A DataFrame containing cell-level metadata and a 'Sample' column
+#' @param cellColData A DataFrame containing cell-level metadata and a 'Sample' 
+#'   column
 #' @param blackList A GRanges of blacklisted regions
-#' @param genome A valid BSGenome object describing the genome of your organism
-#' @param studySignal The median signal (number of fragments) in your study. If not
-#'   set, this will be calculated using the input ArchR project but relies on
-#'   the assumption that the ArchR project encompasses your whole study (i.e. is
-#'   not a subset).
-#' @param TxDb is an AnnotationDbi object with transcript info for the organism.
-#' @param Org is the genome-wide annotation package for your organism.
-#' @param outDir is a string describing the output directory for coverage files
-#'   and TxDb/Org. Must be a complete directory string. With ArchR input,
-#'   set outDir to NULL to create a directory within the input ArchR project
-#'   directory named MOCHA for saving files.
+#' @param genome A BSgenome object, or the full name of an installed 
+#'   BSgenome data package, or a short string specifying the name of an NCBI 
+#'   assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38", 
+#'   "bosTau9", "galGal6", "ce11", etc...). The supplied short string must refer
+#'   unambiguously to an installed BSgenome data package. See 
+#'   \link[BSgenome]{getBSgenome}.
+#' @param studySignal The median signal (number of fragments) in your study. If 
+#'   not set, this will be calculated using the input ArchR project but relies 
+#'   on the assumption that the ArchR project encompasses your whole study (i.e. 
+#'   is not a subset).
+#' @param TxDb The exact package name of a TxDb-class transcript annotation 
+#'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
+#'   must be installed. See 
+#'   \href{https://bioconductor.org/packages/release/data/annotation/}{
+#'   Bioconductor AnnotationData Packages}.
+#' @param OrgDb The exact package name of a OrgDb-class genome wide annotation 
+#'   package for your organism (e.g. "org.Hs.eg.db"). This must be installed. 
+#'   See \href{https://bioconductor.org/packages/release/data/annotation/}{
+#'   Bioconductor AnnotationData Packages}
+#' @param outDir is a string describing the output directory for coverage files.
+#'   Must be a complete directory string. With ArchR input, set outDir to NULL 
+#'   to create a directory within the input ArchR project directory named MOCHA
+#'   for saving files.
 #' @param fast Optional, set to TRUE to use a faster but more memory-intensive
 #   algorithm. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
@@ -40,31 +54,29 @@
 #' @examples
 #' \dontrun{
 #' # Starting from an ArchR Project:
-#' library(TxDb.Hsapiens.UCSC.hg38.refGene)
-#' library(org.Hs.eg.db)
 #' tileResults <- MOCHA::callOpenTiles(
 #'   ArchRProj = myArchRProj,
 #'   cellPopLabel = "celltype_labeling",
 #'   cellPopulations = "CD4",
-#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'   Org = org.Hs.eg.db,
+#'   TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+#'   OrgDb = "org.Hs.eg.db",
 #'   numCores = 1
 #' )
 #' }
 #' \donttest{
 #' # Starting from GRangesList
 #' if (
-#'   require(BSgenome.Hsapiens.UCSC.hg19) &&
-#'     require(TxDb.Hsapiens.UCSC.hg38.refGene) &&
-#'     require(org.Hs.eg.db)
+#'   requireNamespace(BSgenome.Hsapiens.UCSC.hg19) &&
+#'     requireNamespace(TxDb.Hsapiens.UCSC.hg38.refGene) &&
+#'     requireNamespace(org.Hs.eg.db)
 #' ) {
 #'   tiles <- MOCHA::callOpenTiles(
 #'     ATACFragments = MOCHA::exampleFragments,
 #'     cellColData = MOCHA::exampleCellColData,
 #'     blackList = MOCHA::exampleBlackList,
-#'     genome = BSgenome.Hsapiens.UCSC.hg19,
-#'     TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'     Org = org.Hs.eg.db,
+#'     genome = "BSgenome.Hsapiens.UCSC.hg19",
+#'     TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+#'     OrgDb = "org.Hs.eg.db",
 #'     outDir = tempdir(),
 #'     cellPopLabel = "Clusters",
 #'     cellPopulations = c("C2", "C5"),
@@ -86,7 +98,7 @@ setGeneric(
            cellPopulations = "ALL",
            studySignal = NULL,
            TxDb,
-           Org,
+           OrgDb,
            outDir,
            fast = FALSE,
            numCores = 30,
@@ -97,17 +109,6 @@ setGeneric(
   signature = "ATACFragments"
 )
 
-# @title \code{callOpenTiles} Perform peak-calling on a set of scATAC fragments.
-#
-# @description \code{callOpenTiles} is the main peak-calling function in MOCHA
-#   that serves as a wrapper function to call peaks provided a set of fragment
-#   files and an ArchR Project for meta-data purposes
-#
-# @inheritParams callOpenTiles
-# @param cellColData A dataframe containing cell-level metadata and a 'Sample' column
-# @param blackList A GRanges of blacklisted regions
-# @param genome A valid BSGenome object describing the genome of your organism
-#
 
 .callOpenTiles_default <- function(ATACFragments,
                                    cellColData,
@@ -117,11 +118,19 @@ setGeneric(
                                    cellPopulations = "ALL",
                                    studySignal = NULL,
                                    TxDb,
-                                   Org,
+                                   OrgDb,
                                    outDir,
                                    numCores = 30,
                                    verbose = FALSE,
                                    force = FALSE) {
+  
+  # Validate and load databases
+  genome <- BSgenome::getBSgenome(genome)
+  TxDbName <- TxDb
+  TxDb <- getAnnotationDbFromInstalledPkgname(dbName=TxDb, type="TxDb")
+  OrgDbName <- OrgDb
+  OrgDb <- getAnnotationDbFromInstalledPkgname(dbName=OrgDb, type="OrgDb")
+  
   validGRanges <- sapply(ATACFragments, function(obj) {
     methods::is(obj, "GRanges")
   })
@@ -161,11 +170,6 @@ setGeneric(
   } else {
     allCellCounts <- allCellCounts[, cellPopulations, drop=F]
   }
-
-  # Genome and TxDb annotation info is added to the metadata of
-  # the final MultiAssayExperiment for downstream analysis
-  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
-  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
 
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
@@ -312,14 +316,15 @@ setGeneric(
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
-
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
-      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
-      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
+      "Genome" = metadata(genome)$genome,
+      "TxDb" = list(pkgname = TxDbName, metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata(OrgDb)),
+      "Directory" = outDir
     )
   )
 
@@ -342,15 +347,6 @@ setMethod(
   .callOpenTiles_default
 )
 
-# @title \code{callOpenTiles} Perform peak-calling on an ArchR Project
-#
-# @description \code{callOpenTiles} is the main peak-calling function in MOCHA
-#   that serves as a wrapper function to call peaks provided a set of fragment
-#   files and an ArchR Project for meta-data purposes
-#
-# @inheritParams callOpenTiles
-# @param fast Optional, set to TRUE to use a faster but more memory-intensive
-#   algorithm. Default is FALSE.
 
 #' @rdname callOpenTiles-methods
 #' @aliases callOpenTiles,ArchRProject-method
@@ -359,12 +355,22 @@ setMethod(
                                  cellPopulations = "ALL",
                                  studySignal = NULL,
                                  TxDb,
-                                 Org,
+                                 OrgDb,
                                  outDir = NULL,
                                  fast = FALSE,
                                  numCores = 30,
                                  verbose = FALSE,
                                  force = FALSE) {
+
+  # Save names for use in metadata
+  TxDbName <- TxDb
+  OrgDbName <- OrgDb
+  
+  # Validate and load databases
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
+  TxDb <- getAnnotationDbFromInstalledPkgname(dbName=TxDb, type="TxDb")
+  OrgDb <- getAnnotationDbFromInstalledPkgname(dbName=OrgDb, type="OrgDb")
+  
   if (is.null(outDir)) {
     outDir <- paste(ArchR::getOutputDirectory(ATACFragments), "/MOCHA", sep = "")
   }
@@ -382,7 +388,7 @@ setMethod(
       cellPopLabel,
       cellPopulations,
       TxDb,
-      Org,
+      OrgDb,
       outDir,
       numCores,
       force,
@@ -409,12 +415,6 @@ setMethod(
   } else {
     allCellCounts <- allCellCounts[, cellPopulations, drop=F]
   }
-
-  # Genome and TxDb annotation info is added to the metadata of
-  # the final MultiAssayExperiment for downstream analysis
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
-  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
-  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
 
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
@@ -560,14 +560,15 @@ setMethod(
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
-
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
-      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
-      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
+      "Genome" = metadata(genome)$genome,
+      "TxDb" = list(pkgname = TxDbName, metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata(OrgDb)),
+      "Directory" = outDir
     )
   )
 
@@ -585,17 +586,12 @@ callOpenTilesFast <- function(ArchRProj,
                               cellPopLabel,
                               cellPopulations = "ALL",
                               TxDb = NULL,
-                              Org = NULL,
+                              OrgDb = NULL,
                               outDir = NULL,
                               numCores = 30,
                               force = FALSE,
                               studySignal = NULL,
                               verbose = FALSE) {
-  # Genome and TxDb annotation info is added to the metadata of
-  # the final MultiAssayExperiment for downstream analysis
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
-  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
-  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
 
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
@@ -766,14 +762,16 @@ callOpenTilesFast <- function(ArchRProj,
   )
 
   # Add experimentList to MultiAssayExperiment
-  names(experimentList) <- names(splitFrags)
-
+  names(experimentList) <- cellPopulations
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
     metadata = list(
-      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
-      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
+      "CellCounts" = allCellCounts,
+      "Genome" = metadata(genome)$genome,
+      "TxDb" = list(pkgname = TxDbName, metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata(OrgDb)),
+      "Directory" = outDir
     )
   )
 

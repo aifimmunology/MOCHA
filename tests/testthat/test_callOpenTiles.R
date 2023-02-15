@@ -12,8 +12,8 @@ if (
         type = "message"
       )
 
-      TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
-      Org <- org.Hs.eg.db
+      TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
+      Org <- "org.Hs.eg.db"
       capture.output(
         tiles <- MOCHA::callOpenTiles(
           ATACFragments = testProj,
