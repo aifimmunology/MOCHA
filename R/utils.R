@@ -163,11 +163,14 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
 
 #' @title \code{getAnnotationDb} Loads and attaches an installed TxDb or 
 #'   OrgDb-class Annotation database package.
+#'
+#' @description See \link[BSgenome]{getBSgenome}
 #' 
 #' @param dbName Exact name of installed annotation data package.
 #' @param type Expected class of the annotation data package, must be 
 #'   either "OrgDb" or "TxDb".
 #' @return the loaded Annotation database object.
+#' @noRd
 getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   
   if (!is(dbName, "character")){
