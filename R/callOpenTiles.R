@@ -162,13 +162,29 @@ setGeneric(
 
   # Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-
+  
+  # Save the fragment number per population-sample
+  cellPopList <- sapply(names(ATACFragments), function(x){
+    unlist(stringr::str_split(x, "#"))[1]
+  })
+  sampleList <- sapply(names(ATACFragments), function(x){
+    sample <- unlist(stringr::str_split(x, "#"))[2]
+    unlist(stringr::str_split(sample, "__"))[1]
+  })
+  nFragsList <- sapply(ATACFragments, function(x){
+    length(x)
+  })
+  allFragCounts <- data.frame(cellPopList, sampleList, nFragsList)
+  colnames(allFragCounts) <- c(cellPopLabel, "Sample", "nFrags")
+  
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
-    stop("Error: cellPopulations not all found in cellColData")
+    stop("Error: cellPopulations not all found in ArchR project.")
   } else {
     allCellCounts <- allCellCounts[, cellPopulations, drop=F]
+    allFragCounts <- allFragCounts[
+      allFragCounts[[cellPopLabel]] %in% cellPopulations,]
   }
 
   # Add prefactor multiplier across datasets
@@ -321,9 +337,10 @@ setGeneric(
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
+      "FragCounts" = allFragCounts,
       "Genome" = metadata(genome)$genome,
-      "TxDb" = list(pkgname = TxDbName, metadata(TxDb)),
-      "OrgDb" = list(pkgname = OrgDbName, metadata(OrgDb)),
+      "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
       "Directory" = outDir
     )
   )
@@ -404,16 +421,23 @@ setMethod(
 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
-
+  
   # Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-
+  
+  # Save the fragment number per population-sample
+  allFragCounts <- as.data.frame(cellColData) %>% 
+    dplyr::group_by(Clusters, Sample) %>% 
+    dplyr::summarize(nFrags=sum(nFrags), .groups='drop')
+  allFragCounts <- as.data.frame(allFragCounts)
+  
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   } else {
     allCellCounts <- allCellCounts[, cellPopulations, drop=F]
+    allFragCounts <- allFragCounts[allFragCounts[[cellPopLabel]] %in% cellPopulations,]
   }
 
   # Add prefactor multiplier across datasets
@@ -565,9 +589,10 @@ setMethod(
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
+      "FragCounts" = allFragCounts,
       "Genome" = metadata(genome)$genome,
-      "TxDb" = list(pkgname = TxDbName, metadata(TxDb)),
-      "OrgDb" = list(pkgname = OrgDbName, metadata(OrgDb)),
+      "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
       "Directory" = outDir
     )
   )
@@ -768,9 +793,10 @@ callOpenTilesFast <- function(ArchRProj,
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
+      "FragCounts" = allFragCounts,
       "Genome" = metadata(genome)$genome,
-      "TxDb" = list(pkgname = TxDbName, metadata(TxDb)),
-      "OrgDb" = list(pkgname = OrgDbName, metadata(OrgDb)),
+      "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
       "Directory" = outDir
     )
   )
