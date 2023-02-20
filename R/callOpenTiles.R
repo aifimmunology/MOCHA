@@ -174,8 +174,17 @@ setGeneric(
   nFragsList <- sapply(ATACFragments, function(x){
     length(x)
   })
-  allFragCounts <- data.frame(cellPopList, sampleList, nFragsList)
-  colnames(allFragCounts) <- c(cellPopLabel, "Sample", "nFrags")
+  allFragmentCounts <- data.frame(cellPopList, sampleList, nFragsList)
+  colnames(allFragmentCounts) <- c(cellPopLabel, "Sample", "nFrags")
+
+  allFragmentCounts <- tidyr::pivot_wider(
+    allFragmentCounts,
+    names_from=all_of(cellPopLabel),
+    values_from="nFrags"
+  )
+  allFragmentCounts <- as.data.frame(allFragmentCounts)
+  rownames(allFragmentCounts) <- allFragmentCounts$Sample
+  allFragmentCounts <- subset(allFragmentCounts, select=-Sample)
   
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
@@ -183,8 +192,7 @@ setGeneric(
     stop("Error: cellPopulations not all found in ArchR project.")
   } else {
     allCellCounts <- allCellCounts[, cellPopulations, drop=F]
-    allFragCounts <- allFragCounts[
-      allFragCounts[[cellPopLabel]] %in% cellPopulations,]
+    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop=F]
   }
 
   # Add prefactor multiplier across datasets
@@ -337,7 +345,7 @@ setGeneric(
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
-      "FragCounts" = allFragCounts,
+      "FragmentCounts" = allFragmentCounts,
       "Genome" = metadata(genome)$genome,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
@@ -426,10 +434,13 @@ setMethod(
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
   
   # Save the fragment number per population-sample
-  allFragCounts <- as.data.frame(cellColData) %>% 
+  allFragmentCounts <- as.data.frame(cellColData) %>% 
     dplyr::group_by(Clusters, Sample) %>% 
-    dplyr::summarize(nFrags=sum(nFrags), .groups='drop')
-  allFragCounts <- as.data.frame(allFragCounts)
+    dplyr::summarize(nFrags=sum(nFrags), .groups='drop') %>%
+    tidyr::pivot_wider(names_from=all_of(cellPopLabel), values_from="nFrags")
+  allFragmentCounts <- as.data.frame(allFragmentCounts)
+  rownames(allFragmentCounts) <- allFragmentCounts$Sample
+  allFragmentCounts <- subset(allFragmentCounts, select=-Sample)
   
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
@@ -437,7 +448,7 @@ setMethod(
     stop("Error: cellPopulations not all found in ArchR project.")
   } else {
     allCellCounts <- allCellCounts[, cellPopulations, drop=F]
-    allFragCounts <- allFragCounts[allFragCounts[[cellPopLabel]] %in% cellPopulations,]
+    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop=F]
   }
 
   # Add prefactor multiplier across datasets
@@ -589,7 +600,7 @@ setMethod(
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
-      "FragCounts" = allFragCounts,
+      "FragmentCounts" = allFragmentCounts,
       "Genome" = metadata(genome)$genome,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
@@ -617,10 +628,34 @@ callOpenTilesFast <- function(ArchRProj,
                               force = FALSE,
                               studySignal = NULL,
                               verbose = FALSE) {
-
+  
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
   blackList <- ArchR::getBlacklist(ArchRProj)
+  
+  # Get cell populations
+  cellTypeLabelList <- cellColData[, cellPopLabel]
+  
+  # Save the cell number per population-sample in the metadata
+  allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
+  
+  # Save the fragment number per population-sample
+  allFragmentCounts <- as.data.frame(cellColData) %>% 
+    dplyr::group_by(Clusters, Sample) %>% 
+    dplyr::summarize(nFrags=sum(nFrags), .groups='drop') %>%
+    tidyr::pivot_wider(names_from=all_of(cellPopLabel), values_from="nFrags")
+  allFragmentCounts <- as.data.frame(allFragmentCounts)
+  rownames(allFragmentCounts) <- allFragmentCounts$Sample
+  allFragmentCounts <- subset(allFragmentCounts, select=-Sample)
+  
+  if (all(cellPopulations == "ALL")) {
+    cellPopulations <- colnames(allCellCounts)
+  } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
+    stop("Error: cellPopulations not all found in ArchR project.")
+  } else {
+    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
+    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop=F]
+  }
 
   # Get frags grouped by cell population and sample
   # This will also validate the input cellPopulations
@@ -793,7 +828,7 @@ callOpenTilesFast <- function(ArchRProj,
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
-      "FragCounts" = allFragCounts,
+      "FragmentCounts" = allFragmentCounts,
       "Genome" = metadata(genome)$genome,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
