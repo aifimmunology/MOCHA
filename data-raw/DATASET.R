@@ -8,8 +8,8 @@ library(org.Hs.eg.db)
 ArchR::getTestProject()
 testProj <- ArchR::loadArchRProject("PBMCSmall")
 
-TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
-Org <- org.Hs.eg.db
+TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
+Org <- "org.Hs.eg.db"
 
 testTileResults <- MOCHA::callOpenTiles(
   ATACFragments = testProj,
@@ -54,6 +54,11 @@ addArchRThreads(threads = 2)
 inputFiles <- ArchR::getTutorialData("Hematopoiesis")
 addArchRGenome("hg19")
 
+# Uncomment if HemeFragments is already downloaded
+# inputFiles <- c(scATAC_BMMC_R1="HemeFragments/scATAC_BMMC_R1.fragments.tsv.gz", 
+#                 scATAC_PBMC_R1="HemeFragments/scATAC_PBMC_R1.fragments.tsv.gz", 
+#                 scATAC_CD34_BMMC_R1="HemeFragments/scATAC_CD34_BMMC_R1.fragments.tsv.gz")
+
 ArrowFiles <- ArchR::createArrowFiles(
   inputFiles = inputFiles,
   sampleNames = names(inputFiles),
@@ -73,7 +78,7 @@ doubScores <- ArchR::addDoubletScores(
 proj <- ArchR::ArchRProject(
   ArrowFiles = ArrowFiles,
   outputDirectory = "HemeTutorial",
-  copyArrows = TRUE # This is recommened so that you maintain an unaltered copy for later usage.
+  copyArrows = TRUE # This is recommended so that you maintain an unaltered copy for later usage.
 )
 proj <- ArchR::filterDoublets(ArchRProj = proj)
 
@@ -84,6 +89,9 @@ proj <- ArchR::addClusters(input = proj, reducedDims = "IterativeLSI")
 proj <- ArchR::addImputeWeights(proj)
 
 proj <- ArchR::saveArchRProject(ArchRProj = proj)
+
+# Uncomment for reproducing if HemeTutorial already exists
+# proj <- ArchR::loadArchRProject("HemeTutorial")
 
 testTileResultsMultisample <- MOCHA::callOpenTiles(
   ATACFragments = proj,
@@ -143,8 +151,14 @@ testPeaks <- miniSamplePeaks
 testPosList <- smallPosList
 
 # Uncomment to preserve current versions of test data
+# newmeta1 <- testTileResults@metadata
 # testTileResults <- MOCHA:::testTileResults
+# metadata(testTileResults) <- newmeta1
+# 
+# newmeta2 <- testTileResultsMultisample@metadata
 # testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
+# metadata(testTileResultsMultisample) <- newmeta2
+# 
 # testPeaks <- MOCHA:::testPeaks
 # testPosList <- MOCHA:::testPosList
 
