@@ -4,28 +4,35 @@
 \alias{addMotifSet}
 \title{\code{addMotifSet}}
 \usage{
-addMotifSet(SE_Object, pwms, w = 7, returnObj = TRUE, motifSetName = "Motifs")
+addMotifSet(
+  SampleTileMatrix,
+  motifPWMs,
+  w = 7,
+  returnSTM = TRUE,
+  motifSetName = "Motifs"
+)
 }
 \arguments{
-\item{SE_Object}{your MOCHA SummarizedExperiment. Requires Genome
-AnnotationDbi object within the metadata added by getSampleTileMatrix}
+\item{SampleTileMatrix}{A SummarizedExperiment, specifically the output of
+getSampleTileMatrix}
 
-\item{pwms}{a pwms object for the motif database. Either PFMatrix,
-PFMatrixList, PWMatrix, or PWMatrixLis'}
+\item{motifPWMs}{A pwms object for the motif database. Either PFMatrix,
+PFMatrixList, PWMatrix, or PWMatrixList}
 
-\item{w}{the width for motifmatchr}
+\item{w}{Parameter for motifmatchr controlling size in basepairs of window for filtration.
+Default is 7.}
 
-\item{returnObj}{if TRUE, return the modified SE_Object with motif set added
-to metadata (default). If FALSE, return the motifs from motifmatchr.}
+\item{returnSTM}{If TRUE, return the modified SampleTileMatrix with motif set
+added to metadata (default). If FALSE, return just the motifs from motifmatchr.}
 
-\item{motifSetName}{name of the motifList in the SE_object's metadata if
-returnObj=TRUE. Default is 'Motifs'.}
+\item{motifSetName}{Name to give motifList in the SampleTileMatrix's metadata
+if `returnSTM=TRUE`. Default is 'Motifs'.}
 }
 \value{
-the modified SE_Object with motifs added to the metadata
+the modified SampleTileMatrix with motifs added to the metadata
 }
 \description{
-\code{addMotifSet}Identify motifs within peakset
+\code{addMotifSet} Identify motifs within your peakset.
 }
 \examples{
 \dontrun{
@@ -33,9 +40,9 @@ the modified SE_Object with motifs added to the metadata
 # included with ArchR installation
 data(human_pwms_v2)
 SE_with_motifs <- addMotifSet(
-  SE_Object,
-  pwms = human_pwms_v2,
-  returnObj = TRUE, motifSetName = "Motifs", w = 7
+  SampleTileMatrix,
+  motifPWMs = human_pwms_v2,
+  returnSTM = TRUE, motifSetName = "Motifs", w = 7
 )
 }
 
