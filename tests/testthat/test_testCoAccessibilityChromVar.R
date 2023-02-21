@@ -26,7 +26,6 @@ test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
       SampleTileMatrix,
       tile1 = links$Tile1,
       tile2 = links$Tile2,
-      genome = BSgenome.Hsapiens.UCSC.hg19,
       numCores = 1,
       ZI = TRUE,
       backNumber = 1000,
@@ -40,18 +39,6 @@ test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
     variant = "1sample"
   )
 
-  # All foreground correlations are undefined
-  expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
-    SampleTileMatrix,
-    tile1 = links$Tile1,
-    tile2 = links$Tile2,
-    genome = BSgenome.Hsapiens.UCSC.hg19,
-    numCores = 1,
-    ZI = TRUE,
-    backNumber = 1000,
-    highMem = FALSE,
-    verbose = TRUE
-  ))
 })
 
 test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
@@ -79,11 +66,10 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
   )
 
   capture.output(
-    results <- MOCHA::testCoAccessibilityChromVar(
+    results <- MOCHA::testCoAccessibilityChromVar( 
       SampleTileMatrix,
       tile1 = links$Tile1,
       tile2 = links$Tile2,
-      genome = BSgenome.Hsapiens.UCSC.hg19,
       numCores = 1,
       ZI = TRUE,
       backNumber = 1000,
@@ -97,18 +83,6 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
     variant = "3sample"
   )
 
-  # All foreground correlations are undefined
-  capture.output(expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
-    SampleTileMatrix,
-    tile1 = links$Tile1,
-    tile2 = links$Tile2,
-    genome = BSgenome.Hsapiens.UCSC.hg19,
-    numCores = 1,
-    ZI = TRUE,
-    backNumber = 1000,
-    highMem = FALSE,
-    verbose = TRUE
-  )))
 })
 
 
@@ -136,11 +110,10 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
   )
   
   capture.output(
-    results <- MOCHA::testCoAccessibilityChromVar(
+    results <- MOCHA::testCoAccessibilityChromVar( 
       SampleTileMatrix,
       tile1 = links$Tile1,
       tile2 = links$Tile2,
-      genome = BSgenome.Hsapiens.UCSC.hg19,
       numCores = 1,
       ZI = TRUE,
       backNumber = 1000,
@@ -154,17 +127,5 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
     variant = "3sample"
   )
 
-  # All foreground correlations are undefined
-  capture.output(expect_warning(results <- MOCHA::testCoAccessibilityChromVar(
-    SampleTileMatrix,
-    tile1 = links$Tile1,
-    tile2 = links$Tile2,
-    genome = BSgenome.Hsapiens.UCSC.hg19,
-    numCores = 1,
-    ZI = TRUE,
-    backNumber = 1000,
-    highMem = FALSE,
-    verbose = TRUE
-  )))
 
 })

@@ -10,10 +10,6 @@
 #'   to test (first tile in each pair)
 #' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs
 #'   to test (second tile in each pair)
-#' @param genome A valid BSGenome object describing the genome of your organism.
-#'   Optional. If not provided, will look in the metadata of the
-#'   SampleTileObject for an installation, assuming it was created on the same
-#'   filesystem.
 #' @param backNumber number of ChromVAR-matched background pairs. Default is
 #'   1000.
 #' @param highMem Boolean to control memory usage. Default is FALSE. Only set
@@ -35,7 +31,6 @@
 testCoAccessibilityChromVar <- function(SampleTileMatrix,
                                         tile1,
                                         tile2,
-                                        genome = NULL,
                                         numCores = 1,
                                         ZI = TRUE,
                                         backNumber = 1000,
@@ -47,11 +42,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
     stop("tile1 and tile2 must be the same length.")
   }
   
-  if (is.null(genome)){
-    fullObj <- combineSampleTileMatrix(SampleTileMatrix)
-  } else {
-    fullObj <- combineSampleTileMatrix(SampleTileMatrix, genome)
-  }
+  fullObj <- combineSampleTileMatrix(SampleTileMatrix)
   
   backPeaks <- chromVAR::getBackgroundPeaks(fullObj)
 
@@ -225,10 +216,6 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 #'   to test (first tile in each pair)
 #' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs
 #'   to test (second tile in each pair)
-#' @param genome A valid BSGenome object describing the genome of your organism.
-#'   Optional. If not provided, will look in the metadata of the
-#'   SampleTileObject for an installation, assuming it was created on the same
-#'   filesystem.
 #' @param backNumber number of background pairs. Default is 1000.
 #' @param numCores Optional, the number of cores to use with multiprocessing.
 #'   Default is 1.
@@ -246,7 +233,6 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 testCoAccessibilityRandom <- function(SampleTileMatrix,
                                       tile1,
                                       tile2,
-                                      genome = NULL,
                                       numCores = 1,
                                       ZI = TRUE,
                                       backNumber = 1000,
@@ -257,11 +243,7 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
     stop("tile1 and tile2 must be the same length.")
   }
 
-  if (is.null(genome)){
-    fullObj <- combineSampleTileMatrix(SampleTileMatrix)
-  } else {
-    fullObj <- combineSampleTileMatrix(SampleTileMatrix, genome)
-  }
+  fullObj <- combineSampleTileMatrix(SampleTileMatrix)
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
@@ -418,15 +400,11 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 #'
 #' @description \code{combineSampleTileMatrix} combines all celltypes in a
 #'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
-#'   across all cell types and samples. It also annotates GC bias using
+#'   across all cell types and samples, annotating GC bias using
 #'   chromVAR.
 #'
 #' @param SampleTileMatrix The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
-#' @param genome A valid BSGenome object describing the genome of your organism.
-#'   Optional. If not provided, will look in the metadata of the
-#'   SampleTileObject for an installation, assuming it was created on the same
-#'   filesystem.
 #' @param NAToZero Set NA values in the sample-tile matrix to zero
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @return TileCorr A data.table correlation matrix
@@ -434,9 +412,11 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 #'
 #' @export
 combineSampleTileMatrix <- function(SampleTileMatrix,
-                                    genome = NULL,
                                     NAtoZero = TRUE, 
                                     verbose = FALSE) {
+  
+  genome <- S4Vectors::metadata(SampleTileMatrix)$Genome
+  genome <- BSgenome::getBSgenome(genome)
 
   Sample <- Freq <- . <- NULL
   # Extract all the Sample-Tile Matrices for each cell type
@@ -490,20 +470,7 @@ combineSampleTileMatrix <- function(SampleTileMatrix,
     metadata = S4Vectors::metadata(SampleTileMatrix)
   )
   
-  if (is.null(genome)){ 
-    tryCatch({
-        newObj <- chromVAR::addGCBias(newObj, genome = S4Vectors::metadata(SampleTileMatrix)$Genome)
-    }, error = function(e) {
-      warning("Could not find installation of the BSgenome for your organism as ",
-              "given by `metadata(SampleTileMatrix)$Genome`. Was your ",
-              "SampleTileMatrix created on a different filesystem? If so, ",
-              "manually provide the genome via the `genome` parameter."
-              )
-      stop(e)
-    })
-  } else {
-    newObj <- chromVAR::addGCBias(newObj, genome = genome)
-  }
+  newObj <- chromVAR::addGCBias(newObj, genome = genome)
   
   if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
     naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)

@@ -8,10 +8,7 @@ test_that("combineSampleTileMatrix works on a 3-sample dataset", {
     )
   )
 
-  combinedObj <- MOCHA::combineSampleTileMatrix(
-    STObj,
-    genome = BSgenome.Hsapiens.UCSC.hg19
-  )
+  combinedObj <- MOCHA::combineSampleTileMatrix(STObj)
   
   expect_snapshot_output(
     combinedObj,
@@ -29,10 +26,7 @@ test_that("combineSampleTileMatrix works on a 1-sample dataset", {
     )
   )
 
-  combinedObj <- MOCHA::combineSampleTileMatrix(
-    STObj,
-    genome = BSgenome.Hsapiens.UCSC.hg19
-  )
+  combinedObj <- MOCHA::combineSampleTileMatrix(STObj)
 
   expect_snapshot_output(
     combinedObj,

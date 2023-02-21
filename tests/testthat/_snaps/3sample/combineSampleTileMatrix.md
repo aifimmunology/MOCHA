@@ -2,7 +2,7 @@
 
     class: RangedSummarizedExperiment 
     dim: 22775 6 
-    metadata(5): CellCounts Genome TxDb Org Directory
+    metadata(6): CellCounts FragmentCounts ... OrgDb Directory
     assays(1): counts
     rownames(22775): chr10:100083000-100083499 chr10:100206500-100206999
       ... chrY:23153000-23153499 chrY:2884500-2884999
