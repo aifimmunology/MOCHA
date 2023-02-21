@@ -97,7 +97,4 @@
       29       UPSOURCEDATE                              Wed Sep 15 18:21:59 2021
       
       
-      $Directory
-      [1] "/var/folders/rd/b8f4zr4d56gcx71rn102w3t00000gq/T//RtmpoSs8d3"
-      
 

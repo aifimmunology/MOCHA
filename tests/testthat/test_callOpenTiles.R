@@ -35,6 +35,8 @@ if (
         tiles,
         variant = "ArchR"
       )
+      
+      tiles@metadata$Directory <- NULL # Directory uses tempdir()
       expect_snapshot(
         tiles@metadata,
         variant = "ArchR_metadata"
@@ -67,6 +69,8 @@ if (
       metadata(tiles)$CellCounts,
       variant = "CellCounts"
     )
+    
+    tiles@metadata$Directory <- NULL # Directory uses tempdir()
     expect_snapshot(
       tiles@metadata,
       variant = "list_metadata"
