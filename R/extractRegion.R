@@ -100,13 +100,27 @@ extractRegion <- function(SampleTileObj,
     binnedData <- regionGRanges %>%
       plyranges::tile_ranges(., binSize) %>%
       dplyr::mutate(idx = c(1:length(.)))
+  }else{
+
+    binnedData <- NULL
   }
 
+  cl <- parallel::makeCluster(numCores)
+  parallel::clusterExport(
+      cl=cl,
+      varlist=c("originalCovGRanges","sampleNames", "keepSamples","regionGRanges","sampleSpecific","approxLimit","binnedData"),
+      envir=environment()
+  )
 
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
+    
     originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
-    cellPopSubsampleCov <- parallel::mclapply(subSamples, function(y) {
+
+    cellPopSubsampleCov <- pbapply::pblapply(cl = cl,
+      X = subSamples, 
+      FUN = function(y) {
+
       sampleNames <- names(originalCovGRanges)
       keepSamples <- grepl(paste(y, collapse = "|"), sampleNames)
       subSampleList <- originalCovGRanges[keepSamples]
@@ -151,17 +165,26 @@ extractRegion <- function(SampleTileObj,
 
         unlist(tmpCounts)
       }
-    }, mc.cores = numCores)
+    })
     names(cellPopSubsampleCov) <- subGroups
     cellPopSubsampleCov
   })
   names(cellPopulation_Files) <- cellPopulations
   allGroups <- unlist(cellPopulation_Files)
 
+  parallel::clusterExport(
+      cl=cl,
+      varlist=c("allGroups"),
+      envir=environment()
+  )
+
   ## Generate a data.frame for export.
 
   if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-    allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
+
+    allGroupsDF <-pbapply::pblapply(cl = cl,
+      X = seq_along(allGroups), 
+      FUN = function(x) {
       subGroupdf <- as.data.frame(allGroups[[x]])
       subGroupdf$Groups <- rep(names(allGroups)[x], length(allGroups[[x]]))
 
@@ -169,9 +192,13 @@ extractRegion <- function(SampleTileObj,
       colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
       covdf
-    }, mc.cores = numCores)
+    })
+
   } else {
-    allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
+    allGroupsDF <- pbapply::pblapply(cl = cl,
+      X = seq_along(allGroups), 
+      FUN = function(x) {
+
       tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
       tmp$score <- allGroups[[x]]$score[tmp$partition]
       tmp$Groups <- rep(names(allGroups)[x], length(tmp))
@@ -180,8 +207,10 @@ extractRegion <- function(SampleTileObj,
       colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
       covdf
-    }, mc.cores = numCores)
+    })
   }
+
+  parallel::stopCluster(cl)
 
   names(allGroupsDF) <- names(allGroups)
 

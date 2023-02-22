@@ -58,15 +58,28 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
 ## @regions: Regions to count intensities over, must be non-overlapping and non-adjacent ( > 1 bp apart).
 ## @numCores: number of cores to parallelize over.
 getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
+  
   score <- NewScore <- WeightedScore <- . <- NULL
-  counts <- parallel::mclapply(covFiles, function(x) {
+  
+  cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+        cl=cl,
+        varlist=c("regions"),
+        envir=environment()
+    )
+
+  counts <- pbapply::pblapply(
+    cl = cl,
+    X = covFiles, 
+    FUN = function(x) {
     x %>%
       plyranges::mutate(NewScore = score) %>%
       plyranges::join_overlap_intersect(regions) %>%
       plyranges::mutate(WeightedScore = NewScore * GenomicRanges::width(.)) %>%
       plyranges::reduce_ranges(score = mean(WeightedScore))
-  }, mc.cores = numCores)
+  })
 
+  parallel::stopCluster(cl)
 
   return(counts)
 }
