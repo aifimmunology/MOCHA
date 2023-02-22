@@ -230,7 +230,7 @@ setGeneric(
       rm(covFiles)
     }
     
-    # This parLapply will parallelize over each sample within a celltype.
+    # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     cl <- parallel::makeCluster(numCores)
@@ -239,7 +239,7 @@ setGeneric(
       varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
       envir=environment()
     )
-    tilesGRangesList <- parallel::parLapply(
+    tilesGRangesList <- pbapply::pblapply(
       cl,
       1:length(frags),
       function(x) {
@@ -480,9 +480,9 @@ setMethod(
       rm(covFiles)
     }
 
-    
 
-    # This parLapply will parallelize over each sample within a celltype.
+
+    # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     cl <- parallel::makeCluster(numCores)
@@ -491,7 +491,7 @@ setMethod(
       varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
       envir=environment()
     )
-    tilesGRangesList <- parallel::parLapply(
+    tilesGRangesList <- pbapply::pblapply(
       cl,
       1:length(frags),
       function(x) {
@@ -721,7 +721,7 @@ callOpenTilesFast <- function(ArchRProj,
       rm(covFiles)
     }
 
-    # This parLapply will parallelize over each sample within a celltype.
+    # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     cl <- parallel::makeCluster(numCores)
@@ -730,7 +730,7 @@ callOpenTilesFast <- function(ArchRProj,
       varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
       envir=environment()
     )
-    tilesGRangesList <- parallel::parLapply(
+    tilesGRangesList <- pbapply::pblapply(
       cl,
       1:length(frags),
       function(x) {
