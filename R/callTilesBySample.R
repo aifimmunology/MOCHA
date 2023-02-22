@@ -63,6 +63,9 @@ callTilesBySample <- function(blackList,
     totalFrags = totalFrags,
     verbose = verbose
   )
+
+  rm(fragsList)
+
   expected_names <- c(
     "tileID",
     "seqnames",
@@ -90,6 +93,8 @@ callTilesBySample <- function(blackList,
     X = countsMatrix,
     finalModelObject = finalModelObject
   )
+
+  rm(countsMatrix)
 
   if (!returnAllTiles) {
     MOCHA_tiles <- MOCHA_tiles[MOCHA_tiles$peak == T]

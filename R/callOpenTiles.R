@@ -458,6 +458,8 @@ setMethod(
       overlapList = 50
     )
 
+    gc()
+
     # Simplify sample names to remove everything before the first "#"
     sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
     names(frags) <- sampleNames
@@ -477,6 +479,8 @@ setMethod(
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
+
+    
 
     # This parLapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
