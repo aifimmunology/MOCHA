@@ -17,13 +17,15 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
 
   cl <- parallel::makeCluster(numCores)
   parallel::clusterExport(
-      cl=cl, 
+      cl=cl,
       varlist=c("popFrags", "normFactor", "frags", "TxDb", "filterEmpty", "verbose"),
       envir=environment()
   )
 
   # Summarize the coverage over the region window at a single basepair resolution
-  popCounts <- pbapply::pblapply(cl, seq_along(popFrags), function(x) {
+  popCounts <- pbapply::pblapply(cl = cl, 
+              X = seq_along(popFrags), 
+              FUN = function(x) {
     if (verbose) {
       message(paste("Generate coverage files for", names(popFrags)[x], sep = " "))
     }
@@ -39,7 +41,7 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
       counts_gr
     }
   })
-  
+
   parallel::stopCluster(cl)
   gc()
 

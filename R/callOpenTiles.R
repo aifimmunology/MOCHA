@@ -240,9 +240,9 @@ setGeneric(
       envir=environment()
     )
     tilesGRangesList <- pbapply::pblapply(
-      cl,
-      1:length(frags),
-      function(x) {
+      cl = cl,
+      X = 1:length(frags),
+      FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
@@ -492,9 +492,9 @@ setMethod(
       envir=environment()
     )
     tilesGRangesList <- pbapply::pblapply(
-      cl,
-      1:length(frags),
-      function(x) {
+      cl = cl,
+      X = 1:length(frags),
+      FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
@@ -731,9 +731,9 @@ callOpenTilesFast <- function(ArchRProj,
       envir=environment()
     )
     tilesGRangesList <- pbapply::pblapply(
-      cl,
-      1:length(frags),
-      function(x) {
+      cl = cl,
+      X = 1:length(frags),
+      FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
