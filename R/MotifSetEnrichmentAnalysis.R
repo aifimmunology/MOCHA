@@ -25,7 +25,7 @@
 PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment,
                             specLigand, 
                             motifColumn = "feature", 
-                            stat_column = 'log10Padj',
+                            stat_column = 'mlog10Padj',
                             stat_threshold = 2,
                            verbose = FALSE){
                            
@@ -126,7 +126,7 @@ PHyperLigandTF <- function(ligand_tf_matrix, MotifEnrichment,
 # @ numcores: Number of cores to parallelize this over. 
 # @ verbose: Prints the n-all, n-1, m-all, and m-1
 
-MSEA <- function(ligand_tf_matrix, MotifEnrichment, 
+MotifSetEnrichmentAnalysis <- function(ligand_tf_matrix, MotifEnrichment, 
                                        motifColumn = "feature", 
 				                        ligands,
                                         stat_column = 'mlog10Padj',
