@@ -95,7 +95,17 @@ getSampleTileMatrix <- function(tileResults,
     message(stringr::str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))
   }
 
-  tilesByCellPop <- parallel::mclapply(MultiAssayExperiment::experiments(subTileResults), function(x) {
+  cl <- parallel::makeCluster(numCores)
+ 
+  parallel::clusterExport(
+      cl=cl,
+      varlist=c("sampleData", "threshold", "groupColumn", "verbose"),
+      envir=environment()
+  )
+
+
+  tilesByCellPop <- pbapply::pblapply(cl = cl, X = MultiAssayExperiment::experiments(subTileResults), 
+    FUN = function(x) {
 
     # Get consensus tiles for this cell population for filtering
     singlePopulationConsensusTiles(
@@ -105,15 +115,19 @@ getSampleTileMatrix <- function(tileResults,
       groupColumn,
       verbose = verbose
     )
-  }, mc.cores = numCores)
 
-  errorMessages <- parallel::mclapply(tilesByCellPop, function(x) {
+  })
+
+  errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, 
+    FUN = function(x) {
     if (any(grepl("Error", x))) {
       x[grep("Error", x)]
     } else {
       NA
     }
-  }, mc.cores = numCores)
+  })
+
+  gc()
 
   names(errorMessages) <- names(subTileResults)
 
@@ -133,14 +147,28 @@ getSampleTileMatrix <- function(tileResults,
     message(stringr::str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
   }
 
+  parallel::clusterExport(
+      cl=cl,
+      varlist=c("allTiles"),
+      envir=environment()
+  )
+
   # consensusTiles is used to  extract rows (tiles) from this matrix
-  sampleTileIntensityMatList <- parallel::mclapply(MultiAssayExperiment::experiments(tileResults), function(x) {
+  sampleTileIntensityMatList <- pbapply::pblapply(cl = cl,
+   X = MultiAssayExperiment::experiments(tileResults), function(x) {
+
     singlePopulationSampleTileMatrix(
       x,
       allTiles,
       NAtoZero = FALSE
     )
-  }, mc.cores = numCores)
+
+  })
+
+
+  #Stop Clusters and run garbage collection. 
+  parallel::stopCluster(cl)
+  gc()
 
   # Order sampleData rows to match the same order as the columns
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
@@ -148,9 +176,11 @@ getSampleTileMatrix <- function(tileResults,
   sampleData <- sampleData[match(colOrder, rownames(sampleData)), ]
 
   . <- NULL
+  
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
     do.call("cbind", .) %>%
     as.data.frame()
+  
   allTilesGR <- MOCHA::StringsToGRanges(allTiles)
   GenomicRanges::mcols(allTilesGR) <- tilePresence
 
