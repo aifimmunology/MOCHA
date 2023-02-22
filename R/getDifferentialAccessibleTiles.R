@@ -120,9 +120,17 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   # Estimate differential accessibility
   sampleTileMatrix <- log2(sampleTileMatrix + 1)
 
-  res_pvals <- parallel::mclapply(
-    rownames(sampleTileMatrix),
-    function(x) {
+  cl <- parallel::makeCluster(numCores)
+  parallel::clusterExport(
+      cl=cl, 
+      varlist=c("sampleTileMatrix", "group","verbose"),
+      envir=environment()
+  )
+
+  res_pvals <- pbapply::pblapply(
+    cl = cl,
+    X = rownames(sampleTileMatrix),
+    FUN = function(x) {
       if (which(rownames(sampleTileMatrix) == x) %in% idx) {
         cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group, F))
       } else {
@@ -138,9 +146,10 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
           Control_rho = NA
         )
       }
-    },
-    mc.cores = numCores
+    }
   )
+
+  parallel::stopCluster(cl)
 
   # Combine results into single objects
   res_pvals <- do.call(rbind, res_pvals)

@@ -41,12 +41,24 @@ plotConsensus <- function(tileObject,
 
   sampleData <- MultiAssayExperiment::colData(tileObject)
 
-  alldf <- parallel::mclapply(names(subTileResults), function(x) {
+  cl <- parallel::makeCluster(numCores)
+  parallel::clusterExport(
+      cl=cl, 
+      varlist=c("arrows", "ampleData","groupColumn","returnPlotList"),
+      envir=environment()
+  )
+
+  alldf <- pbapply::pblapply(cl = cl,
+      X = seq_along(arrows),
+      FUN = function(x) {
+
     cellTypeDF(
       peaksExperiment = subTileResults[[x]], sampleData = sampleData,
       groupColumn = groupColumn, returnPlotList = returnPlotList
     )
-  }, mc.cores = numCores)
+
+  })
+
 
   names(alldf) <- names(subTileResults)
 
@@ -54,26 +66,45 @@ plotConsensus <- function(tileObject,
     return(alldf)
   }
 
+  parallel::clusterExport(
+        cl=cl, 
+        varlist=c("alldf"),
+        envir=environment()
+  )
+
   if (returnPlotList) {
     if (!is.null(groupColumn)) {
-      allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
+
+      allPlots <- pbapply::pblapply(cl = cl,
+        X = seq_along(alldf),
+        FUN = function(x) {
+
         ggplot2::ggplot(alldf[[x]], ggplot2::aes(x = Reproducibility, y = PeakNumber, group = GroupName, color = GroupName)) +
           ggplot2::geom_point() +
           ggplot2::ggtitle(names(alldf)[x]) +
           ggplot2::scale_y_continuous(trans = "log2") +
           ggplot2::ylab("Peak Number") +
           ggplot2::theme_bw()
-      }, mc.cores = numCores)
+          
+      })
     } else {
-      allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
+
+      allPlots <- pbapply::pblapply(cl = cl,
+        X = seq_along(alldf),
+        FUN = function(x) {
+
         ggplot2::ggplot(alldf[[x]], ggplot2::aes(x = Reproducibility, y = PeakNumber)) +
           ggplot2::geom_point() +
           ggplot2::ggtitle(names(alldf)[x]) +
           ggplot2::scale_y_continuous(trans = "log2") +
           ggplot2::ylab("Peak Number") +
           ggplot2::theme_bw()
-      }, mc.cores = numCores)
+
+      })
     }
+
+    
+    parallel::stopCluster(cl)
 
     return(allPlots)
   } else {

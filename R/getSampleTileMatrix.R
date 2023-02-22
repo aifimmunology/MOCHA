@@ -127,8 +127,6 @@ getSampleTileMatrix <- function(tileResults,
     }
   })
 
-  gc()
-
   names(errorMessages) <- names(subTileResults)
 
   if (any(!is.na(errorMessages))) {
@@ -155,7 +153,8 @@ getSampleTileMatrix <- function(tileResults,
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- pbapply::pblapply(cl = cl,
-   X = MultiAssayExperiment::experiments(tileResults), function(x) {
+   X = MultiAssayExperiment::experiments(tileResults), 
+   FUN = function(x) {
 
     singlePopulationSampleTileMatrix(
       x,

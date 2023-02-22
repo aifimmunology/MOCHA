@@ -99,10 +99,20 @@ getPopFrags <- function(ArchRProj,
     ))
   }
 
+  cl <- parallel::makeCluster(numCores)
+  parallel::clusterExport(
+      cl=cl, 
+      varlist=c("arrows", "cellNames","verbose"),
+      envir=environment()
+  )
+
   if (is.null(region)) {
 
     # Extract fragments from all available regions
-    fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
+    fragsList <- pbapply::pblapply(cl = cl,
+      X = seq_along(arrows),
+      FUN = function(x) {
+
       if (verbose) {
         message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
       }
@@ -112,7 +122,8 @@ getPopFrags <- function(ArchRProj,
         cellNames = cellNames,
         verbose = FALSE
       )
-    }, mc.cores = numCores)
+
+    })
   } else {
 
     # Extract fragments from a given region only
@@ -138,7 +149,17 @@ getPopFrags <- function(ArchRProj,
     chrom <- regionGRanges %>%
       as.data.frame() %>%
       dplyr::select(.data$seqnames)
-    fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
+
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterExport(
+      cl=cl, 
+      varlist=c("arrows", "cellNames","chrom", "blacklist", "verbose","regionGRanges","overlapList"),
+      envir=environment()
+    )
+    fragsList <-  pbapply::pblapply(cl = cl,
+      X = seq_along(arrows),
+      FUN = function(x) {
+
       if (verbose) {
         message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
         fragsGRanges <- ArchR::getFragmentsFromArrow(
@@ -157,8 +178,12 @@ getPopFrags <- function(ArchRProj,
       } else {
         stop("Error: Wrong format for blackList region. Please provide GRanges")
       }
-    }, mc.cores = numCores)
+    })
+
   }
+
+  #stop the cluster
+  parallel::stopCluster(cl)
 
   # From MOCHA - sorts cell barcodes by population
   barcodesByCellPop <- lapply(cellPopulations, function(x) {
@@ -215,9 +240,22 @@ getPopFrags <- function(ArchRProj,
       message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
     }
     if (sum(fragsListIndex[[x]]) > 1) {
-      tmp <- parallel::mclapply(which(fragsListIndex[[x]]), function(y) {
+
+      cl <- parallel::makeCluster(numCores)
+      parallel::clusterExport(
+        cl=cl, 
+        varlist=c("barcodesByCellPop", "fragsListIndex","fragsList"),
+        envir=environment()
+      )
+
+      tmp <- pbapply::pblapply(cl = cl,
+        X = which(fragsListIndex[[x]]), 
+        FUN = function(y) {
         subset_Frag(barcodesByCellPop[[x]], fragsList[[y]])
-      }, mc.cores = 20)
+      })
+
+      parallel::stopCluster(cl)
+
     } else {
       tmp <- list(subset_Frag(
         barcodesByCellPop[[x]],
