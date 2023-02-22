@@ -229,11 +229,30 @@ setGeneric(
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
+    gc()
+
+	  if (numCores > 1) {
+      if(.Platform$OS.type == "windows") {
+        cl <- parallel::makeCluster(numCores, type="PSOCK") # default
+      } else { 
+        cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
+      }
+      parallel::clusterExport(
+        cl=cl, 
+        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
+                  "study_prefactor"),
+        envir=environment()
+      )
+    } else {
+      # Set numCores = 1 (or <= 1) for sequential 
+      # evaluation with pblapply
+      cl <- NULL 
+    }
+
     
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(
       cl=cl, 
       varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
@@ -300,6 +319,14 @@ setGeneric(
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
+
+  on.exit({ # Guarantees we stop clusters on any function exit including error
+    try({
+      if (verbose) { message("Attempting to stop cluster\n") }
+      parallel::stopCluster(cl)
+    })
+  })
+
 
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
@@ -480,12 +507,31 @@ setMethod(
       rm(covFiles)
     }
 
+    gc()
+
+    if (numCores > 1) {
+      if(.Platform$OS.type == "windows") {
+        cl <- parallel::makeCluster(numCores, type="PSOCK") # default
+      } else { 
+        cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
+      }
+      parallel::clusterExport(
+        cl=cl, 
+        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
+                  "study_prefactor"),
+        envir=environment()
+      )
+    } else {
+      # Set numCores = 1 (or <= 1) for sequential 
+      # evaluation with pblapply
+      cl <- NULL 
+    }
+    
 
 
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(
       cl=cl, 
       varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
@@ -552,6 +598,13 @@ setMethod(
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
+
+  on.exit({ # Guarantees we stop clusters on any function exit including error
+    try({
+      if (verbose) { message("Attempting to stop cluster\n") }
+      parallel::stopCluster(cl)
+    })
+  })
 
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
@@ -720,11 +773,29 @@ callOpenTilesFast <- function(ArchRProj,
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
+    gc()
+
+    if (numCores > 1) {
+      if(.Platform$OS.type == "windows") {
+        cl <- parallel::makeCluster(numCores, type="PSOCK") # default
+      } else { 
+        cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
+      }
+      parallel::clusterExport(
+        cl=cl, 
+        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
+                  "study_prefactor"),
+        envir=environment()
+      )
+    } else {
+      # Set numCores = 1 (or <= 1) for sequential 
+      # evaluation with pblapply
+      cl <- NULL 
+    }
 
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(
       cl=cl, 
       varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
@@ -759,6 +830,13 @@ callOpenTilesFast <- function(ArchRProj,
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
+
+  on.exit({ # Guarantees we stop clusters on any function exit including error
+    try({
+      if (verbose) { message("Attempting to stop cluster\n") }
+      parallel::stopCluster(cl)
+    })
+  })
 
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
