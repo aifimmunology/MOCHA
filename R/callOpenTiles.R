@@ -254,7 +254,7 @@ setGeneric(
         )
       }
     )
-    if(!is.null(cl)){parallel::stopCluster(cl)}
+    if(!is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
 
     names(tilesGRangesList) <- names(frags)
 
@@ -305,7 +305,7 @@ setGeneric(
   on.exit({ # Guarantees we stop clusters on any function exit including error
     try({
       if (verbose) { message("Attempting to stop cluster\n") }
-      if(!is.null(cl)){parallel::stopCluster(cl)}
+      if(!is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
     })
   })
 
@@ -523,7 +523,7 @@ setMethod(
         )
       }
     )
-    if(!is.null(cl)){parallel::stopCluster(cl)}
+    if(!is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
 
     names(tilesGRangesList) <- names(frags)
 
@@ -574,7 +574,7 @@ setMethod(
   on.exit({ # Guarantees we stop clusters on any function exit including error
     try({
       if (verbose) { message("Attempting to stop cluster\n") }
-      if(!is.null(cl)){parallel::stopCluster(cl)}
+      if(!is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
     })
   })
 
@@ -779,7 +779,7 @@ callOpenTilesFast <- function(ArchRProj,
         )
       }
     )
-    
+
     if(!is.null(cl) & !is.numeric(cl)) {parallel::stopCluster(cl)}
 
     names(tilesGRangesList) <- sampleNames
