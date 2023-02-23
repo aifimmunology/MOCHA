@@ -99,12 +99,8 @@ getPopFrags <- function(ArchRProj,
     ))
   }
 
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(
-      cl=cl, 
-      varlist=c("arrows", "cellNames","verbose"),
-      envir=environment()
-  )
+  cl <- makeMOCHACluster(numCores, 
+          varList = c("arrows", "cellNames","verbose")) 
 
   if (is.null(region)) {
 
@@ -150,12 +146,9 @@ getPopFrags <- function(ArchRProj,
       as.data.frame() %>%
       dplyr::select(.data$seqnames)
 
-    cl <- parallel::makeCluster(numCores)
-    parallel::clusterExport(
-      cl=cl, 
-      varlist=c("arrows", "cellNames","chrom", "blacklist", "verbose","regionGRanges","overlapList"),
-      envir=environment()
-    )
+    cl <- makeMOCHACluster(numCores, 
+          varList = c("arrows", "cellNames","chrom", "blacklist", "verbose","regionGRanges","overlapList")) 
+
     fragsList <-  pbapply::pblapply(cl = cl,
       X = seq_along(arrows),
       FUN = function(x) {
@@ -241,12 +234,8 @@ getPopFrags <- function(ArchRProj,
     }
     if (sum(fragsListIndex[[x]]) > 1) {
 
-      cl <- parallel::makeCluster(numCores)
-      parallel::clusterExport(
-        cl=cl, 
-        varlist=c("barcodesByCellPop", "fragsListIndex","fragsList"),
-        envir=environment()
-      )
+      cl <- makeMOCHACluster(numCores, 
+          varList = c("barcodesByCellPop", "fragsListIndex","fragsList")) 
 
       tmp <- pbapply::pblapply(cl = cl,
         X = which(fragsListIndex[[x]]), 

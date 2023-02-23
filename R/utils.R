@@ -62,6 +62,14 @@ splitFragsByCellPop <- function(frags) {
   return(splitFrags)
 }
 
+# Function to generate parallelize
+makeMOCHACluster <- function(numCores = 1, varList = NULL) {
+
+  
+
+}
+
+
 
 # Tests if a string is a in the correct format to convert to GRanges
 validRegionString <- function(regionString) {
