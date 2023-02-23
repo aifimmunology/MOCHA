@@ -155,13 +155,15 @@ getPopFrags <- function(ArchRProj,
 
       if (verbose) {
         message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
-        fragsGRanges <- ArchR::getFragmentsFromArrow(
+      }
+
+      fragsGRanges <- ArchR::getFragmentsFromArrow(
           ArrowFile = arrows[x],
           cellNames = cellNames,
           chr = as.character(chrom[, 1]),
           verbose = FALSE
         ) %>% plyranges::join_overlap_intersect(regionGRanges)
-      }
+      
 
       # Filter according to provided blacklist
       if (is.null(blackList)) {
@@ -176,7 +178,7 @@ getPopFrags <- function(ArchRProj,
   }
 
   #stop the cluster
-  parallel::stopCluster(cl)
+  if( !is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
 
   # From MOCHA - sorts cell barcodes by population
   barcodesByCellPop <- lapply(cellPopulations, function(x) {
@@ -243,7 +245,7 @@ getPopFrags <- function(ArchRProj,
         subset_Frag(barcodesByCellPop[[x]], fragsList[[y]])
       })
 
-      parallel::stopCluster(cl)
+      if(!is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
 
     } else {
       tmp <- list(subset_Frag(

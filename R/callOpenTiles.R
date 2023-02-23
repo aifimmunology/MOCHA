@@ -779,7 +779,8 @@ callOpenTilesFast <- function(ArchRProj,
         )
       }
     )
-    if(!is.null(cl)){parallel::stopCluster(cl)}
+    
+    if(!is.null(cl) & !is.numeric(cl)) {parallel::stopCluster(cl)}
 
     names(tilesGRangesList) <- sampleNames
 
