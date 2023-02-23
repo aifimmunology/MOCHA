@@ -63,7 +63,7 @@ splitFragsByCellPop <- function(frags) {
 }
 
 # Function to generate parallelize
-makeMOCHACluster <- function(numCores = 1, varList = NULL) {
+makeMOCHACluster <- function(numCores = 1, varList = NULL, envir = environment()) {
 
   if (numCores > 1) {
       if(.Platform$OS.type == "windows") {
@@ -74,7 +74,7 @@ makeMOCHACluster <- function(numCores = 1, varList = NULL) {
       parallel::clusterExport(
         cl=cl, 
         varlist=varList,
-        envir=environment()
+        envir=envir
       )
     } else {
       # Set numCores = 1 (or <= 1) for sequential 
