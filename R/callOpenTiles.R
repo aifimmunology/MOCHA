@@ -230,7 +230,7 @@ setGeneric(
       rm(covFiles)
     }
     gc()
-
+    
 	  if (numCores > 1) {
       if(.Platform$OS.type == "windows") {
         cl <- parallel::makeCluster(numCores, type="PSOCK") # default
@@ -239,8 +239,7 @@ setGeneric(
       }
       parallel::clusterExport(
         cl=cl, 
-        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
-                  "study_prefactor"),
+        varlist=c("blackList", "verbose", "study_prefactor"),
         envir=environment()
       )
     } else {
@@ -248,16 +247,14 @@ setGeneric(
       # evaluation with pblapply
       cl <- NULL 
     }
-
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
-      X = 1:length(frags),
+      X = frags,
       FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
+          fragsList = x,
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
@@ -508,8 +505,7 @@ setMethod(
       }
       parallel::clusterExport(
         cl=cl, 
-        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
-                  "study_prefactor"),
+        varlist=c("blackList", "verbose", "study_prefactor"),
         envir=environment()
       )
     } else {
@@ -520,13 +516,12 @@ setMethod(
     
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
-      X = 1:length(frags),
+      X = frags,
       FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
+          fragsList = x,
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
@@ -764,8 +759,7 @@ callOpenTilesFast <- function(ArchRProj,
       }
       parallel::clusterExport(
         cl=cl, 
-        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
-                  "study_prefactor"),
+        varlist=c("blackList", "verbose", "study_prefactor"),
         envir=environment()
       )
     } else {
@@ -776,13 +770,12 @@ callOpenTilesFast <- function(ArchRProj,
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
-      X = 1:length(frags),
+      X = frags,
       FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
+          fragsList = x,
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
