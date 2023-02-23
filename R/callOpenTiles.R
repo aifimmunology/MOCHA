@@ -249,15 +249,6 @@ setGeneric(
       cl <- NULL 
     }
 
-    
-    # This pblapply will parallelize over each sample within a celltype.
-    # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time)
-    parallel::clusterExport(
-      cl=cl, 
-      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
-      envir=environment()
-    )
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = 1:length(frags),
@@ -272,7 +263,7 @@ setGeneric(
         )
       }
     )
-    parallel::stopCluster(cl)
+    if(!is.null(cl)){parallel::stopCluster(cl)}
 
     names(tilesGRangesList) <- names(frags)
 
@@ -323,7 +314,7 @@ setGeneric(
   on.exit({ # Guarantees we stop clusters on any function exit including error
     try({
       if (verbose) { message("Attempting to stop cluster\n") }
-      parallel::stopCluster(cl)
+      if(!is.null(cl)){parallel::stopCluster(cl)}
     })
   })
 
@@ -527,16 +518,6 @@ setMethod(
       cl <- NULL 
     }
     
-
-
-    # This pblapply will parallelize over each sample within a celltype.
-    # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time)
-    parallel::clusterExport(
-      cl=cl, 
-      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
-      envir=environment()
-    )
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = 1:length(frags),
@@ -551,7 +532,7 @@ setMethod(
         )
       }
     )
-    parallel::stopCluster(cl)
+    if(!is.null(cl)){parallel::stopCluster(cl)}
 
     names(tilesGRangesList) <- names(frags)
 
@@ -602,7 +583,7 @@ setMethod(
   on.exit({ # Guarantees we stop clusters on any function exit including error
     try({
       if (verbose) { message("Attempting to stop cluster\n") }
-      parallel::stopCluster(cl)
+      if(!is.null(cl)){parallel::stopCluster(cl)}
     })
   })
 
@@ -793,14 +774,6 @@ callOpenTilesFast <- function(ArchRProj,
       cl <- NULL 
     }
 
-    # This pblapply will parallelize over each sample within a celltype.
-    # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time)
-    parallel::clusterExport(
-      cl=cl, 
-      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
-      envir=environment()
-    )
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = 1:length(frags),
@@ -815,7 +788,7 @@ callOpenTilesFast <- function(ArchRProj,
         )
       }
     )
-    parallel::stopCluster(cl)
+    if(!is.null(cl)){parallel::stopCluster(cl)}
 
     names(tilesGRangesList) <- sampleNames
 
