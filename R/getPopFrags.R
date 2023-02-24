@@ -147,7 +147,7 @@ getPopFrags <- function(ArchRProj,
       as.data.frame() %>%
       dplyr::select(.data$seqnames)
 
-    cl <- MOCHA:::makeMOCHACluster(numCores, type = parallelType))
+    cl <- MOCHA:::makeMOCHACluster(numCores, type = parallelType)
 
 
     ## Extract the specific region only across cell types. 
