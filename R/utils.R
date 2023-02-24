@@ -62,6 +62,31 @@ splitFragsByCellPop <- function(frags) {
   return(splitFrags)
 }
 
+# Function to generate parallelize
+makeMOCHACluster <- function(numCores = 1, varList = NULL, envir = environment()) {
+
+  if (numCores > 1) {
+      if(.Platform$OS.type == "windows") {
+        cl <- parallel::makeCluster(numCores, type="PSOCK") # default
+      } else { 
+        cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
+      }
+      parallel::clusterExport(
+        cl=cl, 
+        varlist=varList,
+        envir=envir
+      )
+    } else {
+      # Set numCores = 1 (or <= 1) for sequential 
+      # evaluation with pblapply
+      cl <- NULL 
+    }
+
+  return(cl)
+
+}
+
+
 
 # Tests if a string is a in the correct format to convert to GRanges
 validRegionString <- function(regionString) {
