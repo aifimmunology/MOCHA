@@ -111,7 +111,7 @@ getPopFrags <- function(ArchRProj,
       FUN = function(x, y) {
 
       if (verbose) {
-        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
+        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',x)}"))
       }
 
       ArchR::getFragmentsFromArrow(
