@@ -490,7 +490,7 @@ setMethod(
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- makeMOCHACluster(numCores)
+    cl <- makeMOCHACluster(numCores, parallelType = 'mclapply')
     
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
