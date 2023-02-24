@@ -67,7 +67,9 @@ makeMOCHACluster <- function(numCores = 1, type = NULL) {
 
   if (numCores > 1) {
     if(is.null(type) & .Platform$OS.type == "windows") {
+      
       cl <- parallel::makeCluster(numCores)
+
     } else if((is.null(type) & .Platform$OS.type != "windows")) {
 
       cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
