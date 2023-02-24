@@ -234,23 +234,20 @@ setGeneric(
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- makeMOCHACluster(
-      numCores,
-      varList = c("blackList",  "verbose", "study_prefactor")
-    ) 
+    cl <- makeMOCHACluster(numCores)
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = frags,
-      FUN = function(x) {
+      FUN = function(x,y,z,a) {
         MOCHA:::callTilesBySample(
-          blackList = blackList,
+          blackList = y,
           returnAllTiles = TRUE,
           fragsList = x,
-          verbose = verbose,
-          StudypreFactor = study_prefactor
+          verbose = z,
+          StudypreFactor = a
         )
-      }
+      }, y = blackList, z = verbose, a = study_prefactor
     )
     if(!is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
 
@@ -458,6 +455,7 @@ setMethod(
       cellSubsets = cellPop,
       region = NULL,
       numCores = numCores,
+      parallelType = 'mclapply',
       sampleSpecific = TRUE,
       NormMethod = "nfrags",
       blackList = NULL,
@@ -492,23 +490,20 @@ setMethod(
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- makeMOCHACluster(
-      numCores,
-      varList = c("blackList",  "verbose", "study_prefactor")
-    )
+    cl <- makeMOCHACluster(numCores)
     
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = frags,
-      FUN = function(x) {
+      FUN = function(x, y, z, a) {
         MOCHA:::callTilesBySample(
-          blackList = blackList,
+          blackList = y,
           returnAllTiles = TRUE,
           fragsList = x,
-          verbose = verbose,
-          StudypreFactor = study_prefactor
+          verbose = z,
+          StudypreFactor = a
         )
-      }
+      }, y = blackList, z = verbose,  a = study_prefactor
     )
     if(!is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
 
@@ -625,11 +620,13 @@ callOpenTilesFast <- function(ArchRProj,
     cellSubsets = cellPopulations,
     region = NULL,
     numCores = numCores,
+    parallelType = 'mclapply',
     sampleSpecific = TRUE,
     NormMethod = "nfrags",
     blackList = NULL,
     overlapList = 50
   )
+  gc()
 
   # Check for and remove celltype-sample groups for which there are no fragments.
   fragsNoNull <- frags[lengths(frags) != 0]
@@ -737,23 +734,20 @@ callOpenTilesFast <- function(ArchRProj,
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- makeMOCHACluster(
-      numCores,
-      varList = c("blackList",  "verbose", "study_prefactor")
-    ) 
+    cl <- makeMOCHACluster(numCores)
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = frags,
-      FUN = function(x) {
+      FUN = function(x,y,z,a) {
         MOCHA:::callTilesBySample(
-          blackList = blackList,
+          blackList = y,
           returnAllTiles = TRUE,
           fragsList = x,
-          verbose = verbose,
-          StudypreFactor = study_prefactor
+          verbose = z,
+          StudypreFactor = a
         )
-      }
+      }, y = blackList, z = verbose, a = study_prefactor
     )
 
     if(!is.null(cl) & !is.numeric(cl)) {parallel::stopCluster(cl)}

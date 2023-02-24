@@ -63,14 +63,20 @@ splitFragsByCellPop <- function(frags) {
 }
 
 # Function to generate parallelization. 
-makeMOCHACluster <- function(numCores = 1) {
+makeMOCHACluster <- function(numCores = 1, type = NULL) {
 
   if (numCores > 1) {
-    #if(.Platform$OS.type == "windows") {
+    if(is.null(type) & .Platform$OS.type == "windows") {
       cl <- parallel::makeCluster(numCores)
-    #} else {
-   #   cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
-    #}
+    } else if((is.null(type) & .Platform$OS.type != "windows") | tolow(type) == 'fork') {
+      cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
+    }else if(tolower(type) == 'psock'){
+      cl <- parallel::makeCluster(numCores, type = "PSOCK") # Use forking on unix
+    )else if(tolower(type) = 'mclapply'){
+      cl = numCores
+    }else{
+      error("Type not found. Can be NULL, 'FORK', 'PSOCK', or 'mclapply'.")
+    }
   } else {
     # Set numCores = 1 (or <= 1) for sequential
     # evaluation with pblapply

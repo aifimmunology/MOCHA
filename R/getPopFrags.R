@@ -35,6 +35,7 @@ getPopFrags <- function(ArchRProj,
                         cellSubsets = "ALL",
                         region = NULL,
                         numCores = 1,
+                        parallelType = NULL,
                         sampleSpecific = TRUE,
                         NormMethod = "nfrags",
                         blackList = NULL,
@@ -99,14 +100,7 @@ getPopFrags <- function(ArchRProj,
     ))
   }
 
-  cl <- MOCHA:::makeMOCHACluster(numCores)
-  if(!is.null(cl) & !is.numeric(cl)){
-        parallel::clusterExport(
-        cl=cl, 
-        varlist=c("cellNames","verbose"), 
-        envir=environment()
-        )
-      }
+  cl <- makeMOCHACluster(numCores, type = parallelType)
 
 
   if (is.null(region)) {
@@ -114,7 +108,7 @@ getPopFrags <- function(ArchRProj,
     # Extract fragments from all available regions
     fragsList <- pbapply::pblapply(cl = cl,
       X = arrowList,
-      FUN = function(x) {
+      FUN = function(x, y) {
 
       if (verbose) {
         message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
@@ -122,11 +116,11 @@ getPopFrags <- function(ArchRProj,
 
       ArchR::getFragmentsFromArrow(
         ArrowFile = x,
-        cellNames = cellNames,
+        cellNames = y,
         verbose = FALSE
       )
 
-    })
+    }, y = cellNames)
   } else {
 
     # Extract fragments from a given region only
@@ -153,19 +147,13 @@ getPopFrags <- function(ArchRProj,
       as.data.frame() %>%
       dplyr::select(.data$seqnames)
 
-    cl <- MOCHA:::makeMOCHACluster(numCores)
-    if(!is.null(cl) & !is.numeric(cl)){
-      parallel::clusterExport(
-        cl=cl, 
-        varlist=c("cellNames","chrom", "blacklist", "verbose","regionGRanges","overlapList"),
-        envir=environment()
-      )
-    }
+    cl <- MOCHA:::makeMOCHACluster(numCores, type = parallelType))
+
 
     ## Extract the specific region only across cell types. 
     fragsList <-  pbapply::pblapply(cl = cl,
       X = arrowList,
-      FUN = function(x) {
+      FUN = function(x, y, chrom1, blackList1, region1, overlap1, verb) {
 
       if (verbose) {
         message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',x)}"))
@@ -187,12 +175,14 @@ getPopFrags <- function(ArchRProj,
       } else {
         stop("Error: Wrong format for blackList region. Please provide GRanges")
       }
-    })
+    }, y = cellNames, chrom1 = chrom, blackList1 = blackList, verb = verbose, 
+      region1 = regionGRanges, overlap1 = overlapList)
 
   }
 
   #stop the cluster
   if( !is.null(cl) & !is.numeric(cl)){parallel::stopCluster(cl)}
+  gc()
 
   #if we are only extracting cells from one cell type, then there's no need to sort.
   #All we need to do is annotate the normalization method. 
@@ -201,11 +191,13 @@ getPopFrags <- function(ArchRProj,
     popFrags <- fragsList
     rm(fragsList)
 
+    arrowNames = names(arrowList)
+
     # Add normalization factor.
     if (tolower(NormMethod) == "raw") {
-      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowList,"__", 1, sep = "")
+      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowNames,"__", 1, sep = "")
     } else if (tolower(NormMethod) == "ncells") {
-      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowList,"__", cellCounts / 1000, sep = "")
+      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowNames,"__", cellCounts / 1000, sep = "")
     } else if (tolower(NormMethod) == "nfrags") {
       # Calculate the total nFrags for our cell populations
       nFragsNorm <- as.data.frame(metadf[, c(metaColumn, "nFrags")]) %>%
@@ -218,15 +210,15 @@ getPopFrags <- function(ArchRProj,
       if (!all(nFragsNorm[, 1] == cellPopulations)) {
         stop("Names of nFrags don't match the cell populations.", nFragsNorm[, 1])
       }
-      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowList,"__", nFragsNorm$nFrags / 10^6, sep = "")
+      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowNames,"__", nFragsNorm$nFrags / 10^6, sep = "")
     } else if (tolower(NormMethod) == "median") {
-      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowList,"__", "Median", sep = "")
+      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowNames,"__", "Median", sep = "")
     } else if (tolower(NormMethod) == "medmax") {
-      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowList,"__", "MedianMax", sep = "")
+      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowNames,"__", "MedianMax", sep = "")
     } else if (tolower(NormMethod) == "TotalSampleByNCells") {
       # This calculates total fragments per sample.
       totalsampleFrags <- unlist(fragsList, length)
-      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowList,"__", totalsampleFrags / 10^6, sep = "")
+      names(popFrags) <- paste(gsub(" |_", "_", cellPopulations),"#",arrowNames,"__", totalsampleFrags / 10^6, sep = "")
     } else {
       stop("Error: Incorrect NormMethod given.")
     }
