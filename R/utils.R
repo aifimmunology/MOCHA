@@ -62,28 +62,30 @@ splitFragsByCellPop <- function(frags) {
   return(splitFrags)
 }
 
-# Function to generate parallelize
+# Function to generate a cluster for use by pblapply, creating a socket cluster
+# or forked cluster based on operating system.
+# Output 'cl' is intended for use by pblapply:
+# if cl is a cluster object, pblapply will call parLapply
+# if cl is NULL, pblapply will default to lapply
 makeMOCHACluster <- function(numCores = 1, varList = NULL, envir = environment()) {
-
   if (numCores > 1) {
-      if(.Platform$OS.type == "windows") {
-        cl <- parallel::makeCluster(numCores, type="PSOCK") # default
-      } else { 
-        cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
-      }
-      parallel::clusterExport(
-        cl=cl, 
-        varlist=varList,
-        envir=envir
-      )
+    if (.Platform$OS.type == "windows") {
+      cl <- parallel::makeCluster(numCores, type = "PSOCK") # default
     } else {
-      # Set numCores = 1 (or <= 1) for sequential 
-      # evaluation with pblapply
-      cl <- NULL 
+      cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
     }
+    parallel::clusterExport(
+      cl = cl,
+      varlist = varList,
+      envir = envir
+    )
+  } else {
+    # Set numCores = 1 (or <= 1) for sequential
+    # evaluation with pblapply
+    cl <- NULL
+  }
 
   return(cl)
-
 }
 
 
@@ -174,4 +176,3 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   GenomicRanges::mcols(regions) <- differentials
   regions
 }
-
