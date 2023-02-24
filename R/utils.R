@@ -66,20 +66,11 @@ splitFragsByCellPop <- function(frags) {
 makeMOCHACluster <- function(numCores = 1) {
 
   if (numCores > 1) {
-      #if(.Platform$OS.type == "windows") {
-      #  cl <- parallel::makeCluster(numCores, type="PSOCK") # default
-      #} else { 
-      #  cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
-      #}
+    #if(.Platform$OS.type == "windows") {
       cl <- parallel::makeCluster(numCores)
-    } else {
-      cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
-    }
-    parallel::clusterExport(
-      cl = cl,
-      varlist = varList,
-      envir = envir
-    )
+    #} else {
+   #   cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
+    #}
   } else {
     # Set numCores = 1 (or <= 1) for sequential
     # evaluation with pblapply
