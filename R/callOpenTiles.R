@@ -231,24 +231,22 @@ setGeneric(
     }
     gc()
 
-
-    
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- makeMOCHACluster(numCores, 
-              varList = c("blackList", "normalization_factors", "frags", "verbose", 
-                  "study_prefactor")) 
+    cl <- makeMOCHACluster(
+      numCores,
+      varList = c("blackList",  "verbose", "study_prefactor")
+    ) 
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
-      X = 1:length(frags),
+      X = frags,
       FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
+          fragsList = x,
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
@@ -491,33 +489,22 @@ setMethod(
 
     gc()
 
-    if (numCores > 1) {
-      if(.Platform$OS.type == "windows") {
-        cl <- parallel::makeCluster(numCores, type="PSOCK") # default
-      } else { 
-        cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
-      }
-      parallel::clusterExport(
-        cl=cl, 
-        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
-                  "study_prefactor"),
-        envir=environment()
-      )
-    } else {
-      # Set numCores = 1 (or <= 1) for sequential 
-      # evaluation with pblapply
-      cl <- NULL 
-    }
+    # This pblapply will parallelize over each sample within a celltype.
+    # Each arrow is a sample so this is allowed
+    # (Arrow files are locked - one access at a time)
+    cl <- makeMOCHACluster(
+      numCores,
+      varList = c("blackList",  "verbose", "study_prefactor")
+    )
     
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
-      X = 1:length(frags),
+      X = frags,
       FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
+          fragsList = x,
           verbose = verbose,
           StudypreFactor = study_prefactor
         )
@@ -747,33 +734,22 @@ callOpenTilesFast <- function(ArchRProj,
     }
     gc()
 
-    if (numCores > 1) {
-      if(.Platform$OS.type == "windows") {
-        cl <- parallel::makeCluster(numCores, type="PSOCK") # default
-      } else { 
-        cl <- parallel::makeCluster(numCores, type="FORK") # Use forking on unix
-      }
-      parallel::clusterExport(
-        cl=cl, 
-        varlist=c("blackList", "normalization_factors", "frags", "verbose", 
-                  "study_prefactor"),
-        envir=environment()
-      )
-    } else {
-      # Set numCores = 1 (or <= 1) for sequential 
-      # evaluation with pblapply
-      cl <- NULL 
-    }
+    # This pblapply will parallelize over each sample within a celltype.
+    # Each arrow is a sample so this is allowed
+    # (Arrow files are locked - one access at a time)
+    cl <- makeMOCHACluster(
+      numCores,
+      varList = c("blackList",  "verbose", "study_prefactor")
+    ) 
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
-      X = 1:length(frags),
+      X = frags,
       FUN = function(x) {
         MOCHA:::callTilesBySample(
           blackList = blackList,
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
+          fragsList = x,
           verbose = verbose,
           StudypreFactor = study_prefactor
         )

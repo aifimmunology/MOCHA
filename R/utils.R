@@ -73,13 +73,20 @@ makeMOCHACluster <- function(numCores = 1) {
       #}
       cl <- parallel::makeCluster(numCores)
     } else {
-      # Set numCores = 1 (or <= 1) for sequential 
-      # evaluation with pblapply
-      cl <- NULL 
+      cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
     }
+    parallel::clusterExport(
+      cl = cl,
+      varlist = varList,
+      envir = envir
+    )
+  } else {
+    # Set numCores = 1 (or <= 1) for sequential
+    # evaluation with pblapply
+    cl <- NULL
+  }
 
   return(cl)
-
 }
 
 
@@ -170,4 +177,3 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   GenomicRanges::mcols(regions) <- differentials
   regions
 }
-

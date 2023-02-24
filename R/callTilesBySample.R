@@ -1,20 +1,19 @@
-#' @title \code{callPeaks}
+#' @title \code{callTilesBySample}
 #'
-#' @description \code{callPeaks} is the main peak-calling function in MOCHA
-#'   that serves as a wrapper function to call peaks provided a set of fragment
-#'   files and cell metadata
+#' @description \code{callTilesBySample} Internal wrapper to call peaks provided 
+#'   a set of fragment files and cell metadata
 #'
+#' @param fragsList a GRanges object containing all fragments for one cell 
+#'   population in one sample
 #' @param blackList A GRanges object containing a blacklist of regions to
 #'   exclude
-#' @param returnAllPeaks boolean. Indicates whether MOCHA should return object
-#'   containing all genomic regions or just the positive (+) called peaks.
+#' @param returnAllTiles boolean. Indicates whether MOCHA should return object
+#'   containing all tiles or just the positive (+) called peaks.
 #'   Default to the latter, only positive peaks.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
-#'
-#' @param totalFrags # of fragments in that sample for that cell population
-#' @param StudypreFactor ratio of average signal between new study and training
-#'   set
+#' @param StudypreFactor ratio of average signal between the input data and the
+#'   and training set
 #' @return scMACs_PeakList an list containing peak calls for each cell
 #'   population passed on in the cell subsets argument. Each peak call is
 #'   returned as as Genomic Ranges object.
@@ -26,10 +25,9 @@
 #' @noRd
 #'
 
-callTilesBySample <- function(blackList,
+callTilesBySample <- function(fragsList,
+                              blackList,
                               returnAllTiles = FALSE,
-                              totalFrags,
-                              fragsList,
                               verbose = FALSE,
                               StudypreFactor) {
   # Coefficients trained on ~ 3600 frags per cell
@@ -57,6 +55,8 @@ callTilesBySample <- function(blackList,
       "Verify that input fragments are not all in a blacklisted region."
     )
   }
+  
+  totalFrags <- length(fragsList)
   countsMatrix <- calculate_intensities(
     fragMat = fragsList,
     candidatePeaks = FinalBins,

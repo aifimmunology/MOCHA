@@ -18,7 +18,7 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
   cl <- parallel::makeCluster(numCores)
   parallel::clusterExport(
       cl=cl,
-      varlist=c("popFrags", "normFactor", "frags", "TxDb", "filterEmpty", "verbose"),
+      varlist=c("popFrags", "normFactor", "TxDb", "filterEmpty", "verbose"),
       envir=environment()
   )
 

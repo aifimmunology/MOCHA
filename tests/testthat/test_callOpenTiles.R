@@ -60,6 +60,33 @@ if (
       variant = "CellCounts"
     )
   })
+  
+  test_that("We can call peaks independent of ArchR with numCores>1", {
+    
+    # Opens a fork cluster on unix, even though we only have 1 sample
+    # to pblapply over.
+    numCores <- 2 
+    capture.output(
+      tiles <- MOCHA::callOpenTiles(
+        ATACFragments = MOCHA::exampleFragments,
+        cellColData = MOCHA::exampleCellColData,
+        blackList = MOCHA::exampleBlackList,
+        genome = genome,
+        TxDb = TxDb,
+        Org = Org,
+        outDir = tempdir(),
+        cellPopLabel = "Clusters",
+        cellPopulations = c("C2", "C5"),
+        numCores = numCores
+      ),
+      type = "message"
+    )
+    
+    expect_snapshot(
+      tiles,
+      variant = "list"
+    )
+  })
 
   test_that("We throw a warning when a sample has less than 5 cells", {
     sample1frags <- GenomicRanges::GRanges(
