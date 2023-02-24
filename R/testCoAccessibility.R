@@ -21,6 +21,7 @@ testCoAccessibilityChromVar <- function(STObj,
                                         numCores = 1,
                                         ZI = TRUE,
                                         backNumber = 1000,
+                                        returnBackGround = FALSE
                                         highMem = FALSE,
                                         verbose = TRUE) {
   . <- NULL
@@ -189,7 +190,12 @@ testCoAccessibilityChromVar <- function(STObj,
 
   foreGround$pValues <- pValues
 
-  return(foreGround)
+  if(returnBackGround){
+    return(list('Foreground' = foreGround, 'Background'= backGround))
+  }else{
+    return(foreGround)
+  }
+
 }
 
 #' @title \code{testCoAccessibilityRandom}
@@ -198,7 +204,7 @@ testCoAccessibilityChromVar <- function(STObj,
 #' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
 #' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)
 #' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
-#' @param backNumber number of background pairs. Default is 1000.
+#' @param backNumber number of background pairs, or a user-defined background. Default is 1000. If user-defined, it must be a data.frame with column names Tile1 and Tile2, with all tiles named as string in the format 'ChrX:100-3000'. 
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
@@ -214,6 +220,7 @@ testCoAccessibilityRandom <- function(STObj,
                                       numCores = 1,
                                       ZI = TRUE,
                                       backNumber = 1000,
+                                      returnBackGround = FALSE,
                                       verbose = TRUE) {
   . <- NULL
   
@@ -236,13 +243,16 @@ testCoAccessibilityRandom <- function(STObj,
     stop("tile1 and tile 2 must both be either numbers (indices) or strings")
   }
 
-  if (backNumber >= length(rownames(fullObj)) - c(length(tile1) + length(tile2))) {
-    backNumber <- length(rownames(fullObj)) - c(length(tile1) + length(tile2))
-    if (verbose) {
-      warning("backNumber too high. Reset to all background combinations.")
+  #Only run this if the backNumber is an actual number. If an actually background set is prepare, skip it. 
+  if(is.null(dim(backNumber))){
+    if (backNumber >= length(rownames(fullObj)) - c(length(tile1) + length(tile2))) {
+      backNumber <- length(rownames(fullObj)) - c(length(tile1) + length(tile2))
+      if (verbose) {
+        warning("backNumber too high. Reset to all background combinations.")
+      }
+    } else if (backNumber <= 10) {
+      stop("backNumber too low (<=10). We recommend 1000.")
     }
-  } else if (backNumber <= 10) {
-    stop("backNumber too low (<=10). We recommend 1000.")
   }
 
   cl <- parallel::makeCluster(numCores)
@@ -268,17 +278,47 @@ testCoAccessibilityRandom <- function(STObj,
   parallel::stopCluster(cl)
   gc()
 
-  if (verbose) {
-    message("Finding background peak pairs")
+  if(is.null(dim(backNumber))){
+    if (verbose) {
+      message("Finding background peak pairs")
+    }
+
+    backGroundTiles <- rownames(fullObj)[!rownames(fullObj) %in% c(tile1, tile2)]
+
+    backgroundCombos <- data.frame(
+      Tile1 = sample(backGroundTiles, backNumber),
+      Tile2 = sample(backGroundTiles, backNumber)
+    )
+
+    backgroundCombos <- backgroundCombos[backgroundCombos[, 1] != backgroundCombos[, 2], ]
+
+  }else if(dim(backNumber)[2] > 1){
+    if (verbose) {
+      message("Using user-defined background pairs")
+    }
+
+    backNumber <- as.data.frame(backNumber)
+    if(!all(colnames(backNumber) %in% c('Tile1', 'Tile2'))){
+      error('User-defined background pairs requires a column for Tile1 and Tile2')
+    }else if(!all(grepl(":", c(backNumber[,'Tile1'], backNumber[,'Tile2'])) & grepl("-", backNumber[,'Tile1'], backNumber[,'Tile2']))){
+      error('User-defined background pairs must be in the form ChrX:100-2000')
+    }else if(!all(c(backNumber[,'Tile1'], backNumber[,'Tile2']) %in% rownames(fullObj))){
+      error('User-defined background pairs includes regions not found within the sample tile accessibility matrix.')
+    }
+    
+    backgroundCombos = as.data.frame(backNumber)[,c('Tile1','Tile2')]
+    backgroundCombos <- backgroundCombos[backgroundCombos[, 'Tile1'] != backgroundCombos[,'Tile1'], ]
+
+    if(dim(backNumber)[1] < 10){
+      error('User-defined background pairs are fewer than 10. Please provide a larger background.')
+
+    }
+    
+
+  }else{
+    error('Incorrect backNumber provided. Please provider either a number, or a data.frame with columns entitled Tile1 and Tile2, describing pairs to test. The tile names should be in the format ChrX:100-2000.')
   }
-
-  backGroundTiles <- rownames(fullObj)[!rownames(fullObj) %in% c(tile1, tile2)]
-
-  backgroundCombos <- data.frame(
-    Tile1 = sample(backGroundTiles, backNumber),
-    Tile2 = sample(backGroundTiles, backNumber)
-  )
-  backgroundCombos <- backgroundCombos[backgroundCombos[, 1] != backgroundCombos[, 2], ]
+  
 
   ## Now we need to test the background set
 
@@ -311,7 +351,13 @@ testCoAccessibilityRandom <- function(STObj,
 
   foreGround$pValues <- pValues
 
-  return(foreGround)
+
+  if(returnBackGround){
+    return(list('Foreground' = foreGround, 'Background'= backGround))
+  }else{
+    return(foreGround)
+  }
+
 }
 
 #' @title \code{runCoAccessibility}
