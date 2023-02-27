@@ -74,7 +74,7 @@ makeMOCHACluster <- function(numCores = 1, type = NULL) {
 
       cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix
 
-    } else if(tolower(type) == 'fork'){
+    } else if(tolower(type) == 'fork' & .Platform$OS.type != "windows"){
 
       cl <- parallel::makeCluster(numCores, type = "FORK") # Use forking on unix      
 
@@ -85,7 +85,7 @@ makeMOCHACluster <- function(numCores = 1, type = NULL) {
     }else if(tolower(type) == 'mclapply'){
       cl = numCores
     }else{
-      error("Type not found. Can be NULL, 'FORK', 'PSOCK', or 'mclapply'.")
+      error("Type not found. Can be NULL, 'FORK', 'PSOCK', or 'mclapply'. FORKing is not allowed on windows.")
     }
   } else {
     # Set numCores = 1 (or <= 1) for sequential

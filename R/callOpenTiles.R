@@ -236,6 +236,8 @@ setGeneric(
     # (Arrow files are locked - one access at a time)
     cl <- makeMOCHACluster(numCores, type = 'mclapply')
 
+    print(paste('Is the cluster set to null?',is.null(cl), sep = ''))
+
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = frags,
