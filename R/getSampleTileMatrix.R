@@ -154,15 +154,15 @@ getSampleTileMatrix <- function(tileResults,
   # consensusTiles is used to  extract rows (tiles) from this matrix
   sampleTileIntensityMatList <- pbapply::pblapply(cl = cl,
    X = MultiAssayExperiment::experiments(tileResults), 
-   FUN = function(x) {
+   FUN = function(x, y) {
 
     singlePopulationSampleTileMatrix(
       x,
-      allTiles,
+      y,
       NAtoZero = FALSE
     )
 
-  })
+  }, y= allTiles)
 
 
   #Stop Clusters and run garbage collection. 
