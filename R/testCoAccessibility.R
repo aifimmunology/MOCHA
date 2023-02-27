@@ -385,7 +385,7 @@ testCoAccessibilityRandom <- function(STObj,
 runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCores = 1) {
 
   # Generate matrix for just Tile1, and just Tile2, then combined by column. 
-  combinedMat <- cbind(accMat[pairs[, 1],], subAccMat[pairs[, 2],])
+  combinedMat <- cbind(accMat[pairs[, 1],], accMat[pairs[, 2],])
   # Turn that new data.frame into a list by row that can be iterated over
   subMatList <- as.list(as.data.frame(t(combinedMat)))
   #Remember how many samples you have, so you can split the list later
