@@ -228,7 +228,7 @@ testCoAccessibilityRandom <- function(STObj,
     stop("tile1 and tile2 must be the same length.")
   }
 
-  fullObj <- combineSampleTileMatrix(STObj)
+  fullObj <- MOCHA:::combineSampleTileMatrix(STObj)
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
@@ -245,8 +245,8 @@ testCoAccessibilityRandom <- function(STObj,
 
   #Only run this if the backNumber is an actual number. If an actually background set is prepare, skip it. 
   if(is.null(dim(backNumber))){
-    if (backNumber >= length(rownames(fullObj)) - c(length(tile1) + length(tile2))) {
-      backNumber <- length(rownames(fullObj)) - c(length(tile1) + length(tile2))
+    if (backNumber >= length(rownames(fullObj)) - length(unique(c(tile1, tile2)))){
+      backNumber <- length(rownames(fullObj)) - length(unique(c(tile1, tile2)))
       if (verbose) {
         warning("backNumber too high. Reset to all background combinations.")
       }
@@ -267,7 +267,7 @@ testCoAccessibilityRandom <- function(STObj,
     message("Identifying foreground")
   }
   parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
-  foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
+  foreGround <- MOCHA:::runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
   
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
@@ -328,14 +328,14 @@ testCoAccessibilityRandom <- function(STObj,
   cl <- parallel::makeCluster(numCores)
   subAccMatB <- accMat[c(backgroundCombos$Tile1, backgroundCombos$nTile2), ]
   parallel::clusterExport(cl, varlist = c("backgroundCombos", "subAccMatB"), envir = environment())
-  backGround <- runCoAccessibility(subAccMatB, backgroundCombos, ZI, verbose, cl)
-  parallel::stopCluster(cl)
+  backGround <- MOCHA:::runCoAccessibility(subAccMatB, backgroundCombos, ZI, verbose, cl)
 
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(cl, varlist = c("foreGround", "backGround"), envir = environment())
+  clusterEvalQ(cl, { rm(list = ls())})
 
-  pValues <- pbapply::pblapply(seq_along(tile1), function(x) {
-    cor1 <- foreGround$Correlation[x]
+  parallel::clusterExport(cl, varlist = c("backGround"), envir = environment())
+
+  pValues <- pbapply::pblapply(foreGround$Correlation, function(x) {
+    cor1 <- x
     
     if (is.na(cor1)){
       NA
@@ -384,13 +384,21 @@ testCoAccessibilityRandom <- function(STObj,
 #' @noRd
 #'
 runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCores = 1) {
-  zero_inflated_spearman <- unlist(pbapply::pblapply(seq_len(dim(pairs)[1]),
-    function(x) {
+
+  # Generate matrix for just Tile1, and just Tile2, then combined by column. 
+  combinedMat <- cbind(accMat[pairs[, 1],], subAccMat[pairs[, 2],])
+  # Turn that new data.frame into a list by row that can be iterated over
+  subMatList <- as.list(as.data.frame(t(combinedMat)))
+  #Remember how many samples you have, so you can split the list later
+  sampleNum <- dim(accMat)[2]
+
+  zero_inflated_spearman <- unlist(pbapply::pblapply(X = subMatList,
+    FUN = function(x, y, ZI, verbose) {
       tryCatch(
         {
           MOCHA:::weightedZISpearman(
-            x = accMat[pairs[x, 1], ],
-            y = accMat[pairs[x, 2], ],
+            x = x[1:y],
+            y = x[(y+1):(2*y)],
             verbose = verbose,
             ZI = ZI
           )
@@ -399,7 +407,7 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
           NA
         }
       )
-    },
+    }, y = sampleNum, ZI = ZI, verbose = verbose,
     cl = numCores
   ))
 
