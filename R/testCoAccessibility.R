@@ -261,13 +261,12 @@ testCoAccessibilityRandom <- function(STObj,
 
   ## Test original pairs of locations
   combPairs <- data.frame(tile1, tile2)
-  subAccMat <- accMat[unique(c(nTile1, nTile2)), ]
 
   if (verbose) {
     message("Identifying foreground")
   }
-  parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
-  foreGround <- MOCHA:::runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
+
+  foreGround <- runCoAccessibility(accMat, combPairs, ZI, verbose, cl)
   
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
@@ -325,13 +324,13 @@ testCoAccessibilityRandom <- function(STObj,
   if (verbose) {
     message("Identifying background correlations.")
   }
-  cl <- parallel::makeCluster(numCores)
-  subAccMatB <- accMat[c(backgroundCombos$Tile1, backgroundCombos$nTile2), ]
-  parallel::clusterExport(cl, varlist = c("backgroundCombos", "subAccMatB"), envir = environment())
-  backGround <- MOCHA:::runCoAccessibility(subAccMatB, backgroundCombos, ZI, verbose, cl)
 
-  clusterEvalQ(cl, { rm(list = ls())})
+  backGround <- runCoAccessibility(accMat, backgroundCombos, ZI, verbose, cl)
 
+  #Clean up cluster
+  unlist(clusterEvalQ(cl, { rm(list = ls())}))
+
+  #import backGround correlations into each cluster. 
   parallel::clusterExport(cl, varlist = c("backGround"), envir = environment())
 
   pValues <- pbapply::pblapply(foreGround$Correlation, function(x) {
