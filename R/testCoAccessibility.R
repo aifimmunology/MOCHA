@@ -334,12 +334,11 @@ testCoAccessibilityRandom <- function(STObj,
   rm(fullObj)
 
   #Split foreground into a list for each row and add the background in. This is wierd, but it avoids the inherent memory leak issue in R.
-  cl <- parallel::makeCluster(numCores)
-  foreGroundSplit <- split(foreGround$Correlation, f = c(1:length(foreGround$Correlation)))
-  foreGroundSplit <- lapply(foreGroundSplit, function(x){
+  foreGroundSplit <- lapply(foreGround$Correlation, function(x){
       c(x, backGround$Correlation)
   })
 
+  cl <- parallel::makeCluster(numCores)
   pValues <- unlist(pbapply::pblapply(foreGroundSplit, getPValue, cl = cl))
   parallel::stopCluster(cl)
 
@@ -378,6 +377,7 @@ getPValue <- function(list1){
 
   cor1 = list1[1]
   backGround = list1[-1]
+
   if (is.na(cor1)){
       return(NA)
   } else if (cor1 >= 0) {
@@ -437,8 +437,6 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
                     FUN = Spearman,
                         cl = cl))
   }
- 
-  gc()
 
   # Create zero-inflated correlation matrix from correlation values
   zi_spear_mat_tmp <- data.table::data.table(
