@@ -338,6 +338,11 @@ testCoAccessibilityRandom <- function(STObj,
       c(x, backGround$Correlation)
   })
 
+
+  if (verbose) {
+    message("Generating p-values.")
+  }
+
   cl <- parallel::makeCluster(numCores)
   pValues <- unlist(pbapply::pblapply(foreGroundSplit, getPValue, cl = cl))
   parallel::stopCluster(cl)
