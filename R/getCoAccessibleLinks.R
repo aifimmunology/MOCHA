@@ -91,38 +91,16 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }
 
   cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(
-    cl,
-    varlist = c("regionDF", "start", "end", "chr", "windowSize"),
-    envir = environment()
-  )
-  allCombinations <- pbapply::pblapply(seq_len(dim(regionDF)[1]), function(y) {
-    keyTile <- which(start == regionDF$start[y] &
-      end == regionDF$end[y] &
-      chr == regionDF$seqnames[y])
 
-    windowIndexBool <- which(start > regionDF$start[y] - windowSize / 2 &
-      end < regionDF$end[y] + windowSize / 2 &
-      chr == regionDF$seqnames[y])
+  iterList <- lapply(seq_len(dim(regionDF)[1]), function(x){ 
+    list(regionDF[1,], start, end, chr, windowSize, tileNames)
+  })
 
-    windowIndexBool <- windowIndexBool[windowIndexBool != keyTile]
-
-    if (length(windowIndexBool) > 0) {
-      # Var1 will always be our region of interest
-      keyNeighborPairs <- data.frame(
-        "Key" = tileNames[keyTile],
-        "Neighbor" = tileNames[windowIndexBool]
-      )
-    } else {
-      keyNeighborPairs <- NULL
-    }
-
-    keyNeighborPairs
-  }, cl = cl) %>%
+  allCombinations <- pbapply::pblapply(cl = cl, X = iterList, FUN = findAllCombinations) %>%
     do.call("rbind", .) %>%
     dplyr::distinct()
   
-  parallel::stopCluster(cl)
+
   
   # Determine chromosomes to search over, and the number of iterations to run through.
   chrNum <- paste(unique(regionDF$seqnames), ":", sep = "")
@@ -132,24 +110,13 @@ getCoAccessibleLinks <- function(SampleTileObj,
   if (verbose) {
     message("Finding subsets of pairs for testing.")
   }
-  
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(cl, varlist = c("chrNum", "chrChunks"), envir = environment())
+
+  iterList <- lapply(1:numChunks, function(y){ 
+    list(y, chrNum, chrChunks, tileNames, allCombinations$key)
+  })
 
   # Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
-  combList <- pbapply::pblapply(1:numChunks, function(y) {
-    specChr <- paste0(chrNum[which(c(seq_along(chrNum)) > (y - 1) * chrChunks &
-      c(seq_along(chrNum) <= y * chrChunks))], collapse = "|")
-
-    tileIndices <- grep(specChr, tileNames)
-    combIndices <- grep(specChr, allCombinations$Key)
-
-    infoList <- list(tileIndices, combIndices, specChr)
-
-    infoList
-  }, cl = cl)
-
-  parallel::stopCluster(cl)
+  combList <- pbapply::pblapply(cl = cl, X = iterList, FUN = splitCombList)
 
   # Initialize zi_spear_mat for iterations
   zi_spear_mat <- NULL
@@ -171,15 +138,14 @@ getCoAccessibleLinks <- function(SampleTileObj,
       stop("subset of pair combinations and tile data.frame does not match.")
     }
 
-    cl <- parallel::makeCluster(numCores)
-
-    parallel::clusterExport(cl, varlist = c("subTileDF", "subCombinations"), envir = environment())
     zi_spear_mat_tmp <- runCoAccessibility(subTileDF, subCombinations, ZI, verbose, cl)
-    parallel::stopCluster(cl)
 
     gc()
 
     zi_spear_mat <- rbind(zi_spear_mat, zi_spear_mat_tmp)
   }
+
+  parallel::stopCluster(cl)
+
   return(zi_spear_mat)
 }
