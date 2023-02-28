@@ -56,3 +56,32 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
 
   return(sampleTileIntensityMat)
 }
+
+#' @title \code{singlePopulationSampleTileMatrix}
+#'
+#' @description \code{singlePopulationSampleTileMatrix} is a function that can transform
+#'   a set of tile intensities into peak X sample matrix for a custom set of tiles
+#'
+#'
+#' @param x ref a list of data on one specific cell type (RaggedExperiment) and all tiles that were called across that given population. 
+
+#' @return sampleTileIntensityMat a sample X peak matrix containing observed
+#'   measurements for each sample at each peak.
+#'
+#' @details The technical details of the algorithm are found in singlePopulationSampleTileMatrix
+#'
+#' @references XX
+#'
+#' @keywords internal
+#' 
+
+simplifiedSampleTile <- function(ref){
+	experiments = ref[[1]]
+	allTiles = ref[[2]]
+  singlePopulationSampleTileMatrix(
+      x,
+      allTiles,
+      NAtoZero = FALSE
+    )
+
+}

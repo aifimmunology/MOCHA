@@ -234,25 +234,13 @@ setGeneric(
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     cl <- parallel::makeCluster(numCores)
-    parallel::clusterExport(
-      cl=cl, 
-      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
-      envir=environment()
-    )
-    tilesGRangesList <- parallel::parLapply(
-      cl,
-      1:length(frags),
-      function(x) {
-        MOCHA:::callTilesBySample(
-          blackList = blackList,
-          returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
-          verbose = verbose,
-          StudypreFactor = study_prefactor
-        )
-      }
-    )
+    
+    iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
+
+    tilesGRangesList <- pbapply::pblapply(
+      cl = cl,
+      X = iterList,
+      FUN = simplifiedFragments)
     parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- names(frags)
@@ -440,6 +428,7 @@ setMethod(
 
   # Main loop over all cell populations
   experimentList <- list()
+  cl <- parallel::makeCluster(numCores)
   for (cellPop in cellPopulations) {
     if (verbose) {
       message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
@@ -450,7 +439,7 @@ setMethod(
       metaColumn = cellPopLabel,
       cellSubsets = cellPop,
       region = NULL,
-      numCores = numCores,
+      numCores = cl,
       sampleSpecific = TRUE,
       NormMethod = "nfrags",
       blackList = NULL,
@@ -472,35 +461,23 @@ setMethod(
         popFrags = frags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
-        numCores = numCores, TxDb = TxDb
+        numCores = cl, TxDb = TxDb
       )
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
 
-    # This parLapply will parallelize over each sample within a celltype.
+    # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     cl <- parallel::makeCluster(numCores)
-    parallel::clusterExport(
-      cl=cl, 
-      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
-      envir=environment()
-    )
-    tilesGRangesList <- parallel::parLapply(
-      cl,
-      1:length(frags),
-      function(x) {
-        MOCHA:::callTilesBySample(
-          blackList = blackList,
-          returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
-          verbose = verbose,
-          StudypreFactor = study_prefactor
-        )
-      }
-    )
+
+    iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
+
+    tilesGRangesList <- pbapply::pblapply(
+      cl = cl,
+      X = iterList,
+      FUN = simplifiedFragments)
     parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- names(frags)
@@ -717,29 +694,19 @@ callOpenTilesFast <- function(ArchRProj,
       rm(covFiles)
     }
 
-    # This parLapply will parallelize over each sample within a celltype.
+    # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     cl <- parallel::makeCluster(numCores)
-    parallel::clusterExport(
-      cl=cl, 
-      varlist=c("blackList", "normalization_factors", "frags", "verbose", "study_prefactor"),
-      envir=environment()
-    )
-    tilesGRangesList <- parallel::parLapply(
-      cl,
-      1:length(frags),
-      function(x) {
-        MOCHA:::callTilesBySample(
-          blackList = blackList,
-          returnAllTiles = TRUE,
-          totalFrags = normalization_factors[x],
-          fragsList = frags[[x]],
-          verbose = verbose,
-          StudypreFactor = study_prefactor
-        )
-      }
-    )
+
+    
+    iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
+
+    tilesGRangesList <- pbapply::pblapply(
+      cl = cl,
+      X = iterList,
+      FUN = simplifiedFragments)
+
     parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- sampleNames

@@ -102,17 +102,13 @@ getPopFrags <- function(ArchRProj,
   if (is.null(region)) {
 
     # Extract fragments from all available regions
-    fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-      if (verbose) {
-        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
-      }
+    arrowList <- lapply(seq_along(arrows), function(x){ list(arrows[x], cellNames)})
+    if (verbose) {
+      message(stringr::str_interp("Extracting fragments from arrow files"))        
+    }
 
-      ArchR::getFragmentsFromArrow(
-        ArrowFile = arrows[x],
-        cellNames = cellNames,
-        verbose = FALSE
-      )
-    }, mc.cores = numCores)
+    fragsList <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores)
+
   } else {
 
     # Extract fragments from a given region only
@@ -138,18 +134,16 @@ getPopFrags <- function(ArchRProj,
     chrom <- regionGRanges %>%
       as.data.frame() %>%
       dplyr::select(.data$seqnames)
-    fragsList <- parallel::mclapply(seq_along(arrows), function(x) {
-      if (verbose) {
-        message(stringr::str_interp("Extracting fragments from: ${gsub('.*ArrowFiles','',arrows[x])}"))
-        fragsGRanges <- ArchR::getFragmentsFromArrow(
-          ArrowFile = arrows[x],
-          cellNames = cellNames,
-          chr = as.character(chrom[, 1]),
-          verbose = FALSE
-        ) %>% plyranges::join_overlap_intersect(regionGRanges)
-      }
 
-      # Filter according to provided blacklist
+    arrowList <- lapply(seq_along(arrows), function(x){ list(arrows[x], cellNames,as.character(chrom[, 1]), regionGRanges)})
+
+    if (verbose) {
+        message(stringr::str_interp("Extracting fragments from arrow files.}"))
+    }
+
+    fragsList <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores) 
+  
+    fragsList <- lapply(fragsList, function(x){  # Filter according to provided blacklist
       if (is.null(blackList)) {
         fragsGRanges
       } else if (class(blackList)[1] == "GRanges") {
@@ -157,7 +151,7 @@ getPopFrags <- function(ArchRProj,
       } else {
         stop("Error: Wrong format for blackList region. Please provide GRanges")
       }
-    }, mc.cores = numCores)
+    })
   }
 
   # From MOCHA - sorts cell barcodes by population
@@ -195,13 +189,6 @@ getPopFrags <- function(ArchRProj,
     stop("Error: Incorrect NormMethod given.")
   }
 
-  # From MOCHA - Function to sort fragments by populations based on cell barcode lists
-  subset_Frag <- function(cellNames, fragsGRanges) {
-    fragsTable <- as.data.table(fragsGRanges)
-    idx <- which(fragsTable$RG %in% cellNames)
-    fragsGRanges[idx]
-  }
-
   ## Identify which subset of arrows the population can be found it.
   ## Speeds up sample-specific population extraction
   fragsListIndex <- lapply(cellPopulations, function(x) {
@@ -215,14 +202,15 @@ getPopFrags <- function(ArchRProj,
       message("Extracting fragments for cellPopulation__normalization: ", names(barcodesByCellPop)[x])
     }
     if (sum(fragsListIndex[[x]]) > 1) {
-      tmp <- parallel::mclapply(which(fragsListIndex[[x]]), function(y) {
-        subset_Frag(barcodesByCellPop[[x]], fragsList[[y]])
-      }, mc.cores = 20)
+      
+      fragIterList <- lapply(which(fragsListIndex[[x]]), function(x){
+        list(barcodesByCellPop[[x]], fragsList[[y]])
+      })
+
+      tmp <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
+
     } else {
-      tmp <- list(subset_Frag(
-        barcodesByCellPop[[x]],
-        fragsList[[which(fragsListIndex[[x]])]]
-      ))
+      tmp <- list(subset_Frag(list(barcodesByCellPop[[x]], fragsList[[which(fragsListIndex[[x]])]])))
     }
 
     # For this population, get sample-specific normalization factors
@@ -280,4 +268,63 @@ getPopFrags <- function(ArchRProj,
   ArchR::addArchRVerbose(verbose = TRUE)
 
   return(popFrags)
+}
+
+#' Extract fragments from an arrow file based on one variable
+#'
+#' \code{simplifiedFragments} returns a list of fragments for a given set of cell names
+#'
+#' @param ref a list where the first index if the name of the arrow and the second index is a vector of strings describing cell names
+#'
+#' @return A Granges object for all fragments from a set of cells within a given arrow file. 
+#'
+#'
+#' @noRd
+
+simplifiedFragments <- function(ref){
+   arrows <- ref[[1]]
+   cellNames <- ref[[2]]
+
+   if(length(ref) > 2){
+    regionGRanges = ref[[4]]
+    chrom = ref[[3]]
+    frags <- ArchR::getFragmentsFromArrow(
+        ArrowFile = arrows,
+        cellNames = cellNames,
+        chr = chrom,
+        verbose = FALSE
+      ) 
+    frags <- plyranges::filter_by_overlaps(frags, regionGRanges)
+    return(frags)
+
+   }else{
+
+    frags <- ArchR::getFragmentsFromArrow(
+        ArrowFile = arrows,
+        cellNames = cellNames,
+        verbose = FALSE
+      )
+    return(frags)
+   }
+
+}
+
+#' subsets fragments out by cellnames. 
+#'
+#' \code{subset_Frag} returns a sorted set of fragments by populations based on cell barcode lists
+#'
+#' @param ref a list where the first index is the cellnames for that population, and the second index is a GRanges of fragments
+#'
+#' @return A Granges object for all fragments from a set of cells within a given arrow file. 
+#'
+#'
+#' @noRd
+
+# From MOCHA - Function to sort fragments by populations based on cell barcode lists
+subset_Frag <- function(ref) {
+  cellNames = ref[[1]]
+  fragsGRanges = ref[[2]]
+  fragsTable <- as.data.table(fragsGRanges)
+  idx <- which(fragsTable$RG %in% cellNames)
+  return(fragsGRanges[idx])
 }
