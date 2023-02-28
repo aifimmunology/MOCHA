@@ -21,7 +21,7 @@ testCoAccessibilityChromVar <- function(STObj,
                                         numCores = 1,
                                         ZI = TRUE,
                                         backNumber = 1000,
-                                        returnBackGround = FALSE
+                                        returnBackGround = FALSE,
                                         highMem = FALSE,
                                         verbose = TRUE) {
   . <- NULL
