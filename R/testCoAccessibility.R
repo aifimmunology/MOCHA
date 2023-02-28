@@ -335,7 +335,7 @@ testCoAccessibilityRandom <- function(STObj,
 
   #Split foreground into a list for each row and add the background in. This is wierd, but it avoids the inherent memory leak issue in R.
   cl <- parallel::makeCluster(numCores)
-  foreGroundSplit <- split(foreGround$Correlation, by = c(1:length(foreGround$Correlation)))
+  foreGroundSplit <- split(foreGround$Correlation, f = c(1:length(foreGround$Correlation)))
   foreGroundSplit <- lapply(foreGroundSplit, function(x){
       c(x, backGround$Correlation)
   })
