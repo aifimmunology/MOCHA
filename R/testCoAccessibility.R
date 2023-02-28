@@ -417,7 +417,6 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
   combinedMat <- cbind(accMat[pairs[, 1],], accMat[pairs[, 2],])
   matList <- as.list(as.data.frame(t(combinedMat)))
   #Remember how many samples you have, so you can split the list later
-  sampleNum <- dim(accMat)[2]
   if(verbose){
     message('Data.frame wrangled for co-accessibility')
   }
@@ -432,11 +431,11 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
   if(ZI){
    correlation_tmp <- unlist(pbapply::pblapply(X = matList,
                     FUN = ZISpearman,
-                        cl = cl))
+                        cl = numCores))
   }else{
     correlation_tmp <- unlist(pbapply::pblapply(X = matList,
                     FUN = Spearman,
-                        cl = cl))
+                        cl = numCores))
   }
 
   # Create zero-inflated correlation matrix from correlation values
