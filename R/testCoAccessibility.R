@@ -284,7 +284,7 @@ testCoAccessibilityRandom <- function(STObj,
       message("Finding background peak pairs")
     }
 
-    backGroundTiles <- rownames(fullObj)[!rownames(fullObj) %in% c(tile1, tile2)]
+    backGroundTiles <- rownames(accMat)[!rownames(accMat) %in% c(tile1, tile2)]
 
     backgroundCombos <- data.frame(
       Tile1 = sample(backGroundTiles, backNumber),
@@ -319,7 +319,7 @@ testCoAccessibilityRandom <- function(STObj,
   }else{
     error('Incorrect backNumber provided. Please provider either a number, or a data.frame with columns entitled Tile1 and Tile2, describing pairs to test. The tile names should be in the format ChrX:100-2000.')
   }
-  
+  rm(combPairs)
 
   ## Now we need to test the background set
 
@@ -333,9 +333,11 @@ testCoAccessibilityRandom <- function(STObj,
 
   #Clean up cluster
   unlist(clusterEvalQ(cl, { rm(list = ls())}))
+  rm(accMat)
+  rm(backgroundCombos)
+  rm(fullObj)
 
   #import backGround correlations into each cluster. 
-  assign("backGround", backGround, env = new.env)
   parallel::clusterExport(cl, varlist = c("backGround"), envir = new.env)
 
   pValues <- pbapply::pblapply(foreGround$Correlation, function(x) {
