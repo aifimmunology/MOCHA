@@ -267,8 +267,6 @@ testCoAccessibilityRandom <- function(STObj,
   }
 
   foreGround <- runCoAccessibility(accMat, combPairs, ZI, verbose, cl)
-  #Clean up cluster
-  unlist(clusterEvalQ(cl, { rm(list = ls())}))
   
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
@@ -331,8 +329,6 @@ testCoAccessibilityRandom <- function(STObj,
                   pairs = backgroundCombos, ZI = ZI, verbose = verbose, 
                   numCores = cl)
 
-  #Clean up cluster
-  unlist(clusterEvalQ(cl, { rm(list = ls())}))
   rm(accMat)
   rm(backgroundCombos)
   rm(fullObj)
