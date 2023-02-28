@@ -267,6 +267,8 @@ testCoAccessibilityRandom <- function(STObj,
   }
 
   foreGround <- runCoAccessibility(accMat, combPairs, ZI, verbose, cl)
+  #Clean up cluster
+  unlist(clusterEvalQ(cl, { rm(list = ls())}))
   
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
@@ -325,13 +327,16 @@ testCoAccessibilityRandom <- function(STObj,
     message("Identifying background correlations.")
   }
 
-  backGround <- runCoAccessibility(accMat, backgroundCombos, ZI, verbose, cl)
+  backGround <- runCoAccessibility(accMat = accMat,
+                  pairs = backgroundCombos, ZI = ZI, verbose = verbose, 
+                  numCores = cl)
 
   #Clean up cluster
   unlist(clusterEvalQ(cl, { rm(list = ls())}))
 
   #import backGround correlations into each cluster. 
-  parallel::clusterExport(cl, varlist = c("backGround"), envir = environment())
+  assign("backGround", backGround, env = new.env)
+  parallel::clusterExport(cl, varlist = c("backGround"), envir = new.env)
 
   pValues <- pbapply::pblapply(foreGround$Correlation, function(x) {
     cor1 <- x
@@ -386,33 +391,32 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 
   # Generate matrix for just Tile1, and just Tile2, then combined by column. 
   combinedMat <- cbind(accMat[pairs[, 1],], accMat[pairs[, 2],])
-  # Turn that new data.frame into a list by row that can be iterated over
-  subMatList <- as.list(as.data.frame(t(combinedMat)))
+  matList <- as.list(as.data.frame(t(combinedMat)))
+  rm(combinedMat)
+  rm(accMat)
   #Remember how many samples you have, so you can split the list later
   sampleNum <- dim(accMat)[2]
+  if(verbose){
+    message('Data.frame wrangled for co-accessibility')
+  }
 
-  zero_inflated_spearman <- unlist(pbapply::pblapply(X = subMatList,
-    FUN = function(x, y, ZI, verbose) {
-      tryCatch(
-        {
-          MOCHA:::weightedZISpearman(
-            x = x[1:y],
-            y = x[(y+1):(2*y)],
-            verbose = verbose,
-            ZI = ZI
-          )
-        },
-        error = function(e) {
-          NA
-        }
-      )
-    }, y = sampleNum, ZI = ZI, verbose = verbose,
-    cl = numCores
-  ))
+  ## split combinedMat into blocks that represent the number of cores we are using. 
+  ## Use split command for that. 
+  ## Then test each pair, but only within each block.
 
+  if(ZI){
+   correlation_tmp <- unlist(pbapply::pblapply(X = matList,
+                    FUN = ZISpearman,
+                        cl = cl))
+  }else{
+    correlation_tmp <- unlist(pbapply::pblapply(X = matList,
+                    FUN = Spearman,
+                        cl = cl))
+  }
+ 
   # Create zero-inflated correlation matrix from correlation values
   zi_spear_mat_tmp <- data.table::data.table(
-    Correlation = zero_inflated_spearman,
+    Correlation = correlation_tmp,
     Tile1 = pairs[, 1],
     Tile2 = pairs[, 2]
   )
