@@ -309,7 +309,6 @@ testCoAccessibilityRandom <- function(STObj,
     }else{
       backgroundCombos <- backgroundCombos[backgroundCombos[, 'Tile1'] != backgroundCombos[,'Tile2'], ]
     }
-    
 
   }else{
    stop('Incorrect backNumber provided. Please provider either a number, or a data.frame with columns entitled Tile1 and Tile2, describing pairs to test. The tile names should be in the format ChrX:100-2000.')
@@ -417,13 +416,14 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
   # Generate matrix for just Tile1, and just Tile2, then combined by column. 
   combinedMat <- cbind(accMat[pairs[, 1],], accMat[pairs[, 2],])
   matList <- as.list(as.data.frame(t(combinedMat)))
-  rm(combinedMat)
-  rm(accMat)
   #Remember how many samples you have, so you can split the list later
   sampleNum <- dim(accMat)[2]
   if(verbose){
     message('Data.frame wrangled for co-accessibility')
   }
+
+  rm(combinedMat)
+  rm(accMat)
 
   ## split combinedMat into blocks that represent the number of cores we are using. 
   ## Use split command for that. 
