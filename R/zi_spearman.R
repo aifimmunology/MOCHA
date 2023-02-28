@@ -112,7 +112,8 @@ weightedZISpearman <- function(x, y, w = 1, verbose = FALSE, ZI = TRUE) {
 
 Spearman <- function(compMat) {
   w=1
-  verbose = FALSE, ZI = FALSE
+  verbose = FALSE
+  ZI = FALSE
   # needs the original values, not the ranks
   numLen <- length(compMat)/2
   x = compMat[1:numLen]
