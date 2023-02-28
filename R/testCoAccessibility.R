@@ -377,7 +377,7 @@ testCoAccessibilityRandom <- function(STObj,
 getPValue <- function(list1){
 
   cor1 = list1$Correlation[1]
-  backGround = list2[-1,]f
+  backGround = list2[-1,]
   if (is.na(cor1)){
       return(NA)
   } else if (cor1 >= 0) {
