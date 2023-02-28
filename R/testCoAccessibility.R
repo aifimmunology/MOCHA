@@ -293,7 +293,7 @@ testCoAccessibilityRandom <- function(STObj,
     }
 
     backNumber <- as.data.frame(backNumber)
-    if(!all(colnames(backNumber) %in% c('Tile1', 'Tile2'))){
+    if(!all(c('Tile1', 'Tile2') %in% colnames(backNumber))){
       stop('User-defined background pairs requires a column for Tile1 and Tile2')
     }else if(!all(grepl(":", c(backNumber[,'Tile1'], backNumber[,'Tile2'])) & grepl("-", backNumber[,'Tile1'], backNumber[,'Tile2']))){
       stop('User-defined background pairs must be in the form ChrX:100-2000')
@@ -438,6 +438,8 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
                         cl = cl))
   }
  
+  gc()
+
   # Create zero-inflated correlation matrix from correlation values
   zi_spear_mat_tmp <- data.table::data.table(
     Correlation = correlation_tmp,
