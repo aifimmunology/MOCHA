@@ -333,20 +333,14 @@ testCoAccessibilityRandom <- function(STObj,
   rm(backgroundCombos)
   rm(fullObj)
 
-  #import backGround correlations into each cluster. 
-  parallel::clusterExport(cl, varlist = c("backGround"), envir = new.env)
+  #Split foreground into a list for each row and add the background in. This is wierd, but it avoids the inherent memory leak issue in R.
+  cl <- parallel::makeCluster(numCores)
+  foreGroundSplit <- split(foreGround, by = c(1:dim(foreGround)[1]))
+  foreGroundSplit <- lapply(foreGroundSplit, function(x){
+      rbind(x, backGround)
+  })
 
-  pValues <- pbapply::pblapply(foreGround$Correlation, function(x) {
-    cor1 <- x
-    
-    if (is.na(cor1)){
-      NA
-    } else if (cor1 >= 0) {
-      sum(cor1 > backGround$Correlation) / length(backGround$Correlation)
-    } else if (cor1 < 0) {
-      sum(cor1 < backGround$Correlation) / length(backGround$Correlation)
-    }
-  }, cl = cl) %>% unlist()
+  pValues <- unlist(pbapply::pblapply(foreGroundSplit, getPValue, cl = cl))
   parallel::stopCluster(cl)
 
   gc()
@@ -358,6 +352,38 @@ testCoAccessibilityRandom <- function(STObj,
     return(list('Foreground' = foreGround, 'Background'= backGround))
   }else{
     return(foreGround)
+  }
+
+}
+
+#' @title \code{getPValue}
+#'
+#' @description \code{getPValue}
+#'
+#' @param list1 A data.frame of correlations, where the first value is the foreground, and the rest is the background. 
+#' @return Returns the empirical P-value, testing the foreground against the background provided
+#'
+#' @examples
+#' runCoAccessibility(
+#'   assays(SampleTileObj)[[1]],
+#'   pairs = data.frame(
+#'     Tile1 = c("chrX:1000-1499", "chr21:1000-1499"),
+#'     Tile2 = c("chrX:1500-1999", "chr21:1500-1999")
+#'   )
+#' )
+#' @noRd
+#'
+#' 
+getPValue <- function(list1){
+
+  cor1 = list1$Correlation[1]
+  backGround = list2[-1,]f
+  if (is.na(cor1)){
+      return(NA)
+  } else if (cor1 >= 0) {
+      return(sum(cor1 > backGround$Correlation) / length(backGround$Correlation))
+  } else if (cor1 < 0) {
+      return(sum(cor1 < backGround$Correlation) / length(backGround$Correlation))
   }
 
 }
