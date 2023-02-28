@@ -302,7 +302,7 @@ testCoAccessibilityRandom <- function(STObj,
     }
     
     backgroundCombos = as.data.frame(backNumber)[,c('Tile1','Tile2')]
-    backgroundCombos <- backgroundCombos[backgroundCombos[, 'Tile1'] != backgroundCombos[,'Tile1'], ]
+    backgroundCombos <- backgroundCombos[backgroundCombos[, 'Tile1'] != backgroundCombos[,'Tile2'], ]
 
     if(dim(backNumber)[1] < 10){
       stop('User-defined background pairs are fewer than 10. Please provide a larger background.')
