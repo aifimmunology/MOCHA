@@ -255,8 +255,6 @@ testCoAccessibilityRandom <- function(STObj,
     }
   }
 
-  cl <- parallel::makeCluster(numCores)
-
   accMat <- SummarizedExperiment::assays(fullObj)[[1]]
 
   ## Test original pairs of locations
@@ -266,6 +264,7 @@ testCoAccessibilityRandom <- function(STObj,
     message("Identifying foreground")
   }
 
+  cl <- parallel::makeCluster(numCores)
   foreGround <- runCoAccessibility(accMat, combPairs, ZI, verbose, cl)
   
   if (any(is.na(foreGround$Correlation))) {
@@ -273,9 +272,6 @@ testCoAccessibilityRandom <- function(STObj,
       warning("All foreground correlations are undefined")
     }
   }
-  
-  parallel::stopCluster(cl)
-  gc()
 
   if(is.null(dim(backNumber))){
     if (verbose) {
@@ -298,24 +294,24 @@ testCoAccessibilityRandom <- function(STObj,
 
     backNumber <- as.data.frame(backNumber)
     if(!all(colnames(backNumber) %in% c('Tile1', 'Tile2'))){
-      error('User-defined background pairs requires a column for Tile1 and Tile2')
+      stop('User-defined background pairs requires a column for Tile1 and Tile2')
     }else if(!all(grepl(":", c(backNumber[,'Tile1'], backNumber[,'Tile2'])) & grepl("-", backNumber[,'Tile1'], backNumber[,'Tile2']))){
-      error('User-defined background pairs must be in the form ChrX:100-2000')
+      stop('User-defined background pairs must be in the form ChrX:100-2000')
     }else if(!all(c(backNumber[,'Tile1'], backNumber[,'Tile2']) %in% rownames(fullObj))){
-      error('User-defined background pairs includes regions not found within the sample tile accessibility matrix.')
+      stop('User-defined background pairs includes regions not found within the sample tile accessibility matrix.')
     }
     
     backgroundCombos = as.data.frame(backNumber)[,c('Tile1','Tile2')]
     backgroundCombos <- backgroundCombos[backgroundCombos[, 'Tile1'] != backgroundCombos[,'Tile1'], ]
 
     if(dim(backNumber)[1] < 10){
-      error('User-defined background pairs are fewer than 10. Please provide a larger background.')
+      stop('User-defined background pairs are fewer than 10. Please provide a larger background.')
 
     }
     
 
   }else{
-    error('Incorrect backNumber provided. Please provider either a number, or a data.frame with columns entitled Tile1 and Tile2, describing pairs to test. The tile names should be in the format ChrX:100-2000.')
+   stop('Incorrect backNumber provided. Please provider either a number, or a data.frame with columns entitled Tile1 and Tile2, describing pairs to test. The tile names should be in the format ChrX:100-2000.')
   }
   rm(combPairs)
 
@@ -328,6 +324,10 @@ testCoAccessibilityRandom <- function(STObj,
   backGround <- runCoAccessibility(accMat = accMat,
                   pairs = backgroundCombos, ZI = ZI, verbose = verbose, 
                   numCores = cl)
+
+    
+  parallel::stopCluster(cl)
+  gc()
 
   rm(accMat)
   rm(backgroundCombos)
