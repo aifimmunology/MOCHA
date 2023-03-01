@@ -353,10 +353,10 @@ getFragsFromArrow <- function(
   }
 
   #Get Sample Name
-  sampleName <- ArchR:::ArchR:::.h5read(ArrowFile, paste0("Metadata/Sample"), method = method)
+  sampleName <- ArchR:::.h5read(ArrowFile, paste0("Metadata/Sample"), method = method)
 
   o <- h5closeAll()
-  nFrags <- sum(ArchR:::ArchR:::.h5read(ArrowFile, paste0("Fragments/",chr,"/RGLengths"), method = method))
+  nFrags <- sum(ArchR:::.h5read(ArrowFile, paste0("Fragments/",chr,"/RGLengths"), method = method))
 
   if(nFrags==0){
     if(tolower(out)=="granges"){
