@@ -321,7 +321,7 @@ testCoAccessibilityRandom <- function(STObj,
 
   ## Now we need to test the background set
 
-  if(calc)
+  if(calcPValue)
   if (verbose) {
     message("Identifying background correlations.")
   }
