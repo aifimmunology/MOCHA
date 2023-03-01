@@ -435,7 +435,7 @@ setMethod(
     }
 
     cl <- parallel::makeCluster(numCores)
-    clusterEvalQ(cl, {library(ArchR); library(rhdf5)})
+    parallel::clusterEvalQ(cl, {library(ArchR); library(rhdf5)})
 
     # Get our fragments for this cellPop
     frags <- MOCHA::getPopFrags(
@@ -585,6 +585,9 @@ callOpenTilesFast <- function(ArchRProj,
   cellColData <- ArchR::getCellColData(ArchRProj)
   blackList <- ArchR::getBlacklist(ArchRProj)
 
+  cl <- parallel::makeCluster(numCores)
+  parallel::clusterEvalQ(cl, {library(ArchR); library(rhdf5)})
+
   # Get frags grouped by cell population and sample
   # This will also validate the input cellPopulations
   frags <- MOCHA::getPopFrags(
@@ -592,13 +595,13 @@ callOpenTilesFast <- function(ArchRProj,
     metaColumn = cellPopLabel,
     cellSubsets = cellPopulations,
     region = NULL,
-    numCores = numCores,
+    numCores = cl,
     sampleSpecific = TRUE,
     NormMethod = "nfrags",
     blackList = NULL,
     overlapList = 50
   )
-
+  parallel::stopCluster(cl)
   # Check for and remove celltype-sample groups for which there are no fragments.
   fragsNoNull <- frags[lengths(frags) != 0]
   emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
@@ -675,6 +678,7 @@ callOpenTilesFast <- function(ArchRProj,
 
   # Main loop over all cell populations
   experimentList <- list()
+  cl <- parallel::makeCluster(numCores)
   for (cellPop in names(splitFrags)) {
     if (verbose) {
       message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
@@ -704,16 +708,13 @@ callOpenTilesFast <- function(ArchRProj,
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-
+    
     iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
       FUN = simplifiedTilesBySample)
-
-    parallel::stopCluster(cl)
-
     names(tilesGRangesList) <- sampleNames
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
@@ -728,6 +729,7 @@ callOpenTilesFast <- function(ArchRProj,
     experimentList <- append(experimentList, ragExp)
   }
 
+  parallel::stopCluster(cl)
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
   # sample IDs which correspond to the arrow files.
