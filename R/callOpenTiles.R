@@ -458,6 +458,9 @@ setMethod(
     # save coverage files to folder.
     # This doesn't include empty samples and might break. We may need to reconsider how getCoverage works and add empty samples before this step.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
+      if (verbose) {
+        message(stringr::str_interp("Saving coverage files for cell population ${cellPop}"))
+      }
       covFiles <- getCoverage(
         popFrags = frags,
         normFactor = normalization_factors / 10^6,
@@ -706,7 +709,7 @@ callOpenTilesFast <- function(ArchRProj,
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
-      FUN = simplifiedFragments)
+      FUN = simplifiedTilesBySample)
 
     parallel::stopCluster(cl)
 
