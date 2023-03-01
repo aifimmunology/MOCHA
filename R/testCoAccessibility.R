@@ -342,7 +342,7 @@ testCoAccessibilityRandom <- function(STObj,
     #Split foreground into a list for each row and add the background in. This is wierd, but it avoids the inherent memory leak issue in R, 
     # without generating too many copies of the background
     numberChunks <- length(foreGround$Correlation) %/% (numCores*5) + 1
-    splitFactors = unlist(lapply(1:(numCores*10), function(x){ rep(x, numberChunks)})[c(1:length(foreGround$Correlation))]
+    splitFactors = unlist(lapply(1:(numCores*10), function(x){ rep(x, numberChunks)}))[c(1:length(foreGround$Correlation))]
 
     foreGroundSplit <- split(foreGround$Correlation, f = splitFactors )
     foreGroundSplit <- lapply(foreGroundSplit function(x){
