@@ -429,6 +429,7 @@ setMethod(
   # Main loop over all cell populations
   experimentList <- list()
   cl <- parallel::makeCluster(numCores)
+  clusterEvalQ(cl, {library(ArchR); library(rhdf5)})
   for (cellPop in cellPopulations) {
     if (verbose) {
       message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
