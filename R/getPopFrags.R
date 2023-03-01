@@ -203,7 +203,7 @@ getPopFrags <- function(ArchRProj,
     }
     if (sum(fragsListIndex[[x]]) > 1) {
       
-      fragIterList <- lapply(which(fragsListIndex[[x]]), function(x){
+      fragIterList <- lapply(which(fragsListIndex[[x]]), function(y){
         list(barcodesByCellPop[[x]], fragsList[[y]])
       })
 
@@ -327,4 +327,97 @@ subset_Frag <- function(ref) {
   fragsTable <- as.data.table(fragsGRanges)
   idx <- which(fragsTable$RG %in% cellNames)
   return(fragsGRanges[idx])
+}
+
+#### cloned function from ArchR, with correction for h5closeAll reference
+
+
+getFragsFromArrow <- function(
+  ArrowFile = NULL, 
+  chr = NULL, 
+  out = "GRanges", 
+  cellNames = NULL, 
+  method = "fast"
+  ){
+
+  if(is.null(chr)){
+    stop("Need to provide chromosome to read!")
+  }
+
+  o <- rhdf5::h5closeAll
+  ArrowFile <- ArchR:::.validArrow(ArrowFile)
+  
+  avSeq <- ArchR:::.availableSeqnames(ArrowFile)
+  if(chr %ni% avSeq){
+    stop(paste0("Chromosome ", chr ," not in ArrowFile! Available Chromosomes are : ", paste0(avSeq, collapse=",")))
+  }
+
+  #Get Sample Name
+  sampleName <- ArchR:::ArchR:::.h5read(ArrowFile, paste0("Metadata/Sample"), method = method)
+
+  o <- h5closeAll()
+  nFrags <- sum(ArchR:::ArchR:::.h5read(ArrowFile, paste0("Fragments/",chr,"/RGLengths"), method = method))
+
+  if(nFrags==0){
+    if(tolower(out)=="granges"){
+      output <- GenomicRanges::GRanges(seqnames = chr, IRanges::IRanges(start = 1, end = 1), RG = "tmp")
+      output <- output[-1,]
+    }else{
+      output <- IRanges::IRanges(start = 1, end = 1)
+      GenomicRanges::mcols(output)$RG <- c("tmp")
+      output <- output[-1,]
+    }
+    return(output)
+  }
+
+  if(is.null(cellNames) | tolower(method) == "fast"){
+    
+    output <- ArchR:::.h5read(ArrowFile, paste0("Fragments/",chr,"/Ranges"), method = method) %>% 
+      {IRanges::IRanges(start = .[,1], width = .[,2])}
+       GenomicRanges::mcols(output)$RG <- Rle(
+      values = paste0(sampleName, "#", ArchR:::.h5read(ArrowFile, paste0("Fragments/",chr,"/RGValues"), method = method)), 
+      lengths = ArchR:::.h5read(ArrowFile, paste0("Fragments/",chr,"/RGLengths"), method = method)
+    )
+    if(!is.null(cellNames)){
+      output <- output[BiocGenerics::which(mcols(output)$RG %bcin% cellNames)]
+    }
+
+  }else{
+    
+    if(!any(cellNames %in% .availableCells(ArrowFile))){
+
+      stop("None of input cellNames are in ArrowFile availableCells!")
+
+    }else{
+
+      barRle <- Rle(h5read(ArrowFile, paste0("Fragments/",chr,"/RGValues")), h5read(ArrowFile, paste0("Fragments/",chr,"/RGLengths")))
+      barRle@values <- paste0(sampleName, "#", barRle@values)
+      idx <- BiocGenerics::which(barRle %bcin% cellNames)
+      if(length(idx) > 0){
+        output <- h5read(ArrowFile, paste0("Fragments/",chr,"/Ranges"), index = list(idx, 1:2)) %>% 
+          {IRanges::IRanges(start = .[,1], width = .[,2])}
+          GenomicRanges::mcols(output)$RG <- barRle[idx]
+      }else{
+        output <- IRanges::IRanges(start = 1, end = 1)
+         GenomicRanges::mcols(output)$RG <- c("tmp")
+        output <- output[-1,]
+      }
+    }
+
+  }
+  
+  o <- rhdf5::h5closeAll
+
+  if(tolower(out)=="granges"){
+    if(length(output) > 0){
+      output <- GenomicRanges::GRanges(seqnames = chr, ranges(output), RG =GenomicRanges::mcols(output)$RG)    
+    }else{
+      output <- IRanges::IRanges(start = 1, end = 1)
+       GenomicRanges::mcols(output)$RG <- c("tmp")
+      output <- GenomicRanges::GRanges(seqnames = chr, ranges(output), RG =GenomicRanges::mcols(output)$RG)
+      output <- output[-1,]
+    }
+  }
+
+  return(output)
 }
