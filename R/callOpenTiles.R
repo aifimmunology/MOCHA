@@ -474,7 +474,7 @@ setMethod(
     # This pblapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    cl <- parallel::makeCluster(numCores)
+    #cl <- parallel::makeCluster(numCores)
 
     iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
 
