@@ -403,7 +403,7 @@ getPValue <- function(list1){
     } else if (x < 0) {
         return(1 - sum(x < backGround) / length(backGround))
     }
-  })
+  }))
 
 }
 
