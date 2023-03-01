@@ -5,15 +5,19 @@ if (
     require("org.Hs.eg.db", quietly = TRUE) &&
     require("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)
 ) {
-  if (require("ArchR", quietly = TRUE) & dir.exists("PBMCSmall")) {
+  # Working dir during tests is under projects/MOCHA/tests/testthat/. Assumes
+  # PBMCSmall is under 'projects'
+  ArchRProjDir <- "../../../PBMCSmall"
+  if (require("ArchR", quietly = TRUE) & dir.exists(ArchRProjDir)) {
+
     test_that("We can call peaks by sample from an ArchR project", {
       capture.output(
-        testProj <- ArchR::loadArchRProject("PBMCSmall"),
+        testProj <- ArchR::loadArchRProject(ArchRProjDir),
         type = "message"
       )
 
-      TxDb <- TxDb.Hsapiens.UCSC.hg38.refGene
-      Org <- org.Hs.eg.db
+      TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
+      Org <- "org.Hs.eg.db"
       capture.output(
         tiles <- MOCHA::callOpenTiles(
           ATACFragments = testProj,
@@ -30,6 +34,12 @@ if (
       expect_snapshot(
         tiles,
         variant = "ArchR"
+      )
+      
+      tiles@metadata$Directory <- NULL # Directory uses tempdir()
+      expect_snapshot(
+        tiles@metadata,
+        variant = "ArchR_metadata"
       )
     })
   }
@@ -58,6 +68,12 @@ if (
     expect_snapshot(
       metadata(tiles)$CellCounts,
       variant = "CellCounts"
+    )
+    
+    tiles@metadata$Directory <- NULL # Directory uses tempdir()
+    expect_snapshot(
+      tiles@metadata,
+      variant = "list_metadata"
     )
   })
 

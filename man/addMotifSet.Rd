@@ -7,7 +7,6 @@
 addMotifSet(
   SampleTileMatrix,
   motifPWMs,
-  genome = NULL,
   w = 7,
   returnSTM = TRUE,
   motifSetName = "Motifs"
@@ -19,9 +18,6 @@ getSampleTileMatrix}
 
 \item{motifPWMs}{A pwms object for the motif database. Either PFMatrix,
 PFMatrixList, PWMatrix, or PWMatrixList}
-
-\item{genome}{BSgenome object, DNAStringSet, or FaFile, or short string
-signifying genome build recognized by [BSgenome::getBSgenome()]}
 
 \item{w}{Parameter for motifmatchr controlling size in basepairs of window for filtration.
 Default is 7.}

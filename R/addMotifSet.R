@@ -6,8 +6,6 @@
 #'   getSampleTileMatrix
 #' @param motifPWMs A pwms object for the motif database. Either PFMatrix,
 #'   PFMatrixList, PWMatrix, or PWMatrixList
-#' @param genome BSgenome object, DNAStringSet, or FaFile, or short string
-#'   signifying genome build recognized by [BSgenome::getBSgenome()]
 #' @param w Parameter for motifmatchr controlling size in basepairs of window for filtration.
 #'   Default is 7.
 #' @param returnSTM If TRUE, return the modified SampleTileMatrix with motif set
@@ -35,7 +33,6 @@
 #'
 addMotifSet <- function(SampleTileMatrix, 
                         motifPWMs, 
-                        genome = NULL,
                         w = 7, 
                         returnSTM = TRUE, 
                         motifSetName = "Motifs") {
@@ -47,11 +44,9 @@ addMotifSet <- function(SampleTileMatrix,
   }
   TotalPeakSet <- SummarizedExperiment::rowRanges(SampleTileMatrix)
   
-  if (is.null(genome)) {
-    warning("Genome not provided - looking for genome in metadata of the ",
-            "provided SampleTileMatrix")
-    genome <- S4Vectors::metadata(SampleTileMatrix)$Genome
-  }
+  genome <- S4Vectors::metadata(SampleTileMatrix)$Genome
+  genome <- BSgenome::getBSgenome(genome)
+  
   motif_ix <- motifmatchr::matchMotifs(
     pwms = motifPWMs,
     subject = TotalPeakSet,

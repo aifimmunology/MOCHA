@@ -15,11 +15,9 @@ if (requireNamespace("chromVAR", quietly = TRUE) &&
       )
     )
     
-    library(BSgenome.Hsapiens.UCSC.hg19)
-    STM <- MOCHA::addMotifSet(
+    STM <- MOCHA::addMotifSet( 
       STM,
       chromVARmotifs::human_pwms_v2,
-      genome = BSgenome.Hsapiens.UCSC.hg19,
       motifSetName = 'CISBP'
     )
     
