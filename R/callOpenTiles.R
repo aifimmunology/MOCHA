@@ -690,9 +690,6 @@ callOpenTilesFast <- function(ArchRProj,
     sampleNames <- gsub("^([^.]+).", "", names(popFrags))
     names(popFrags) <- sampleNames
 
-    # Calculate normalization factors as the number of fragments for each celltype_samples
-    normalization_factors <- as.integer(sapply(popFrags, length))
-
     # save coverage files to folder.
     if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
       covFiles <- getCoverage(
@@ -709,7 +706,7 @@ callOpenTilesFast <- function(ArchRProj,
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     
-    iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
+    iterList <- lapply(1:length(popFrags), function(x){list(blackList, popFrags[[x]], verbose, study_prefactor)})
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
