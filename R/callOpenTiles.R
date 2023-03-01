@@ -481,7 +481,7 @@ setMethod(
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
-      FUN = simplifiedFragments)
+      FUN = simplifiedTilesBySample)
     parallel::stopCluster(cl)
 
     names(tilesGRangesList) <- names(frags)
