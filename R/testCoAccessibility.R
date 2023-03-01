@@ -266,7 +266,9 @@ testCoAccessibilityRandom <- function(STObj,
 
   cl <- parallel::makeCluster(numCores)
   foreGround <- runCoAccessibility(accMat, combPairs, ZI, verbose, cl)
-  
+  parallel::stopCluster(cl)
+  gc()
+
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
       warning("All foreground correlations are undefined")
@@ -320,7 +322,7 @@ testCoAccessibilityRandom <- function(STObj,
   if (verbose) {
     message("Identifying background correlations.")
   }
-
+  cl <- parallel::makeCluster(numCores)
   backGround <- runCoAccessibility(accMat = accMat,
                   pairs = backgroundCombos, ZI = ZI, verbose = verbose, 
                   numCores = cl)
@@ -386,9 +388,9 @@ getPValue <- function(list1){
   if (is.na(cor1)){
       return(NA)
   } else if (cor1 >= 0) {
-      return(sum(cor1 > backGround) / length(backGround))
+      return(1 - sum(cor1 > backGround) / length(backGround))
   } else if (cor1 < 0) {
-      return(sum(cor1 < backGround) / length(backGround))
+      return(1 - sum(cor1 < backGround) / length(backGround))
   }
 
 }

@@ -111,63 +111,18 @@ weightedZISpearman <- function(x, y, w = 1, verbose = FALSE, ZI = TRUE) {
 #' @noRd
 
 Spearman <- function(compMat) {
-  w=1
+
   verbose = FALSE
   ZI = FALSE
   # needs the original values, not the ranks
   numLen <- length(compMat)/2
   x = compMat[1:numLen]
   y = compMat[(numLen+1):(2*numLen)]
+  w=rep(1, length(x))
 
-  if (any(x < 0 | y < 0)) {
-    stop("x and/or y values have negative values")
-  }
-  if (length(x) != length(y)) {
-    stop("x and y should have the same length")
-  }
-  if (length(w) == 1) {
-    w <- rep(w, length(x))
-  }
-
-  if (!ZI) {
-    spearmanCorr <- wCorr::weightedCorr(x = x, y = y, weights = w, method = "Spearman")
-    return(spearmanCorr)
-  }
-
-  posx <- x > 0
-  posy <- y > 0
-  pospos <- posx & posy
-
-  p_11 <- sum(w * pospos) / sum(w)
-  p_00 <- sum(w * (!posx & !posy)) / sum(w)
-  p_01 <- sum(w * (!posx & posy)) / sum(w)
-  p_10 <- sum(w * (posx & !posy)) / sum(w)
-
-
-  if (any(pospos) & p_11 > 0) {
-    rho_11 <- wCorr::weightedCorr(x = x[pospos], y = y[pospos], weights = w[pospos], method = "Spearman")
-  } else {
-    rho <- NA
-    if (verbose) {
-      message("Zero inflated Spearman correlation is undefined, returning NA")
-    }
-    return(rho)
-  }
-
-  rho_star <- p_11 * (p_01 + p_11) * (p_10 + p_11) * rho_11 +
-    3 * (p_00 * p_11 - p_10 * p_01)
-
-  if (is.na(rho_star)) {
-    rho <- NA
-    if (verbose) {
-      message("Zero inflated Spearman correlation is undefined, returning NA")
-    }
-    return(rho)
-  }
-
-
-
-  return(rho_star)
+  spearmanCorr <- wCorr::weightedCorr(x = x, y = y, weights = w, method = "Spearman")
+  return(spearmanCorr)
+  
 }
 
 #' @title ZISpearman
@@ -187,7 +142,7 @@ Spearman <- function(compMat) {
 #' @noRd
 
 ZISpearman <- function(compMat) {
-  w=1
+  
   verbose = FALSE
   ZI = TRUE
   # needs the original values, not the ranks
@@ -195,20 +150,7 @@ ZISpearman <- function(compMat) {
   x = compMat[1:numLen]
   y = compMat[(numLen+1):(2*numLen)]
 
-  if (any(x < 0 | y < 0)) {
-    stop("x and/or y values have negative values")
-  }
-  if (length(x) != length(y)) {
-    stop("x and y should have the same length")
-  }
-  if (length(w) == 1) {
-    w <- rep(w, length(x))
-  }
-
-  if (!ZI) {
-    spearmanCorr <- wCorr::weightedCorr(x = x, y = y, weights = w, method = "Spearman")
-    return(spearmanCorr)
-  }
+  w = rep(1, length(x))
 
   posx <- x > 0
   posy <- y > 0
