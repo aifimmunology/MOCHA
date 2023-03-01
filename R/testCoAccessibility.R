@@ -345,7 +345,7 @@ testCoAccessibilityRandom <- function(STObj,
     splitFactors = unlist(lapply(1:(numCores*10), function(x){ rep(x, numberChunks)}))[c(1:length(foreGround$Correlation))]
 
     foreGroundSplit <- split(foreGround$Correlation, f = splitFactors )
-    foreGroundSplit <- lapply(foreGroundSplit function(x){
+    foreGroundSplit <- lapply(foreGroundSplit, function(x){
         list(x, backGround$Correlation)
     })
 
