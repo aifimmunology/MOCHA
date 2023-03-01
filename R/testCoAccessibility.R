@@ -205,6 +205,7 @@ testCoAccessibilityChromVar <- function(STObj,
 #' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)
 #' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
 #' @param backNumber number of background pairs, or a user-defined background. Default is 1000. If user-defined, it must be a data.frame with column names Tile1 and Tile2, with all tiles named as string in the format 'ChrX:100-3000'. 
+#' @param calcPValue Set TRUE to calculate p-value of foreground compared to background. If background is larger, it may be better to set to FALSE, and calculate this in the global R environment to avoid memory issues. 
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
@@ -220,6 +221,7 @@ testCoAccessibilityRandom <- function(STObj,
                                       numCores = 1,
                                       ZI = TRUE,
                                       backNumber = 1000,
+                                      calcPValue = TRUE,
                                       returnBackGround = FALSE,
                                       verbose = TRUE) {
   . <- NULL
@@ -319,6 +321,7 @@ testCoAccessibilityRandom <- function(STObj,
 
   ## Now we need to test the background set
 
+  if(calc)
   if (verbose) {
     message("Identifying background correlations.")
   }
@@ -335,23 +338,30 @@ testCoAccessibilityRandom <- function(STObj,
   rm(backgroundCombos)
   rm(fullObj)
 
-  #Split foreground into a list for each row and add the background in. This is wierd, but it avoids the inherent memory leak issue in R.
-  foreGroundSplit <- lapply(foreGround$Correlation, function(x){
-      c(x, backGround$Correlation)
-  })
+  if(calcPValue){
+    #Split foreground into a list for each row and add the background in. This is wierd, but it avoids the inherent memory leak issue in R, 
+    # without generating too many copies of the background
+    numberChunks <- length(foreGround$Correlation) %/% (numCores*5) + 1
+    splitFactors = unlist(lapply(1:(numCores*10), function(x){ rep(x, numberChunks)})[c(1:length(foreGround$Correlation))]
+
+    foreGroundSplit <- split(foreGround$Correlation, f = splitFactors )
+    foreGroundSplit <- lapply(foreGroundSplit function(x){
+        list(x, backGround$Correlation)
+    })
 
 
-  if (verbose) {
-    message("Generating p-values.")
+    if (verbose) {
+      message("Generating p-values.")
+    }
+
+    cl <- parallel::makeCluster(numCores)
+    pValues <- unlist(pbapply::pblapply(foreGroundSplit, getPValue, cl = cl))
+    parallel::stopCluster(cl)
+
+    gc()
+
+    foreGround$pValues <- pValues
   }
-
-  cl <- parallel::makeCluster(numCores)
-  pValues <- unlist(pbapply::pblapply(foreGroundSplit, getPValue, cl = cl))
-  parallel::stopCluster(cl)
-
-  gc()
-
-  foreGround$pValues <- pValues
 
 
   if(returnBackGround){
@@ -382,16 +392,18 @@ testCoAccessibilityRandom <- function(STObj,
 #' 
 getPValue <- function(list1){
 
-  cor1 = list1[1]
-  backGround = list1[-1]
+  cor1 = list1[[1]]
+  backGround = list1[[2]]
 
-  if (is.na(cor1)){
-      return(NA)
-  } else if (cor1 >= 0) {
-      return(1 - sum(cor1 > backGround) / length(backGround))
-  } else if (cor1 < 0) {
-      return(1 - sum(cor1 < backGround) / length(backGround))
-  }
+  unlist(lapply(cor1, function(x){
+    if (is.na(x)){
+        return(NA)
+    } else if (x >= 0) {
+        return(1 - sum(x > backGround) / length(backGround))
+    } else if (x < 0) {
+        return(1 - sum(x < backGround) / length(backGround))
+    }
+  })
 
 }
 
