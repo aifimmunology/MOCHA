@@ -679,6 +679,17 @@ callOpenTilesFast <- function(ArchRProj,
   # Main loop over all cell populations
   experimentList <- list()
   cl <- parallel::makeCluster(numCores)
+  frags2 <- unlist(frags, recursive = FALSE)
+  iterList <- lapply(1:length(frags2), function(x){list(blackList, frags2[[x]], verbose, study_prefactor)})
+
+  tilesGRangesList <- pbapply::pblapply(
+      cl = cl,
+      X = iterList,
+      FUN = simplifiedTilesBySample)
+
+  names(tilesGRangesList) <- names(frags2)
+  
+
   for (cellPop in names(splitFrags)) {
     if (verbose) {
       message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
