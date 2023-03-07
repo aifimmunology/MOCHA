@@ -194,10 +194,11 @@ getPopFrags <- function(ArchRProj,
   }
 
   # Add normalization factor.
+  fragLength <- unlist(lapply(tmp_fragList, length))
   names(tmp_fragList) <- paste(
         names(tmp_fragList),
         "__",
-        unlist(lapply(tmp_fragList, function(y){length(y[[2]])})) / 10^6,
+        fragLength/ 10^6,
         sep = ""
   )
 
