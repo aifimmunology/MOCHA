@@ -172,8 +172,7 @@ ZISpearman <- function(compMat) {
     return(rho)
   }
 
-  rho_star <- p_11 * (p_01 + p_11) * (p_10 + p_11) * rho_11 +
-    3 * (p_00 * p_11 - p_10 * p_01)
+  rho_star <- p_11 * (p_01 + p_11) * (p_10 + p_11) * rho_11 + 3 * (p_00 * p_11 - p_10 * p_01)
 
   if (is.na(rho_star)) {
     rho <- NA
