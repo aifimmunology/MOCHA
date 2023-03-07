@@ -171,7 +171,7 @@ getPopFrags <- function(ArchRProj,
 
     
     if (verbose) {
-        message("Subsetting fragments by cell type."))
+        message("Subsetting fragments by cell type.")
     }
 
     #Subset fragments by cell type
