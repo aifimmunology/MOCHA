@@ -444,8 +444,6 @@ setMethod(
       cellSubsets = cellPop,
       region = NULL,
       numCores = cl,
-      sampleSpecific = TRUE,
-      NormMethod = "nfrags",
       blackList = NULL,
       verbose = verbose,
       overlapList = 50
@@ -688,7 +686,8 @@ callOpenTilesFast <- function(ArchRProj,
       FUN = simplifiedTilesBySample)
 
   names(tilesGRangesList) <- names(frags2)
-  
+
+
 
   for (cellPop in names(splitFrags)) {
     if (verbose) {
