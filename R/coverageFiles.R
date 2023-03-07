@@ -15,27 +15,45 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
     stop("Length of normFactor is equal to length of popFrags. Please either give 1 value, or a vector of equal length to popFrags.")
   }
 
+  if (verbose) {
+      message(paste("Counting", paste0(names(popFrags), collapse = ", "), sep = " "))
+  }
+
+  popFragList <- lapply(seq_along(popFrags), function(x){
+
+    list(popFrags[[x]], normFactor[[x]], TxDb, filterEmpty)
+
+  })
+
+  cl <- parallel::makeCluster(numCores)
+
   # Summarize the coverage over the region window at a single basepair resolution
-  popCounts <- parallel::mclapply(seq_along(popFrags), function(x) {
-    if (verbose) {
-      message(paste("Counting", names(popFrags)[x], sep = " "))
-    }
-
-    Num <- normFactor[[x]]
-    counts_gr <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score / Num)
-
-    GenomeInfoDb::seqinfo(counts_gr) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(counts_gr))]
-
-    if (filterEmpty) {
-      plyranges::filter(counts_gr, score > 0)
-    } else {
-      counts_gr
-    }
-  }, mc.cores = numCores)
-
+  popCounts <- pbapply::pblapply(popFragList, calculateCoverage, cl = cl)
   names(popCounts) <- names(popFrags)
+  parallel::stopCluster(cl)
 
   return(popCounts)
+}
+
+######## calculateCoverage: Function that takes in a GRanges fragment object and generates coverage GRanges.
+## @param ref
+calculateCoverage <- function(ref){
+
+  popFrags <- ref[[1]]
+  Num <- ref[[2]]
+  TxDb <- ref[[3]]
+  filterEmpty <- ref[[4]]
+
+  counts_gr <- plyranges::compute_coverage(popFrags) %>% plyranges::mutate(score = score / Num)
+
+  GenomeInfoDb::seqinfo(counts_gr) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(counts_gr))]
+
+  if (filterEmpty) {
+    plyranges::filter(counts_gr, score > 0)
+  } else {
+    counts_gr
+  }
+
 }
 
 
