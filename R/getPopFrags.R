@@ -35,8 +35,6 @@ getPopFrags <- function(ArchRProj,
                         cellSubsets = "ALL",
                         region = NULL,
                         numCores = 1,
-                        sampleSpecific = TRUE,
-                        NormMethod = "nfrags",
                         blackList = NULL,
                         verbose = FALSE,
                         overlapList = 50) {
@@ -107,7 +105,7 @@ getPopFrags <- function(ArchRProj,
       message(stringr::str_interp("Extracting fragments from arrow files"))        
     }
 
-    fragsList <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores)
+    frags <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores)
 
   } else {
 
@@ -141,9 +139,9 @@ getPopFrags <- function(ArchRProj,
         message(stringr::str_interp("Extracting fragments from arrow files.}"))
     }
 
-    fragsList <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores) 
+    frags <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores) 
     
-    fragsList <- lapply(fragsList, function(x){  # Filter according to provided blacklist
+    frags <- lapply(frags, function(x){  # Filter according to provided blacklist
       if (is.null(blackList)) {
         x
       } else if (class(blackList)[1] == "GRanges") {
@@ -159,177 +157,51 @@ getPopFrags <- function(ArchRProj,
     row.names(metadf)[which(metadf[, metaColumn] == x)]
   })
 
-  # Add normalization factor.
-  if (tolower(NormMethod) == "raw") {
-    names(barcodesByCellPop) <- paste(gsub("#", "_", gsub(" |_", "_", cellPopulations)), 1, sep = "__")
-  } else if (tolower(NormMethod) == "ncells") {
-    names(barcodesByCellPop) <- paste(gsub("#", "_", gsub(" |_", "_", cellPopulations)), cellCounts / 1000, sep = "__")
-  } else if (tolower(NormMethod) == "nfrags") {
-    # Calculate the total nFrags for our cell populations
-    nFragsNorm <- as.data.frame(metadf[, c(metaColumn, "nFrags")]) %>%
-      dplyr::filter(!is.na(get(metaColumn))) %>%
-      dplyr::filter(get(metaColumn) %in% cellPopulations) %>%
-      dplyr::group_by(get(metaColumn)) %>%
-      dplyr::summarize(nFrags = sum(nFrags))
+  #name list of cell barcodes by population (while cleaning up for odd characters)
+  names(barcodesByCellPop) <- gsub(" |_|#", "_", cellPopulations)
 
-    # Verify expected cellPopulations have corresponding nFrags
-    if (!all(nFragsNorm[, 1] == cellPopulations)) {
-      stop("Names of nFrags don't match the cell populations.", nFragsNorm[, 1])
-    }
-    names(barcodesByCellPop) <- paste(gsub("#", "_", gsub(" |_", "_", cellPopulations)), nFragsNorm$nFrags / 10^6, sep = "__")
-  } else if (tolower(NormMethod) == "median") {
-    names(barcodesByCellPop) <- paste(gsub("#", "_", gsub(" |_", "_", cellPopulations)), "Median", sep = "__")
-  } else if (tolower(NormMethod) == "medmax") {
-    names(barcodesByCellPop) <- paste(gsub("#", "_", gsub(" |_", "_", cellPopulations)), "MedianMax", sep = "__")
-  } else if (tolower(NormMethod) == "TotalSampleByNCells") {
-    # This calculates total fragments per sample.
-    totalsampleFrags <- unlist(fragsList, length)
-    names(barcodesByCellPop) <- paste(gsub("#", "_", gsub(" |_", "_", cellPopulations)), totalsampleFrags / 10^6 * cellCounts / 1000, sep = "__")
-  } else {
-    stop("Error: Incorrect NormMethod given.")
-  }
-
-  ## Identify which subset of arrows the population can be found it.
-  ## Speeds up sample-specific population extraction
-  fragsListIndex <- lapply(cellPopulations, function(x) {
-    names(arrows) %in% unique(metadf$Sample[which(metadf[, metaColumn] == x)])
-  })
-
-  # Sort fragments into a list by cell population only if there's multiple populations being pulled out. 
-
+  #If you are extracting more than one population, then sort the fragments by population. If you are not, then no sorting is necessary. 
   if(length(cellPopulations) > 1 | tolower(cellPopulations) == 'all'){
-
-      fragIterList <- lapply(cellPopulations, function(x){
-        # iterate over all cell
-        fragIterList_sub <- lapply(seq_along(frags), function(y){
-          list(barcodesByCellPop[[x]], frags[[y]])
-        })
-        names(fragIterList_sub) = names(arrows)
-        fragIterList_sub
-      })
-
-      names(fragIterList) <-  gsub("\\.", "", gsub("__.*", "", names(barcodesByCellPop)))
-
-      tmp_fragList <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
-
-      if (sampleSpecific) {
-        subSet_tmp <- gsub("__.*", "", names(barcodesByCellPop)[x])
-
-        if (tolower(NormMethod) == "ncells") {
-          tmp_cellCount <- unlist(lapply(tmp_fragList, function(y) {
-            length(unique(y$RG))
-          }))
-
-          names(tmp_fragList) <- paste(
-            subSet_tmp,
-            "#",
-            names(arrows)[unlist(fragsListIndex[[x]])],
-            "__",
-            tmp_cellCount / 1000,
-            sep = ""
-          )
-        } else if (tolower(NormMethod) == "nfrags") {
-          names(tmp_fragList) <- paste(
-            subSet_tmp,
-            "#",
-            names(arrows)[unlist(fragsListIndex[[x]])],
-            "__",
-            unlist(lapply(tmp_fragList, length)) / 10^6,
-            sep = ""
-          )
-        } else {
-          subSet_tmp <- gsub("__.*", "", names(barcodesByCellPop)[x])
-          norm_tmp <- gsub(".*__", "", names(barcodesByCellPop)[x])
-
-          names(tmp_fragList) <- paste(
-            subSet_tmp,
-            "#",
-            names(arrows)[unlist(fragsListIndex[[x]])], "__", norm_tmp,
-            sep = ""
-          )
-        }
-
-      }
-
-      popFrags <- lapply(names(barcodesByCellPop), function(x){
-         IRanges::stack(methods::as(tmp, "GRangesList"))
-
-        IRanges::stack(methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList"))
-
-      })
-      rm(tmp_fragList)
-      names(popFrags) <- names(barcodesByCellPop)
-
-  } else{
-
-    ## sort all cells and samples
-
-    #start by iterating over cell populations
-    fragIterList <- lapply(seq_along(cellPopulations), function(x){
-      # iterate over all cell
-     fragIterList_sub <- lapply(seq_along(frags), function(y){
-        list(barcodesByCellPop[[x]], frags[[y]])
-      })
-     names(fragIterList_sub) = names(arrows)
-     fragIterList_sub
+    # Set up sets for sorting by fragments for cell types
+    fragIterList <- lapply(seq_along(frags), function(x){
+          list(barcodesByCellPop, frags[[y]])
     })
-    names(fragIterList) <-  gsub("\\.", "", gsub("__.*", "", names(barcodesByCellPop)))
-
-    fragIterList <- unlist(fragIterList, recursive = FALSE)
-    names(fragIterList) <- gsub("\\.", "#",names(fragIterList))
-    #Remove frags, and barcodesByCellPop
     rm(frags)
-    rm(barcodesByCellPop)
+    names(fragIterList) = names(arrows)
 
-    #Now iterate over all indices, and pull out
-    tmp <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
+    #Subset fragments by cell type
+    tmp_fragList <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
+    names(tmp_fragList) = names(arrows)
 
-    if (sampleSpecific) {
-      subSet_tmp <- gsub("__.*", "", names(barcodesByCellPop)[x])
+    #Unlist
+    tmp_fragList <- unlist(tmp_fragList, recursive = FALSE)
+    names(tmp_fragList) <- gsub("\\.", "#",names(tmp_fragList))
+    sampleName <- gsub("#.*", "",names(tmp_fragList))
+    cellTypeName <-  gsub(".*#", "",names(tmp_fragList))
+    names(tmp_fragList) <- paste(cellTypeName, "#", sampleName, sep ='')
+    rm(fragIterList)
 
-      if (tolower(NormMethod) == "ncells") {
-        tmp_cellCount <- unlist(lapply(tmp, function(y) {
-          length(unique(y$RG))
-        }))
+  }else{
 
-        names(tmp) <- paste(
-          subSet_tmp,
-          "#",
-          names(arrows)[unlist(fragsListIndex[[x]])],
-          "__",
-          tmp_cellCount / 1000,
-          sep = ""
-        )
-      } else if (tolower(NormMethod) == "nfrags") {
-        names(tmp) <- paste(
-          subSet_tmp,
-          "#",
-          names(arrows)[unlist(fragsListIndex[[x]])],
-          "__",
-          unlist(lapply(tmp, length)) / 10^6,
-          sep = ""
-        )
-      } else {
-        subSet_tmp <- gsub("__.*", "", names(barcodesByCellPop)[x])
-        norm_tmp <- gsub(".*__", "", names(barcodesByCellPop)[x])
-
-        names(tmp) <- paste(
-          subSet_tmp,
-          "#",
-          names(arrows)[unlist(fragsListIndex[[x]])], "__", norm_tmp,
-          sep = ""
-        )
-      }
-
-      IRanges::stack(methods::as(tmp, "GRangesList"))
-    }
+    tmp_fragList <- frags
+    names(tmp_fragList) <- paste(names(barcodesByCellPop), '#', names(arrows), sep ='')
+    rm(frags)
   }
 
-  if (sampleSpecific) {
-    popFrags <- unlist(popFrags, recursive = FALSE)
-  } else {
-    names(popFrags) <- names(barcodesByCellPop)
-  }
+  # Add normalization factor.
+  names(tmp_fragList) <- paste(
+        names(tmp_fragList),
+        "__",
+        unlist(lapply(tmp_fragList, function(y){length(y[[2]])})) / 10^6,
+        sep = ""
+  )
+
+  popFrags <- lapply(names(barcodesByCellPop), function(x){
+    IRanges::stack(methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList"))
+
+     })
+  rm(tmp_fragList)
+  names(popFrags) <- names(barcodesByCellPop)
 
   # Turn off ArchR logging messages
   ArchR::addArchRVerbose(verbose = TRUE)
@@ -389,9 +261,15 @@ simplifiedFragments <- function(ref){
 
 # From MOCHA - Function to sort fragments by populations based on cell barcode lists
 subset_Frag <- function(ref) {
-  cellNames = ref[[1]]
+  barcodesByCellPop = ref[[1]]
   fragsGRanges = ref[[2]]
-  fragsTable <- as.data.table(fragsGRanges)
-  idx <- which(fragsTable$RG %in% cellNames)
-  return(fragsGRanges[idx])
+
+  fragsTable <- data.table::as.data.table(fragsGRanges)
+  sortedFrags <- lapply(barcodesByCellPop, function(y){
+        idx <- which(fragsTable$RG %in% y)
+        fragsGRanges[idx]
+  })
+
+  names(sortedFrags) = names(barcodesByCellPop)   
+  return(sortedFrags)
 }
