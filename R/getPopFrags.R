@@ -260,7 +260,7 @@ getPopFrags <- function(ArchRProj,
       rm(tmp_fragList)
       names(popFrags) <- names(barcodesByCellPop)
 
-  }else{
+  } else{
 
     ## sort all cells and samples
 
@@ -322,6 +322,7 @@ getPopFrags <- function(ArchRProj,
       }
 
       IRanges::stack(methods::as(tmp, "GRangesList"))
+    }
   }
 
   if (sampleSpecific) {
