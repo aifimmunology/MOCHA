@@ -102,7 +102,7 @@ getPopFrags <- function(ArchRProj,
     # Extract fragments from all available regions
     arrowList <- lapply(seq_along(arrows), function(x){ list(arrows[x], grep(names(arrows)[x], cellNames, value = TRUE))})
     if (verbose) {
-      message(stringr::str_interp("Extracting fragments from arrow files"))        
+      message("Extracting fragments from arrow files")
     }
 
     frags <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores)
@@ -168,6 +168,11 @@ getPopFrags <- function(ArchRProj,
     })
     rm(frags)
     names(fragIterList) = names(arrows)
+
+    
+    if (verbose) {
+        message("Subsetting fragments by cell type."))
+    }
 
     #Subset fragments by cell type
     tmp_fragList <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
