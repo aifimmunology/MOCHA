@@ -161,7 +161,7 @@ getPopFrags <- function(ArchRProj,
   names(barcodesByCellPop) <- gsub(" |_|#", "_", cellPopulations)
 
   #If you are extracting more than one population, then sort the fragments by population. If you are not, then no sorting is necessary. 
-  if(length(cellPopulations) > 1 | tolower(cellPopulations) == 'all'){
+  if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
     # Set up sets for sorting by fragments for cell types
     fragIterList <- lapply(seq_along(frags), function(x){
           list(barcodesByCellPop, frags[[y]])
