@@ -164,7 +164,7 @@ getPopFrags <- function(ArchRProj,
   if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
     # Set up sets for sorting by fragments for cell types
     fragIterList <- lapply(seq_along(frags), function(x){
-          list(barcodesByCellPop, frags[[y]])
+          list(barcodesByCellPop, frags[[x]])
     })
     rm(frags)
     names(fragIterList) = names(arrows)
@@ -203,9 +203,14 @@ getPopFrags <- function(ArchRProj,
   )
 
   popFrags <- lapply(names(barcodesByCellPop), function(x){
-    IRanges::stack(methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList"))
+      subsetFrags <- methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList")
+      names(subsetFrags) <- grep(x, names(tmp_fragList), value = TRUE)
+      subsetFrags
+  })
 
-     })
+  #popFrags <- 
+
+  #   IRanges::stack(methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList"))
   rm(tmp_fragList)
   names(popFrags) <- names(barcodesByCellPop)
 
