@@ -447,7 +447,7 @@ setMethod(
       blackList = NULL,
       verbose = verbose,
       overlapList = 50
-    )
+    )[[1]]
 
     # Simplify sample names to remove everything before the first "#"
     sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
@@ -594,8 +594,6 @@ callOpenTilesFast <- function(ArchRProj,
     cellSubsets = cellPopulations,
     region = NULL,
     numCores = cl,
-    sampleSpecific = TRUE,
-    NormMethod = "nfrags",
     blackList = NULL,
     overlapList = 50
   )

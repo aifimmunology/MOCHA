@@ -40,7 +40,7 @@ getPopFrags <- function(ArchRProj,
                         overlapList = 50) {
   nFrags <- NULL
   # Turn off ArchR logging messages
-  ArchR::addArchRVerbose(verbose = FALSE)
+  suppressMessages(ArchR::addArchRVerbose(verbose = FALSE))
 
   # Extract metadata
   metadf <- ArchR::getCellColData(ArchRProj)
@@ -191,6 +191,7 @@ getPopFrags <- function(ArchRProj,
     tmp_fragList <- frags
     names(tmp_fragList) <- paste(names(barcodesByCellPop), '#', names(arrows), sep ='')
     rm(frags)
+
   }
 
   # Add normalization factor.
@@ -202,20 +203,21 @@ getPopFrags <- function(ArchRProj,
         sep = ""
   )
 
-  popFrags <- lapply(names(barcodesByCellPop), function(x){
-      subsetFrags <- methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList")
-      names(subsetFrags) <- grep(x, names(tmp_fragList), value = TRUE)
-      subsetFrags
-  })
+  if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
+    popFrags <- lapply(names(barcodesByCellPop), function(x){
+        subsetFrags <- methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList")
+        names(subsetFrags) <- grep(x, names(tmp_fragList), value = TRUE)
+        subsetFrags
+    })
+    
+    names(popFrags) <- names(barcodesByCellPop)
+  }else{
+    popFrags = tmp_fragList
+  }
 
-  #popFrags <- 
-
-  #   IRanges::stack(methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList"))
   rm(tmp_fragList)
-  names(popFrags) <- names(barcodesByCellPop)
-
   # Turn off ArchR logging messages
-  ArchR::addArchRVerbose(verbose = TRUE)
+  suppressMessages(ArchR::addArchRVerbose(verbose = TRUE))
 
   return(popFrags)
 }
