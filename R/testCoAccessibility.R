@@ -394,15 +394,13 @@ getPValue <- function(list1){
   cor1 = list1[[1]]
   #extract previous environment
   env1 = list1[[2]]
-  #Get background distribution from previous environment
-  background <- env1$background$Correlation
-  
+
   if (is.na(x)){
       return(NA)
   } else if (x >= 0) {
-      return(1 - sum(x > backGround) / length(backGround))
+      return(1 - sum(x > env1$background$Correlation) / length(env1$background$Correlation))
   } else if (x < 0) {
-      return(1 - sum(x < backGround) / length(backGround))
+      return(1 - sum(x < env1$background$Correlation) / length(env1$background$Correlation))
   }
 }
 
