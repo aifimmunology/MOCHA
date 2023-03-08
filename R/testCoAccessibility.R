@@ -344,9 +344,8 @@ testCoAccessibilityRandom <- function(STObj,
     numberChunks <- length(foreGround$Correlation) %/% (numCores*5) + 1
     splitFactors = unlist(lapply(1:(numCores*10), function(x){ rep(x, numberChunks)}))[c(1:length(foreGround$Correlation))]
 
-    foreGroundSplit <- split(foreGround$Correlation, f = splitFactors )
-    foreGroundSplit <- lapply(foreGroundSplit, function(x){
-        list(x, backGround$Correlation)
+    foreGroundSplit <- lapply(foreGround$Correlation, function(x){
+        list(x, environment())
     })
 
 
@@ -391,20 +390,20 @@ testCoAccessibilityRandom <- function(STObj,
 #'
 #' 
 getPValue <- function(list1){
-
+  #Extract correlation
   cor1 = list1[[1]]
-  backGround = list1[[2]]
-
-  unlist(lapply(cor1, function(x){
-    if (is.na(x)){
-        return(NA)
-    } else if (x >= 0) {
-        return(1 - sum(x > backGround) / length(backGround))
-    } else if (x < 0) {
-        return(1 - sum(x < backGround) / length(backGround))
-    }
-  }))
-
+  #extract previous environment
+  env1 = list1[[2]]
+  #Get background distribution from previous environment
+  background <- env1$background$Correlation
+  
+  if (is.na(x)){
+      return(NA)
+  } else if (x >= 0) {
+      return(1 - sum(x > backGround) / length(backGround))
+  } else if (x < 0) {
+      return(1 - sum(x < backGround) / length(backGround))
+  }
 }
 
 #' @title \code{runCoAccessibility}
