@@ -235,7 +235,7 @@ setGeneric(
     # (Arrow files are locked - one access at a time)
     cl <- parallel::makeCluster(numCores)
     
-    iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
+    iterList <- lapply(1:length(frags), function(x){list(blackList, frags[[x]], verbose, study_prefactor)})
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
@@ -477,7 +477,7 @@ setMethod(
     # (Arrow files are locked - one access at a time)
     #cl <- parallel::makeCluster(numCores)
 
-    iterList <- lapply(1:length(frags), function(x){list(blackList, normalization_factors[x], frags[[x]], verbose, study_prefactor)})
+    iterList <- lapply(1:length(frags), function(x){list(blackList, frags[[x]], verbose, study_prefactor)})
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
