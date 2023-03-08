@@ -120,7 +120,7 @@ callTilesBySample <- function(blackList,
 simplifiedTilesBySample <- function(x){
 
   blackList <- x[[1]]
-  frags <- x[[3]]
+  frags <- x[[2]]
   normalization_factors <- length(frags)
   verbose <- x[[3]]
   study_prefactor <- x[[4]]
