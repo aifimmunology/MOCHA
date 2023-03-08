@@ -21,16 +21,18 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
 
   popFragList <- lapply(seq_along(popFrags), function(x){
 
-    list(popFrags[[x]], normFactor[[x]], TxDb, filterEmpty)
+    list(popFrags[[x]], normFactor[[x]], filterEmpty)
 
   })
 
-  cl <- parallel::makeCluster(numCores)
-
   # Summarize the coverage over the region window at a single basepair resolution
   popCounts <- pbapply::pblapply(popFragList, calculateCoverage, cl = cl)
+
+  popCounts <- lapply(popCounts, function(x){
+          GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
+  })
+    
   names(popCounts) <- names(popFrags)
-  parallel::stopCluster(cl)
 
   return(popCounts)
 }
@@ -41,12 +43,9 @@ calculateCoverage <- function(ref){
 
   popFrags <- ref[[1]]
   Num <- ref[[2]]
-  TxDb <- ref[[3]]
-  filterEmpty <- ref[[4]]
+  filterEmpty <- ref[[3]]
 
   counts_gr <- plyranges::compute_coverage(popFrags) %>% plyranges::mutate(score = score / Num)
-
-  GenomeInfoDb::seqinfo(counts_gr) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(counts_gr))]
 
   if (filterEmpty) {
     plyranges::filter(counts_gr, score > 0)
