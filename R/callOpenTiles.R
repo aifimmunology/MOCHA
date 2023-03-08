@@ -454,7 +454,7 @@ setMethod(
     names(frags) <- sampleNames
 
     # Calculate normalization factors as the number of fragments for each celltype_samples
-    normalization_factors <- as.integer(lengths(frags)))
+    normalization_factors <- as.integer(lengths(frags))
 
     # save coverage files to folder.
     # This doesn't include empty samples and might break. We may need to reconsider how getCoverage works and add empty samples before this step.
