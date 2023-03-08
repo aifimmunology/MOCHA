@@ -79,7 +79,7 @@ simplifiedSampleTile <- function(ref){
 	experiments = ref[[1]]
 	allTiles = ref[[2]]
   singlePopulationSampleTileMatrix(
-      x,
+      experiments,
       allTiles,
       NAtoZero = FALSE
     )
