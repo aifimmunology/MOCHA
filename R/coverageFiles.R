@@ -30,6 +30,7 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
 
   popCounts <- lapply(popCounts, function(x){
           GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
+          x
   })
     
   names(popCounts) <- names(popFrags)
