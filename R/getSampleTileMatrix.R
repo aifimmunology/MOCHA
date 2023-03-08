@@ -92,7 +92,7 @@ getSampleTileMatrix <- function(tileResults,
 
 
   if (verbose) {
-    message(stringr::str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))
+    message(stringr::str_interp("Extracting consensus tile set for each population"))
   }
 
   iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
@@ -102,6 +102,7 @@ getSampleTileMatrix <- function(tileResults,
   cl <- parallel::makeCluster(numCores)
   tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
 
+  rm(iterList)
   errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
 
   names(errorMessages) <- names(subTileResults)
@@ -119,7 +120,7 @@ getSampleTileMatrix <- function(tileResults,
   allTiles <- sort(unique(do.call("c", tilesByCellPop)))
 
   if (verbose) {
-    message(stringr::str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
+    message(stringr::str_interp("Generating sample-tile matrix across all populations."))
   }
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
