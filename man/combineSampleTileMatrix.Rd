@@ -4,10 +4,11 @@
 \alias{combineSampleTileMatrix}
 \title{\code{combineSampleTileMatrix}}
 \usage{
-combineSampleTileMatrix(STObj, NAtoZero = TRUE, verbose = FALSE)
+combineSampleTileMatrix(SampleTileMatrix, NAtoZero = TRUE, verbose = FALSE)
 }
 \arguments{
-\item{STObj}{The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices}
+\item{SampleTileMatrix}{The SummarizedExperiment object output from
+getSampleTileMatrix containing your sample-tile matrices}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 
@@ -17,5 +18,8 @@ combineSampleTileMatrix(STObj, NAtoZero = TRUE, verbose = FALSE)
 TileCorr A data.table correlation matrix
 }
 \description{
-\code{combineSampleTileMatrix} combines all celltypes in a SampleTileMatrix object into a SummarizedExperiment with one single matrix across all cell types and samples.
+\code{combineSampleTileMatrix} combines all celltypes in a
+  SampleTileMatrix object into a SummarizedExperiment with one single matrix
+  across all cell types and samples, annotating GC bias using
+  chromVAR.
 }
