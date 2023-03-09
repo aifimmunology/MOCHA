@@ -345,19 +345,20 @@ testCoAccessibilityRandom <- function(STObj,
       message("Generating p-values.")
     }
 
-    pValues <- pbapply::pblapply(foreGround$Correlation, function(x){
-    
-      if (is.na(x)){
-            return(NA)
-        } else if (x >= 0) {
-            return(1 - sum(x > backGround$Correlation) / length(backGround$Correlation))
-      }else if (x < 0) {
-            return(1 - sum(x < backGround$Correlation) / length(backGround$Correlation))
-      }
-    })
+    greatList <- unlist(pbapply::pblapply(foreGround$Correlation[which(foreGround$Correlation > 0)],
+        function(x){
+                  return(1 - sum(x > backGround$Correlation))
+          }, cl = 1))/length(backGround$Correlation)
 
-    foreGround$pValues <- unlist(pValues)
+    lesserList <- unlist(pbapply::pblapply(foreGround$Correlation[which(foreGround$Correlation < 0)], 
+          function(x){
+                  return(1 - sum(x < backGround$Correlation))
+          }, cl = 1))/length(backGround$Correlation)
 
+
+    foreGround$pValues <- rep(NA, length(foreGround$Correlation))
+    foreGround$pValues[which(foreGround$Correlation > 0)] = greatList
+    foreGround$pValues[which(foreGround$Correlation < 0)] = lesserList
   }
 
 
