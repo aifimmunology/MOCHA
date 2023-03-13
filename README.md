@@ -38,7 +38,7 @@ Please view the example usage found in the vignette found under
 
 The example usage demonstrates this workflow: 
 
-![](man/figures/workflow2.png)
+![](man/figures/web_version_workflow_diagram.png)
 
 ## <a name="contact"></a> Contact
 
