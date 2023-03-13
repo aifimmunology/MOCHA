@@ -1,4 +1,4 @@
-#' @title \code{plotConsensus}
+#' @title Plot to determine the reproducibility threshold
 #'
 #' @description \code{plotConsensus} Extracts the peak reproducibility and generates a
 #' 					heuristic plots that can be used to determine the reproducibility threshold
@@ -16,6 +16,7 @@
 #'
 #'
 #' @export
+#' @keywords plotting
 
 plotConsensus <- function(tileObject,
                           cellPopulations = "All",

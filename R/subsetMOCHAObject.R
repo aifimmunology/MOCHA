@@ -1,4 +1,4 @@
-#' @title \code{subsetObject}
+#' @title Subsets a tileResults-type object by metadata
 #'
 #' @description \code{subsetObject} subsets a tileResults-type object (from
 #'   callOpenTiles), or a SummarizedExperiment-type object (from
@@ -20,6 +20,7 @@
 #'
 #'
 #' @export
+#' @keywords utils
 
 subsetMOCHAObject <- function(Object,
                               subsetBy,

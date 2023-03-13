@@ -1,4 +1,4 @@
-#' @title \code{dynamic_bins}
+#' @title 
 #'
 #' @description \code{dynamic_bins} is an R helper function, part of the single-cell peak calling
 #' algorithm MOCHA by (Zaim, Pebworth, et. al. 2022) that determines which genomic regions, or bins,

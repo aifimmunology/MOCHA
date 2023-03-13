@@ -81,6 +81,8 @@ get_grange_genebody <- function(regionGRanges, TxDb, single.strand.genes.only = 
 
 
 #' Default ggplot theme for counts plot
+#' @keywords internal
+#' @noRd
 .counts_plot_default_theme <- list(
   panel.grid = ggplot2::element_blank(),
   plot.margin = grid::unit(c(0, 0, 0, 0), "cm"),
@@ -683,6 +685,8 @@ get_gene_body_model <- function(whichGene,
 }
 
 #' Common theme for gene plots
+#' noRd
+#' @keywords internal
 .gene_plot_theme <- list(
   panel.grid = ggplot2::element_blank(),
   panel.border = ggplot2::element_blank(),

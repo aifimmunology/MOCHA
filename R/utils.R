@@ -89,7 +89,7 @@ validRegionString <- function(regionString) {
   return(TRUE)
 }
 
-#' @title \code{StringsToGRanges}
+#' @title Turns a list of strings in the format chr1:100-200 into a GRanges object
 #'
 #' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
 #'   into a GRanges object
@@ -98,6 +98,7 @@ validRegionString <- function(regionString) {
 #' @return a GRanges object with ranges representing the input string(s)
 #'
 #' @export
+#' @keywords utils
 StringsToGRanges <- function(regionString) {
   # if (length(regionString)>1){
   #   boolList <- lapply(regionString, function(x){validRegionString(x)})
@@ -121,7 +122,7 @@ StringsToGRanges <- function(regionString) {
   return(regionGRanges)
 }
 
-#' @title \code{GRangesToString} Converts a GRanges object to a string in the format 'chr1:100-200'
+#' @title Converts a GRanges object to a string in the format 'chr1:100-200'
 #'
 #' @description \code{GRangesToString} Turns a GRanges Object into
 #'  a list of strings in the format chr1:100-200
@@ -131,19 +132,20 @@ StringsToGRanges <- function(regionString) {
 #'  ranges in the input GRanges
 #'
 #' @export
+#' @keywords utils
 GRangesToString <- function(GR_obj) {
   paste(GenomicRanges::seqnames(GR_obj), ":", GenomicRanges::start(GR_obj), "-", GenomicRanges::end(GR_obj), sep = "")
 }
 
-#' @title \code{differentialsToGRanges} Converts a data.frame matrix to a GRanges,
-#'   preserving additional columns as GRanges metadata
-#'
+#' @title Converts a data.frame matrix to a GRanges
+#'   
 #' @param differentials a matrix/data.frame with a column tileColumn containing
 #'   region strings in the format "chr:start-end"
 #' @param tileColumn name of column containing region strings. Default is "Tile".
 #'
 #' @return a GRanges containing all original information
 #' @export
+#' @keywords utils
 differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   regions <- MOCHA::StringsToGRanges(differentials[[tileColumn]])
   GenomicRanges::mcols(regions) <- differentials
@@ -161,7 +163,7 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   substr(x, 1L, nchar(.ORGDB_PREFIX)) == .ORGDB_PREFIX
 }
 
-#' @title \code{getAnnotationDbFromInstalledPkgname} Loads and attaches an installed TxDb or 
+#' @title Loads and attaches an installed TxDb or 
 #'   OrgDb-class Annotation database package.
 #'
 #' @description See \link[BSgenome]{getBSgenome}

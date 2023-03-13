@@ -1,4 +1,4 @@
-#' @title \code{co_accessibility}
+#' @title 
 #'
 #' @description \code{co_accessibility} allows you to determine whether 2 tiles
 #'              are co-accessible using a zero-inflated Spearman correlation.

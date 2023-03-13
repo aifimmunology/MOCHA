@@ -1,4 +1,4 @@
-#' @title \code{testCoAccessibilityChromVar}
+#' @title Tests input tile pairs against a ChromVAR background
 #'
 #' @description \code{testCoAccessibilityChromVar} takes an input set of tile
 #'   pairs and tests whether they are significantly different compared to a
@@ -27,7 +27,7 @@
 #'
 #'
 #' @export
-#' 
+#' @keywords downstream
 testCoAccessibilityChromVar <- function(SampleTileMatrix,
                                         tile1,
                                         tile2,
@@ -205,7 +205,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
   return(foreGround)
 }
 
-#' @title \code{testCoAccessibilityRandom}
+#' @title Tests input tile pairs against a random background
 #'
 #' @description \code{testCoAccessibilityRandom} takes an input set of tile
 #'   pairs and tests whether they are significantly different compared to
@@ -229,7 +229,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 #'
 #'
 #' @export
-#' 
+#' @keywords downstream
 testCoAccessibilityRandom <- function(SampleTileMatrix,
                                       tile1,
                                       tile2,
@@ -396,7 +396,7 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 }
 
 
-#' @title \code{combineSampleTileMatrix}
+#' @title Combine all celltypes in a SampleTileMatrix into a single matrix
 #'
 #' @description \code{combineSampleTileMatrix} combines all celltypes in a
 #'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
@@ -411,6 +411,7 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 #'
 #'
 #' @export
+#' @keywords utils
 combineSampleTileMatrix <- function(SampleTileMatrix,
                                     NAtoZero = TRUE, 
                                     verbose = FALSE) {

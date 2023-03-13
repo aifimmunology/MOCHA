@@ -1,4 +1,4 @@
-#' @title \code{getCellPopMatrix}
+#' @title Get the SampleTileMatrix of the given cell population
 #'
 #' @description \code{getCellPopMatrix} pulls out the SampleTileMatrix of tiles called in one
 #'   given cell population.
@@ -12,6 +12,7 @@
 #' @return sampleTileMatrix a matrix of samples by called tiles for a given cell population.
 #'
 #' @export
+#' @keywords utils
 getCellPopMatrix <- function(SampleTileObj, cellPopulation, dropSamples = TRUE, NAtoZero = TRUE) {
   tilesCalled <- GenomicRanges::mcols(SummarizedExperiment::rowRanges(SampleTileObj))[, cellPopulation]
 

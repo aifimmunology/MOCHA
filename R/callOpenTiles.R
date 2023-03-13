@@ -1,5 +1,5 @@
-#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an 
-#'   ArchR Project.
+#' @title Perform peak-calling on a set of fragments or an 
+#'   ArchR Project
 #'
 #' @description \code{callOpenTiles} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
@@ -88,6 +88,7 @@
 #' @export
 #' @docType methods
 #' @rdname callOpenTiles-methods
+#' @keywords core
 setGeneric(
   "callOpenTiles",
   function(ATACFragments,

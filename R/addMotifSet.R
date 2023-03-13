@@ -1,4 +1,4 @@
-#' @title \code{addMotifSet}
+#' @title \code{addMotifSet} Identify motifs within a peakset
 #'
 #' @description \code{addMotifSet} Identify motifs within your peakset.
 #'
@@ -30,7 +30,7 @@
 #' }
 #'
 #' @export
-#'
+#' @keywords utils
 addMotifSet <- function(SampleTileMatrix, 
                         motifPWMs, 
                         w = 7, 

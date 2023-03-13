@@ -1,4 +1,4 @@
-#' @title \code{filterCoAccessibleLinks}
+#' @title Filter links by correlation strength
 #'
 #' @description \code{filterCoAccessibleLinks} will filter the output from
 #'   getCoAccessibleLinks by a threshold, retaining links with a
@@ -20,6 +20,7 @@
 #' }
 #'
 #' @export
+#' @keywords downstream
 filterCoAccessibleLinks <- function(TileCorr, threshold = 0.5) {
   if (!any(abs(TileCorr$Correlation) > threshold)) {
     stop("Error: There are no values above the threshold.")

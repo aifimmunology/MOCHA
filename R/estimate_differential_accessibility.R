@@ -1,4 +1,4 @@
-#' @title \code{estimate_differential_accessibility}
+#' @title 
 #'
 #' @description \code{estimate_differential_accessibility} internal function for computing differential accessibility on a set of tiles
 #'

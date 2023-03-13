@@ -1,4 +1,4 @@
-#' @title \code{getDifferentialAccessibleTiles}
+#' @title Conduct a differential test between open regions of two sample groups
 #'
 #' @description \code{getDifferentialAccessibleTiles} allows you to
 #'   determine whether regions of chromatin are differentially accessible
@@ -50,6 +50,7 @@
 #' )
 #' }
 #' @export
+#' @keywords downstream
 
 getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            cellPopulation,

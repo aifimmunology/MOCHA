@@ -1,4 +1,4 @@
-#' @title \code{callPeaks}
+#' @title 
 #'
 #' @description \code{callPeaks} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment

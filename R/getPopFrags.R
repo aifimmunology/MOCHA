@@ -29,6 +29,7 @@
 #'
 #'
 #' @export
+#' @keywords utils
 
 getPopFrags <- function(ArchRProj,
                         metaColumn,
