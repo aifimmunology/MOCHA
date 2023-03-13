@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotRegion.R
 \name{plotRegion}
 \alias{plotRegion}
-\title{\code{plotRegion}}
+\title{Plot a given region summarized across all cell groupings}
 \usage{
 plotRegion(
   countSE,
@@ -174,3 +174,4 @@ plotRegion(
 }
 
 }
+\keyword{plotting}

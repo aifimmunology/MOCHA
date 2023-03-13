@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{StringsToGRanges}
 \alias{StringsToGRanges}
-\title{\code{StringsToGRanges}}
+\title{Turns a list of strings in the format chr1:100-200 into a GRanges object}
 \usage{
 StringsToGRanges(regionString)
 }
@@ -16,3 +16,4 @@ a GRanges object with ranges representing the input string(s)
 \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
   into a GRanges object
 }
+\keyword{utils}

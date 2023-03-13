@@ -56,3 +56,4 @@ A list of GRanges containing fragments. Each GRanges corresponds to a
 \description{
 \code{getPopFrags} returns a list of fragments per cell subset as a GRanges.
 }
+\keyword{utils}

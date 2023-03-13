@@ -2,7 +2,7 @@
 % Please edit documentation in R/getDifferentialAccessibleTiles.R
 \name{getDifferentialAccessibleTiles}
 \alias{getDifferentialAccessibleTiles}
-\title{\code{getDifferentialAccessibleTiles}}
+\title{Conduct a differential test between open regions of two sample groups}
 \usage{
 getDifferentialAccessibleTiles(
   SampleTileObj,
@@ -81,3 +81,4 @@ differentials <- MOCHA::getDifferentialAccessibleTiles(
 )
 }
 }
+\keyword{downstream}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotConsensus.R
 \name{plotConsensus}
 \alias{plotConsensus}
-\title{\code{plotConsensus}}
+\title{Plot to determine the reproducibility threshold}
 \usage{
 plotConsensus(
   tileObject,
@@ -36,3 +36,4 @@ SampleTileObj the input data structure with added gene annotations.
 					heuristic plots that can be used to determine the reproducibility threshold
 					used within getSampleTileMatrix.
 }
+\keyword{plotting}

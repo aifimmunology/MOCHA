@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsetMOCHAObject.R
 \name{subsetMOCHAObject}
 \alias{subsetMOCHAObject}
-\title{\code{subsetObject}}
+\title{Subsets a tileResults-type object by metadata}
 \usage{
 subsetMOCHAObject(
   Object,
@@ -39,3 +39,4 @@ Object the input Object, filtered down to either the cell type or
   callOpenTiles), or a SummarizedExperiment-type object (from
   getSampleTileMatrix), either by cell type or sample metadata.
 }
+\keyword{utils}

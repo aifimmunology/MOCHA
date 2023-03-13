@@ -2,7 +2,7 @@
 % Please edit documentation in R/getCellPopMatrix.R
 \name{getCellPopMatrix}
 \alias{getCellPopMatrix}
-\title{\code{getCellPopMatrix}}
+\title{Get the SampleTileMatrix of the given cell population}
 \usage{
 getCellPopMatrix(
   SampleTileObj,
@@ -28,3 +28,4 @@ sampleTileMatrix a matrix of samples by called tiles for a given cell population
 \code{getCellPopMatrix} pulls out the SampleTileMatrix of tiles called in one
   given cell population.
 }
+\keyword{utils}

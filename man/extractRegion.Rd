@@ -2,7 +2,7 @@
 % Please edit documentation in R/extractRegion.R
 \name{extractRegion}
 \alias{extractRegion}
-\title{\code{extractRegion}}
+\title{Get coverage for a given region}
 \usage{
 extractRegion(
   SampleTileObj,
@@ -61,3 +61,4 @@ countSE <- MOCHA::extractRegion(
 }
 
 }
+\keyword{utils}

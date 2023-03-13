@@ -2,7 +2,7 @@
 % Please edit documentation in R/testCoAccessibility.R
 \name{combineSampleTileMatrix}
 \alias{combineSampleTileMatrix}
-\title{\code{combineSampleTileMatrix}}
+\title{Combine all celltypes in a SampleTileMatrix into a single matrix}
 \usage{
 combineSampleTileMatrix(SampleTileMatrix, NAtoZero = TRUE, verbose = FALSE)
 }
@@ -23,3 +23,4 @@ TileCorr A data.table correlation matrix
   across all cell types and samples, annotating GC bias using
   chromVAR.
 }
+\keyword{utils}

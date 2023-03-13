@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSampleTileMatrix.R
 \name{getSampleTileMatrix}
 \alias{getSampleTileMatrix}
-\title{\code{getSampleTileMatrix}}
+\title{Get consensus sample-tile matrices containing the signal intensity at each tile}
 \usage{
 getSampleTileMatrix(
   tileResults,
@@ -77,3 +77,4 @@ SampleTileMatrices <- MOCHA::getSampleTileMatrix(
 }
 
 }
+\keyword{core}

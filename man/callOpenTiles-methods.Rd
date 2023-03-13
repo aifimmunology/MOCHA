@@ -7,8 +7,8 @@
 \alias{callOpenTiles,list-method}
 \alias{.callOpenTiles_ArchR}
 \alias{callOpenTiles,ArchRProject-method}
-\title{\code{callOpenTiles} Perform peak-calling on a set of fragments or an 
-  ArchR Project.}
+\title{Perform peak-calling on a set of fragments or an 
+  ArchR Project}
 \usage{
 callOpenTiles(
   ATACFragments,
@@ -172,3 +172,4 @@ if (
 }
 
 }
+\keyword{core}

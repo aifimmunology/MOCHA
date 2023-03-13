@@ -2,7 +2,7 @@
 % Please edit documentation in R/MotifEnrichment.R
 \name{MotifEnrichment}
 \alias{MotifEnrichment}
-\title{\code{MotifEnrichment}}
+\title{Test for enrichment of motifs against a background}
 \usage{
 MotifEnrichment(Group1, Group2, motifPosList, type = NULL)
 }
@@ -27,3 +27,4 @@ A data.frame containing enrichment for each group
 Test for enrichment of motifs within Group1 against a background
   Group2 using a hypergeometric t-test.
 }
+\keyword{downstream}
