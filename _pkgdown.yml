@@ -4,5 +4,23 @@ template:
   bootswatch: materia
   navbar:
     structure:
-      left:  [intro, reference, articles, tutorials, news]
+      left:  [intro, Functions, articles, tutorials, news]
       right: [github]
+    components:
+     Functions:
+      text: "Function Reference"
+      href: reference/index.html
+
+reference:
+- title: "Open Chromatin Identification"
+- contents:
+  - has_keyword("core")
+- title: Plotting
+- contents:
+  - has_keyword("plotting")
+- title: "Downstream Analyses"
+- contents:
+  - has_keyword("downstream")
+- title: "Utilities"
+- contents:
+  - has_keyword("utils")

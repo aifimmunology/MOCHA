@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,7 +53,101 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="open-chromatin-identification">Open Chromatin Identification<a class="anchor" aria-label="anchor" href="#open-chromatin-identification"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="callOpenTiles-methods.html">callOpenTiles()</a></code> <code><a href="callOpenTiles-methods.html">.callOpenTiles_ArchR()</a></code> 
+        </dt>
+        <dd>Perform peak-calling on a set of fragments or an 
+  ArchR Project</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getSampleTileMatrix.html">getSampleTileMatrix()</a></code> 
+        </dt>
+        <dd>Get consensus sample-tile matrices containing the signal intensity at each tile</dd>
+      </dl></div><div class="section level2">
+      <h2 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="plotConsensus.html">plotConsensus()</a></code> 
+        </dt>
+        <dd>Plot to determine the reproducibility threshold</dd>
+      </dl><dl><dt>
+          
+          <code><a href="plotRegion.html">plotRegion()</a></code> 
+        </dt>
+        <dd>Plot a given region summarized across all cell groupings</dd>
+      </dl></div><div class="section level2">
+      <h2 id="downstream-analyses">Downstream Analyses<a class="anchor" aria-label="anchor" href="#downstream-analyses"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="MotifEnrichment.html">MotifEnrichment()</a></code> 
+        </dt>
+        <dd>Test for enrichment of motifs against a background</dd>
+      </dl><dl><dt>
+          
+          <code><a href="addAccessibilityShift.html">addAccessibilityShift()</a></code> 
+        </dt>
+        <dd>Add difference in accessibility between two conditions</dd>
+      </dl><dl><dt>
+          
+          <code><a href="filterCoAccessibleLinks.html">filterCoAccessibleLinks()</a></code> 
+        </dt>
+        <dd>Filter links by correlation strength</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getAltTSS.html">getAltTSS()</a></code> 
+        </dt>
+        <dd>Annotate peaks falling in transcription start sites</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getCoAccessibleLinks.html">getCoAccessibleLinks()</a></code> 
+        </dt>
+        <dd>Find co-accessible neighboring regions</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getDifferentialAccessibleTiles.html">getDifferentialAccessibleTiles()</a></code> 
+        </dt>
+        <dd>Conduct a differential test between open regions of two sample groups</dd>
+      </dl><dl><dt>
+          
+          <code><a href="testCoAccessibilityChromVar.html">testCoAccessibilityChromVar()</a></code> 
+        </dt>
+        <dd>Tests input tile pairs against a ChromVAR background</dd>
+      </dl><dl><dt>
+          
+          <code><a href="testCoAccessibilityRandom.html">testCoAccessibilityRandom()</a></code> 
+        </dt>
+        <dd>Tests input tile pairs against a random background</dd>
+      </dl></div><div class="section level2">
+      <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
       
       
 
@@ -67,98 +161,42 @@
           
           <code><a href="GRangesToString.html">GRangesToString()</a></code> 
         </dt>
-        <dd><code>GRangesToString</code> Converts a GRanges object to a string in the format 'chr1:100-200'</dd>
+        <dd>Converts a GRanges object to a string in the format 'chr1:100-200'</dd>
       </dl><dl><dt>
           
           <code><a href="StringsToGRanges.html">StringsToGRanges()</a></code> 
         </dt>
-        <dd><code>StringsToGRanges</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="addAccessibilityShift.html">addAccessibilityShift()</a></code> 
-        </dt>
-        <dd><code>addAccessibilityShift</code></dd>
+        <dd>Turns a list of strings in the format chr1:100-200 into a GRanges object</dd>
       </dl><dl><dt>
           
           <code><a href="addMotifSet.html">addMotifSet()</a></code> 
         </dt>
-        <dd><code>addMotifSet</code></dd>
+        <dd><code>addMotifSet</code> Identify motifs within a peakset</dd>
       </dl><dl><dt>
           
           <code><a href="annotateTiles.html">annotateTiles()</a></code> 
         </dt>
-        <dd><code>annotateTiles</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="callOpenTiles-methods.html">callOpenTiles()</a></code> <code><a href="callOpenTiles-methods.html">.callOpenTiles_ArchR()</a></code> 
-        </dt>
-        <dd><code>callOpenTiles</code> Perform peak-calling on a set of fragments or an ArchR Project.</dd>
+        <dd><code>annotateTiles</code> Add gene annotations</dd>
       </dl><dl><dt>
           
           <code><a href="combineSampleTileMatrix.html">combineSampleTileMatrix()</a></code> 
         </dt>
-        <dd><code>combineSampleTileMatrix</code></dd>
+        <dd>Combine all celltypes in a SampleTileMatrix into a single matrix</dd>
       </dl><dl><dt>
           
           <code><a href="differentialsToGRanges.html">differentialsToGRanges()</a></code> 
         </dt>
-        <dd><code>differentialsToGRanges</code> Converts a data.frame matrix to a GRanges,
-  preserving additional columns as GRanges metadata</dd>
-      </dl><dl><dt>
-          
-          <code><a href="dot-counts_plot_default_theme.html">.counts_plot_default_theme</a></code> 
-        </dt>
-        <dd>Default ggplot theme for counts plot</dd>
-      </dl><dl><dt>
-          
-          <code><a href="dot-gene_plot_theme.html">.gene_plot_theme</a></code> 
-        </dt>
-        <dd>Common theme for gene plots</dd>
-      </dl><dl><dt>
-          
-          <code><a href="exampleBlackList.html">exampleBlackList</a></code> 
-        </dt>
-        <dd>exampleBlackList</dd>
-      </dl><dl><dt>
-          
-          <code><a href="exampleCellColData.html">exampleCellColData</a></code> 
-        </dt>
-        <dd>exampleCellColData</dd>
-      </dl><dl><dt>
-          
-          <code><a href="exampleFragments.html">exampleFragments</a></code> 
-        </dt>
-        <dd>exampleFragments</dd>
+        <dd>Converts a data.frame matrix to a GRanges</dd>
       </dl><dl><dt>
           
           <code><a href="extractRegion.html">extractRegion()</a></code> 
         </dt>
-        <dd><code>extractRegion</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="filterCoAccessibleLinks.html">filterCoAccessibleLinks()</a></code> 
-        </dt>
-        <dd><code>filterCoAccessibleLinks</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="finalModelObject.html">finalModelObject</a></code> 
-        </dt>
-        <dd>finalModelObject</dd>
+        <dd>Get coverage for a given region</dd>
       </dl><dl><dt>
           
           <code><a href="getCellPopMatrix.html">getCellPopMatrix()</a></code> 
         </dt>
-        <dd><code>getCellPopMatrix</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="getCoAccessibleLinks.html">getCoAccessibleLinks()</a></code> 
-        </dt>
-        <dd><code>getCoAccessibleLinks</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="getDifferentialAccessibleTiles.html">getDifferentialAccessibleTiles()</a></code> 
-        </dt>
-        <dd><code>getDifferentialAccessibleTiles</code></dd>
+        <dd>Get the SampleTileMatrix of the given cell population</dd>
       </dl><dl><dt>
           
           <code><a href="getPopFrags.html">getPopFrags()</a></code> 
@@ -166,41 +204,12 @@
         <dd>Extract fragments by populations from an ArchR Project</dd>
       </dl><dl><dt>
           
-          <code><a href="getSampleTileMatrix.html">getSampleTileMatrix()</a></code> 
-        </dt>
-        <dd><code>getSampleTileMatrix</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="plotConsensus.html">plotConsensus()</a></code> 
-        </dt>
-        <dd><code>plotConsensus</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="plotRegion.html">plotRegion()</a></code> 
-        </dt>
-        <dd><code>plotRegion</code></dd>
-      </dl><dl><dt>
-          
           <code><a href="subsetMOCHAObject.html">subsetMOCHAObject()</a></code> 
         </dt>
-        <dd><code>subsetObject</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="testCoAccessibilityChromVar.html">testCoAccessibilityChromVar()</a></code> 
-        </dt>
-        <dd><code>testCoAccessibilityChromVar</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="testCoAccessibilityRandom.html">testCoAccessibilityRandom()</a></code> 
-        </dt>
-        <dd><code>testCoAccessibilityRandom</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="youden_threshold.html">youden_threshold</a></code> 
-        </dt>
-        <dd>youden_threshold</dd>
+        <dd>Subsets a tileResults-type object by metadata</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

@@ -34,6 +34,9 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/GRangesToString.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/MotifEnrichment.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/StringsToGRanges.html</loc>
   </url>
   <url>
@@ -77,6 +80,9 @@
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/finalModelObject.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getAltTSS.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/getCellPopMatrix.html</loc>
