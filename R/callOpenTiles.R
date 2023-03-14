@@ -141,177 +141,22 @@ setGeneric(
     )
   }
 
-  if (!file.exists(outDir)) {
-    if (verbose) {
-      message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
-    }
-    dir.create(outDir)
-  }
-
-  # Get cell populations
-  cellTypeLabelList <- cellColData[, cellPopLabel]
-
-  # Save the cell number per population-sample in the metadata
-  allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-
-  if (all(cellPopulations == "ALL")) {
-    cellPopulations <- colnames(allCellCounts)
-  } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
-    stop("Error: cellPopulations not all found in cellColData")
-  } else {
-    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
-  }
-
-  # Genome and TxDb annotation info is added to the metadata of
-  # the final MultiAssayExperiment for downstream analysis
-  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
-  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
-
-  # Add prefactor multiplier across datasets
-  if (is.null(studySignal)) {
-    if (verbose) {
-      message(
-        "studySignal was not provided. ",
-        "Calculating study signal on cellColData as the median ",
-        "nFrags with the assumption that all cell populations are ",
-        "present in cellColData."
-      )
-    }
-    if (!("nFrags" %in% colnames(cellColData))) {
-      stop(
-        "cellColData is missing fragment count information. ",
-        "To calculate study signal, cellColData must contain a column 'nFrags' ",
-        "representing the number of fragments per cell. Alternatively, ",
-        "provide a value for the parameter 'studySignal'."
-      )
-    }
-    studySignal <- stats::median(cellColData$nFrags)
-  }
-  study_prefactor <- 3668 / studySignal # Training median
-
-  # Main loop over all cell populations
-  experimentList <- list()
-  for (cellPop in cellPopulations) {
-    if (verbose) {
-      message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
-    }
-
-    # Get our fragments for this cellPop
-    frags <- ATACFragments[grep(cellPop, names(ATACFragments))]
-    if (length(frags) == 0) {
-      stop(
-        "Provided ATACFragments does not contain any sample fragments ",
-        stringr::str_interp("belonging to cellPopulations: ${cellPop}. "),
-        "ATACFragments must have at lease one sample GRanges for each ",
-        "cell population."
-      )
-    }
-
-    # Simplify sample names to remove celltype and normalization factor
-    # Removes everything before the first "#" and after the first "__"
-    # This is a convention from MOCHA::getPopFrags which is ArchR-dependent
-    # E.g. C1#PBMCSmall__0.527239 becomes PBMCSmall
-    sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
-    names(frags) <- sampleNames
-
-    # Calculate normalization factors as the number of fragments for each celltype_samples
-    normalization_factors <- as.integer(sapply(frags, length))
-
-    # save coverage files to folder.
-    # This doesn't include empty samples and might break. We may need to reconsider how getCoverage works and add empty samples before this step.
-    if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
-      covFiles <- getCoverage(
-        popFrags = frags,
-        normFactor = normalization_factors / 10^6,
-        filterEmpty = FALSE,
-        numCores = numCores, TxDb = TxDb
-      )
-      saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
-      rm(covFiles)
-    }
-    
-    # This parLapply will parallelize over each sample within a celltype.
-    # Each arrow is a sample so this is allowed
-    # (Arrow files are locked - one access at a time)
-    cl <- parallel::makeCluster(numCores)
-    
-    iterList <- lapply(1:length(frags), function(x){list(blackList, frags[[x]], verbose, study_prefactor)})
-
-    tilesGRangesList <- pbapply::pblapply(
-      cl = cl,
-      X = iterList,
-      FUN = simplifiedFragments)
-    parallel::stopCluster(cl)
-
-    names(tilesGRangesList) <- names(frags)
-
-    # Where samples have no cells, add an empty GRanges placeholder
-    if (!all(rownames(allCellCounts) %in% names(tilesGRangesList))) {
-      emptySamples <- rownames(allCellCounts)[!rownames(allCellCounts) %in% names(tilesGRangesList)]
-      emptyGRanges <- lapply(emptySamples, function(x) NULL)
-      names(emptyGRanges) <- emptySamples
-      tilesGRangesList <- append(tilesGRangesList, emptyGRanges)
-    }
-    tilesGRangesList <- tilesGRangesList[sort(names(tilesGRangesList))]
-
-    # Cannot make peak calls with < 5 cells (see make_prediction.R)
-    # so NULL will occur for those samples. We need to fill in dummy data so that we
-    # preserve the existence of the sample, while also not including any information from it.
-
-    emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
-
-    if (length(emptyGroups) > 0) {
-      if (verbose) {
-        warning(
-          paste(
-            "The following celltype#sample groupings have too few cells (<5)",
-            "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
-          )
-        )
-      }
-    }
-    for (i in emptyGroups) {
-      # This is an empty region placeholder that represents an empty sample
-      # And is functionally ignored downstream but required for
-      # the RaggedExperiment structure
-      tilesGRangesList[[i]] <- data.table(
-        tileID = "chr1:1-499", seqnames = "chr1", start = 1,
-        end = 499, strand = "*", TotalIntensity = 0, maxIntensity = 0,
-        numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE
-      )
-    }
-
-    # Package rangeList into a RaggedExperiment
-    ragExp <- RaggedExperiment::RaggedExperiment(
-      tilesGRangesList
-    )
-    # And add it to the experimentList for this cell population
-    experimentList <- append(experimentList, ragExp)
-  }
-
-  # Create sample metadata from cellColData using util function
-  # "Sample" is the enforced col in ArchR containing the
-  # sample IDs which correspond to the arrow files.
-  # We are assuming samples are synonymous to wells
-  # (If hashed, samples were un-hashed during ArchR project generation)
-  sampleData <- suppressWarnings(
-    sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
+  .callOpenTiles(
+    ATACFragments,
+    cellColData,
+    blackList,
+    genome,
+    cellPopLabel,
+    cellPopulations,
+    studySignal,
+    TxDb,
+    Org,
+    outDir,
+    numCores,
+    verbose,
+    force,
+    useArchR = FALSE
   )
-
-  # Add experimentList to MultiAssayExperiment
-  names(experimentList) <- cellPopulations
-
-  tileResults <- MultiAssayExperiment::MultiAssayExperiment(
-    experiments = experimentList,
-    colData = sampleData,
-    metadata = list(
-      "CellCounts" = allCellCounts,
-      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
-      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
-    )
-  )
-
-  return(tileResults)
 }
 
 #' @rdname callOpenTiles-methods
@@ -354,8 +199,17 @@ setMethod(
                                  verbose = FALSE,
                                  force = FALSE) {
   if (is.null(outDir)) {
-    outDir <- paste(ArchR::getOutputDirectory(ATACFragments), "/MOCHA", sep = "")
+    outDir <- paste(
+      ArchR::getOutputDirectory(ATACFragments),
+      "/MOCHA",
+      sep = ""
+    )
   }
+
+  # Get cell metadata and blacklisted regions from ArchR Project
+  cellColData <- ArchR::getCellColData(ATACFragments)
+  blackList <- ArchR::getBlacklist(ATACFragments)
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
 
   if (!file.exists(outDir)) {
     if (verbose) {
@@ -365,7 +219,8 @@ setMethod(
   }
 
   if (fast) {
-    tileResults <- callOpenTilesFast(
+    warning("The 'fast' option for callOpenTiles is deprecated")
+    tileResults <- .callOpenTilesFast(
       ATACFragments,
       cellPopLabel,
       cellPopulations,
@@ -380,46 +235,83 @@ setMethod(
     return(tileResults)
   }
 
-  # Get cell metadata and blacklisted regions from ArchR Project
-  cellColData <- ArchR::getCellColData(ATACFragments)
-  blackList <- ArchR::getBlacklist(ATACFragments)
+  .callOpenTiles(
+    ATACFragments,
+    cellColData,
+    blackList,
+    genome,
+    cellPopLabel,
+    cellPopulations,
+    studySignal,
+    TxDb,
+    Org,
+    outDir,
+    numCores,
+    verbose,
+    force,
+    useArchR = TRUE
+  )
+}
+setMethod(
+  "callOpenTiles",
+  signature(ATACFragments = "ArchRProject"),
+  .callOpenTiles_ArchR
+)
+
+
+.callOpenTiles <- function(
+    ATACFragments,
+    cellColData,
+    blackList,
+    genome,
+    cellPopLabel,
+    cellPopulations,
+    studySignal,
+    TxDb,
+    Org,
+    outDir,
+    numCores,
+    verbose,
+    force,
+    useArchR) {
+  if (!file.exists(outDir)) {
+    if (verbose) {
+      message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    }
+    dir.create(outDir)
+  }
 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
-
   # Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
-    stop("Error: cellPopulations not all found in ArchR project.")
+    stop("Error: cellPopulations not all found in cellColData")
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
+    allCellCounts <- allCellCounts[, cellPopulations, drop = F]
   }
-
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
   AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
   AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
-
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
     if (verbose) {
       message(
         "studySignal was not provided. ",
-        "Calculating study signal on ArchR project as the median ",
+        "Calculating study signal on cellColData as the median ",
         "nFrags with the assumption that all cell populations are ",
-        "present in ArchR project."
+        "present in cellColData."
       )
     }
     if (!("nFrags" %in% colnames(cellColData))) {
       stop(
         "cellColData is missing fragment count information. ",
-        "To calculate study signal, cellColData must contain a column 'nFrags' ",
-        "representing the number of fragments per cell. Alternatively, ",
-        "provide a value for the parameter 'studySignal'."
+        "To calculate study signal, cellColData must contain a column",
+        " 'nFrags' representing the number of fragments per cell. ",
+        "Alternatively, provide a value for the parameter 'studySignal'."
       )
     }
     studySignal <- stats::median(cellColData$nFrags)
@@ -428,39 +320,61 @@ setMethod(
 
   # Main loop over all cell populations
   experimentList <- list()
- 
   for (cellPop in cellPopulations) {
     if (verbose) {
       message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
     }
 
     cl <- parallel::makeCluster(numCores)
-    parallel::clusterEvalQ(cl, {library(ArchR); library(rhdf5)})
 
-    # Get our fragments for this cellPop
-    frags <- MOCHA::getPopFrags(
-      ArchRProj = ATACFragments,
-      metaColumn = cellPopLabel,
-      cellSubsets = cellPop,
-      region = NULL,
-      numCores = cl,
-      blackList = NULL,
-      verbose = verbose,
-      overlapList = 50
-    )
+    if (UseArchR) {
+      parallel::clusterEvalQ(cl, {
+        library(ArchR)
+        library(rhdf5)
+      })
+      # Get our fragments for this cellPop
+      frags <- MOCHA::getPopFrags(
+        ArchRProj = ATACFragments,
+        metaColumn = cellPopLabel,
+        cellSubsets = cellPop,
+        region = NULL,
+        numCores = cl,
+        blackList = NULL,
+        verbose = verbose,
+        overlapList = 50
+      )
+    } else {
+      frags <- ATACFragments[grep(cellPop, names(ATACFragments))]
+      if (length(frags) == 0) {
+        stop(
+          "Provided ATACFragments does not contain any sample fragments ",
+          stringr::str_interp("belonging to cellPopulations: ${cellPop}. "),
+          "ATACFragments must have at lease one sample GRanges for each ",
+          "cell population."
+        )
+      }
+    }
 
-    # Simplify sample names to remove everything before the first "#"
+    # Simplify sample names to remove celltype and normalization factor
+    # Removes everything before the first "#" and after the first "__"
+    # This is a convention from MOCHA::getPopFrags which is ArchR-dependent
+    # E.g. C1#PBMCSmall__0.527239 becomes PBMCSmall
     sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
     names(frags) <- sampleNames
-
-    # Calculate normalization factors as the number of fragments for each celltype_samples
+    # Calculate normalization factors as the number of fragments for
+    # each celltype_samples
     normalization_factors <- as.integer(lengths(frags))
-
+    cl <- parallel::makeCluster(numCores)
     # save coverage files to folder.
-    # This doesn't include empty samples and might break. We may need to reconsider how getCoverage works and add empty samples before this step.
-    if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
+    # This doesn't include empty samples and might break. We may need to
+    # reconsider how getCoverage works and add empty samples before this step.
+    if (!file.exists(
+      paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")
+    ) || force) {
       if (verbose) {
-        message(stringr::str_interp("Saving coverage files for cell population ${cellPop}"))
+        message(stringr::str_interp(
+          "Saving coverage files for cell population ${cellPop}"
+        ))
       }
       covFiles <- getCoverage(
         popFrags = frags,
@@ -471,37 +385,39 @@ setMethod(
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
-
-    # This pblapply will parallelize over each sample within a celltype.
+    # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    #cl <- parallel::makeCluster(numCores)
-
-    iterList <- lapply(1:length(frags), function(x){list(blackList, frags[[x]], verbose, study_prefactor)})
-
+    iterList <- lapply(seq_along(frags), function(x) {
+      list(blackList, frags[[x]], verbose, study_prefactor)
+    })
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
-      FUN = simplifiedTilesBySample)
+      FUN = simplifiedTilesBySample
+    )
     parallel::stopCluster(cl)
-
     names(tilesGRangesList) <- names(frags)
 
     # Where samples have no cells, add an empty GRanges placeholder
     if (!all(rownames(allCellCounts) %in% names(tilesGRangesList))) {
-      emptySamples <- rownames(allCellCounts)[!rownames(allCellCounts) %in% names(tilesGRangesList)]
-      emptyGRanges <- lapply(emptySamples, function(x) NULL)
+      emptySamples <- rownames(allCellCounts)[
+        !rownames(allCellCounts) %in% names(tilesGRangesList)
+      ]
+      emptyGRanges <- lapply(emptySamples, function(x) {
+        NULL
+      })
       names(emptyGRanges) <- emptySamples
       tilesGRangesList <- append(tilesGRangesList, emptyGRanges)
     }
+
     tilesGRangesList <- tilesGRangesList[sort(names(tilesGRangesList))]
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
-    # so NULL will occur for those samples. We need to fill in dummy data so that we
-    # preserve the existence of the sample, while also not including any information from it.
-
+    # so NULL will occur for those samples. We need to fill in
+    # dummy data so that we preserve the existence of the sample, while
+    # also not including any information from it.
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
-
     if (length(emptyGroups) > 0) {
       if (verbose) {
         warning(
@@ -512,6 +428,7 @@ setMethod(
         )
       }
     }
+
     for (i in emptyGroups) {
       # This is an empty region placeholder that represents an empty sample
       # And is functionally ignored downstream but required for
@@ -527,10 +444,10 @@ setMethod(
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesList
     )
+
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
-
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
   # sample IDs which correspond to the arrow files.
@@ -539,10 +456,8 @@ setMethod(
   sampleData <- suppressWarnings(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
-
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
-
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
@@ -552,27 +467,25 @@ setMethod(
       "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
     )
   )
-
   return(tileResults)
 }
-setMethod(
-  "callOpenTiles",
-  signature(ATACFragments = "ArchRProject"),
-  .callOpenTiles_ArchR
-)
+
+
 
 ##### Same function, but runs faster with much, much more RAM usage.
 # TODO: Deprecate
-callOpenTilesFast <- function(ArchRProj,
-                              cellPopLabel,
-                              cellPopulations = "ALL",
-                              TxDb = NULL,
-                              Org = NULL,
-                              outDir = NULL,
-                              numCores = 30,
-                              force = FALSE,
-                              studySignal = NULL,
-                              verbose = FALSE) {
+.callOpenTilesFast <- function(ArchRProj,
+                               cellPopLabel,
+                               cellPopulations = "ALL",
+                               TxDb = NULL,
+                               Org = NULL,
+                               outDir = NULL,
+                               numCores = 30,
+                               force = FALSE,
+                               studySignal = NULL,
+                               verbose = FALSE) {
+  warning("The 'fast' option in callOpenTiles is deprecated.")
+
   # Genome and TxDb annotation info is added to the metadata of
   # the final MultiAssayExperiment for downstream analysis
   genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
@@ -584,7 +497,10 @@ callOpenTilesFast <- function(ArchRProj,
   blackList <- ArchR::getBlacklist(ArchRProj)
 
   cl <- parallel::makeCluster(numCores)
-  parallel::clusterEvalQ(cl, {library(ArchR); library(rhdf5)})
+  parallel::clusterEvalQ(cl, {
+    library(ArchR)
+    library(rhdf5)
+  })
 
   # Get frags grouped by cell population and sample
   # This will also validate the input cellPopulations
@@ -597,8 +513,9 @@ callOpenTilesFast <- function(ArchRProj,
     blackList = NULL,
     overlapList = 50
   )
-  parallel::stopCluster(cl)
-  # Check for and remove celltype-sample groups for which there are no fragments.
+
+  # Check for and remove celltype-sample groups for which there
+  # are no fragments.
   fragsNoNull <- frags[lengths(frags) != 0]
   emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
   emptyGroups <- names(frags)[emptyFragsBool]
@@ -632,7 +549,10 @@ callOpenTilesFast <- function(ArchRProj,
   # Fragments maintain their order by cell population.
   names(splitFrags) <- finalCellPopulations
   if (verbose) {
-    message("Cell populations for peak calling: ", paste(names(splitFrags), collapse = ", "))
+    message(
+      "Cell populations for peak calling: ",
+      paste(names(splitFrags), collapse = ", ")
+    )
   }
 
   if (is.null(outDir)) {
@@ -663,9 +583,9 @@ callOpenTilesFast <- function(ArchRProj,
     if (!("nFrags" %in% colnames(cellColData))) {
       stop(
         "cellColData is missing fragment count information. ",
-        "To calculate study signal, cellColData must contain a column 'nFrags' ",
-        "representing the number of fragments per cell. Alternatively, ",
-        "provide a value for the parameter 'studySignal'."
+        "To calculate study signal, cellColData must contain a column ",
+        "'nFrags' representing the number of fragments per cell. ",
+        "Alternatively,  provide a value for the parameter 'studySignal'."
       )
     }
     studySignal <- stats::median(cellColData$nFrags)
@@ -674,52 +594,53 @@ callOpenTilesFast <- function(ArchRProj,
 
   # Main loop over all cell populations
   experimentList <- list()
-  cl <- parallel::makeCluster(numCores)
-  frags2 <- unlist(frags, recursive = FALSE)
-  iterList <- lapply(1:length(frags2), function(x){list(blackList, frags2[[x]], verbose, study_prefactor)})
-
-  tilesGRangesList <- pbapply::pblapply(
-      cl = cl,
-      X = iterList,
-      FUN = simplifiedTilesBySample)
-
-  names(tilesGRangesList) <- names(frags2)
-
-
-
   for (cellPop in names(splitFrags)) {
     if (verbose) {
-      message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
+      message(stringr::str_interp(
+        "Calling open tiles for cell population ${cellPop}"
+      ))
     }
     # Get our fragments for this cellPop
     popFrags <- unlist(splitFrags[[cellPop]])
+
+    normalization_factors <- as.integer(lengths(popFrags))
 
     # Simplify sample names to remove everything before the first "."
     sampleNames <- gsub("^([^.]+).", "", names(popFrags))
     names(popFrags) <- sampleNames
 
     # save coverage files to folder.
-    if (!file.exists(paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")) | force) {
+    if (!file.exists(
+      paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")
+    ) | force) {
+      if (verbose) {
+        message(stringr::str_interp(
+          "Saving coverage files for cell population ${cellPop}"
+        ))
+      }
       covFiles <- getCoverage(
         popFrags = popFrags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
-        numCores = numCores, TxDb = TxDb
+        numCores = cl, TxDb = TxDb
       )
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
     }
 
-    # This pblapply will parallelize over each sample within a celltype.
+    # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
-    
-    iterList <- lapply(1:length(popFrags), function(x){list(blackList, popFrags[[x]], verbose, study_prefactor)})
+
+    iterList <- lapply(seq_along(popFrags), function(x) {
+      list(blackList, popFrags[[x]], verbose, study_prefactor)
+    })
 
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
-      FUN = simplifiedTilesBySample)
+      FUN = simplifiedTilesBySample
+    )
     names(tilesGRangesList) <- sampleNames
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
