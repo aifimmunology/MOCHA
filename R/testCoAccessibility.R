@@ -470,7 +470,7 @@ combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
 
   allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
     tmp_meta <- coldata
-    tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "", .)
+    tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "_", .)
     tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
@@ -479,7 +479,7 @@ combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
   cellTypeLabelList <- Var1 <- NULL
   cellCounts <- as.data.frame(S4Vectors::metadata(STObj)$CellCounts) %>%
     dplyr::mutate(
-      Sample = gsub(" ", "", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
+      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
     dplyr::select(Sample, Freq)
 
   allSampleData <- dplyr::left_join(
