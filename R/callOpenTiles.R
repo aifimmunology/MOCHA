@@ -1,4 +1,5 @@
-#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an ArchR Project.
+#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an
+#'   ArchR Project.
 #'
 #' @description \code{callOpenTiles} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
@@ -13,19 +14,32 @@
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
-#' @param cellColData A DataFrame containing cell-level metadata and a 'Sample' column
+#' @param cellColData A DataFrame containing cell-level metadata and a 'Sample'
+#'   column
 #' @param blackList A GRanges of blacklisted regions
-#' @param genome A valid BSGenome object describing the genome of your organism
-#' @param studySignal The median signal (number of fragments) in your study. If not
-#'   set, this will be calculated using the input ArchR project but relies on
-#'   the assumption that the ArchR project encompasses your whole study (i.e. is
-#'   not a subset).
-#' @param TxDb is an AnnotationDbi object with transcript info for the organism.
-#' @param Org is the genome-wide annotation package for your organism.
-#' @param outDir is a string describing the output directory for coverage files
-#'   and TxDb/Org. Must be a complete directory string. With ArchR input,
-#'   set outDir to NULL to create a directory within the input ArchR project
-#'   directory named MOCHA for saving files.
+#' @param genome A BSgenome object, or the full name of an installed
+#'   BSgenome data package, or a short string specifying the name of an NCBI
+#'   assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38",
+#'   "bosTau9", "galGal6", "ce11", etc...). The supplied short string must refer
+#'   unambiguously to an installed BSgenome data package. See
+#'   \link[BSgenome]{getBSgenome}.
+#' @param studySignal The median signal (number of fragments) in your study. If
+#'   not set, this will be calculated using the input ArchR project but relies
+#'   on the assumption that the ArchR project encompasses your whole study (i.e.
+#'   is not a subset).
+#' @param TxDb The exact package name of a TxDb-class transcript annotation
+#'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This
+#'   must be installed. See
+#'   \href{https://bioconductor.org/packages/release/data/annotation/}{
+#'   Bioconductor AnnotationData Packages}.
+#' @param OrgDb The exact package name of a OrgDb-class genome wide annotation
+#'   package for your organism (e.g. "org.Hs.eg.db"). This must be installed.
+#'   See \href{https://bioconductor.org/packages/release/data/annotation/}{
+#'   Bioconductor AnnotationData Packages}
+#' @param outDir is a string describing the output directory for coverage files.
+#'   Must be a complete directory string. With ArchR input, set outDir to NULL
+#'   to create a directory within the input ArchR project directory named MOCHA
+#'   for saving files.
 #' @param fast Optional, set to TRUE to use a faster but more memory-intensive
 #   algorithm. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
@@ -40,31 +54,29 @@
 #' @examples
 #' \dontrun{
 #' # Starting from an ArchR Project:
-#' library(TxDb.Hsapiens.UCSC.hg38.refGene)
-#' library(org.Hs.eg.db)
 #' tileResults <- MOCHA::callOpenTiles(
 #'   ArchRProj = myArchRProj,
 #'   cellPopLabel = "celltype_labeling",
 #'   cellPopulations = "CD4",
-#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'   Org = org.Hs.eg.db,
+#'   TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+#'   OrgDb = "org.Hs.eg.db",
 #'   numCores = 1
 #' )
 #' }
 #' \donttest{
 #' # Starting from GRangesList
 #' if (
-#'   require(BSgenome.Hsapiens.UCSC.hg19) &&
-#'     require(TxDb.Hsapiens.UCSC.hg38.refGene) &&
-#'     require(org.Hs.eg.db)
+#'   requireNamespace(BSgenome.Hsapiens.UCSC.hg19) &&
+#'     requireNamespace(TxDb.Hsapiens.UCSC.hg38.refGene) &&
+#'     requireNamespace(org.Hs.eg.db)
 #' ) {
 #'   tiles <- MOCHA::callOpenTiles(
 #'     ATACFragments = MOCHA::exampleFragments,
 #'     cellColData = MOCHA::exampleCellColData,
 #'     blackList = MOCHA::exampleBlackList,
-#'     genome = BSgenome.Hsapiens.UCSC.hg19,
-#'     TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'     Org = org.Hs.eg.db,
+#'     genome = "BSgenome.Hsapiens.UCSC.hg19",
+#'     TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+#'     OrgDb = "org.Hs.eg.db",
 #'     outDir = tempdir(),
 #'     cellPopLabel = "Clusters",
 #'     cellPopulations = c("C2", "C5"),
@@ -86,7 +98,7 @@ setGeneric(
            cellPopulations = "ALL",
            studySignal = NULL,
            TxDb,
-           Org,
+           OrgDb,
            outDir,
            fast = FALSE,
            numCores = 30,
@@ -117,7 +129,7 @@ setGeneric(
                                    cellPopulations = "ALL",
                                    studySignal = NULL,
                                    TxDb,
-                                   Org,
+                                   OrgDb,
                                    outDir,
                                    numCores = 30,
                                    verbose = FALSE,
@@ -141,8 +153,35 @@ setGeneric(
     )
   }
 
+  # Validate and load databases
+  genome <- BSgenome::getBSgenome(genome)
+
+  # Save the fragment number per population-sample
+  cellPopList <- sapply(names(ATACFragments), function(x) {
+    unlist(stringr::str_split(x, "#"))[1]
+  })
+  sampleList <- sapply(names(ATACFragments), function(x) {
+    sample <- unlist(stringr::str_split(x, "#"))[2]
+    unlist(stringr::str_split(sample, "__"))[1]
+  })
+  nFragsList <- sapply(ATACFragments, function(x) {
+    length(x)
+  })
+  allFragmentCounts <- data.frame(cellPopList, sampleList, nFragsList)
+  colnames(allFragmentCounts) <- c(cellPopLabel, "Sample", "nFrags")
+
+  allFragmentCounts <- tidyr::pivot_wider(
+    allFragmentCounts,
+    names_from = all_of(.data[[cellPopLabel]]),
+    values_from = "nFrags"
+  )
+  allFragmentCounts <- as.data.frame(allFragmentCounts)
+  rownames(allFragmentCounts) <- allFragmentCounts$Sample
+  allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
+
   .callOpenTiles(
     ATACFragments,
+    allFragmentCounts,
     cellColData,
     blackList,
     genome,
@@ -150,7 +189,7 @@ setGeneric(
     cellPopulations,
     studySignal,
     TxDb,
-    Org,
+    OrgDb,
     outDir,
     numCores,
     verbose,
@@ -192,7 +231,7 @@ setMethod(
                                  cellPopulations = "ALL",
                                  studySignal = NULL,
                                  TxDb,
-                                 Org,
+                                 OrgDb,
                                  outDir = NULL,
                                  fast = FALSE,
                                  numCores = 30,
@@ -206,17 +245,28 @@ setMethod(
     )
   }
 
-  # Get cell metadata and blacklisted regions from ArchR Project
-  cellColData <- ArchR::getCellColData(ATACFragments)
-  blackList <- ArchR::getBlacklist(ATACFragments)
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
-
   if (!file.exists(outDir)) {
     if (verbose) {
       message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
     }
     dir.create(outDir)
   }
+
+  # Get cell metadata and blacklisted regions from ArchR Project
+  cellColData <- ArchR::getCellColData(ATACFragments)
+  blackList <- ArchR::getBlacklist(ATACFragments)
+
+  # Get genome
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
+
+  # Save the fragment number per population-sample
+  allFragmentCounts <- as.data.frame(cellColData) %>%
+    dplyr::group_by(.data[[cellPopLabel]], Sample) %>%
+    dplyr::summarize(nFrags = sum(nFrags), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = all_of(cellPopLabel), values_from = "nFrags")
+  allFragmentCounts <- as.data.frame(allFragmentCounts)
+  rownames(allFragmentCounts) <- allFragmentCounts$Sample
+  allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
 
   if (fast) {
     warning("The 'fast' option for callOpenTiles is deprecated")
@@ -225,7 +275,7 @@ setMethod(
       cellPopLabel,
       cellPopulations,
       TxDb,
-      Org,
+      OrgDb,
       outDir,
       numCores,
       force,
@@ -237,6 +287,7 @@ setMethod(
 
   .callOpenTiles(
     ATACFragments,
+    allFragmentCounts,
     cellColData,
     blackList,
     genome,
@@ -244,7 +295,7 @@ setMethod(
     cellPopulations,
     studySignal,
     TxDb,
-    Org,
+    OrgDb,
     outDir,
     numCores,
     verbose,
@@ -261,6 +312,7 @@ setMethod(
 
 .callOpenTiles <- function(
     ATACFragments,
+    allFragmentCounts,
     cellColData,
     blackList,
     genome,
@@ -268,12 +320,20 @@ setMethod(
     cellPopulations,
     studySignal,
     TxDb,
-    Org,
+    OrgDb,
     outDir,
     numCores,
     verbose,
     force,
     useArchR) {
+  # Save names for use in metadata
+  TxDbName <- TxDb
+  OrgDbName <- OrgDb
+
+  # Validate and load databases
+  TxDb <- getAnnotationDbFromInstalledPkgname(dbName = TxDb, type = "TxDb")
+  OrgDb <- getAnnotationDbFromInstalledPkgname(dbName = OrgDb, type = "OrgDb")
+
   if (!file.exists(outDir)) {
     if (verbose) {
       message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
@@ -290,12 +350,10 @@ setMethod(
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
     stop("Error: cellPopulations not all found in cellColData")
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations, drop = F]
+    allCellCounts <- allCellCounts[, cellPopulations, drop = FALSE]
+    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop = FALSE]
   }
-  # Genome and TxDb annotation info is added to the metadata of
-  # the final MultiAssayExperiment for downstream analysis
-  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
-  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
+
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
     if (verbose) {
@@ -322,12 +380,14 @@ setMethod(
   experimentList <- list()
   for (cellPop in cellPopulations) {
     if (verbose) {
-      message(stringr::str_interp("Calling open tiles for cell population ${cellPop}"))
+      message(stringr::str_interp(
+        "Calling open tiles for cell population ${cellPop}"
+      ))
     }
 
     cl <- parallel::makeCluster(numCores)
 
-    if (UseArchR) {
+    if (useArchR) {
       parallel::clusterEvalQ(cl, {
         library(ArchR)
         library(rhdf5)
@@ -380,9 +440,12 @@ setMethod(
         popFrags = frags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
-        numCores = cl, TxDb = TxDb
+        cl = cl, TxDb = TxDb
       )
-      saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
+      saveRDS(
+        covFiles,
+        paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")
+      )
       rm(covFiles)
     }
     # This pbapply will parallelize over each sample within a celltype.
@@ -463,8 +526,11 @@ setMethod(
     colData = sampleData,
     metadata = list(
       "CellCounts" = allCellCounts,
-      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
-      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
+      "FragmentCounts" = allFragmentCounts,
+      "Genome" = metadata(genome)$genome,
+      "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
+      "Directory" = outDir
     )
   )
   return(tileResults)
@@ -478,7 +544,7 @@ setMethod(
                                cellPopLabel,
                                cellPopulations = "ALL",
                                TxDb = NULL,
-                               Org = NULL,
+                               OrgDb = NULL,
                                outDir = NULL,
                                numCores = 30,
                                force = FALSE,
@@ -486,16 +552,33 @@ setMethod(
                                verbose = FALSE) {
   warning("The 'fast' option in callOpenTiles is deprecated.")
 
-  # Genome and TxDb annotation info is added to the metadata of
-  # the final MultiAssayExperiment for downstream analysis
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ArchRProj))
-  AnnotationDbi::saveDb(TxDb, paste(outDir, "/TxDb.sqlite", sep = ""))
-  AnnotationDbi::saveDb(Org, paste(outDir, "/Org.sqlite", sep = ""))
-
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
   blackList <- ArchR::getBlacklist(ArchRProj)
 
+  # Get cell populations
+  cellTypeLabelList <- cellColData[, cellPopLabel]
+
+  # Save the cell number per population-sample in the metadata
+  allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
+
+  # Save the fragment number per population-sample
+  allFragmentCounts <- as.data.frame(cellColData) %>%
+    dplyr::group_by(.data[[cellPopLabel]], Sample) %>%
+    dplyr::summarize(nFrags = sum(nFrags), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = all_of(.data[[cellPopLabel]]), values_from = "nFrags")
+  allFragmentCounts <- as.data.frame(allFragmentCounts)
+  rownames(allFragmentCounts) <- allFragmentCounts$Sample
+  allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
+
+  if (all(cellPopulations == "ALL")) {
+    cellPopulations <- colnames(allCellCounts)
+  } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
+    stop("Error: cellPopulations not all found in ArchR project.")
+  } else {
+    allCellCounts <- allCellCounts[, cellPopulations, drop = F]
+    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop = F]
+  }
   cl <- parallel::makeCluster(numCores)
   parallel::clusterEvalQ(cl, {
     library(ArchR)
@@ -622,7 +705,7 @@ setMethod(
         popFrags = popFrags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
-        numCores = cl, TxDb = TxDb
+        cl = cl, TxDb = TxDb
       )
       saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
       rm(covFiles)
@@ -666,14 +749,18 @@ setMethod(
   )
 
   # Add experimentList to MultiAssayExperiment
-  names(experimentList) <- names(splitFrags)
+  names(experimentList) <- cellPopulations
 
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
     metadata = list(
-      "Genome" = genome, "TxDb" = paste(outDir, "/TxDb.sqlite", sep = ""),
-      "Org" = paste(outDir, "/Org.sqlite", sep = ""), "Directory" = outDir
+      "CellCounts" = allCellCounts,
+      "FragmentCounts" = allFragmentCounts,
+      "Genome" = metadata(genome)$genome,
+      "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
+      "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
+      "Directory" = outDir
     )
   )
 
