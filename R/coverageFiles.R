@@ -7,7 +7,7 @@
 # @numCores - number of cores to parallelize over
 # @verbose - Boolean variable to determine verbosity of output.
 
-getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCores = 1, verbose = FALSE) {
+getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {
     normFactor <- rep(normFactor, length(popFrags))
