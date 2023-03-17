@@ -7,11 +7,13 @@
 getCellTypeMarkers <- function(TSAM_Object, verbose = FALSE, numCores = 1){
 
 
-    fullObj <- combineSampleTileMatrix(TSAM_Object)
+    fullObj <- combineSampleTileMatrix(TSAM_Object, NAtoZero = TRUE, verbose = verbose)
 
-    compCounts <- SummarizedExperiment::assays(fullObj)
+    CountDF <- SummarizedExperiment::assays(fullObj)[[1]]
 
-    metaData <- colData(fullObj)
+    MetaDF <- SummarizedExperiment::colData(fullObj)
+
+    variableList <- c('CellType', 'Freq')
 
     #Generate formula
     varForm <- paste0(unlist(lapply(variableList, function(x) paste('(1|',x,')',sep=''))), collapse = ' + ')
@@ -38,15 +40,16 @@ getCellTypeMarkers <- function(TSAM_Object, verbose = FALSE, numCores = 1){
     }
 
     # Make your clusters for efficient parallelization
-
+    #return(list(formula1, CountDF, MetaDF, getIndividualVariance))
     cl <- parallel::makeCluster(numCores)
-    parallel::clusterExport(cl=cl, varlist = c('formula1', 'CountDF', 'MetaDF','runIndividualDecomposition'), 
+    parallel::clusterExport(cl=cl, varlist = c('formula1', 'CountDF', 'MetaDF','getIndividualVariance'), 
                         envir = environment())
-    decompList <- pbapply::pblapply(cl = cl, X = rownames(CountDF), runIndividualDecomposition)
+    decompList <- pbapply::pblapply(cl = cl, X = rownames(CountDF), getIndividualVariance)
     parallel::stopCluster(cl)
+    return(decompList)
 
     varDecomp <- do.call('rbind', decompList)
-    colnames(varDecomp) <- c(variableList, 'Residual')
+    #colnames(varDecomp) <- c(variableList, 'Residual')
     output_df <- cbind(data.frame(Variables = rownames(CountDF)), varDecomp)
 
     return(output_df)
@@ -64,7 +67,7 @@ getCellTypeMarkers <- function(TSAM_Object, verbose = FALSE, numCores = 1){
 #' @export
 #' 
 #' 
-runIndividualDecomposition <- function(x){
+getIndividualVariance <- function(x){
 
     df <-  data.frame(exp = as.numeric(CountDF[x,]), 
                 MetaDF, stringsAsFactors = FALSE)
@@ -92,3 +95,42 @@ runIndividualDecomposition <- function(x){
       error = function(e){rep(NA, length(variableList) + 1)})
     return(output_vector)
 }
+
+tmpM <- getZIVariance(rownames(CountDF)[1])
+tmp2 <- summary(tmpM)
+
+getZIVariance <- function(x){
+
+    df <-  data.frame(exp = as.numeric(CountDF[x,]), 
+                MetaDF, stringsAsFactors = FALSE)
+
+    modelRes <- tryCatch({
+        glmmTMB::glmmTMB(formula1, 
+            family = gaussian(),
+            ziformula = ~ CellType + Freq,
+            data =  df)
+        }, 
+        error = function(e){NA})
+    return(modelRes)
+    variableList <-  all.vars(formula1[-1])
+
+    output_vector <- tryCatch({
+        if(!is.na(modelRes)){
+            ## Extract variance decomposition.
+            lmem_re <- as.data.frame(glmmTMB::VarCorr(modelRes))
+            row.names(lmem_re) <- c(lmem_re$grp)
+        
+            lmem_re <- lmem_re[c(variableList,'Residual'), ]
+
+            VarDecomp <- (lmem_re$vcov)/sum(lmem_re$vcov)
+
+        }else{
+            VarDecomp <- rep(NA, length(variableList) + 1)
+        }
+
+        VarDecomp
+    }, 
+      error = function(e){rep(NA, length(variableList) + 1)})
+    return(output_vector)
+}
+
