@@ -189,4 +189,25 @@ if (
       numCores = 1, verbose = TRUE
     ))
   })
+  
+  test_that("We error informatively when cellPopLabel is not in the metadata", {
+    TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
+    Org <- "org.Hs.eg.db"
+    expect_error(
+      tiles <- MOCHA::callOpenTiles(
+        ATACFragments = MOCHA::exampleFragments,
+        cellColData = MOCHA::exampleCellColData,
+        blackList = MOCHA::exampleBlackList,
+        genome = "hg19",
+        TxDb = TxDb,
+        Org = Org,
+        outDir = tempdir(),
+        cellPopLabel = "INCORRECTCELLPOPLABEL",
+        cellPopulations = c("C2", "C5"),
+        numCores = 1
+      ),
+      regexp = "cellColData must contain column cellPopLabel"
+    )
+  })
+  
 }

@@ -239,6 +239,13 @@ setMethod(
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ATACFragments)
   blackList <- ArchR::getBlacklist(ATACFragments)
+  
+  if (!(cellPopLabel %in% colnames(cellColData))) {
+    stop(
+      stringr::str_interp("cellPopLabel {cellPopLabel} not found in "),
+      "cellColData. cellColData must contain column cellPopLabel."
+    )
+  }
 
   # Save the fragment number per population-sample
   allFragmentCounts <- as.data.frame(cellColData) %>%
@@ -327,8 +334,6 @@ setMethod(
 
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
-  } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
-    stop("Error: cellPopulations not all found in cellColData")
   } else {
     allCellCounts <- allCellCounts[, cellPopulations, drop = FALSE]
     allFragmentCounts <- allFragmentCounts[, cellPopulations, drop = FALSE]
