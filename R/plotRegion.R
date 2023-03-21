@@ -177,9 +177,8 @@ plotRegion <- function(countSE,
   chrom <- toString(unique(countdf$chr))
   .relativeHeights_default <- c(`Chr` = 0.9, `Normalized Counts` = 7, `Genes` = 2, `AdditionalGRanges` = 4.5, `Links` = 1.5) # retain in case any missing
 
-  TxDb <- AnnotationDbi::loadDb(countSE@metadata$TxDb)
-  orgdb <- AnnotationDbi::loadDb(countSE@metadata$Org)
-
+  TxDb <- getAnnotationDbFromInstalledPkgname(countSE@metadata$TxDb$pkgname, "TxDb")
+  Org <- getAnnotationDbFromInstalledPkgname(countSE@metadata$OrgDb$pkgname, "OrgDb")
   # Base Plot of Sample Counts
   p1 <- verbf(
     counts_plot_samples(countdf,

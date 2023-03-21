@@ -1,21 +1,33 @@
 #' @title \code{testCoAccessibilityChromVar}
 #'
-#' @description \code{testCoAccessibilityChromVar} takes an input set of tile pairs and tests whether they are significantly different compared to a background set found via ChromVAR
+#' @description \code{testCoAccessibilityChromVar} takes an input set of tile
+#'   pairs and tests whether they are significantly different compared to a
+#'   background set found via ChromVAR
 #'
-#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
-#' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)
-#' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
-#' @param backNumber number of ChromVAR-matched background pairs. Default is 1000.
-#' @param highMem Boolean to control memory usage. Default is FALSE. Only set highMem to TRUE if you have plenty of memory and want to run this function faster.s
-#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param SampleTileMatrix The SummarizedExperiment object output from
+#'   getSampleTileMatrix containing your sample-tile matrices
+#' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs
+#'   to test (first tile in each pair)
+#' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs
+#'   to test (second tile in each pair)
+#' @param backNumber number of ChromVAR-matched background pairs. Default is
+#'   1000.
+#' @param highMem Boolean to control memory usage. Default is FALSE. Only set
+#'   highMem to TRUE if you have plenty of memory and want to run this function
+#'   faster.s
+#' @param numCores Optional, the number of cores to use with multiprocessing.
+#'   Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations
+#'   to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate
+#'   the normal Spearman.
 #'
-#' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value for that correlation compared to the background
-#'
+#' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
+#'   for that correlation compared to the background
 #'
 #' @export
-testCoAccessibilityChromVar <- function(STObj,
+#' 
+testCoAccessibilityChromVar <- function(SampleTileMatrix,
                                         tile1,
                                         tile2,
                                         numCores = 1,
@@ -29,9 +41,9 @@ testCoAccessibilityChromVar <- function(STObj,
   if (length(tile1) != length(tile2)) {
     stop("tile1 and tile2 must be the same length.")
   }
-
-  fullObj <- combineSampleTileMatrix(STObj)
-
+  
+  fullObj <- combineSampleTileMatrix(SampleTileMatrix)
+  
   backPeaks <- chromVAR::getBackgroundPeaks(fullObj)
 
   if (is.character(tile1) && is.character(tile2)) {
@@ -200,22 +212,30 @@ testCoAccessibilityChromVar <- function(STObj,
 
 #' @title \code{testCoAccessibilityRandom}
 #'
-#' @description \code{testCoAccessibilityRandom} takes an input set of tile pairs and tests whether they are significantly different compared to random, non-overlapping background set.
-#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
-#' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)
-#' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)
-#' @param backNumber number of background pairs, or a user-defined background. Default is 1000. If user-defined, it must be a data.frame with column names Tile1 and Tile2, with all tiles named as string in the format 'ChrX:100-3000'. 
-#' @param calcPValue Set TRUE to calculate p-value of foreground compared to background. If background is larger, it may be better to set to FALSE, and calculate this in the global R environment to avoid memory issues. 
-#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @description \code{testCoAccessibilityRandom} takes an input set of tile
+#'   pairs and tests whether they are significantly different compared to
+#'   random, non-overlapping background set.
+#' @param SampleTileMatrix The SummarizedExperiment object output from
+#'   getSampleTileMatrix containing your sample-tile matrices
+#' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs
+#'   to test (first tile in each pair)
+#' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs
+#'   to test (second tile in each pair)
+#' @param backNumber number of background pairs. Default is 1000.
+#' @param numCores Optional, the number of cores to use with multiprocessing.
+#'   Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations
+#'   to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate
+#'   the normal Spearman.
 #'
-#' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value for that correlation compared to the background
+#' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
+#'   for that correlation compared to the background
 #'
 #'
 #' @export
-
-testCoAccessibilityRandom <- function(STObj,
+#' 
+testCoAccessibilityRandom <- function(SampleTileMatrix,
                                       tile1,
                                       tile2,
                                       numCores = 1,
@@ -230,7 +250,7 @@ testCoAccessibilityRandom <- function(STObj,
     stop("tile1 and tile2 must be the same length.")
   }
 
-  fullObj <- MOCHA:::combineSampleTileMatrix(STObj)
+  fullObj <- combineSampleTileMatrix(SampleTileMatrix)
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
@@ -375,14 +395,20 @@ testCoAccessibilityRandom <- function(STObj,
 #'
 #' @description \code{runCoAccessibility}
 #'
-#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
+#' @param SampleTileMatrix The SummarizedExperiment object output from
+#'   getSampleTileMatrix containing your sample-tile matrices
 #' @param accMat accessibility matrix to use for correlations
-#' @param pairs data.frame for pairs of tiles to test. Must be tileNames (chrX:100-200).
-#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' @param pairs data.frame for pairs of tiles to test. Must be tileNames
+#'   (chrX:100-200).
+#' @param numCores Optional, the number of cores to use with multiprocessing.
+#'   Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations
+#'   to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate
+#'   the normal Spearman.
 #'
-#' @return zi_spear_mat_tmp a data.table of tile pairs with associated correlations.
+#' @return zi_spear_mat_tmp a data.table of tile pairs with associated
+#'   correlations.
 #'
 #' @examples
 #' runCoAccessibility(
@@ -393,7 +419,7 @@ testCoAccessibilityRandom <- function(STObj,
 #'   )
 #' )
 #' @noRd
-#'
+#' 
 runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCores = 1) {
 
   # Generate matrix for just Tile1, and just Tile2, then combined by column. 
@@ -434,22 +460,31 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
 
 #' @title \code{combineSampleTileMatrix}
 #'
-#' @description \code{combineSampleTileMatrix} combines all celltypes in a SampleTileMatrix object into a SummarizedExperiment with one single matrix across all cell types and samples.
+#' @description \code{combineSampleTileMatrix} combines all celltypes in a
+#'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
+#'   across all cell types and samples, annotating GC bias using
+#'   chromVAR.
 #'
-#' @param STObj The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices
+#' @param SampleTileMatrix The SummarizedExperiment object output from
+#'   getSampleTileMatrix containing your sample-tile matrices
 #' @param NAToZero Set NA values in the sample-tile matrix to zero
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @return TileCorr A data.table correlation matrix
 #'
 #'
 #' @export
-combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
+combineSampleTileMatrix <- function(SampleTileMatrix,
+                                    NAtoZero = TRUE, 
+                                    verbose = FALSE) {
+  
+  genome <- S4Vectors::metadata(SampleTileMatrix)$Genome
+  genome <- BSgenome::getBSgenome(genome)
 
   Sample <- Freq <- . <- NULL
   # Extract all the Sample-Tile Matrices for each cell type
-  assays <- SummarizedExperiment::assays(STObj)
+  assays <- SummarizedExperiment::assays(SampleTileMatrix)
 
-  coldata <- SummarizedExperiment::colData(STObj)
+  coldata <- SummarizedExperiment::colData(SampleTileMatrix)
   
   # Let's generate a new assay, that will contain the
   # the intensity for a given cell, as well as the
@@ -457,7 +492,7 @@ combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
 
   newAssays <- list(do.call("cbind", as(assays, "list")))
   newSamplesNames <- unlist(lapply(names(assays), function(x) {
-    paste(x, colnames(STObj), sep = "__") %>% gsub(" ", "", .)
+    paste(x, colnames(SampleTileMatrix), sep = "__") %>% gsub(" ", "", .)
   }))
 
   names(newAssays) <- "counts"
@@ -477,7 +512,7 @@ combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
   }))
   
   cellTypeLabelList <- Var1 <- NULL
-  cellCounts <- as.data.frame(S4Vectors::metadata(STObj)$CellCounts) %>%
+  cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileMatrix)$CellCounts) %>%
     dplyr::mutate(
       Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
     dplyr::select(Sample, Freq)
@@ -485,7 +520,7 @@ combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
   allSampleData <- dplyr::left_join(
     as.data.frame(allSampleData), cellCounts, by = "Sample")
 
-  allRanges <- SummarizedExperiment::rowRanges(STObj)
+  allRanges <- SummarizedExperiment::rowRanges(SampleTileMatrix)
   for (i in names(assays)) {
     GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
   }
@@ -494,21 +529,16 @@ combineSampleTileMatrix <- function(STObj, NAtoZero = TRUE, verbose = FALSE) {
     assays = newAssays,
     colData = allSampleData,
     rowRanges = allRanges,
-    metadata = S4Vectors::metadata(STObj)
+    metadata = S4Vectors::metadata(SampleTileMatrix)
   )
   
-  tryCatch({
-      newObj <- chromVAR::addGCBias(newObj, genome = S4Vectors::metadata(STObj)$Genome)
-  }, error = function(e) {
-    warning("The BSgenome for your organism is not installed")
-    stop(e)
-  })
+  newObj <- chromVAR::addGCBias(newObj, genome = genome)
   
   if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
     naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
     
     if (verbose) {
-      message(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
+      warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
     }
     
     SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(rowData(newObj)$bias, na.rm = TRUE)

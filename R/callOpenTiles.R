@@ -1,4 +1,4 @@
-#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an
+#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an 
 #'   ArchR Project.
 #'
 #' @description \code{callOpenTiles} is the main peak-calling function in MOCHA
@@ -14,30 +14,30 @@
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
-#' @param cellColData A DataFrame containing cell-level metadata and a 'Sample'
+#' @param cellColData A DataFrame containing cell-level metadata and a 'Sample' 
 #'   column
 #' @param blackList A GRanges of blacklisted regions
-#' @param genome A BSgenome object, or the full name of an installed
-#'   BSgenome data package, or a short string specifying the name of an NCBI
-#'   assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38",
+#' @param genome A BSgenome object, or the full name of an installed 
+#'   BSgenome data package, or a short string specifying the name of an NCBI 
+#'   assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38", 
 #'   "bosTau9", "galGal6", "ce11", etc...). The supplied short string must refer
-#'   unambiguously to an installed BSgenome data package. See
+#'   unambiguously to an installed BSgenome data package. See 
 #'   \link[BSgenome]{getBSgenome}.
-#' @param studySignal The median signal (number of fragments) in your study. If
-#'   not set, this will be calculated using the input ArchR project but relies
-#'   on the assumption that the ArchR project encompasses your whole study (i.e.
+#' @param studySignal The median signal (number of fragments) in your study. If 
+#'   not set, this will be calculated using the input ArchR project but relies 
+#'   on the assumption that the ArchR project encompasses your whole study (i.e. 
 #'   is not a subset).
-#' @param TxDb The exact package name of a TxDb-class transcript annotation
-#'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This
-#'   must be installed. See
+#' @param TxDb The exact package name of a TxDb-class transcript annotation 
+#'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
+#'   must be installed. See 
 #'   \href{https://bioconductor.org/packages/release/data/annotation/}{
 #'   Bioconductor AnnotationData Packages}.
-#' @param OrgDb The exact package name of a OrgDb-class genome wide annotation
-#'   package for your organism (e.g. "org.Hs.eg.db"). This must be installed.
+#' @param OrgDb The exact package name of a OrgDb-class genome wide annotation 
+#'   package for your organism (e.g. "org.Hs.eg.db"). This must be installed. 
 #'   See \href{https://bioconductor.org/packages/release/data/annotation/}{
 #'   Bioconductor AnnotationData Packages}
 #' @param outDir is a string describing the output directory for coverage files.
-#'   Must be a complete directory string. With ArchR input, set outDir to NULL
+#'   Must be a complete directory string. With ArchR input, set outDir to NULL 
 #'   to create a directory within the input ArchR project directory named MOCHA
 #'   for saving files.
 #' @param fast Optional, set to TRUE to use a faster but more memory-intensive
@@ -109,17 +109,6 @@ setGeneric(
   signature = "ATACFragments"
 )
 
-# @title \code{callOpenTiles} Perform peak-calling on a set of scATAC fragments.
-#
-# @description \code{callOpenTiles} is the main peak-calling function in MOCHA
-#   that serves as a wrapper function to call peaks provided a set of fragment
-#   files and an ArchR Project for meta-data purposes
-#
-# @inheritParams callOpenTiles
-# @param cellColData A dataframe containing cell-level metadata and a 'Sample' column
-# @param blackList A GRanges of blacklisted regions
-# @param genome A valid BSGenome object describing the genome of your organism
-#
 
 .callOpenTiles_default <- function(ATACFragments,
                                    cellColData,
@@ -134,6 +123,10 @@ setGeneric(
                                    numCores = 30,
                                    verbose = FALSE,
                                    force = FALSE) {
+  
+  # Load Genome
+  genome <- BSgenome::getBSgenome(genome)
+  
   validGRanges <- sapply(ATACFragments, function(obj) {
     methods::is(obj, "GRanges")
   })
@@ -153,9 +146,6 @@ setGeneric(
     )
   }
 
-  # Validate and load databases
-  genome <- BSgenome::getBSgenome(genome)
-
   # Save the fragment number per population-sample
   cellPopList <- sapply(names(ATACFragments), function(x) {
     unlist(stringr::str_split(x, "#"))[1]
@@ -172,9 +162,10 @@ setGeneric(
 
   allFragmentCounts <- tidyr::pivot_wider(
     allFragmentCounts,
-    names_from = all_of(.data[[cellPopLabel]]),
+    names_from = tidyselect::all_of({{cellPopLabel}}),
     values_from = "nFrags"
   )
+  
   allFragmentCounts <- as.data.frame(allFragmentCounts)
   rownames(allFragmentCounts) <- allFragmentCounts$Sample
   allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
@@ -197,7 +188,6 @@ setGeneric(
     useArchR = FALSE
   )
 }
-
 #' @rdname callOpenTiles-methods
 #' @aliases callOpenTiles,GRangesList-method
 setMethod(
@@ -205,7 +195,6 @@ setMethod(
   signature(ATACFragments = "GRangesList"),
   .callOpenTiles_default
 )
-
 #' @rdname callOpenTiles-methods
 #' @aliases callOpenTiles,list-method
 setMethod(
@@ -214,15 +203,6 @@ setMethod(
   .callOpenTiles_default
 )
 
-# @title \code{callOpenTiles} Perform peak-calling on an ArchR Project
-#
-# @description \code{callOpenTiles} is the main peak-calling function in MOCHA
-#   that serves as a wrapper function to call peaks provided a set of fragment
-#   files and an ArchR Project for meta-data purposes
-#
-# @inheritParams callOpenTiles
-# @param fast Optional, set to TRUE to use a faster but more memory-intensive
-#   algorithm. Default is FALSE.
 
 #' @rdname callOpenTiles-methods
 #' @aliases callOpenTiles,ArchRProject-method
@@ -237,6 +217,10 @@ setMethod(
                                  numCores = 30,
                                  verbose = FALSE,
                                  force = FALSE) {
+  
+  # Load Genome
+  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
+  
   if (is.null(outDir)) {
     outDir <- paste(
       ArchR::getOutputDirectory(ATACFragments),
@@ -256,14 +240,16 @@ setMethod(
   cellColData <- ArchR::getCellColData(ATACFragments)
   blackList <- ArchR::getBlacklist(ATACFragments)
 
-  # Get genome
-  genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
-
   # Save the fragment number per population-sample
   allFragmentCounts <- as.data.frame(cellColData) %>%
-    dplyr::group_by(.data[[cellPopLabel]], Sample) %>%
-    dplyr::summarize(nFrags = sum(nFrags), .groups = "drop") %>%
-    tidyr::pivot_wider(names_from = all_of(cellPopLabel), values_from = "nFrags")
+    dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
+    dplyr::summarize(nFrags = sum(nFrags), .groups = "drop")
+  
+  allFragmentCounts <- tidyr::pivot_wider(
+    allFragmentCounts,
+    names_from = tidyselect::all_of({{cellPopLabel}}),
+    values_from = "nFrags"
+  )
   allFragmentCounts <- as.data.frame(allFragmentCounts)
   rownames(allFragmentCounts) <- allFragmentCounts$Sample
   allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
@@ -326,25 +312,19 @@ setMethod(
     verbose,
     force,
     useArchR) {
-  # Save names for use in metadata
+  
+  # Load databases and save names for use in metadata
   TxDbName <- TxDb
   OrgDbName <- OrgDb
-
-  # Validate and load databases
-  TxDb <- getAnnotationDbFromInstalledPkgname(dbName = TxDb, type = "TxDb")
-  OrgDb <- getAnnotationDbFromInstalledPkgname(dbName = OrgDb, type = "OrgDb")
-
-  if (!file.exists(outDir)) {
-    if (verbose) {
-      message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
-    }
-    dir.create(outDir)
-  }
-
+  TxDb <- getAnnotationDbFromInstalledPkgname(dbName=TxDb, type="TxDb")
+  OrgDb <- getAnnotationDbFromInstalledPkgname(dbName=OrgDb, type="OrgDb")
+ 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
+
   # Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
+
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
@@ -536,8 +516,6 @@ setMethod(
   return(tileResults)
 }
 
-
-
 ##### Same function, but runs faster with much, much more RAM usage.
 # TODO: Deprecate
 .callOpenTilesFast <- function(ArchRProj,
@@ -555,30 +533,37 @@ setMethod(
   # Get cell metadata and blacklisted regions from ArchR Project
   cellColData <- ArchR::getCellColData(ArchRProj)
   blackList <- ArchR::getBlacklist(ArchRProj)
-
+  
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
-
+  
   # Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-
+  
   # Save the fragment number per population-sample
-  allFragmentCounts <- as.data.frame(cellColData) %>%
-    dplyr::group_by(.data[[cellPopLabel]], Sample) %>%
-    dplyr::summarize(nFrags = sum(nFrags), .groups = "drop") %>%
-    tidyr::pivot_wider(names_from = all_of(.data[[cellPopLabel]]), values_from = "nFrags")
+  allFragmentCounts <- as.data.frame(cellColData) %>% 
+    dplyr::group_by({{cellPopLabel}}, Sample) %>% 
+    dplyr::summarize(nFrags=sum(nFrags), .groups='drop')
+  
+  allFragmentCounts <- tidyr::pivot_wider(
+    allFragmentCounts,
+    names_from = tidyselect::all_of({{cellPopLabel}}),
+    values_from = "nFrags"
+  )
+  
   allFragmentCounts <- as.data.frame(allFragmentCounts)
   rownames(allFragmentCounts) <- allFragmentCounts$Sample
-  allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
-
+  allFragmentCounts <- subset(allFragmentCounts, select=-Sample)
+  
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
     stop("Error: cellPopulations not all found in ArchR project.")
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations, drop = F]
-    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop = F]
+    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
+    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop=F]
   }
+
   cl <- parallel::makeCluster(numCores)
   parallel::clusterEvalQ(cl, {
     library(ArchR)

@@ -5,7 +5,7 @@
 \title{\code{testCoAccessibilityRandom}}
 \usage{
 testCoAccessibilityRandom(
-  STObj,
+  SampleTileMatrix,
   tile1,
   tile2,
   numCores = 1,
@@ -15,23 +15,32 @@ testCoAccessibilityRandom(
 )
 }
 \arguments{
-\item{STObj}{The SummarizedExperiment object output from getSampleTileMatrix containing your sample-tile matrices}
+\item{SampleTileMatrix}{The SummarizedExperiment object output from
+getSampleTileMatrix containing your sample-tile matrices}
 
-\item{tile1}{vector of indices or tile names (chrX:100-2000) for tile pairs to test (first tile in each pair)}
+\item{tile1}{vector of indices or tile names (chrX:100-2000) for tile pairs
+to test (first tile in each pair)}
 
-\item{tile2}{vector of indices or tile names (chrX:100-2000) for tile pairs to test (second tile in each pair)}
+\item{tile2}{vector of indices or tile names (chrX:100-2000) for tile pairs
+to test (second tile in each pair)}
 
-\item{numCores}{Optional, the number of cores to use with multiprocessing. Default is 1.}
+\item{numCores}{Optional, the number of cores to use with multiprocessing.
+Default is 1.}
 
-\item{ZI}{boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.}
+\item{ZI}{boolean flag that enables zero-inflated (ZI) Spearman correlations
+to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate
+the normal Spearman.}
 
 \item{backNumber}{number of background pairs. Default is 1000.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
-foreGround A data.frame with Tile1, Tile2, Correlation, and p-value for that correlation compared to the background
+foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
+  for that correlation compared to the background
 }
 \description{
-\code{testCoAccessibilityRandom} takes an input set of tile pairs and tests whether they are significantly different compared to random, non-overlapping background set.
+\code{testCoAccessibilityRandom} takes an input set of tile
+  pairs and tests whether they are significantly different compared to
+  random, non-overlapping background set.
 }
