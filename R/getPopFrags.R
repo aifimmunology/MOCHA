@@ -100,7 +100,9 @@ getPopFrags <- function(ArchRProj,
   if (is.null(region)) {
 
     # Extract fragments from all available regions
-    arrowList <- lapply(seq_along(arrows), function(x){ list(arrows[x], grep(names(arrows)[x], cellNames, value = TRUE))})
+    arrowList <- lapply(seq_along(arrows), function(x){ 
+      list(arrows[x], grep(names(arrows)[x], cellNames, value = TRUE))
+    })
     if (verbose) {
       message("Extracting fragments from arrow files")
     }
@@ -157,10 +159,11 @@ getPopFrags <- function(ArchRProj,
     row.names(metadf)[which(metadf[, metaColumn] == x)]
   })
 
-  #name list of cell barcodes by population (while cleaning up for odd characters)
-  names(barcodesByCellPop) <- gsub(" |_|#", "_", cellPopulations)
+  # name list of cell barcodes by population (while cleaning up for odd characters)
+  names(barcodesByCellPop) <- gsub(" |_|#", "_", cellPopulations) #TODO assess pattern assumptions
 
-  #If you are extracting more than one population, then sort the fragments by population. If you are not, then no sorting is necessary. 
+  # If you are extracting more than one population, then sort the fragments by population.
+  # If you are not, then no sorting is necessary. 
   if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
     # Set up sets for sorting by fragments for cell types
     fragIterList <- lapply(seq_along(frags), function(x){
@@ -180,6 +183,7 @@ getPopFrags <- function(ArchRProj,
 
     #Unlist
     tmp_fragList <- unlist(tmp_fragList, recursive = FALSE)
+    # TODO check naming pattern assumptions
     names(tmp_fragList) <- gsub("\\.", "#",names(tmp_fragList))
     sampleName <- gsub("#.*", "",names(tmp_fragList))
     cellTypeName <-  gsub(".*#", "",names(tmp_fragList))
@@ -204,31 +208,29 @@ getPopFrags <- function(ArchRProj,
   )
 
   if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
-    popFrags <- lapply(names(barcodesByCellPop), function(x){
-        subsetFrags <- methods::as(tmp_fragList[grepl(x, names(tmp_fragList))], "GRangesList")
+    popFrags <- unlist(lapply(names(barcodesByCellPop), function(x){
+        subsetFrags <- tmp_fragList[grepl(x, names(tmp_fragList))]
         names(subsetFrags) <- grep(x, names(tmp_fragList), value = TRUE)
         subsetFrags
-    })
+    }))
     
-    names(popFrags) <- names(barcodesByCellPop)
+    # names(popFrags) <- names(barcodesByCellPop)
   }else{
-    popFrags = tmp_fragList
+    popFrags <- tmp_fragList
   }
 
   rm(tmp_fragList)
-  # Turn off ArchR logging messages
-  suppressMessages(ArchR::addArchRVerbose(verbose = TRUE))
 
-  return(popFrags)
+  return(GenomicRanges::GRangesList(popFrags))
 }
 
 #' Extract fragments from an arrow file based on one variable
 #'
 #' \code{simplifiedFragments} returns a list of fragments for a given set of cell names
 #'
-#' @param ref a list where the first index if the name of the arrow and the second index is a vector of strings describing cell names
+#' @param ref a list where the first index is the name of the arrow and the second index is a vector of strings describing cell names
 #'
-#' @return A Granges object for all fragments from a set of cells within a given arrow file. 
+#' @return A GRanges object for all fragments from a set of cells within a given arrow file. 
 #'
 #'
 #' @noRd
