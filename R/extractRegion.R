@@ -159,7 +159,7 @@ extractRegion <- function(SampleTileObj,
   if (verbose) {
      message(stringr::str_interp("Converting from GRanges."))
   }
-  return(allGroups)
+
   iterList <- lapply(seq_along(allGroups), function(x) { list(allGroups[[x]], names(allGroups)[x]) })
 
   if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
@@ -167,8 +167,6 @@ extractRegion <- function(SampleTileObj,
     allGroupsDF <- pbapply::pblapply(cl = cl, iterList, cleanDataFrame1)
 
   } else {
-
-
 
     allGroupsDF <- pbapply::pblapply(cl = cl, iterList, cleanDataFrame2)
     
@@ -252,7 +250,7 @@ averageBinCoverage <- function(iterList){
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, binnedData)
                            
                            
-    return(unlist(mergedCounts))
+    return(mergedCounts)
 }
 
 cleanDataFrame1 <- function(iterList){
