@@ -380,13 +380,10 @@ setMethod(
       # Get our fragments for this cellPop
       frags <- MOCHA::getPopFrags(
         ArchRProj = ATACFragments,
-        metaColumn = cellPopLabel,
+        cellPopLabel = cellPopLabel,
         cellSubsets = cellPop,
-        region = NULL,
         numCores = cl,
-        blackList = NULL,
-        verbose = verbose,
-        overlapList = 50
+        verbose = verbose
       )
     } else {
       frags <- ATACFragments[grep(cellPop, names(ATACFragments))]
@@ -579,12 +576,9 @@ setMethod(
   # This will also validate the input cellPopulations
   frags <- MOCHA::getPopFrags(
     ArchRProj = ArchRProj,
-    metaColumn = cellPopLabel,
+    cellPopLabel = cellPopLabel,
     cellSubsets = cellPopulations,
-    region = NULL,
-    numCores = cl,
-    blackList = NULL,
-    overlapList = 50
+    numCores = cl
   )
 
   # Check for and remove celltype-sample groups for which there
