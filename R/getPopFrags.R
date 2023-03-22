@@ -56,7 +56,7 @@ getPopFrags <- function(ArchRProj,
   tmp <- metadf[, metaColumn]
   cellCounts <- table(tmp[!is.na(tmp)])
 
-  if (all(cellSubsets == "ALL")) {
+  if (all(tolower(cellSubsets) == "all")) {
     cellPopulations <- names(cellCounts)
   } else {
 
@@ -159,9 +159,22 @@ getPopFrags <- function(ArchRProj,
     row.names(metadf)[which(metadf[, metaColumn] == x)]
   })
 
-  # name list of cell barcodes by population (while cleaning up for odd characters)
-  names(barcodesByCellPop) <- gsub(" |_|#", "_", cellPopulations) #TODO assess pattern assumptions
-
+  # Clean up cell populations
+  # PROTECTED DELIMITER CHARACTERS: # and . and __
+  cleanedCellPopulations <- gsub("[#.]|_{2}", "_", cellPopulations)
+  changedLabelsBool <- grepl("[#.]|_{2}", cellPopulations)
+  if (any(changedLabelsBool)){
+    warning(
+      "The following cell population labels contain protected delimiter ",
+      "characters '#.' and have been updated. Please use the updated ",
+      "cell population labels in downstream analyses. ",
+      "\nPrevious: \n", paste0(cellPopulations[changedLabelsBool], collapse="  "),
+      "\nUpdated: \n", paste0(cleanedCellPopulations[changedLabelsBool],collapse="  ")
+    )
+  }
+  names(barcodesByCellPop) <- cleanedCellPopulations
+  cellPopulations <- cleanedCellPopulations
+  
   # If you are extracting more than one population, then sort the fragments by population.
   # If you are not, then no sorting is necessary. 
   if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
@@ -181,9 +194,9 @@ getPopFrags <- function(ArchRProj,
     tmp_fragList <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
     names(tmp_fragList) = names(arrows)
 
-    #Unlist
     tmp_fragList <- unlist(tmp_fragList, recursive = FALSE)
-    # TODO check naming pattern assumptions
+    
+    # Here we use . and # as protected delimeter characters
     names(tmp_fragList) <- gsub("\\.", "#",names(tmp_fragList))
     sampleName <- gsub("#.*", "",names(tmp_fragList))
     cellTypeName <-  gsub(".*#", "",names(tmp_fragList))
@@ -199,6 +212,7 @@ getPopFrags <- function(ArchRProj,
   }
 
   # Add normalization factor.
+  # Double underscore __ is protected delimeter
   fragLength <- unlist(lapply(tmp_fragList, length))
   names(tmp_fragList) <- paste(
         names(tmp_fragList),
