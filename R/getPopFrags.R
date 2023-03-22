@@ -217,7 +217,6 @@ simplifiedFragments <- function(ref){
         verbose = FALSE
       ) 
     frags <- plyranges::filter_by_overlaps(frags, regionGRanges)
-    return(frags)
 
    }else{
 
@@ -226,8 +225,9 @@ simplifiedFragments <- function(ref){
         cellNames = cellNames,
         verbose = FALSE
       )
-    return(frags)
+    
    }
+   return(frags)
 
 }
 
