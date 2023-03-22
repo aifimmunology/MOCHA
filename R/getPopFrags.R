@@ -9,6 +9,7 @@
 #'   then give it a list of group names. This needs to be unique - no duplicated
 #'   names. This list of group names must be identical to names that appear in
 #'   the given cellPopLabel metadata column of the ArchR Project.
+#' @param poolSamples Set TRUE to pool sample-specific fragments by cell population. By default this is FALSE and sample-specific fragments are returned.
 #' @param numCores Number of cores to use.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
@@ -20,6 +21,7 @@
 getPopFrags <- function(ArchRProj,
                         cellPopLabel,
                         cellSubsets = "ALL",
+                        poolSamples = FALSE,
                         numCores = 1,
                         verbose = FALSE) {
   nFrags <- NULL
@@ -92,7 +94,6 @@ getPopFrags <- function(ArchRProj,
 
   frags <- pbapply::pblapply(arrowList, simplifiedFragments, cl = numCores)
 
-
   # From MOCHA - sorts cell barcodes by population
   barcodesByCellPop <- lapply(cellPopulations, function(x) {
     row.names(metadf)[which(metadf[, cellPopLabel] == x)]
@@ -122,30 +123,46 @@ getPopFrags <- function(ArchRProj,
           list(barcodesByCellPop, frags[[x]])
     })
     rm(frags)
-    names(fragIterList) = names(arrows)
+    names(fragIterList) <- names(arrows)
 
-    
     if (verbose) {
-        message("Subsetting fragments by cell type.")
+        message("Sorting fragments by cell type.")
     }
 
     #Subset fragments by cell type
     tmp_fragList <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
-    names(tmp_fragList) = names(arrows)
-
-    tmp_fragList <- unlist(tmp_fragList, recursive = FALSE)
+    names(tmp_fragList) <- names(arrows)
     
-    # Here we use . and # as protected delimeter characters
-    names(tmp_fragList) <- gsub("\\.", "#",names(tmp_fragList))
-    sampleName <- gsub("#.*", "",names(tmp_fragList))
-    cellTypeName <-  gsub(".*#", "",names(tmp_fragList))
+    if (poolSamples) {
+      pooledFrags <- lapply(cellPopulations, function(cellPop){
+        cellPopFrags <- lapply(tmp_fragList, function(x){
+          x[[cellPop]]
+        })
+        IRanges::stack(methods::as(cellPopFrags, "GRangesList"))
+      })
+      names(pooledFrags) <- cellPopulations
+      return(GenomicRanges::GRangesList(pooledFrags))
+    }
+    
+    tmp_fragList <- unlist(tmp_fragList, recursive = FALSE)   
+    # Here we use . and # as protected delimiter characters
+    names(tmp_fragList) <- gsub("\\.", "#", names(tmp_fragList))
+    sampleName <- gsub("#.*", "", names(tmp_fragList))
+    cellTypeName <-  gsub(".*#", "", names(tmp_fragList))
     names(tmp_fragList) <- paste(cellTypeName, "#", sampleName, sep ='')
     rm(fragIterList)
 
   }else{
-
+    # One cell population
     tmp_fragList <- frags
-    names(tmp_fragList) <- paste(names(barcodesByCellPop), '#', names(arrows), sep ='')
+    
+    if (poolSamples) {
+      pooledFrags <- list(IRanges::stack(methods::as(tmp_fragList, "GRangesList")))
+      names(pooledFrags) <- cellPopulations
+      return(GenomicRanges::GRangesList(pooledFrags))
+    }
+    
+    names(tmp_fragList) <- paste0(cellPopulations, '#', names(arrows))
     rm(frags)
 
   }

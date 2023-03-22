@@ -16,7 +16,7 @@ ArchRProjDir <- "../../../PBMCSmall"
 if (dir.exists(ArchRProjDir)) {
   # Load ArchR project
   capture.output(testProj <- ArchR::loadArchRProject(ArchRProjDir), type = "message")
-  metaColumn <- "Clusters" # Column with cell population groups
+  cellPopLabel <- "Clusters" # Column with cell population groups
 
   # Test getPopFrags with full genome and all normalization methods
   # Includes snapshot test for output
@@ -29,12 +29,12 @@ if (dir.exists(ArchRProjDir)) {
     {
       testthat::local_edition(3)
       capture.output(
-        popFrags <- getPopFrags(testProj, metaColumn = metaColumn, numCores = 1),
+        popFrags <- getPopFrags(testProj, cellPopLabel = cellPopLabel, numCores = 1),
         type = "message"
       )
 
       # Test population+sample names are as expected
-      populations <- sort(unique(getCellColData(testProj)[[metaColumn]]))
+      populations <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
 
       samples <- unique(testProj$Sample)
       combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
@@ -67,7 +67,7 @@ if (dir.exists(ArchRProjDir)) {
 #       capture.output(
 #         popFrags <- getPopFrags(
 #           testProj,
-#           metaColumn = metaColumn,
+#           cellPopLabel = cellPopLabel,
 #           numCores = 1,
 #           region = "chr2:1-187350807",
 #           NormMethod = "Raw",
@@ -78,7 +78,7 @@ if (dir.exists(ArchRProjDir)) {
 
 #       # Test population names are as expected
 #       actual_names <- sort(gsub("__.*", "", names(popFrags)))
-#       expected_names <- sort(unique(getCellColData(testProj)[[metaColumn]]))
+#       expected_names <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
 #       expect_equal(actual_names, expected_names)
 #     }
 #   )
@@ -91,7 +91,7 @@ if (dir.exists(ArchRProjDir)) {
   #       expect_error(
   #         capture.output(popFrags <- getPopFrags(
   #           testProj,
-  #           metaColumn = metaColumn,
+  #           cellPopLabel = cellPopLabel,
   #           numCores = 1,
   #           region = "chr2:1-187350807",
   #           NormMethod = NormMethod,
@@ -111,7 +111,7 @@ if (dir.exists(ArchRProjDir)) {
   #       capture.output(
   #         popFrags <- getPopFrags(
   #           testProj,
-  #           metaColumn = metaColumn,
+  #           cellPopLabel = cellPopLabel,
   #           numCores = 1,
   #           region = "chr2_1-187350807"
   #         ),
@@ -124,7 +124,7 @@ if (dir.exists(ArchRProjDir)) {
   #       capture.output(
   #         popFrags <- getPopFrags(
   #           testProj,
-  #           metaColumn = metaColumn,
+  #           cellPopLabel = cellPopLabel,
   #           numCores = 1,
   #           region = list("chr1:1-2", "chr2:1-2")
   #         ),
@@ -136,15 +136,15 @@ if (dir.exists(ArchRProjDir)) {
   # )
 
 
-  # Test getPopFrags with a metaColumn not in cellColData
+  # Test getPopFrags with a cellPopLabel not in cellColData
   test_that(
-    stringr::str_interp("getPopFrags throws an error for a metaColumn not in cellColData"),
+    stringr::str_interp("getPopFrags throws an error for a cellPopLabel not in cellColData"),
     {
       expect_error(
         capture.output(
           popFrags <- getPopFrags(
             testProj,
-            metaColumn = "IDoNotExist",
+            cellPopLabel = "IDoNotExist",
             numCores = 1
           ),
           type = "message"
@@ -162,7 +162,7 @@ if (dir.exists(ArchRProjDir)) {
         capture.output(
           popFrags <- getPopFrags(
             testProj,
-            metaColumn = "Clusters",
+            cellPopLabel = "Clusters",
             cellSubsets = c("C1", "IDoNotExist", "C3", "C5"),
             numCores = 1
           ),
@@ -189,13 +189,70 @@ if (dir.exists(ArchRProjDir)) {
         capture.output(
           popFrags <- getPopFrags(
             testProj,
-            metaColumn = "newClusters",
+            cellPopLabel = "newClusters",
             cellSubsets = "all",
             numCores = 1
           ),
           type = "message"
         ),
         "The following cell population labels contain protected delimiter"
+      )
+    }
+  )
+  
+    test_that(
+    "getPopFrags pools samples by cell population with poolSamples=TRUE",
+    {
+      capture.output(
+        popFrags <- getPopFrags(
+          testProj,
+          cellPopLabel = "Clusters",
+          cellSubsets = "all",
+          poolSamples = TRUE,
+          numCores = 1
+        ),
+        type = "message"
+      )
+      expect_snapshot_output(
+        methods::as(popFrags, "list")
+      )
+    }
+  )
+  
+  test_that(
+    "getPopFrags pools samples by a single cellSubset with poolSamples=TRUE",
+    {
+      capture.output(
+        popFrags <- getPopFrags(
+          testProj,
+          cellPopLabel = "Clusters",
+          cellSubsets = "C5",
+          poolSamples = TRUE,
+          numCores = 1
+        ),
+        type = "message"
+      )
+      expect_snapshot_output(
+        methods::as(popFrags, "list")
+      )
+    }
+  )
+  
+  test_that(
+    "getPopFrags pools samples by a single cellSubset with poolSamples=FALSE",
+    {
+      capture.output(
+        popFrags <- getPopFrags(
+          testProj,
+          cellPopLabel = "Clusters",
+          cellSubsets = "C5",
+          poolSamples = FALSE,
+          numCores = 1
+        ),
+        type = "message"
+      )
+      expect_snapshot_output(
+        methods::as(popFrags, "list")
       )
     }
   )
