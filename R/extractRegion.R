@@ -4,7 +4,7 @@
 #'   by callOpenTiles and return a specific region's coverage
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
-#' @param region a GRanges object or vector or strings containing the regions on which to compute co-accessible links. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
+#' @param region a GRanges object or vector or strings containing the regions of interest. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
@@ -51,7 +51,11 @@ extractRegion <- function(SampleTileObj,
   outDir <- SampleTileObj@metadata$Directory
 
   if (is.na(outDir)) {
-    stop("Error: Missing coverage file directory.")
+    stop("Missing coverage file directory. SampleTileObj$metadata must contain 'Directory'.")
+  }
+  
+  if (!file.exists(outDir)) {
+    stop("Directory given by SampleTileObj@metadata$Directory does not exist.")
   }
 
   if (is.character(region)) {
