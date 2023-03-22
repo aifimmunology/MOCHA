@@ -73,6 +73,5 @@ getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
       plyranges::reduce_ranges(score = mean(WeightedScore))
   }, mc.cores = numCores)
 
-
   return(counts)
 }
