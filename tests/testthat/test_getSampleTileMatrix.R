@@ -9,6 +9,11 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
     ),
     type = "message"
   )
+  
+  expect_s4_class(
+    tilemat,
+    "RangedSummarizedExperiment"
+  )
 
   expect_snapshot_value(
     dim(tilemat),
@@ -19,9 +24,14 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
     names(SummarizedExperiment::assays(tilemat)),
     c("C2", "C5")
   )
-
-  # expect_snapshot_value(
-  #   tilemat,
-  #   style = "json2"
-  # )
+  
+  expect_snapshot_output(
+    S4Vectors::metadata(tilemat)
+  )
+  
+  expect_snapshot_output(
+    SummarizedExperiment::colData(tilemat)
+  )
+  
+  
 })

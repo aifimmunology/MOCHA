@@ -101,10 +101,10 @@ getSampleTileMatrix <- function(tileResults,
 
   cl <- parallel::makeCluster(numCores)
   tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
-
+  names(tilesByCellPop) <- names(subTileResults)
+  
   rm(iterList)
   errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
-
   names(errorMessages) <- names(subTileResults)
 
   if (any(!is.na(errorMessages))) {
