@@ -79,7 +79,15 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }
 
   tileNames <- rownames(tileDF)
-
+  
+  regionsStrings <- GRangesToString(regions)
+  if (!all(regionsStrings %in% tileNames)) {
+    stop(
+      "Invalid regions provided. All given regions must be tiles in your SampleTileObj. ",
+      "\nThe following regions are not tiles in the SampleTileObj:\n",
+      paste(regionsStrings[which(!regionsStrings %in% tileNames)], collapse=", ")
+    )
+  }
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", tileNames))
   end <- as.numeric(gsub("chr.*\\:|.*\\-", "", tileNames))
   chr <- gsub("\\:.*", "", tileNames)
