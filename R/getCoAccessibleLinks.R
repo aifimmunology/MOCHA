@@ -93,7 +93,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   cl <- parallel::makeCluster(numCores)
 
   iterList <- lapply(seq_len(dim(regionDF)[1]), function(x){ 
-    list(regionDF[1,], start, end, chr, windowSize, tileNames)
+    list(regionDF[1,], start, end, chr, windowSize)
   })
 
   allCombinations <- pbapply::pblapply(cl = cl, X = iterList, FUN = findAllCombinations) %>%
@@ -148,4 +148,60 @@ getCoAccessibleLinks <- function(SampleTileObj,
   parallel::stopCluster(cl)
 
   return(zi_spear_mat)
+}
+
+
+findAllCombinations <- function(iterList){
+
+  #Extract info needed
+  reg <- iterList[[1]]
+  start <- iterList[[2]]
+  end <- iterList[[3]]
+  chr <- iterList[[4]]
+  windowSize <- iterList[[5]]
+  tileNames <- paste(chr,":", start, "-", end, paste = "")
+
+  keyTile <- which(start == reg$start &
+      end == reg$end &
+      chr == reg$seqnames)
+
+  windowIndexBool <- which(start > reg$start - windowSize / 2 &
+    end < reg$end + windowSize / 2 &
+    chr == reg$seqnames)
+
+  windowIndexBool <- windowIndexBool[windowIndexBool != keyTile]
+
+  if (length(windowIndexBool) > 0) {
+    # Var1 will always be our region of interest
+    keyNeighborPairs <- data.frame(
+      "Key" = tileNames[keyTile],
+      "Neighbor" = tileNames[windowIndexBool]
+    )
+  } else {
+    keyNeighborPairs <- NULL
+  }
+
+  return(keyNeighborPairs)
+
+
+}
+
+splitCombList <- function(iterList){
+
+  index <- iterList[[1]]
+  chrNum <- iterList[[2]]
+  chrChunks <- iterList[[3]]
+  tileNames <- iterList[[4]]
+  key <- iterList[[5]]
+
+  specChr <- paste0(chrNum[which(c(seq_along(chrNum)) > (index - 1)*chrChunks &
+      c(seq_along(chrNum) <= y * chrChunks))], collapse = "|")
+
+  tileIndices <- grep(specChr, tileNames)
+  combIndices <- grep(specChr, key)
+
+  infoList <- list(tileIndices, combIndices, specChr)
+
+  return(infoList)
+
 }
