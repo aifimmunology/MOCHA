@@ -95,7 +95,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
   iterList <- lapply(seq_len(dim(regionDF)[1]), function(x){ 
     list(regionDF[1,], start, end, chr, windowSize)
   })
-
+  
   allCombinations <- pbapply::pblapply(cl = cl, X = iterList, FUN = findAllCombinations) %>%
     do.call("rbind", .) %>%
     dplyr::distinct()
@@ -112,9 +112,8 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }
 
   iterList <- lapply(1:numChunks, function(y){ 
-    list(y, chrNum, chrChunks, tileNames, allCombinations$key)
+    list(y, chrNum, chrChunks, tileNames, allCombinations$Key)
   })
-
   # Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
   combList <- pbapply::pblapply(cl = cl, X = iterList, FUN = splitCombList)
 
@@ -159,7 +158,7 @@ findAllCombinations <- function(iterList){
   end <- iterList[[3]]
   chr <- iterList[[4]]
   windowSize <- iterList[[5]]
-  tileNames <- paste(chr,":", start, "-", end, paste = "")
+  tileNames <- paste0(chr, ":", start, "-", end, paste = "")
 
   keyTile <- which(start == reg$start &
       end == reg$end &
@@ -182,12 +181,10 @@ findAllCombinations <- function(iterList){
   }
 
   return(keyNeighborPairs)
-
-
 }
 
 splitCombList <- function(iterList){
-
+  # input is list(y, chrNum, chrChunks, tileNames, allCombinations$key)
   index <- iterList[[1]]
   chrNum <- iterList[[2]]
   chrChunks <- iterList[[3]]
@@ -195,7 +192,7 @@ splitCombList <- function(iterList){
   key <- iterList[[5]]
 
   specChr <- paste0(chrNum[which(c(seq_along(chrNum)) > (index - 1)*chrChunks &
-      c(seq_along(chrNum) <= y * chrChunks))], collapse = "|")
+      c(seq_along(chrNum) <= index * chrChunks))], collapse = "|")
 
   tileIndices <- grep(specChr, tileNames)
   combIndices <- grep(specChr, key)
