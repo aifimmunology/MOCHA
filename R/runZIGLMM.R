@@ -6,7 +6,8 @@
 
 ## formula must be in the form exp ~ <variables>
 
-#Exa
+
+#example: runZIGLMM(STM[c(1:1000),], 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), ~ Age, verbose = TRUE, numCores = 35 )
 
 runZIGLMM <- function(TSAM_Object,
                         cellTypeName = NULL,
@@ -88,46 +89,45 @@ runZIGLMM <- function(TSAM_Object,
 
 
     # Make your clusters for efficient parallelization
-
     cl <- parallel::makeCluster(numCores)
     parallel::clusterEvalQ(cl, {library(glmmTMB)})
-    parallel::clusterExport(cl=cl, varlist = c('continuousFormula', 'modelingData', 'MetaDF','individualZIGLMM','nullDF'), 
+    parallel::clusterExport(cl=cl, varlist = c('continuousFormula','ziformula', 'modelingData', 'MetaDF','individualZIGLMM','nullDF'), 
                         envir = environment())
     coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
     parallel::stopCluster(cl)
-    return(coeffList)
-    output_list <- lapply(list('cond','zi'), function(y){
+    output_list <- lapply(list('cond','zi'), function(varType){
         
         if(verbose){
-            message(stringr::str_interp("Extracting coefficients for the ${y} component"))
+            message(stringr::str_interp("Extracting coefficients for the ${varType} component"))
         }
 
-        slopes <-  do.call('rbind', pbapply::pblapply(X = coeffList, function(x){ 
-                    slope_tmp <- x[[y]]$Estimate
-                    names(slope_tmp) <- rownames(x[[y]])
-                    slope_tmp
+        valuesToExtract <- c('Estimate','Pr(>|z|)','Std. Error')
 
-        },cl = NULL))
+        dfList <- lapply(valuesToExtract, function(valType){
 
-        significance <-  do.call('rbind', pbapply::pblapply(X = coeffList, function(x){ 
-                    sig_tmp <- x[[y]]$'Pr(>|z|)'
-                    names(sig_tmp) <- rownames(x[[y]])
-                    sig_tmp
+                tmpDF <- do.call('rbind', pbapply::pblapply(X = coeffList, function(x){ 
+                    extractVariable(x[[varType]], valType)
+                    },cl = NULL))
+                if(!is.null(tmpDF)){rownames(tmpDF) <- rownames(modelingData)}
+                tmpDF
+        })
 
-        },cl = NULL))
-
-        stdError <-  do.call('rbind', pbapply::pblapply(X = coeffList, function(x){ 
-                    error_tmp <- x[[y]]$'Std. Error'
-                    names(error_tmp) <- rownames(x)
-                    error_tmp
-
-        },cl = NULL))
-        rownames(stdError) <- rownames(significance) <- rownames(slopes) <- rownames(modelingData)
-        list('Slopes' = slopes, 'Significance' = significance, 'StdError' = stdError)
+        names(dfList) <- c('Slopes', 'Significance', 'StdError')
+        dfList
     })
     names(output_list) <- c('cond','zi')
 
     return(output_list)
+}
+
+extractVariable <- function(varDF, variable){
+    if(dim(varDF)[2] > 0){
+        val_tmp <- unlist(varDF[,variable])
+        names(val_tmp) <- rownames(varDF)
+        val_tmp
+    }else{
+        NULL
+    }
 }
 
 
