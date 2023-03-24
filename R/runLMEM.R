@@ -10,6 +10,9 @@
 ## The initial sampling provides a blueprint for how big that NA data.frame should be. The default is that it'll run 5 models, and if they are all NA, through an error. 
 ## This function should only be used on continuous, non-zero inflated data. 
 
+#example: runLMEM(STM[c(1:1000),], 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), verbose = TRUE, numCores = 35 )
+require(lmerTest)
+
 runLMEM <- function(TSAM_Object,
                         cellTypeName = NULL,
                         modelFormula = NULL, 
@@ -43,7 +46,6 @@ runLMEM <- function(TSAM_Object,
 
     #Subset metadata to just the variables needed. This minimizes overhead for parallelization
     MetaDF <- MetaDF[, colnames(MetaDF) %in% c('Sample', variableList)]
-
     
     if(verbose){
         message('Running a quick test.')
@@ -62,6 +64,7 @@ runLMEM <- function(TSAM_Object,
         }, error = function(e){ NA})
 
     }, cl = NULL)
+
 
     if(all(is.na(unlist(modelList)))){
         stop('For the initial sampling, every test model failed. Reconsider modelFormula or increase initial sampling size.')
@@ -83,6 +86,7 @@ runLMEM <- function(TSAM_Object,
     cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(cl=cl, varlist = c('modelFormula', 'modelingData', 'MetaDF','individualLMEM','nullDF'), 
                         envir = environment())
+    parallel::clusterEvalQ(cl, {library(lmerTest)})
     coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualLMEM)
     parallel::stopCluster(cl)
 
