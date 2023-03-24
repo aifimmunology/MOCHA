@@ -48,7 +48,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
-    nTile2 <- match(tile1, rownames(fullObj))
+    nTile2 <- match(tile2, rownames(fullObj))
   } else if (is.numeric(tile1) && is.numeric(tile2)) {
     nTile1 <- tile1
     nTile2 <- tile2
@@ -81,12 +81,12 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
     tmpMat[sample.int(dim(tmpMat)[1], backNumber), ]
   }, cl = cl)
 
-  parallel::stopCluster(cl)
-
+  
   gc()
-
+  
+  parallel::stopCluster(cl)
   cl <- parallel::makeCluster(numCores)
-
+  
   accMat <- SummarizedExperiment::assays(fullObj)[[1]]
 
   ## Test original pairs of locations
@@ -98,6 +98,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
   }
 
   parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
+  
   foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
@@ -254,7 +255,7 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
-    nTile2 <- match(tile1, rownames(fullObj))
+    nTile2 <- match(tile2, rownames(fullObj))
   } else if (is.numeric(tile1) && is.numeric(tile2)) {
     nTile1 <- tile1
     nTile2 <- tile2
