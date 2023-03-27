@@ -12,10 +12,8 @@
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param approximateTile If set to TRUE, it will use all tiles that overlap with the regions given, instead of finding an exact match to the regions variable. Default is FALSE.
-#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate the normal Spearman.
-#'
-#' @return TileCorr A data.table correlation matrix
+
+#' @return TileGeneCorr A data.table correlation matrix
 #'
 #' @details The technical details of the zero-inflated correlation can be
 #'          found here:
@@ -28,15 +26,104 @@
 #'
 #'
 #' @export
-runTileToGene <- function(SampleTileObj,
+runTileToGeneLinks <- function(SampleTileObj,
                           SampleGeneObj,
                           cellPopulation = "All",
                           DEGList = NULL,
-                          windowSize = 1*10^6) {
+                          windowSize = 1*10^6,
+                          numCores = 20) {
 
     
     . <- NULL
 
+    if(!all(cellPopulation %in% names(SummarizedExperiment::assays(SampleTileObj)))){
+        stop("Cell populations not found within SampleTileObj.")
+    }else{
+        subSTM <- subsetMOCHAObject(SampleTileObj,  susbetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE)
+        fullSTM <- combineSampleTileMatrix(subSTM)
+    }
+
+    if(!all(cellPopulation %in% names(SummarizedExperiment::assays(SampleGeneObj)))){
+        stop("Cell populations not found within SampleGeneObj.")
+    }else{
+        subSGM <- subsetSampleGeneObject(SampleGeneObj,  susbetBy = 'celltype', groupList = cellPopulation)
+        fullSGM <- combineSampleGeneObject(subSGM)
+    }
+
+    ## Extract the matrices for both. 
+    accMat <- SummarizedExperiment::assays(fullSTM)[[1]]
+    exprMat <- SummarizedExperiment::assays(fullSGM)[[1]]
+
+    if(!all(colnames(accMat) %in% colnames(exprMat))){
+        stop('Samples and/or cell type names are not the same between the SampleTileObject and SampleGeneObject. Please align sample and cell type names.')
+    }
+
+
+    ## Extract all promoter tiles within the SampleTileObj. 
+    allTiles <- SummarizedExperiment::rowRanges(SampleTileObj)
+    if(!all(c('Gene', 'tileType') %in% colnames(SummarizedExperiment::mcols(allTiles)))){
+        stop('Tiles within the SampleTileObj are not annotated. Please run annotateTiles() and try again.')
+    }
+
+    promotersOfInterest <- getDEGPromoters(allTiles, DEGList)
+
+    ## Now take the promoters of interest, and expand it by the windowSize either direction.
+    ## Reduce those ranges by gene so that promoters and TSS related to the same gene are compressed into one GRanges. 
+    promoterWindow <- plyranges::stretch(plyranges::anchor_center(promotersOfInterest), extend = windowSize*2)
+    promoterWindow <- plyranges::reduce_ranges(plyranges::group_by(promoterWindow, Genes))
+    
+    ## Find all tiles near each gene, and iterate over each one for ZI-spearman correlations. 
+    iterList <- pbapply::pblapply(cl = NULL, X = seq_along(promoterWindow), function(x){
+
+        #Find all tiles within the windowSize either direction of the promoter of interest. 
+        overlapTiles <- plyranges::filter_by_overlaps(allTiles, promoterWindow[x])
+
+
+        #Extract a data.frame of all the tile intensities
+        subAccMat <- accessibleMatrix[rownames(accessibleMatrix) %in% GRangesToString(overlapTiles),]
+
+        #Extract a data.frame of gene expression for the matching gene. 
+        subExprMat <- expressionMatrix[rownames(expressionMatrix) %in% promoterWindow$Genes[x],]
+        if(dim(subExprMat)[1] > 1){ stop('One gene name is duplicated in your gene expression matrix.')}
+        list(subAccMat, subExprMat)
+    })
+
+    ## Now iterate over the list and run a Zero-inflated spearman for all combinations of tiles and genes. 
+    cl <- parallel::makeCluster(numCores)
+    foregroundDF <- pbapply::pblapply(cl = cl, X = iterList, tileGeneCorrelations)
+    foregroundDF <- do.call('rbind', foregroundDF)
+    parallel::stopCluster(cl)
+
+    ## Generate a background set of tiles and genes (non-DEGs) by finding a background set of tile-gene pairs.
+    backGenes <- sample(rownames(exprMat)[! rownames(exprMat) %in% DEGList], length(DEGList), replace = FALSE)
+    if(length(backGenes) == 0){
+        stop('No background geneset could be found.')
+    }
+    backTiles <- sample(rownames(accMat), length(unique(foreGroundDF$Tiles)), replace = FALSE)
+    
+    tilesPerGene <- length(backTiles) %/% length(backGenes)
+    
+    back_df <- data.frame(Tiles = unlist(lapply(tilesPerGene, function(x){
+
+
+
+                        })),
+                             Genes = )
+
+    iterList <- lapply(backGenes, function(x){
+
+        
+
+    })
+
+        ## Now iterate over the list and run a Zero-inflated spearman for all combinations of tiles and genes. 
+    cl <- parallel::makeCluster(numCores)
+    backgroundDF <- pbapply::pblapply(cl = cl, X = iterList, ZISpearman)
+    backgroundDF <- do.call('rbind', backgroundDF)
+    parallel::stopCluster(cl)
+
+
+    ## Test that set. 
     if (length(tile1) != length(tile2)) {
     stop("tile1 and tile2 must be the same length.")
     }
@@ -83,5 +170,50 @@ runTileToGene <- function(SampleTileObj,
 
 
 
+
+}
+
+tileGeneCorrelations <- function(iterList){
+
+    accMat <- iterList[[1]]
+    exprMat <- iterList[[2]]
+
+    te_corr <- unlist(lapply(1:nrows(accMat){
+        weightedZISpearman(exprMat[1,], accMat[x,], ZI = TRUE)
+    }))
+
+    df <- data.frame(Tiles = rownames(accMat), 
+                     Genes = rep(rownames(exprMat), length(te_corr)),
+                     Correlations = te_corr)
+    return(df)
+}
+
+
+getDEGPromoters <- function(tileGR, DEGList = NULL){
+    
+    if(!all(c('Gene', 'tileType') %in% colnames(GenomicRanges::mcols(tileGR)))){
+        stop('Tiles within the SampleTileObj are not annotated. Please run annotateTiles() and try again.')
+    }
+
+    if(is.null(DEGList)){
+        stop('No DEGList provided.')
+    }
+
+    ## Identify all promoter tiles related to the genes within the DEG List
+    promoterTiles <- plyranges::filter(tileGR, tileType == 'Promoter')
+    geneDF <-  do.call('rbind',lapply(seq_along(promoterTiles$Gene), function(x){
+            geneList <- unlist(stringr::str_split(.,", "))
+            data.frame(index = x, genes = geneList)
+            }))
+    percentOpen <- sum(DEGList %in% geneDF$genes)/length(DEGList)*100
+
+    messages(stringr::str_interp("{percentOpen}% of the DEGList have an accessible promoter region."))
+
+    subGeneDF <- dplyr::filter(geneDF, genes %in% DEGList) %>% distinct()
+    promotersOfInterest <- promoterTiles[subGeneDF$index]
+    mcols(promotersOfInterest) <- NULL
+    promotersOfInterest$Genes = subGeneDF$genes
+
+    return(promotersOfInterest)
 
 }
