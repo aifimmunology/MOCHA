@@ -7,7 +7,7 @@
 # @numCores - number of cores to parallelize over
 # @verbose - Boolean variable to determine verbosity of output.
 
-getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCores = 1, verbose = FALSE) {
+getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {
     normFactor <- rep(normFactor, length(popFrags))
@@ -15,27 +15,45 @@ getCoverage <- function(popFrags, normFactor, TxDb, filterEmpty = FALSE, numCore
     stop("Length of normFactor is equal to length of popFrags. Please either give 1 value, or a vector of equal length to popFrags.")
   }
 
+  if (verbose) {
+      message(paste("Counting", paste0(names(popFrags), collapse = ", "), sep = " "))
+  }
+
+  popFragList <- lapply(seq_along(popFrags), function(x){
+
+    list(popFrags[[x]], normFactor[[x]], filterEmpty)
+
+  })
+
   # Summarize the coverage over the region window at a single basepair resolution
-  popCounts <- parallel::mclapply(seq_along(popFrags), function(x) {
-    if (verbose) {
-      message(paste("Counting", names(popFrags)[x], sep = " "))
-    }
+  popCounts <- pbapply::pblapply(popFragList, calculateCoverage, cl = cl)
 
-    Num <- normFactor[[x]]
-    counts_gr <- plyranges::compute_coverage(popFrags[[x]]) %>% plyranges::mutate(score = score / Num)
-
-    GenomeInfoDb::seqinfo(counts_gr) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(counts_gr))]
-
-    if (filterEmpty) {
-      plyranges::filter(counts_gr, score > 0)
-    } else {
-      counts_gr
-    }
-  }, mc.cores = numCores)
-
+  popCounts <- lapply(popCounts, function(x){
+          GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
+          x
+  })
+    
   names(popCounts) <- names(popFrags)
 
   return(popCounts)
+}
+
+######## calculateCoverage: Function that takes in a GRanges fragment object and generates coverage GRanges.
+## @param ref
+calculateCoverage <- function(ref){
+
+  popFrags <- ref[[1]]
+  Num <- ref[[2]]
+  filterEmpty <- ref[[3]]
+
+  counts_gr <- plyranges::compute_coverage(popFrags) %>% plyranges::mutate(score = score / Num)
+
+  if (filterEmpty) {
+    plyranges::filter(counts_gr, score > 0)
+  } else {
+    counts_gr
+  }
+
 }
 
 
@@ -54,7 +72,6 @@ getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
       plyranges::mutate(WeightedScore = NewScore * GenomicRanges::width(.)) %>%
       plyranges::reduce_ranges(score = mean(WeightedScore))
   }, mc.cores = numCores)
-
 
   return(counts)
 }

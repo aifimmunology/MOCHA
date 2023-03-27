@@ -1,4 +1,4 @@
-# getAltTSS works with returnAllTSS=TRUE
+# getAltTSS works with returnAllTSS = TRUE
 
     GRanges object with 1769 ranges and 13 metadata columns:
              seqnames              ranges strand |     name     tx_id      tx_name
@@ -29,17 +29,17 @@
       [1769]  36224443 chr1:36224000-36224499        59000.5      553.996      1137
              Prediction PredictionStrength      peak       FDR  Log2FC_C
               <numeric>          <numeric> <logical> <numeric> <numeric>
-         [1]     1.0000           5539.955      TRUE      0.30       1.9
-         [2]     1.0000           5539.955      TRUE      0.30       1.9
-         [3]     1.0000          30469.754      TRUE      0.33       4.0
-         [4]     0.9697            692.494      TRUE      0.21       0.2
-         [5]     1.0000           9002.427      TRUE      0.94      -0.1
+         [1]     1.0000           5539.955      TRUE      0.30      -1.2
+         [2]     1.0000           5539.955      TRUE      0.30      -1.2
+         [3]     1.0000          30469.754      TRUE      0.33       1.9
+         [4]     0.9697            692.494      TRUE      0.21       3.7
+         [5]     1.0000           9002.427      TRUE      0.94      -1.4
          ...        ...                ...       ...       ...       ...
-      [1765]          1            44873.6      TRUE      0.71      -1.5
-      [1766]          1            27838.3      TRUE      0.36      -3.4
-      [1767]          1            21467.3      TRUE      0.32       2.8
-      [1768]          1            15373.4      TRUE      0.49      -0.6
-      [1769]          1            59000.5      TRUE      0.61       1.7
+      [1765]          1            44873.6      TRUE      0.71       0.8
+      [1766]          1            27838.3      TRUE      0.36       2.5
+      [1767]          1            21467.3      TRUE      0.32       1.1
+      [1768]          1            15373.4      TRUE      0.49      -3.7
+      [1769]          1            59000.5      TRUE      0.61       0.8
       -------
       seqinfo: 595 sequences (1 circular) from hg38 genome
 

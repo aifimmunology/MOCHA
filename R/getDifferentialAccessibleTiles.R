@@ -120,28 +120,23 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   # Estimate differential accessibility
   sampleTileMatrix <- log2(sampleTileMatrix + 1)
 
-  res_pvals <- parallel::mclapply(
-    rownames(sampleTileMatrix),
-    function(x) {
-      if (which(rownames(sampleTileMatrix) == x) %in% idx) {
-        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group, F))
-      } else {
-        data.frame(
-          Tile = x,
-          P_value = NA,
-          TestStatistic = NA,
-          Log2FC_C = NA,
-          MeanDiff = NA,
-          Case_mu = NA,
-          Case_rho = NA,
-          Control_mu = NA,
-          Control_rho = NA
-        )
-      }
-    },
-    mc.cores = numCores
-  )
+  #Generate list for rapid parallelization
+  iterList <- lapply(rownames(sampleTileMatrix), function(x){
 
+      toTest = which(rownames(sampleTileMatrix) == x) %in% idx
+      if(toTest){
+        list(x, sampleTileMatrix[x, ], group)
+      }else{
+        list(x, NA, NA)
+      }
+  })
+
+  #only test tiles that need testing. 
+  cl <- parallel::makeCluster(numCores)
+  res_pvals <- pbapply::pblapply(cl = cl, iterList, simplifiedDA)
+  parallel::stopCluster(cl)
+
+  
   # Combine results into single objects
   res_pvals <- do.call(rbind, res_pvals)
 

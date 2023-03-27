@@ -2,7 +2,7 @@ test_that("getAltTSS works with different input formats", {
   
   testPeakDT <- MOCHA:::testPeaks
   set.seed(2023)
-  testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDF), replace=TRUE)
+  testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDT), replace=TRUE)
   
   testPeakDF <- as.data.frame(testPeakDT)
   
@@ -69,7 +69,7 @@ test_that("getAltTSS works with returnAllTSS = TRUE", {
   
   testPeakDT <- MOCHA:::testPeaks
   set.seed(2023)
-  testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDF), replace=TRUE)
+  testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDT), replace=TRUE)
   
   tpeaks <- getAltTSS(
     completeDAPs = testPeakDT,
@@ -92,7 +92,7 @@ test_that("getAltTSS works with nuancedTSS = TRUE", {
   
   testPeakDT <- MOCHA:::testPeaks
   set.seed(2023)
-  testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDF), replace=TRUE)
+  testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDT), replace=TRUE)
   
   tpeaksDT <- getAltTSS(
     completeDAPs = testPeakDT,

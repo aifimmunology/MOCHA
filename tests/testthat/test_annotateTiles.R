@@ -48,6 +48,16 @@ test_that("annotateTiles works on a 3 sample test dataset", {
 if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
   requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
   test_that("annotateTiles works on a GRanges", {
+    
+    cellPopulations <- c("C2", "C3")
+    capture.output(
+      SampleTileMatrix <- MOCHA::getSampleTileMatrix(
+        MOCHA:::testTileResultsMultisample,
+        cellPopulations = cellPopulations,
+        threshold = 0
+      ),
+      type = "message"
+    )
     capture.output(
       ranges <- MOCHA::annotateTiles(rowRanges(SampleTileMatrix),
         TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,

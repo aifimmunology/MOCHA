@@ -97,3 +97,54 @@ calculateMeanDiff <- function(tile_values, group) {
   mean_diff <- mean(a) - mean(b)
   mean_diff
 }
+
+#' @title \code{simplifiedDA}
+#'
+#' @description \code{simplifiedDA} simplified wrapper for estimate_differential_accessibility within a highly parallelized environment.
+#'
+#'
+#' @param ref a list with tile_values, and group indices
+#'
+#' @return a table indicating the results for differential accessibility
+#'         which includes the following pieces of information
+#'         - Tile = Tile ID
+#'         - P_value = P-value from two-part wilcoxon test
+#'         - TestStatistic = statistic from two-part wilcoxon test
+#'         - HL_EffectSize = hodges_lehmann effect size,
+#'         - Case_mu = Median of nonzero values in case condition,
+#'         - Case_rho = proportion of zeros in case condition ,
+#'         - Control_mu = Median of nonzero values in
+#'          control condition
+#'         - Control_rho = proportion of zeros in control condition ,
+#'
+#'
+#' @details The technical details of the algorithm are found in XX.
+#'
+#' @references XX
+#'
+#' @noRd
+#' 
+
+simplifiedDA <- function(ref){
+  tileName <- ref[[1]]
+  tile_values <- ref[[2]]
+  group <- ref[[3]]
+
+  if(is.na(tile_values)){
+    DA_value <- data.frame(Tile = tileName, 
+          P_value = NA,
+          TestStatistic = NA,
+          Log2FC_C = NA,
+          MeanDiff = NA,
+          Case_mu = NA,
+          Case_rho = NA,
+          Control_mu = NA,
+          Control_rho = NA
+        )
+  }else{
+    DA_value <- cbind(Tile= tileName, estimate_differential_accessibility(tile_values, group, providePermutation = FALSE))
+  }
+
+  return(DA_value)
+}
+

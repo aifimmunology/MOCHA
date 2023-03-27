@@ -25,7 +25,6 @@
 #' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
 #'   for that correlation compared to the background
 #'
-#'
 #' @export
 #' 
 testCoAccessibilityChromVar <- function(SampleTileMatrix,
@@ -34,6 +33,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
                                         numCores = 1,
                                         ZI = TRUE,
                                         backNumber = 1000,
+                                        returnBackGround = FALSE,
                                         highMem = FALSE,
                                         verbose = TRUE) {
   . <- NULL
@@ -48,7 +48,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
-    nTile2 <- match(tile1, rownames(fullObj))
+    nTile2 <- match(tile2, rownames(fullObj))
   } else if (is.numeric(tile1) && is.numeric(tile2)) {
     nTile1 <- tile1
     nTile2 <- tile2
@@ -81,12 +81,12 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
     tmpMat[sample.int(dim(tmpMat)[1], backNumber), ]
   }, cl = cl)
 
-  parallel::stopCluster(cl)
-
+  
   gc()
-
+  
+  parallel::stopCluster(cl)
   cl <- parallel::makeCluster(numCores)
-
+  
   accMat <- SummarizedExperiment::assays(fullObj)[[1]]
 
   ## Test original pairs of locations
@@ -98,6 +98,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
   }
 
   parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
+  
   foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
@@ -202,7 +203,12 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 
   foreGround$pValues <- pValues
 
-  return(foreGround)
+  if(returnBackGround){
+    return(list('Foreground' = foreGround, 'Background'= backGround))
+  }else{
+    return(foreGround)
+  }
+
 }
 
 #' @title \code{testCoAccessibilityRandom}
@@ -236,6 +242,8 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
                                       numCores = 1,
                                       ZI = TRUE,
                                       backNumber = 1000,
+                                      calcPValue = TRUE,
+                                      returnBackGround = FALSE,
                                       verbose = TRUE) {
   . <- NULL
   
@@ -247,7 +255,7 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
-    nTile2 <- match(tile1, rownames(fullObj))
+    nTile2 <- match(tile2, rownames(fullObj))
   } else if (is.numeric(tile1) && is.numeric(tile2)) {
     nTile1 <- tile1
     nTile2 <- tile2
@@ -258,83 +266,131 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
     stop("tile1 and tile 2 must both be either numbers (indices) or strings")
   }
 
-  if (backNumber >= length(rownames(fullObj)) - c(length(tile1) + length(tile2))) {
-    backNumber <- length(rownames(fullObj)) - c(length(tile1) + length(tile2))
-    if (verbose) {
-      warning("backNumber too high. Reset to all background combinations.")
+  #Only run this if the backNumber is an actual number. If an actually background set is prepare, skip it. 
+  if(is.null(dim(backNumber))){
+    if (backNumber >= length(rownames(fullObj)) - length(unique(c(tile1, tile2)))){
+      backNumber <- length(rownames(fullObj)) - length(unique(c(tile1, tile2)))
+      if (verbose) {
+        warning("backNumber too high. Reset to all background combinations.")
+      }
+    } else if (backNumber <= 10) {
+      stop("backNumber too low (<=10). We recommend 1000.")
     }
-  } else if (backNumber <= 10) {
-    stop("backNumber too low (<=10). We recommend 1000.")
   }
-
-  cl <- parallel::makeCluster(numCores)
 
   accMat <- SummarizedExperiment::assays(fullObj)[[1]]
 
   ## Test original pairs of locations
   combPairs <- data.frame(tile1, tile2)
-  subAccMat <- accMat[unique(c(nTile1, nTile2)), ]
 
   if (verbose) {
     message("Identifying foreground")
   }
-  parallel::clusterExport(cl, varlist = c("subAccMat", "combPairs"), envir = environment())
-  foreGround <- runCoAccessibility(subAccMat, combPairs, ZI, verbose, cl)
-  
+
+  cl <- parallel::makeCluster(numCores)
+  foreGround <- runCoAccessibility(accMat, combPairs, ZI, verbose, cl)
+  parallel::stopCluster(cl)
+  gc()
+
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
       warning("All foreground correlations are undefined")
     }
   }
-  
-  parallel::stopCluster(cl)
-  gc()
 
-  if (verbose) {
-    message("Finding background peak pairs")
+  if(is.null(dim(backNumber))){
+    if (verbose) {
+      message("Finding background peak pairs")
+    }
+
+    backGroundTiles <- rownames(accMat)[!rownames(accMat) %in% c(tile1, tile2)]
+
+    backgroundCombos <- data.frame(
+      Tile1 = sample(backGroundTiles, backNumber),
+      Tile2 = sample(backGroundTiles, backNumber)
+    )
+
+    backgroundCombos <- backgroundCombos[backgroundCombos[, 1] != backgroundCombos[, 2], ]
+
+  }else if(dim(backNumber)[2] > 1){
+    if (verbose) {
+      message("Using user-defined background pairs")
+    }
+
+    backNumber <- as.data.frame(backNumber)
+    if(!all(c('Tile1', 'Tile2') %in% colnames(backNumber))){
+      stop('User-defined background pairs requires a column for Tile1 and Tile2')
+    }else if(!all(grepl(":", c(backNumber[,'Tile1'], backNumber[,'Tile2'])) & grepl("-", backNumber[,'Tile1'], backNumber[,'Tile2']))){
+      stop('User-defined background pairs must be in the form ChrX:100-2000')
+    }else if(!all(c(backNumber[,'Tile1'], backNumber[,'Tile2']) %in% rownames(fullObj))){
+      stop('User-defined background pairs includes regions not found within the sample tile accessibility matrix.')
+    }
+    
+    backgroundCombos = as.data.frame(backNumber)[,c('Tile1','Tile2')]
+
+    if(sum(backgroundCombos[, 'Tile1'] != backgroundCombos[,'Tile2']) < 10){
+      stop('User-defined background pairs are fewer than 10. Please provide a larger background.')
+
+    }else{
+      backgroundCombos <- backgroundCombos[backgroundCombos[, 'Tile1'] != backgroundCombos[,'Tile2'], ]
+    }
+
+  }else{
+   stop('Incorrect backNumber provided. Please provider either a number, or a data.frame with columns entitled Tile1 and Tile2, describing pairs to test. The tile names should be in the format ChrX:100-2000.')
   }
-
-  backGroundTiles <- rownames(fullObj)[!rownames(fullObj) %in% c(tile1, tile2)]
-
-  backgroundCombos <- data.frame(
-    Tile1 = sample(backGroundTiles, backNumber),
-    Tile2 = sample(backGroundTiles, backNumber)
-  )
-  backgroundCombos <- backgroundCombos[backgroundCombos[, 1] != backgroundCombos[, 2], ]
+  rm(combPairs)
 
   ## Now we need to test the background set
 
+  if(calcPValue)
   if (verbose) {
     message("Identifying background correlations.")
   }
   cl <- parallel::makeCluster(numCores)
-  subAccMatB <- accMat[c(backgroundCombos$Tile1, backgroundCombos$nTile2), ]
-  parallel::clusterExport(cl, varlist = c("backgroundCombos", "subAccMatB"), envir = environment())
-  backGround <- runCoAccessibility(subAccMatB, backgroundCombos, ZI, verbose, cl)
-  parallel::stopCluster(cl)
+  backGround <- runCoAccessibility(accMat = accMat,
+                  pairs = backgroundCombos, ZI = ZI, verbose = verbose, 
+                  numCores = cl)
 
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(cl, varlist = c("foreGround", "backGround"), envir = environment())
-
-  pValues <- pbapply::pblapply(seq_along(tile1), function(x) {
-    cor1 <- foreGround$Correlation[x]
     
-    if (is.na(cor1)){
-      NA
-    } else if (cor1 >= 0) {
-      sum(cor1 > backGround$Correlation) / length(backGround$Correlation)
-    } else if (cor1 < 0) {
-      sum(cor1 < backGround$Correlation) / length(backGround$Correlation)
-    }
-  }, cl = cl) %>% unlist()
   parallel::stopCluster(cl)
-
   gc()
 
-  foreGround$pValues <- pValues
+  rm(accMat)
+  rm(backgroundCombos)
+  rm(fullObj)
 
-  return(foreGround)
+  if(calcPValue){
+  
+
+    if (verbose) {
+      message("Generating p-values.")
+    }
+
+    greatList <- unlist(pbapply::pblapply(foreGround$Correlation[which(foreGround$Correlation > 0)],
+        function(x){
+                  return(sum(x > backGround$Correlation))
+          }, cl = 1))/length(backGround$Correlation)
+
+    lesserList <- unlist(pbapply::pblapply(foreGround$Correlation[which(foreGround$Correlation < 0)], 
+          function(x){
+                  return(sum(x < backGround$Correlation))
+          }, cl = 1))/length(backGround$Correlation)
+
+
+    foreGround$pValues <- rep(NA, length(foreGround$Correlation))
+    foreGround$pValues[which(foreGround$Correlation > 0)] = 1-greatList
+    foreGround$pValues[which(foreGround$Correlation < 0)] = 1-lesserList
+  }
+
+
+  if(returnBackGround){
+    return(list('Foreground' = foreGround, 'Background'= backGround))
+  }else{
+    return(foreGround)
+  }
+
 }
+
 
 #' @title \code{runCoAccessibility}
 #'
@@ -366,28 +422,35 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
 #' @noRd
 #' 
 runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCores = 1) {
-  zero_inflated_spearman <- unlist(pbapply::pblapply(seq_len(dim(pairs)[1]),
-    function(x) {
-      tryCatch(
-        {
-          MOCHA:::weightedZISpearman(
-            x = accMat[pairs[x, 1], ],
-            y = accMat[pairs[x, 2], ],
-            verbose = verbose,
-            ZI = ZI
-          )
-        },
-        error = function(e) {
-          NA
-        }
-      )
-    },
-    cl = numCores
-  ))
+
+  # Generate matrix for just Tile1, and just Tile2, then combined by column. 
+  combinedMat <- cbind(accMat[pairs[, 1],], accMat[pairs[, 2],])
+  matList <- as.list(as.data.frame(t(combinedMat)))
+  #Remember how many samples you have, so you can split the list later
+  if(verbose){
+    message('Data.frame wrangled for co-accessibility')
+  }
+
+  rm(combinedMat)
+  rm(accMat)
+
+  ## split combinedMat into blocks that represent the number of cores we are using. 
+  ## Use split command for that. 
+  ## Then test each pair, but only within each block.
+
+  if(ZI){
+   correlation_tmp <- unlist(pbapply::pblapply(X = matList,
+                    FUN = ZISpearman,
+                        cl = numCores))
+  }else{
+    correlation_tmp <- unlist(pbapply::pblapply(X = matList,
+                    FUN = Spearman,
+                        cl = numCores))
+  }
 
   # Create zero-inflated correlation matrix from correlation values
   zi_spear_mat_tmp <- data.table::data.table(
-    Correlation = zero_inflated_spearman,
+    Correlation = correlation_tmp,
     Tile1 = pairs[, 1],
     Tile2 = pairs[, 2]
   )
@@ -443,7 +506,7 @@ combineSampleTileMatrix <- function(SampleTileMatrix,
 
   allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
     tmp_meta <- coldata
-    tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "", .)
+    tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "_", .)
     tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
@@ -452,7 +515,7 @@ combineSampleTileMatrix <- function(SampleTileMatrix,
   cellTypeLabelList <- Var1 <- NULL
   cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileMatrix)$CellCounts) %>%
     dplyr::mutate(
-      Sample = gsub(" ", "", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
+      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
     dplyr::select(Sample, Freq)
 
   allSampleData <- dplyr::left_join(
