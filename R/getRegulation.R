@@ -39,7 +39,6 @@ getRegulation <- function(GeneMotifLinks,
     fullDF <- dplyr::left_join(TGLinks, GeneMotifLinks, by = ('Genes' = 'Genes', 'Motifs'= 'Motifs'))
 
     return(fullDF)
-    
 
 }
 
