@@ -4,10 +4,10 @@
 \alias{combineSampleTileMatrix}
 \title{\code{combineSampleTileMatrix}}
 \usage{
-combineSampleTileMatrix(SampleTileMatrix, NAtoZero = TRUE, verbose = FALSE)
+combineSampleTileMatrix(SampleTileObj, NAtoZero = TRUE, verbose = FALSE)
 }
 \arguments{
-\item{SampleTileMatrix}{The SummarizedExperiment object output from
+\item{SampleTileObj}{The SummarizedExperiment object output from
 getSampleTileMatrix containing your sample-tile matrices}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}

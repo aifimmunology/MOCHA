@@ -6,53 +6,34 @@
 \usage{
 getPopFrags(
   ArchRProj,
-  metaColumn,
+  cellPopLabel,
   cellSubsets = "ALL",
-  region = NULL,
+  poolSamples = FALSE,
   numCores = 1,
-  sampleSpecific = TRUE,
-  NormMethod = "nfrags",
-  blackList = NULL,
-  verbose = FALSE,
-  overlapList = 50
+  verbose = FALSE
 )
 }
 \arguments{
 \item{ArchRProj}{The ArchR Project.}
 
-\item{metaColumn}{The name of metadata column that contains the populations
-of cells you want to merge and export.}
+\item{cellPopLabel}{The name of the metadata column of the ArchR Project that contains the populations
+of cells you want to extract fragments from.}
 
-\item{cellSubsets}{Default is 'ALL'. If you want to export only some groups,
+\item{cellSubsets}{Default is 'ALL'. If you want to export only some populations,
 then give it a list of group names. This needs to be unique - no duplicated
 names. This list of group names must be identical to names that appear in
-the metadata column of the ArchR Project (e.g. metaColumn).}
+the given cellPopLabel metadata column of the ArchR Project.}
 
-\item{region}{Optional parameter. Set this if you only want to extract
-fragments from particular regions of the genome. Format should be as a
-string (e.g. 'chr1:1000-2000'), or a GRanges object.}
+\item{poolSamples}{Set TRUE to pool sample-specific fragments by cell population. By default this is FALSE and sample-specific fragments are returned.}
 
 \item{numCores}{Number of cores to use.}
 
-\item{sampleSpecific}{Set to TRUE to further subset cells by sample}
-
-\item{NormMethod}{Normalization method. Can be either "nFrags","nCells", or
-"Median".}
-
-\item{blackList}{Blacklisted region to filter out. Default is to not filter
-out anything (i.e. NULL). Input should be provided as a GRanges object. Any
-fragments with more than a certain overlap will be thrown out.}
-
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{overlapList}{The minimum overlap necessary for a fragment marked as
-overlapping with the blacklist region and thus thrown out.}
 }
 \value{
 A list of GRanges containing fragments. Each GRanges corresponds to a
-  population defined by cellSubsets (and sample, if
-  \code{sampleSpecific=TRUE})
+  population defined by cellSubsets and sample.
 }
 \description{
-\code{getPopFrags} returns a list of fragments per cell subset as a GRanges.
+\code{getPopFrags} returns a list of sample-specific fragments per cell population as a GRangesList.
 }

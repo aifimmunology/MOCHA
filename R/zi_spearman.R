@@ -94,7 +94,7 @@ weightedZISpearman <- function(x, y, w = 1, verbose = FALSE, ZI = TRUE) {
 
 #' @title Spearman
 #'
-#' @compMat indices to correlate. Will split in half, and correlate the first half with the second half. 
+#' @param compMat indices to correlate. Will split in half, and correlate the first half with the second half. 
 #' @return \code{numeric} rho* association value between x and y
 #'
 #'
@@ -127,7 +127,7 @@ Spearman <- function(compMat) {
 
 #' @title ZISpearman
 #'
-#' @compMat indices to correlate. Will split in half, and correlate the first half with the second half. 
+#' @param compMat indices to correlate. Will split in half, and correlate the first half with the second half. 
 #' @return \code{numeric} rho* association value between x and y
 #' @references scHOT
 #' Ghazanfar, S., Lin, Y., Su, X. et al. Investigating higher-order interactions in
