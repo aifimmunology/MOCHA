@@ -1,42 +1,42 @@
 #' @title \code{bulkLSI}
 #'
-#' @description \code{bulkLSI} generates LSI 
+#' @description \code{bulkLSI} generates LSI (Latent semantic indexing)
 #'
-#' @param TSAM_Object The SummarizedExperiment object output from getSampleTileMatrix
+#' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations. Default is 'ALL'.
-#' @param componentNumber integer. Number of components to include in LSI. 
+#' @param componentNumber integer. Number of components to include in LSI. This must be strictly less than
+#' the number of samples times the number of cellTypes in your SampleTileObj.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @return LSI_SE a SummarizedExperiment containing PC components from the LSI and metadata from the TSAM_Object
+#' @return LSIObj a SummarizedExperiment containing PC components from the LSI and metadata from the SampleTileObj
 #' 
 #' @examples
 #' \dontrun{
-#' LSIse <- MOCHA::bulkLSI(TSAM, cellType = 'CD16 Mono')
-#' 
+#' LSIObj <- MOCHA::bulkLSI(SampleTileObj, cellType = 'CD16_Mono')
+#' }
 #' @export
 #'
 #' 
-bulkLSI <- function(TSAM_Object, cellType = 'All', componentNumber = 30, verbose = FALSE){
-    ## code adapted from https://github.com/GreenleafLab/10x-scATAC-2019/blob/master/code/02_Get_Peak_Set_hg19_v2.R
+bulkLSI <- function(SampleTileObj, cellType = 'All', componentNumber = 30, verbose = FALSE){
     
-    allCellTypes = names(SummarizedExperiment::assays(TSAM_Object))
+    allCellTypes = names(SummarizedExperiment::assays(SampleTileObj))
     if(all(tolower(cellType) == 'all')){
 
-        fullObj <- combineSampleTileMatrix(TSAM_Object)
+        fullObj <- combineSampleTileMatrix(SampleTileObj)
         countMat <- SummarizedExperiment::assays(fullObj)[[1]]
 
     }else if(all(cellType %in% allCellTypes)){
-        newTSAM <- subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype',
+        newTSAM <- subsetMOCHAObject(SampleTileObj, subsetBy = 'celltype',
                                     groupList = cellType, subsetPeaks = TRUE,
                                     verbose = verbose)
         fullObj <- combineSampleTileMatrix(newTSAM)
         countMat <- SummarizedExperiment::assays(fullObj)[[1]]
 
     }else{
-        stop('Cell type names not found.')
+        stop('cellType not found. SampleTileObj must contain the given cellType.')
     }
 
     #TF-IDF step
@@ -44,8 +44,15 @@ bulkLSI <- function(TSAM_Object, cellType = 'All', componentNumber = 30, verbose
     idf   <- log(1 + ncol(countMat) / Matrix::rowSums(countMat))
     tfidf <- Matrix::Diagonal(x=as.vector(idf)) %*% freqs
 
-    #SVD step, using 30 components
-    svd <- irlba::irlba(tfidf,componentNumber, componentNumber)
+    # SVD step, using 30 components
+    # max(nu, nv) must be strictly less than min(nrow(A), ncol(A))
+    tryCatch(
+      {svd <- irlba::irlba(tfidf, componentNumber, componentNumber)},
+      error=function(cond){
+        message(cond)
+        error("Columns containing all NAs may be present in SampleTileObj")
+      }
+    )
     svdDiag <- matrix(0, nrow=componentNumber, ncol=componentNumber)
     diag(svdDiag) <- svd$d
     matSVD <- t(svdDiag %*% t(svd$v))
@@ -54,48 +61,53 @@ bulkLSI <- function(TSAM_Object, cellType = 'All', componentNumber = 30, verbose
 
     assayList1 <- list(t(matSVD))
     names(assayList1) = 'LSI'
-    newExp <- SummarizedExperiment(
+    LSIObj <- SummarizedExperiment::SummarizedExperiment(
             assayList1,
-            metadata = fullObj@metadata
+            metadata = fullObj@metadata,
             colData = SummarizedExperiment::colData(fullObj)
     )
-    return(newExp)
+    return(LSIObj)
 }
 
 #' @title \code{bulkUMAP}
 #'
-#' @description \code{bulkUMAP} generates UMAP from pseudobulk LSI_SE object, and merges in metadata.
+#' @description \code{bulkUMAP} generates UMAP from pseudobulk LSIObj object, and merges in metadata.
 #'
-#' @param LSI_SE The SummarizedExperiment object output from bulkLSI. 
+#' @param LSIObj The SummarizedExperiment object output from bulkLSI. 
 #' 
-#' @param componentNumber vector of integers. Number of components to include in LSI (1:30 typically)
+#' @param components A vector of integers. Number of components to include in LSI (1:30 typically).
+#' @param n_neighbors See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
+#'           neighboring sample points) used for manifold approximation. Default is 15.
 #' 
-#' @return data.frame of UMAP values with metadata attached. 
+#' @return fullUMAP data.frame of UMAP values with metadata attached. 
 #' 
 #' @examples
 #' \dontrun{
-#' LSIse <- MOCHA::bulkLSI(TSAM, cellType = 'CD16 Mono')
-#' 
+#' UMAPvalues <- MOCHA::bulkUMAP(LSIObj)
+#' }
 #' @export
 #'
-#' 
+bulkUMAP <- function(LSIObj, components = c(1:30), n_neighbors = 15){
 
-bulkUMAP <- function(LSI_SE, components = c(1:30)){
+    countMat <- t(SummarizedExperiment::assays(LSIObj)[[1]])
 
-    countMat <- SummarizedExperiment::assays(LSI_SE)[[1]]
-    metaData <- as.data.frame(SummarizedExperiment::colData(LSI_SE))
-
-    if(all(components %in% seq_along(colnames(countMat)))){
-        stop('Component list does not align with number of LSI components.')
+    if(!all(components %in% seq_along(colnames(countMat)))){
+      stop('Component list does not align with number of LSI components.')
     }
     
-    subUMAP <- as.data.frame(uwot::umap(t(countMat)[,components]))
+    subUMAP <- as.data.frame(
+      uwot::umap(countMat[,components], n_neighbors=n_neighbors)
+    )
 
     colnames(subUMAP) <- c('UMAP1', 'UMAP2')
     subUMAP$Sample <- rownames(subUMAP)
 
-    fullUMAP <- dplyr::full_join(subUMAP, as.data.frame(metadata), 
-                    by = 'Sample') 
+    fullUMAP <- dplyr::full_join(
+      subUMAP, 
+      as.data.frame(SummarizedExperiment::colData(LSIObj)),
+      by = 'Sample',
+      copy=TRUE
+    ) 
     
     return(fullUMAP)
 }
