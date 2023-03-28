@@ -95,6 +95,7 @@ runZIGLMM <- function(TSAM_Object,
                         envir = environment())
     coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
     parallel::stopCluster(cl)
+
     output_list <- lapply(list('cond','zi'), function(varType){
         
         if(verbose){
@@ -114,10 +115,29 @@ runZIGLMM <- function(TSAM_Object,
 
         names(dfList) <- c('Slopes', 'Significance', 'StdError')
         dfList
+
     })
+
     names(output_list) <- c('cond','zi')
 
-    return(output_list)
+    combinedList <- lapply(c('Slopes', 'Significance', 'StdError'), function(x){
+
+        cond1 <- output_list[['cond']][[x]]
+        zi1 <- output_list[['zi']][[x]]
+
+        colnames(zi1) <- paste('ZI_', colnames(zi1), paste = '')
+        cbind(cond1, zi1)
+    })
+
+    names(combinedList) <- c('Slopes', 'Significance', 'StdError')
+
+    results <- SummarizedExperiment::SummarizedExperiment(
+                combinedList,
+                rowRanges = SummarizedExperiment::rowRanges(TSAM_Object),
+                metadata = metadata(TSAM_Object)
+    )
+
+    return(results)
 }
 
 extractVariable <- function(varDF, variable){
