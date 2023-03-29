@@ -1,6 +1,6 @@
-#' @title \code{callPeaks}
+#' @title \code{callTilesBySample}
 #'
-#' @description \code{callPeaks} is the main peak-calling function in MOCHA
+#' @description \code{callTilesBySample} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
 #'   files and cell metadata
 #'
@@ -97,3 +97,43 @@ callTilesBySample <- function(blackList,
 
   return(MOCHA_tiles)
 }
+
+#' @title \code{callTilesBySample}
+#'
+#' @description \code{callTilesBySample} is the main peak-calling function in MOCHA
+#'   that serves as a wrapper function to call peaks provided a set of fragment
+#'   files and cell metadata
+#'
+#' @param x a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..
+#' 
+#' @return scMACs_PeakList an list containing peak calls for each cell
+#'   population passed on in the cell subsets argument. Each peak call is
+#'   returned as as Genomic Ranges object.
+#'
+#' @details The technical details of the algorithm are found in XX.
+#'
+#' @references XX
+#'
+#' @noRd
+#'
+#' 
+
+simplifiedTilesBySample <- function(x){
+
+  blackList <- x[[1]]
+  frags <- x[[2]]
+  normalization_factors <- length(frags)
+  verbose <- x[[3]]
+  study_prefactor <- x[[4]]
+  
+  MOCHA:::callTilesBySample(
+          blackList = blackList,
+          returnAllTiles = TRUE,
+          totalFrags = normalization_factors,
+          fragsList = frags,
+          verbose = verbose,
+          StudypreFactor = study_prefactor
+        )
+
+}
+

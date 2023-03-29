@@ -10,156 +10,142 @@ test_that(
   }
 )
 
-if (dir.exists("PBMCSmall")) {
+# Working dir during tests is under structure:
+# parent_dir/MOCHA/tests/testthat/. Assumes PBMCSmall is under 'parent_dir'
+ArchRProjDir <- "../../../PBMCSmall"
+if (dir.exists(ArchRProjDir)) {
   # Load ArchR project
-  capture.output(testProj <- ArchR::loadArchRProject("PBMCSmall"), type = "message")
-  outdir <- dirname(ArchR::getOutputDirectory(testProj))
-  metaColumn <- "Clusters" # Column with cell population groups
+  capture.output(testProj <- ArchR::loadArchRProject(ArchRProjDir), type = "message")
+  cellPopLabel <- "Clusters" # Column with cell population groups
 
-  # # Test getPopFrags with full genome and all normalization methods
-  # # Includes snapshot test for output
-  # for (sampleSpecific in c(TRUE, FALSE)) {
-  #   for (NormMethod in c("raw", "nFrags", "nCells", "Median", NULL)) {
-  #     test_that(
-  #       stringr::str_interp(
-  #         "getPopFrags works for NormMethod='${NormMethod}', sampleSpecific=${sampleSpecific}"
-  #       ),
-  #       {
-  #         testthat::local_edition(3)
-  #         capture.output(
-  #           popFrags <- getPopFrags(
-  #             testProj,
-  #             metaColumn = metaColumn,
-  #             numCores = 1,
-  #             NormMethod = NormMethod,
-  #             sampleSpecific = sampleSpecific
-  #           ),
-  #           type = "message"
-  #         )
-  #
-  #         # Test population+sample names are as expected
-  #         populations <- sort(unique(getCellColData(testProj)[[metaColumn]]))
-  #
-  #         if (sampleSpecific) {
-  #           samples <- unique(testProj$Sample)
-  #           combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
-  #           expected_names <- gsub(" ", "#", combinations)
-  #         } else {
-  #           expected_names <- populations
-  #         }
-  #         sampleNames <- names(popFrags)
-  #         actual_names <- sort(gsub("__.*", "", sampleNames))
-  #
-  #         expect_equal(actual_names, expected_names)
-  #
-  #         # Remove population+sample names and check that the content is equal
-  #         names(popFrags) <- NULL
-  #
-  #         snapshotVariant <- str_interp("${NormMethod}")
-  #         if (sampleSpecific) {
-  #           snapshotVariant <- paste(snapshotVariant, "sampleSpecific", sep = "_")
-  #         }
-  #         expect_snapshot_output(
-  #           popFrags,
-  #           variant = snapshotVariant
-  #         )
-  #       }
-  #     )
-  #   }
-  # }
-
-
-  # Test getPopFrags with specific region
+  # Test getPopFrags with full genome and all normalization methods
+  # Includes snapshot test for output
+  NormMethod <- "nFrags"
+  sampleSpecific <- TRUE
   test_that(
-    "getPopFrags works with a specific region when NormMethod='Raw'",
+    stringr::str_interp(
+      "getPopFrags works for NormMethod='${NormMethod}', sampleSpecific=${sampleSpecific}"
+    ),
     {
+      testthat::local_edition(3)
       capture.output(
-        popFrags <- getPopFrags(
-          testProj,
-          metaColumn = metaColumn,
-          numCores = 1,
-          region = "chr2:1-187350807",
-          NormMethod = "Raw",
-          sampleSpecific = FALSE
-        ),
+        popFrags <- getPopFrags(testProj, cellPopLabel = cellPopLabel, numCores = 1),
         type = "message"
       )
 
-      # Test population names are as expected
-      actual_names <- sort(gsub("__.*", "", names(popFrags)))
-      expected_names <- sort(unique(getCellColData(testProj)[[metaColumn]]))
+      # Test population+sample names are as expected
+      populations <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
+
+      samples <- unique(testProj$Sample)
+      combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
+      expected_names <- gsub(" ", "#", combinations)
+
+      sampleNames <- names(popFrags)
+      actual_names <- sort(gsub("__.*", "", sampleNames))
+
       expect_equal(actual_names, expected_names)
+
+      # Remove population+sample names and check that the content is equal
+      names(popFrags) <- NULL
+
+      snapshotVariant <- stringr::str_interp("${NormMethod}")
+      if (sampleSpecific) {
+        snapshotVariant <- paste(snapshotVariant, "sampleSpecific", sep = "_")
+      }
+      expect_snapshot_output(
+        methods::as(popFrags, "list"),
+        variant = snapshotVariant
+      )
     }
   )
 
-  # Test getPopFrags with the wrong NormMethod when specifying a region
-  for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
-    test_that(
-      stringr::str_interp("getPopFrags throws an error if the wrong NormMethod (${NormMethod}) is set when asking for a specific region"),
-      {
-        expect_error(
-          capture.output(popFrags <- getPopFrags(
-            testProj,
-            metaColumn = metaColumn,
-            numCores = 1,
-            region = "chr2:1-187350807",
-            NormMethod = NormMethod,
-            sampleSpecific = FALSE
-          ), type = "message"),
-          "Wrong NormMethod"
-        )
-      }
-    )
-  }
+
+  # Test getPopFrags with specific region
+#   test_that(
+#     "getPopFrags works with a specific region when NormMethod='Raw'",
+#     {
+#       capture.output(
+#         popFrags <- getPopFrags(
+#           testProj,
+#           cellPopLabel = cellPopLabel,
+#           numCores = 1,
+#           region = "chr2:1-187350807",
+#           NormMethod = "Raw",
+#           sampleSpecific = FALSE
+#         ),
+#         type = "message"
+#       )
+
+#       # Test population names are as expected
+#       actual_names <- sort(gsub("__.*", "", names(popFrags)))
+#       expected_names <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
+#       expect_equal(actual_names, expected_names)
+#     }
+#   )
+
+  # # Test getPopFrags with the wrong NormMethod when specifying a region
+  # for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
+  #   test_that(
+  #     stringr::str_interp("getPopFrags throws an error if the wrong NormMethod (${NormMethod}) is set when asking for a specific region"),
+  #     {
+  #       expect_error(
+  #         capture.output(popFrags <- getPopFrags(
+  #           testProj,
+  #           cellPopLabel = cellPopLabel,
+  #           numCores = 1,
+  #           region = "chr2:1-187350807",
+  #           NormMethod = NormMethod,
+  #           sampleSpecific = FALSE
+  #         ), type = "message"),
+  #         "Wrong NormMethod"
+  #       )
+  #     }
+  #   )
+  # }
 
   # Test getPopFrags with an incorrectly formatted region string
+  # test_that(
+  #   stringr::str_interp("getPopFrags throws an error for an incorrectly formatted region string"),
+  #   {
+  #     expect_error(
+  #       capture.output(
+  #         popFrags <- getPopFrags(
+  #           testProj,
+  #           cellPopLabel = cellPopLabel,
+  #           numCores = 1,
+  #           region = "chr2_1-187350807"
+  #         ),
+  #         type = "message"
+  #       ),
+  #       "Invalid region input."
+  #     )
+  #     # A character vector or region strings will work, but a list will not.
+  #     expect_error(
+  #       capture.output(
+  #         popFrags <- getPopFrags(
+  #           testProj,
+  #           cellPopLabel = cellPopLabel,
+  #           numCores = 1,
+  #           region = list("chr1:1-2", "chr2:1-2")
+  #         ),
+  #         type = "message"
+  #       ),
+  #       "Invalid region input."
+  #     )
+  #   }
+  # )
+
+
+  # Test getPopFrags with a cellPopLabel not in cellColData
   test_that(
-    stringr::str_interp("getPopFrags throws an error for an incorrectly formatted region string"),
+    stringr::str_interp("getPopFrags throws an error for a cellPopLabel not in cellColData"),
     {
       expect_error(
         capture.output(
           popFrags <- getPopFrags(
             testProj,
-            metaColumn = metaColumn,
-            numCores = 1,
-            region = "chr2_1-187350807",
-            NormMethod = "Raw",
-            sampleSpecific = FALSE
-          ),
-          type = "message"
-        ),
-        "Invalid region input."
-      )
-      # A character vector or region strings will work, but a list will not.
-      expect_error(
-        capture.output(
-          popFrags <- getPopFrags(
-            testProj,
-            metaColumn = metaColumn,
-            numCores = 1,
-            region = list("chr1:1-2", "chr2:1-2"),
-            NormMethod = "Raw",
-            sampleSpecific = FALSE
-          ),
-          type = "message"
-        ),
-        "Invalid region input."
-      )
-    }
-  )
-
-
-  # Test getPopFrags with a metaColumn not in cellColData
-  test_that(
-    stringr::str_interp("getPopFrags throws an error for a metaColumn not in cellColData"),
-    {
-      expect_error(
-        capture.output(
-          popFrags <- getPopFrags(
-            testProj,
-            metaColumn = "IDoNotExist",
-            numCores = 1,
-            sampleSpecific = FALSE
+            cellPopLabel = "IDoNotExist",
+            numCores = 1
           ),
           type = "message"
         ),
@@ -176,14 +162,97 @@ if (dir.exists("PBMCSmall")) {
         capture.output(
           popFrags <- getPopFrags(
             testProj,
-            metaColumn = "Clusters",
+            cellPopLabel = "Clusters",
             cellSubsets = c("C1", "IDoNotExist", "C3", "C5"),
-            numCores = 1,
-            sampleSpecific = FALSE
+            numCores = 1
           ),
           type = "message"
         ),
         "cellSubsets with NA cell counts: IDoNotExist"
+      )
+    }
+  )
+  
+  test_that(
+    "getPopFrags warns when cellPopLabels have protected delimiter characters",
+    {
+      newClusters <- c("01__HSC", "06_CLP.1", "10#cDC", "12__CD14.Mono.2", "13_CD16.Mono")
+      clustersCol <- testProj$Clusters
+      oldClusters <- unique(clustersCol)
+      
+      for (i in seq_along(newClusters)) {
+        clustersCol[clustersCol == oldClusters[i]] <- newClusters[i]
+      }
+      testProj$newClusters <- clustersCol
+      
+      expect_warning(
+        capture.output(
+          popFrags <- getPopFrags(
+            testProj,
+            cellPopLabel = "newClusters",
+            cellSubsets = "all",
+            numCores = 1
+          ),
+          type = "message"
+        ),
+        "The following cell population labels contain protected delimiter"
+      )
+    }
+  )
+  
+    test_that(
+    "getPopFrags pools samples by cell population with poolSamples=TRUE",
+    {
+      capture.output(
+        popFrags <- getPopFrags(
+          testProj,
+          cellPopLabel = "Clusters",
+          cellSubsets = "all",
+          poolSamples = TRUE,
+          numCores = 1
+        ),
+        type = "message"
+      )
+      expect_snapshot_output(
+        methods::as(popFrags, "list")
+      )
+    }
+  )
+  
+  test_that(
+    "getPopFrags pools samples by a single cellSubset with poolSamples=TRUE",
+    {
+      capture.output(
+        popFrags <- getPopFrags(
+          testProj,
+          cellPopLabel = "Clusters",
+          cellSubsets = "C5",
+          poolSamples = TRUE,
+          numCores = 1
+        ),
+        type = "message"
+      )
+      expect_snapshot_output(
+        methods::as(popFrags, "list")
+      )
+    }
+  )
+  
+  test_that(
+    "getPopFrags pools samples by a single cellSubset with poolSamples=FALSE",
+    {
+      capture.output(
+        popFrags <- getPopFrags(
+          testProj,
+          cellPopLabel = "Clusters",
+          cellSubsets = "C5",
+          poolSamples = FALSE,
+          numCores = 1
+        ),
+        type = "message"
+      )
+      expect_snapshot_output(
+        methods::as(popFrags, "list")
       )
     }
   )

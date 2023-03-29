@@ -4,7 +4,7 @@
 #'   by callOpenTiles and return a specific region's coverage
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
-#' @param region a GRanges object or vector or strings containing the regions on which to compute co-accessible links. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
+#' @param region a GRanges object or vector or strings containing the regions of interest. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
@@ -51,7 +51,11 @@ extractRegion <- function(SampleTileObj,
   outDir <- SampleTileObj@metadata$Directory
 
   if (is.na(outDir)) {
-    stop("Error: Missing coverage file directory.")
+    stop("Missing coverage file directory. SampleTileObj$metadata must contain 'Directory'.")
+  }
+  
+  if (!file.exists(outDir)) {
+    stop("Directory given by SampleTileObj@metadata$Directory does not exist.")
   }
 
   if (is.character(region)) {
@@ -102,86 +106,76 @@ extractRegion <- function(SampleTileObj,
       dplyr::mutate(idx = c(1:length(.)))
   }
 
-
+  cl <- parallel::makeCluster(numCores)
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
     originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
-    cellPopSubsampleCov <- parallel::mclapply(subSamples, function(y) {
-      sampleNames <- names(originalCovGRanges)
-      keepSamples <- grepl(paste(y, collapse = "|"), sampleNames)
-      subSampleList <- originalCovGRanges[keepSamples]
 
+    if (verbose) {
+      message(stringr::str_interp("Extracting coverage from {x}."))
+    }
 
-      # If we don't want sample-specific, then average and get a dataframe out.
-      # else, get a sample-specific count dataframe out.
+    #If the region is too large, bin the data. 
+    if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit){
+
+      iterList <- lapply(seq_along(subSamples), function(y){
+        list(binnedData, originalCovGRanges[subSamples[[y]]])
+      })
+
+      #If not sample specific, take the average coverage across samples. 
+      # if it is sample specific, just subset down the coverage to the region of interest. 
       if (!sampleSpecific) {
-        sampleCount <- sum(keepSamples)
-        filterCounts <- lapply(subSampleList, function(z) {
-          tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges)
-
-          if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-            tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
-              plyranges::group_by(idx) %>%
-              plyranges::reduce_ranges(score = mean(score)) %>%
-              dplyr::ungroup()
-          }
-          tmpGR
-        })
-
-        mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList")) %>%
-          plyranges::join_overlap_intersect(regionGRanges) %>%
-          plyranges::compute_coverage(weight = .$score / sampleCount) %>%
-          plyranges::join_overlap_intersect(regionGRanges)
-        if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-          mergedCounts %>% plyranges::join_overlap_intersect(binnedData)
-        } else {
-          mergedCounts
-        }
-      } else {
-        tmpCounts <- lapply(subSampleList, function(z) {
-          tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges)
-          if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-            tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData) %>%
-              plyranges::group_by(idx) %>%
-              plyranges::reduce_ranges(score = mean(score)) %>%
-              dplyr::ungroup()
-          }
-          tmpGR
-        })
-
-        unlist(tmpCounts)
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, averageBinCoverage)
+      }else{
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, subsetBinCoverage)
       }
-    }, mc.cores = numCores)
+
+
+    }else{
+
+      iterList <- lapply(seq_along(subSamples), function(y){
+        list(regionGRanges, originalCovGRanges[subSamples[[y]]])
+      })
+      
+      #If not sample specific, take the average coverage across samples. 
+      # if it is sample specific, just subset down the coverage to the region of interest. 
+      if (!sampleSpecific) {
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, averageBPCoverage)
+      }else{
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, subsetBPCoverage)
+      }
+    }
+
     names(cellPopSubsampleCov) <- subGroups
     cellPopSubsampleCov
+    
   })
+  
   names(cellPopulation_Files) <- cellPopulations
   allGroups <- unlist(cellPopulation_Files)
 
+  if(all(lengths(allGroups) == 0)){
+    stop('No fragments found for the region provided.')
+  }
+
   ## Generate a data.frame for export.
 
-  if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-    allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
-      subGroupdf <- as.data.frame(allGroups[[x]])
-      subGroupdf$Groups <- rep(names(allGroups)[x], length(allGroups[[x]]))
-
-      covdf <- subGroupdf[, c("seqnames", "start", "score", "Groups")]
-      colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
-
-      covdf
-    }, mc.cores = numCores)
-  } else {
-    allGroupsDF <- parallel::mclapply(seq_along(allGroups), function(x) {
-      tmp <- allGroups[[x]] %>% plyranges::tile_ranges(width = 1)
-      tmp$score <- allGroups[[x]]$score[tmp$partition]
-      tmp$Groups <- rep(names(allGroups)[x], length(tmp))
-
-      covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
-      colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
-
-      covdf
-    }, mc.cores = numCores)
+  if (verbose) {
+     message(stringr::str_interp("Converting from GRanges."))
   }
+
+  iterList <- lapply(seq_along(allGroups), function(x) { list(allGroups[[x]], names(allGroups)[x]) })
+
+  if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
+
+    allGroupsDF <- pbapply::pblapply(cl = cl, iterList, cleanDataFrame1)
+
+  } else {
+
+    allGroupsDF <- pbapply::pblapply(cl = cl, iterList, cleanDataFrame2)
+    
+  }
+  parallel::stopCluster(cl)
 
   names(allGroupsDF) <- names(allGroups)
 
@@ -190,4 +184,101 @@ extractRegion <- function(SampleTileObj,
   )
 
   return(countSE)
+}
+
+
+## helper functions.
+
+## Efficiently subsets single basepair coverage for a given region across samples
+subsetBPCoverage <- function(iterList){
+    
+    sampleCount <- length(iterList[[2]])
+    tmpCounts <- lapply(1:sampleCount, function(z) {
+        plyranges::join_overlap_intersect(iterList[[2]][[z]], iterList[[1]])
+    })
+                           
+    return(tmpCounts)
+}
+                        
+## Efficiently generates average single basepair coverage for a given region
+averageBPCoverage <- function(iterList){
+
+    regionGRanges <- iterList[[1]]
+    sampleCount <- length(iterList[[2]])
+    
+    filterCounts <- lapply(1:sampleCount, function(z) {
+        plyranges::join_overlap_intersect(iterList[[2]][[z]], regionGRanges)
+    })
+                        
+    mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges) 
+    mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+                           
+    return(mergedCounts)
+}
+
+## Efficiently subsets and bins coverage for a given region across samples
+subsetBinCoverag <- function(iterList){
+
+    binnedData <- iterList[[1]]
+    regionGRanges <- plyranges::reduce_ranges(binnedData)
+    
+    tmpCounts <- lapply(subList, function(z) {
+        tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges) %>%
+        tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData)
+        tmpGR <- plyranges::group_by(tmpGR, idx) %>%
+        tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
+        tmpGR <- dplyr::ungroup(tmpGR)
+        tmpGR
+    })
+                           
+    return(tmpCounts)
+}
+                        
+## Efficiently generates averaged coverage across samples by bins within a given region
+averageBinCoverage <- function(iterList){
+
+    binnedData <- iterList[[1]]
+    regionGRanges <- plyranges::reduce_ranges(binnedData)
+    sampleCount <- length(iterList[[2]])
+    
+    filterCounts <- lapply(1:sampleCount, function(z) {
+        plyranges::join_overlap_intersect(iterList[[2]][[z]], regionGRanges)
+    })
+                        
+    mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
+    mergedCounts <- plyranges::join_overlap_intersect( mergedCounts, regionGRanges) 
+    mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, binnedData)
+                           
+                           
+    return(mergedCounts)
+}
+
+cleanDataFrame1 <- function(iterList){
+  group1 <- iterList[[1]]
+  subGroupdf <- as.data.frame(group1)
+  subGroupdf$Groups <- rep(iterList[[2]], length(group1))
+
+  covdf <- subGroupdf[, c("seqnames", "start", "score", "Groups")]
+  colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
+
+  return(covdf)
+
+}
+
+cleanDataFrame2 <- function(iterList){
+  group1 <- iterList[[1]]
+  tmp <-  plyranges::tile_ranges(group1,width = 1)
+  tmp$score <- group1$score[tmp$partition]
+  tmp$Groups <- rep(iterList[[2]], length(tmp)) 
+
+  
+  covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
+  colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
+
+  return(covdf)
+
 }

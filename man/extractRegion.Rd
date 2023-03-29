@@ -20,7 +20,7 @@ extractRegion(
 \arguments{
 \item{SampleTileObj}{The SummarizedExperiment object output from getSampleTileMatrix}
 
-\item{region}{a GRanges object or vector or strings containing the regions on which to compute co-accessible links. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".}
+\item{region}{a GRanges object or vector or strings containing the regions of interest. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".}
 
 \item{cellPopulations}{vector of strings. Cell subsets for which to call
 peaks. This list of group names must be identical to names that appear in
