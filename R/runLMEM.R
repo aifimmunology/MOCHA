@@ -1,41 +1,24 @@
-## To do: Implement ZI options, and figure out how to handle Log2 or not log2. 
 
-## Will take data (metadata and modeling data), and use it to model a given formula.
-## It then returns a data.frame of intercept, slope, significance, and (residual?) 
-## for each row of modelingData
-
-## formula must be in the form exp ~ <variables>
 
 ## Initial sampling: When the model fails to converge, it needs to return a default data.frame with NAs that is the same size. 
 ## The initial sampling provides a blueprint for how big that NA data.frame should be. The default is that it'll run 5 models, and if they are all NA, through an error. 
 ## This function should only be used on continuous, non-zero inflated data. 
 
-#example: runLMEM(STM[c(1:1000),], 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), verbose = TRUE, numCores = 35 )
 require(lmerTest)
 
-runLMEM <- function(TSAM_Object,
-                        cellTypeName = NULL,
+runLMEM <- function(SE_Object,
                         modelFormula = NULL, 
                         initialSampling = 5,
                         verbose = FALSE, 
                         numCores = 1){
 
-    
-    if (is.null(cellTypeName)) {
-        stop("No cell type name was provided.")
-    }else if(length(cellTypeName) > 1){
-        stop("Please provide only one string within cellTypeName. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellTypeName = 'counts'")
-    }else if(!cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object))){
-        stop("cellTypeName was not found within TSAM_Object.")
-    }
-
-    modelingData <- as.data.frame(getCellPopMatrix(TSAM_Object, cellPopulation = cellTypeName, NAtoZero = TRUE))
-    MetaDF <- as.data.frame(SummarizedExperiment::colData(TSAM_Object))
+    modelingData <- as.data.frame(SummarizedExperiment::assays(SE_Object)[[1]])
+    MetaDF <- as.data.frame(SummarizedExperiment::colData(SE_Object))
 
     if (is.null(modelFormula)) {
         stop("No formula was provided.")
     }else if(!all(all.vars(modelFormula) %in% c('~','exp',colnames(MetaDF)))){
-        stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
+        stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the SE_Object.")
     }
 
     variableList <- all.vars(modelFormula)[all.vars(modelFormula) != 'exp']
@@ -120,7 +103,13 @@ runLMEM <- function(TSAM_Object,
 
     output_list <- list('Slopes' = slopes, 'Significance' = significance, StdError = stdError)
 
-    return(output_list)
+    results <- SummarizedExperiment::SummarizedExperiment(
+                output_list,
+                rowData = SummarizedExperiment::rowData(SE_Object),
+                metadata = metadata(SE_Object)
+            )
+
+    return(results)
 }
 
 
@@ -153,7 +142,7 @@ individualLMEM <- function(x){
 ## Code for testing out formulas on the data. Runs a given formula on a subset of the data, and returns the model results. 
 ## This is meant to help during the model selection process. 
 
-pilotLMEM <- function(TSAM_Object,
+pilotLMEM <- function(SE_Object,
                         cellTypeName = NULL,
                         modelFormula = NULL, 
                         ZI = FALSE,
@@ -164,17 +153,17 @@ pilotLMEM <- function(TSAM_Object,
         stop("No cell type name was provided.")
     }else if(length(cellTypeName) > 1){
         stop("Please provide only one string within cellTypeName. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellTypeName = 'counts'")
-    }else if(!cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object))){
-        stop("cellTypeName was not found within TSAM_Object.")
+    }else if(!cellTypeName %in% names(SummarizedExperiment::assays(SE_Object))){
+        stop("cellTypeName was not found within SE_Object.")
     }
 
-    modelingData <- as.data.frame(getCellPopMatrix(TSAM_Object, cellPopulation = cellTypeName, NAtoZero = TRUE))
-    MetaDF <- as.data.frame(SummarizedExperiment::colData(TSAM_Object))
+    modelingData <- as.data.frame(getCellPopMatrix(SE_Object, cellPopulation = cellTypeName, NAtoZero = TRUE))
+    MetaDF <- as.data.frame(SummarizedExperiment::colData(SE_Object))
 
     if (is.null(modelFormula)) {
         stop("No formula was provided.")
     }else if(!all(all.vars(modelFormula) %in% c('~','exp',colnames(MetaDF)))){
-        stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
+        stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the SE_Object.")
     }
 
     variableList <- all.vars(modelFormula)[all.vars(modelFormula) != 'exp']
