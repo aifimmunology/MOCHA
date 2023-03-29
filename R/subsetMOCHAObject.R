@@ -68,7 +68,7 @@ subsetMOCHAObject <- function(Object,
       # Subset peaks
       if(subsetPeaks){
 
-        rowMeta <- mcols(rowRanges(Object))[,groupList]
+        rowMeta <- GenomicRanges::mcols(SummarizedExperiment::rowRanges(Object))[,groupList]
 
         if(!is.null(dim(rowMeta))){
 

@@ -104,7 +104,7 @@ callTilesBySample <- function(blackList,
 #'   that serves as a wrapper function to call peaks provided a set of fragment
 #'   files and cell metadata
 #'
-#' @param ref a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..\
+#' @param x a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..
 #' 
 #' @return scMACs_PeakList an list containing peak calls for each cell
 #'   population passed on in the cell subsets argument. Each peak call is
