@@ -1,12 +1,13 @@
-#' @title \code{bulkLSI}
+#' @title \code{bulkDimReduction}
 #'
-#' @description \code{bulkLSI} generates LSI (Latent semantic indexing)
+#' @description \code{bulkDimReduction} runs dimensionality reduction (either PCA or LSI).
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations. Default is 'ALL'.
+#' @param componentNumber integer. Number of components to include in LSI. This must be strictly less than
 #' @param componentNumber integer. Number of components to include in LSI. This must be strictly less than
 #' the number of samples times the number of cellTypes in your SampleTileObj.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -20,7 +21,7 @@
 #' @export
 #'
 #' 
-bulkLSI <- function(SampleTileObj, cellType = 'All', componentNumber = 30, verbose = FALSE){
+bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 30, method = 'pca', verbose = FALSE){
     
     allCellTypes = names(SummarizedExperiment::assays(SampleTileObj))
     if(all(tolower(cellType) == 'all')){
@@ -38,43 +39,74 @@ bulkLSI <- function(SampleTileObj, cellType = 'All', componentNumber = 30, verbo
     }else{
         stop('cellType not found. SampleTileObj must contain the given cellType.')
     }
+    
+    countMat[is.na(countMat)] = 0
 
-    #TF-IDF step
-    freqs <- t(t(countMat)/Matrix::colSums(countMat))
-    idf   <- log(1 + ncol(countMat) / Matrix::rowSums(countMat))
-    tfidf <- Matrix::Diagonal(x=as.vector(idf)) %*% freqs
+    if(tolower(method) == 'lsi'){
+      #TF-IDF step
+      freqs <- t(t(countMat)/Matrix::colSums(countMat))
+      idf   <- log(1 + ncol(countMat) / Matrix::rowSums(countMat))
+      tfidf <- Matrix::Diagonal(x=as.vector(idf)) %*% freqs
 
-    # SVD step, using 30 components
-    # max(nu, nv) must be strictly less than min(nrow(A), ncol(A))
-    tryCatch(
-      {svd <- irlba::irlba(tfidf, componentNumber, componentNumber)},
-      error=function(cond){
-        message(cond)
-        error("Columns containing all NAs may be present in SampleTileObj")
-      }
-    )
-    svdDiag <- matrix(0, nrow=componentNumber, ncol=componentNumber)
-    diag(svdDiag) <- svd$d
-    matSVD <- t(svdDiag %*% t(svd$v))
-    rownames(matSVD) <- colnames(countMat)
-    colnames(matSVD) <- paste0("PC",seq_len(ncol(matSVD)))   
+      # SVD step, using componentNumber
+      tryCatch(
+        {svd <- irlba::irlba(tfidf, componentNumber, componentNumber)},
+        error=function(cond){
+          message(cond)
+          error("Columns containing all NAs may be present in SampleTileObj")
+        }
+      )
+      svdDiag <- matrix(0, nrow=componentNumber, ncol=componentNumber)
+      diag(svdDiag) <- svd$d
+      matSVD <- t(svdDiag %*% t(svd$v))
+      rownames(matSVD) <- colnames(countMat)
+      colnames(matSVD) <- paste0("PC",seq_len(ncol(matSVD)))   
 
-    assayList1 <- list(t(matSVD))
-    names(assayList1) = 'LSI'
-    LSIObj <- SummarizedExperiment::SummarizedExperiment(
+      assayList1 <- list(t(matSVD))
+      names(assayList1) = 'LSI'
+      DimReducObj <- SummarizedExperiment::SummarizedExperiment(
             assayList1,
             metadata = fullObj@metadata,
             colData = SummarizedExperiment::colData(fullObj)
-    )
-    return(LSIObj)
+      )
+
+    }else if(tolower(method) == 'pca'){
+    
+      # SVD step, using 30 components
+      tryCatch(
+        {pca <- irlba::prcomp_irlba(countMat, componentNumber)},
+        error=function(cond){
+          message(cond)
+          error("Columns containing all NAs may be present in SampleTileObj")
+        }
+      )
+
+      pc_rotation <- pca$rotation
+      rownames(pc_rotation) <- colnames(countMat)
+      loadings <- pca$x
+      rownames(loadings) <- rownames(countMat)
+      metadata1 = append(pca[c('scale', 'totalvar', 'sdev', 'center')], fullObj@metadata)
+
+      assayList1 <- list(t(pc_rotation))
+      names(assayList1) = c('PCA')
+
+      DimReducObj <- SummarizedExperiment::SummarizedExperiment(
+          assayList1,
+          rowData = t(loadings),
+          metadata = metadata1,
+          colData = SummarizedExperiment::colData(fullObj)
+      )
+    }else {stop('Method not recognized. Must be LSI or PCA.')}   
+
+    return(DimReducObj)
 }
 
 #' @title \code{bulkUMAP}
 #'
 #' @description \code{bulkUMAP} generates UMAP from pseudobulk LSIObj object, and merges in metadata.
 #'
-#' @param LSIObj The SummarizedExperiment object output from bulkLSI. 
-#' 
+#' @param SEObj The SummarizedExperiment object output from bulkDimReduction, or an STM, subsetted down to just one cell type.  
+#' @param assay A string, describing the name of the assay within SEObj to run UMAP ('PCA', 'LSI', or 'counts'). 
 #' @param components A vector of integers. Number of components to include in LSI (1:30 typically).
 #' @param n_neighbors See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
 #'           neighboring sample points) used for manifold approximation. Default is 15.
@@ -87,27 +119,52 @@ bulkLSI <- function(SampleTileObj, cellType = 'All', componentNumber = 30, verbo
 #' }
 #' @export
 #'
-bulkUMAP <- function(LSIObj, components = c(1:30), n_neighbors = 15){
+bulkUMAP <- function(SEObj, assay = 'PCA', components = c(1:30), n_neighbors = 15, returnModel = FALSE, seed = 1, ...){
 
-    countMat <- t(SummarizedExperiment::assays(LSIObj)[[1]])
+    set.seed(seed)
+    if(!any(names(SummarizedExperiment::assays(SEObj)) == assay)){
+      stop('Assay was not represented in the SEObj. ')
+    }
+    countMat <- t(SummarizedExperiment::assays(SEObj)[[assay]])
+
+    if(any(is.na(countMat))){ stop('The given matrix contains NA. Remove and try again.')}
 
     if(!all(components %in% seq_along(colnames(countMat)))){
       stop('Component list does not align with number of LSI components.')
     }
     
-    subUMAP <- as.data.frame(
-      uwot::umap(countMat[,components], n_neighbors=n_neighbors)
-    )
+    if(!returnModel){
+      subUMAP <- as.data.frame(
+      uwot::umap(countMat[,components], n_neighbors=n_neighbors, batch = TRUE, ...)
+      )
 
-    colnames(subUMAP) <- c('UMAP1', 'UMAP2')
-    subUMAP$Sample <- rownames(subUMAP)
+      colnames(subUMAP) <- c('UMAP1', 'UMAP2')
+      subUMAP$Sample <- rownames(subUMAP)
 
-    fullUMAP <- dplyr::full_join(
-      subUMAP, 
-      as.data.frame(SummarizedExperiment::colData(LSIObj)),
-      by = 'Sample',
-      copy=TRUE
-    ) 
+      fullUMAP <- dplyr::left_join(
+        subUMAP, 
+        as.data.frame(SummarizedExperiment::colData(SEObj)),
+        by = 'Sample'
+      ) 
+      
+      return(fullUMAP)
+    }else{
+
+      umapOut <- uwot::umap(countMat[,components], n_neighbors=n_neighbors, ret_model = TRUE, batch = TRUE, ...)
+      subUMAP <- as.data.frame(umapOut$embedding)
+      colnames(subUMAP) <- c('UMAP1', 'UMAP2')
+      subUMAP$Sample <- rownames(subUMAP)
+
+      fullUMAP <- dplyr::left_join(
+        subUMAP, 
+        as.data.frame(SummarizedExperiment::colData(SEObj)),
+        by = 'Sample'
+      ) 
+
+      outList <- list(fullUMAP, umapOut)
+      names(outList) <- c('UMAP', 'modelOutput')
+      return(outList)
+
+    }
     
-    return(fullUMAP)
 }
