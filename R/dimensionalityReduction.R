@@ -21,7 +21,7 @@
 #' @export
 #'
 #' 
-bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 30, method = 'pca', verbose = FALSE){
+bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 30, method = 'LSI', verbose = FALSE){
     
     allCellTypes = names(SummarizedExperiment::assays(SampleTileObj))
     if(all(tolower(cellType) == 'all')){
@@ -119,7 +119,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
 #' }
 #' @export
 #'
-bulkUMAP <- function(SEObj, assay = 'PCA', components = c(1:30), n_neighbors = 15, returnModel = FALSE, seed = 1, ...){
+bulkUMAP <- function(SEObj, assay = 'LSI', components = c(1:30), n_neighbors = 15, returnModel = FALSE, seed = 1, ...){
 
     set.seed(seed)
     if(!any(names(SummarizedExperiment::assays(SEObj)) == assay)){
