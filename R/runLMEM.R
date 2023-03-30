@@ -1,10 +1,3 @@
-## Initial sampling: When the model fails to converge, it needs to return a default data.frame with NAs that is the same size.
-## The initial sampling provides a blueprint for how big that NA data.frame should be. The default is that it'll run 5 models, and if they are all NA, through an error.
-## This function should only be used on continuous, non-zero inflated data.
-
-require(lmerTest)
-
-
 #' @title Run Linear Mixed-Effects Modeling for continuous,
 #'  non-zero inflated data
 #'
@@ -12,11 +5,14 @@ require(lmerTest)
 #'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 #'
 #' @param ExperimentObj A SummarizedExperiment object generated from
-#'   getSampleTileMatrix, chromVAR, or other.
+#'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only
+#'   one assay, or only the first assay will be used for the model.
+#'   Data should not be zero-inflated.
 #' @param modelFormula The formula to use with lmerTest::lmer, in the
 #'   format (exp ~ factors). All factors must be found in column names
-#'   of the ExperimentObj metadata.
-#' @param initialSampling Size of data to use for pilot 
+#'   of the ExperimentObj metadata. modelFormula must start with 'exp' as the response.
+#'   See \link[lmerTest]{lmer}.
+#' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
@@ -26,7 +22,12 @@ require(lmerTest)
 #'
 #' @examples
 #' \dontrun{
-#'
+#'   modelList <- runLMEM(ExperimentObj,
+#'     modelFormula = NULL,
+#'     initialSampling = 5,
+#'     verbose = FALSE,
+#'     numCores = 1
+#'  )
 #' }
 #'
 #' @export
@@ -36,25 +37,41 @@ runLMEM <- function(ExperimentObj,
                     verbose = FALSE,
                     numCores = 1) {
   Sample <- NULL
+  
   modelingData <- as.data.frame(
     SummarizedExperiment::assays(ExperimentObj)[[1]]
   )
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
+  
+  if (!is(modelFormula, "formula")){
+    stop("modelFormula is not a formula. modelFormula must be a formula in the format ",
+        "(exp ~ factors)")   
+  }
+  
+  if (!"exp" %in% all.vars(modelFormula)) {
+    stop(
+      "modelFormula is not in the format (exp ~ factors). ",
+      "modelFormula must start with 'exp' as the response."
+    )
+  }
 
   if (
     !all(all.vars(modelFormula) %in% c("~", "exp", colnames(MetaDF)))
   ) {
     stop(
-      "Model formula is not in the correct format ",
-      "(exp ~ factors) or model factors are not found ",
-      "in column names of metadata within the ExperimentObj."
+      "Model factors are not found ",
+      "in the 'colData' of the ExperimentObj, or ",
+      "modelFormula is not in the format ",
+      "(exp ~ factors)."
     )
   }
 
   variableList <- all.vars(modelFormula)[all.vars(modelFormula) != "exp"]
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
-  modelingData <- modelingData[, match(colnames(modelingData), MetaDF$Sample)]
+  modelingData <- modelingData[
+    , match(colnames(modelingData), MetaDF$Sample), drop=FALSE
+  ]
 
   # Subset metadata to just the variables in modelFormula
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
@@ -84,24 +101,26 @@ runLMEM <- function(ExperimentObj,
       }
     )
   }, cl = NULL)
-
+  # Initial sampling: When the model fails to converge, we
+  # return a data.frame with NAs that is the same size.
   if (all(is.na(unlist(modelList)))) {
     stop(
-      "For the initial sampling, every test model failed.",
+      "For the initial sampling, every test model failed to converge. ",
       "Reconsider modelFormula or increase 'initialSampling'."
     )
   } else {
     idx <- which(!is.na(unlist(modelList)))
     nullDF <- as.data.frame(summary(modelList[[idx[1]]])$coefficients)
-    nullDF[!is.na(nullDF)] <- NA
+    nullDF[!is.na(nullDF)] <- NA 
     rm(modelList)
+    # Why do we make and then export to cluster this nullDF if it is not used?
   }
 
   cl <- parallel::makeCluster(numCores)
   parallel::clusterExport(
     cl = cl, varlist = c(
       "modelFormula", "modelingData",
-      "MetaDF", "individualLMEM", "nullDF"
+      "MetaDF", "individualLMEM", "nullDF" 
     ),
     envir = environment()
   )
@@ -140,14 +159,16 @@ runLMEM <- function(ExperimentObj,
       error_tmp
     }, cl = NULL)
   )
-  
+
   rownames(slopes) <- rownames(modelingData)
 
   rownames(stdError) <- rownames(significance) <- rownames(modelingData)
 
-  output_list <- list("Slopes" = slopes,
-                      "Significance" = significance,
-                      "StdError" = stdError)
+  output_list <- list(
+    "Slopes" = slopes,
+    "Significance" = significance,
+    "StdError" = stdError
+  )
 
   results <- SummarizedExperiment::SummarizedExperiment(
     output_list,
@@ -161,9 +182,9 @@ runLMEM <- function(ExperimentObj,
 
 #' @title Internal function to run linear modeling
 #'
-#' @description \code{IndividualLMEM} Runs linear modeling 
+#' @description \code{IndividualLMEM} Runs linear modeling
 #'   on data provided. Written for efficient parallelization.
-#' @param refList. A list where the first index is a data.frame 
+#' @param refList. A list where the first index is a data.frame
 #'   to use for modeling, and the second is the formula for modeling.
 #' @return A linear model
 #'
@@ -185,11 +206,6 @@ individualLMEM <- function(x) {
   )
   return(output_vector)
 }
-
-
-## Code for testing out formulas on the data. Runs a given formula
-## on a subset of the data, and returns the model results.
-## This is meant to help during the model selection process.
 
 #' @title Execute a pilot run of single linear model on a subset of data
 #'
@@ -222,11 +238,12 @@ pilotLMEM <- function(ExperimentObj,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
   if (length(cellPopulation) > 1) {
-    stop("More than one cell population was provided. ",
-         "cellPopulation must be length 1. To run over multiple cell types, ",
-         "run combineSampleTileMatrix() to produce ExperimentObj and set ",
-         "cellPopulation = 'counts'."
-        )
+    stop(
+      "More than one cell population was provided. ",
+      "cellPopulation must be length 1. To run over multiple cell types, ",
+      "run combineSampleTileMatrix() to produce ExperimentObj and set ",
+      "cellPopulation = 'counts'."
+    )
   } else if (
     !cellPopulation %in% names(SummarizedExperiment::assays(ExperimentObj))
   ) {
@@ -235,29 +252,49 @@ pilotLMEM <- function(ExperimentObj,
 
   modelingData <- as.data.frame(
     MOCHA::getCellPopMatrix(
-      ExperimentObj, cellPopulation = cellPopulation, NAtoZero = TRUE)
+      ExperimentObj,
+      cellPopulation = cellPopulation, NAtoZero = TRUE
+    )
   )
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
+  
+  if (!is(modelFormula, "formula")){
+    stop("modelFormula is not a formula. modelFormula must be a formula in the format ",
+        "(exp ~ factors)")   
+  }
+
+  if (!"exp" %in% all.vars(modelFormula)) {
+    stop(
+      "modelFormula is not in the format (exp ~ factors). ",
+      "modelFormula must start with 'exp' as the response."
+    )
+  }
 
   if (
     !all(all.vars(modelFormula) %in% c("~", "exp", colnames(MetaDF)))
   ) {
     stop(
-      "Model formula is not in the correct format ",
-      "(exp ~ factors) or model factors are not found ",
-      "in column names of metadata within the ExperimentObj."
+      "Model factors are not found ",
+      "in the 'colData' of the ExperimentObj, or ",
+      "modelFormula is not in the format ",
+      "(exp ~ factors)."
     )
   }
+
 
   variableList <- all.vars(modelFormula)[all.vars(modelFormula) != "exp"]
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
-  modelingData <- modelingData[pilotIndices, match(colnames(modelingData), MetaDF$Sample)]
+  modelingData <- modelingData[
+    pilotIndices, match(colnames(modelingData), MetaDF$Sample), drop=FALSE
+  ]
 
   # Subset metadata to just the variables in modelFormula
-  MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
-
-  modelList <- pbapply::pblapply(X = pilotIndices, function(x) {
+  MetaDF <- MetaDF[
+    , colnames(MetaDF) %in% c("Sample", variableList), drop=FALSE
+  ]
+  
+  modelList <- pbapply::pblapply(pilotIndices, function(x) {
     df <- data.frame(
       exp = as.numeric(modelingData[x, ]),
       MetaDF, stringsAsFactors = FALSE
