@@ -43,7 +43,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
     newAssays[[1]][is.na(newAssays[[1]])] <- 0
   }
 
-
   allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
     tmp_meta <- coldata
     tmp_meta$Sample <- gsub(" ", "_", paste(x, tmp_meta$Sample, sep = "__"))

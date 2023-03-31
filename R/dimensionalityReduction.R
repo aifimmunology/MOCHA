@@ -3,20 +3,19 @@
 #' @description \code{bulkDimReduction} runs dimensionality reduction (either PCA or LSI).
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
-#' @param cellPopulations vector of strings. Cell subsets for which to call
+#' @param cellType vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations. Default is 'ALL'.
-#' @param componentNumber integer. Number of components to include in LSI. This must be strictly less than
-#' @param componentNumber integer. Number of components to include in LSI. This must be strictly less than
-#' the number of samples times the number of cellTypes in your SampleTileObj.
+#' @param componentNumber integer. Number of components to include in LSI, or PCA This must be strictly less than
+#' @param method a string. Represents the method to use. Includes LSI or PCA, but we do not recommend PCA for scATAC pseudobulk.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @return LSIObj a SummarizedExperiment containing PC components from the LSI and metadata from the SampleTileObj
+#' @return SEObj a SummarizedExperiment containing PC components from dimensionality reduction and metadata from the SampleTileObj
 #' 
 #' @examples
 #' \dontrun{
-#' LSIObj <- MOCHA::bulkLSI(SampleTileObj, cellType = 'CD16_Mono')
+#' LSIObj <- MOCHA::bulkDimReduction(SampleTileObj, cellType = 'CD16_Mono')
 #' }
 #' @export
 #'
@@ -108,6 +107,8 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
 #' @param SEObj The SummarizedExperiment object output from bulkDimReduction, or an STM, subsetted down to just one cell type.  
 #' @param assay A string, describing the name of the assay within SEObj to run UMAP ('PCA', 'LSI', or 'counts'). 
 #' @param components A vector of integers. Number of components to include in LSI (1:30 typically).
+#' @param seed an integer. Represents the seed to pass to the umap. 
+#' @param returnModel. A boolean. Default is FALSE. If set to true, it will return a list, where the first is the UMAP coordinates with metadata for plotting, and the second is the full UMAP model so further projection can occur. 
 #' @param n_neighbors See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
 #'           neighboring sample points) used for manifold approximation. Default is 15.
 #' 
