@@ -5,18 +5,19 @@
 \title{\code{testCoAccessibilityChromVar}}
 \usage{
 testCoAccessibilityChromVar(
-  SampleTileMatrix,
+  SampleTileObj,
   tile1,
   tile2,
   numCores = 1,
   ZI = TRUE,
   backNumber = 1000,
+  returnBackGround = FALSE,
   highMem = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{SampleTileMatrix}{The SummarizedExperiment object output from
+\item{SampleTileObj}{The SummarizedExperiment object output from
 getSampleTileMatrix containing your sample-tile matrices}
 
 \item{tile1}{vector of indices or tile names (chrX:100-2000) for tile pairs
