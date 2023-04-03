@@ -126,24 +126,15 @@ calculateMeanDiff <- function(tile_values, group) {
 #' 
 
 simplifiedDA <- function(ref){
-  tileName <- ref[[1]]
-  tile_values <- ref[[2]]
-  group <- ref[[3]]
+  #tileName <- ref[[1]]
+  #tile_values <- ref[[2]]
+  #group <- ref[[3]]
 
-  if(is.na(tile_values)){
-    DA_value <- data.frame(Tile = tileName, 
-          P_value = NA,
-          TestStatistic = NA,
-          Log2FC_C = NA,
-          MeanDiff = NA,
-          Case_mu = NA,
-          Case_rho = NA,
-          Control_mu = NA,
-          Control_rho = NA
-        )
-  }else{
-    DA_value <- cbind(Tile= tileName, estimate_differential_accessibility(tile_values, group, providePermutation = FALSE))
-  }
+  DA_value <- cbind(Tile= ref[[1]], 
+                    estimate_differential_accessibility(ref[[2]], 
+                                                        ref[[3]], 
+                                                        providePermutation = FALSE)
+                   )
 
   return(DA_value)
 }

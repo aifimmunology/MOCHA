@@ -119,31 +119,45 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   ############################################################################
   # Estimate differential accessibility
   sampleTileMatrix <- log2(sampleTileMatrix + 1)
-
   #Generate list for rapid parallelization
-  iterList <- lapply(rownames(sampleTileMatrix), function(x){
+  browser()
+  iterList <- pbapply::pblapply(rownames(sampleTileMatrix)[idx], function(x){
 
-      toTest = which(rownames(sampleTileMatrix) == x) %in% idx
-      if(toTest){
+      #toTest = which(rownames(sampleTileMatrix) == x) %in% idx
+     # if(toTest){
         list(x, sampleTileMatrix[x, ], group)
-      }else{
-        list(x, NA, NA)
-      }
+     # }else{
+     #   list(x, NA, NA)
+     # }
   })
-
+  
   #only test tiles that need testing. 
   cl <- parallel::makeCluster(numCores)
+  browser()
   res_pvals <- pbapply::pblapply(cl = cl, iterList, simplifiedDA)
   parallel::stopCluster(cl)
-
   
   # Combine results into single objects
   res_pvals <- do.call(rbind, res_pvals)
-
+    
+  ## untested tiles
+  untested_dats = rownames(sampleTileMatrix)[-idx]
+  
+  untested_mat = data.table(Tile = untested_dats, 
+                  P_value = rep(NA, length(untested_dats)),
+                  TestStatistic =  rep(NA, length(untested_dats)),
+                  Log2FC_C =  rep(NA, length(untested_dats)),
+                  MeanDiff =  rep(NA, length(untested_dats)),
+                  Case_mu =  rep(NA, length(untested_dats)),
+                  Case_rho =  rep(NA, length(untested_dats)),
+                  Control_mu =  rep(NA, length(untested_dats)),
+                  Control_rho =  rep(NA, length(untested_dats))
+        )
+    
   #############################################################################
   # Apply FDR on filtered regions
 
-  filtered_res <- res_pvals[idx, ]
+  filtered_res <- data.table(res_pvals)
 
   if (!all(is.na(filtered_res$P_value[filtered_res$P_value <= 0.95]))) {
     pi0_reduced <- qvalue::pi0est(filtered_res$P_value[filtered_res$P_value <= 0.95],
