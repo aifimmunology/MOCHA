@@ -161,28 +161,28 @@ getCoAccessibleLinks <- function(SampleTileObj,
 findAllCombinations <- function(iterList){
 
   #Extract info needed
-  reg <- iterList[[1]]
-  start <- iterList[[2]]
-  end <- iterList[[3]]
-  chr <- iterList[[4]]
-  windowSize <- iterList[[5]]
-  tileNames <- paste0(chr, ":", start, "-", end, paste = "")
+  # reg <- iterList[[1]]
+  # start <- iterList[[2]]
+  # end <- iterList[[3]]
+  # chr <- iterList[[4]]
+  # windowSize <- iterList[[5]]
+  tmpTileNames <- paste0(iterList[[4]], ":", iterList[[2]], "-",  iterList[[3]], paste = "")
 
-  keyTile <- which(start == reg$start &
-      end == reg$end &
-      chr == reg$seqnames)
+  keyTile <- which(iterList[[2]] == iterList[[1]]$start &
+                     iterList[[3]] == iterList[[1]]$end &
+                     iterList[[4]] == iterList[[1]]$seqnames)
 
-  windowIndexBool <- which(start > reg$start - windowSize / 2 &
-    end < reg$end + windowSize / 2 &
-    chr == reg$seqnames)
+  windowIndexBool <- which(iterList[[2]] > iterList[[1]]$start - iterList[[5]] / 2 &
+                             iterList[[3]] < iterList[[1]]$end + iterList[[5]] / 2 &
+                             iterList[[4]] == iterList[[1]]$seqnames)
 
   windowIndexBool <- windowIndexBool[windowIndexBool != keyTile]
 
   if (length(windowIndexBool) > 0) {
     # Var1 will always be our region of interest
     keyNeighborPairs <- data.frame(
-      "Key" = tileNames[keyTile],
-      "Neighbor" = tileNames[windowIndexBool]
+      "Key" = tmpTileNames[keyTile],
+      "Neighbor" = tmpTileNames[windowIndexBool]
     )
   } else {
     keyNeighborPairs <- NULL
@@ -192,18 +192,18 @@ findAllCombinations <- function(iterList){
 }
 
 splitCombList <- function(iterList){
-  # input is list(y, chrNum, chrChunks, tileNames, allCombinations$key)
-  index <- iterList[[1]]
-  chrNum <- iterList[[2]]
-  chrChunks <- iterList[[3]]
-  tileNames <- iterList[[4]]
-  key <- iterList[[5]]
+  # input is list(y, tmpChrNum, chrChunks, tileNames, allCombinations$key)
+  # index <- iterList[[1]]
+  tmpChrNum <- iterList[[2]]
+  tmpChrChunks <- iterList[[3]]
+  # tileNames <- iterList[[4]]
+  # key <- iterList[[5]]
 
-  specChr <- paste0(chrNum[which(c(seq_along(chrNum)) > (index - 1)*chrChunks &
-      c(seq_along(chrNum) <= index * chrChunks))], collapse = "|")
+  specChr <- paste0(tmpChrNum[which(c(seq_along(tmpChrNum)) > (iterList[[1]] - 1)*tmpChrChunks &
+      c(seq_along(tmpChrNum) <= iterList[[1]] * tmpChrChunks))], collapse = "|")
 
-  tileIndices <- grep(specChr, tileNames)
-  combIndices <- grep(specChr, key)
+  tileIndices <- grep(specChr, iterList[[4]])
+  combIndices <- grep(specChr, iterList[[5]])
 
   infoList <- list(tileIndices, combIndices, specChr)
 
