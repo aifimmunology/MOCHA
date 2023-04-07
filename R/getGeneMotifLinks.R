@@ -28,14 +28,15 @@
 #' @export
 getGeneMotifLinks <- function(ChromVARObj,
                           SampleGeneObj,
-                          DEGList = NULL,
                           DUMList = NULL,
+                          DEGList = NULL,
                           returnBackground = FALSE,
                           numCores = 20,
                           verbose = TRUE) {
 
     
     . <- NULL
+
 
     if(length(SummarizedExperiment::assays(SampleGeneObj)) > 1){
         stop("SampleGeneObj needs to be subsetted to only one cell type.")
@@ -61,103 +62,28 @@ getGeneMotifLinks <- function(ChromVARObj,
         stop("More than half of genes are listed as Differentially Expressed. This is unlikely to be accurate. Provide a shorter DEGList.")
     }
 
-    ## Extract the matrices for both. 
-    motifMat <- SummarizedExperiment::assays(ChromVARObj)$z
-    exprMat <- SummarizedExperiment::assays(SampleGeneObj)[[1]]
+    ChromVARObj
 
-    #Align the matrices.
-    exprMat <- exprMat[,colnames(motifMat)]
-
-    ## Find all tiles near each gene, and iterate over each one for ZI-spearman correlations. 
-    iterList <- pbapply::pblapply(cl = NULL, X = seq_along(DUMList), function(x){
-
-        #Extract a data.frame of all the tile intensities
-        submotifMat <- motifMat[rownames(motifMat) %in% DUMList[x],]
-
-        #Extract a data.frame of gene expression for the matching gene. 
-        subExprMat <- exprMat[rownames(exprMat) %in% DEGList,]
-        if(dim(subExprMat)[1] > 1){ stop('One gene name is duplicated in your gene expression matrix.')}
-
-        list(submotifMat, subExprMat)
-    })
-
-    ## Now iterate over the list and run a Zero-inflated spearman for all combinations of tiles and genes. 
-    cl <- parallel::makeCluster(numCores)
-    foregroundDF <- pbapply::pblapply(cl = cl, X = iterList, motifGeneCorrelations)
-    foregroundDF <- do.call('rbind', foregroundDF)
-    parallel::stopCluster(cl)
-
-    rm(iterList)
-
-    ## Generate a background set of tiles and genes (non-DEGs) by finding a background set of tile-gene pairs.
-    backGenes <- sample(rownames(exprMat)[! rownames(exprMat) %in% DEGList], length(DEGList), replace = FALSE)
-    backMotifs <- sample(rownames(motifMat)[! rownames(motifMat) %in% DUMList], length(DUMList), replace = FALSE)
-    
-    iterList <- pbapply::pblapply(cl = NULL, X = seq_along(backMotifs), function(x){
-
-        #Extract a data.frame of all the tile intensities
-        submotifMat <- motifMat[rownames(motifMat) %in% backMotifs[x],]
-
-        #Extract a data.frame of gene expression for the matching gene. 
-        subExprMat <- exprMat[rownames(exprMat) %in% backGenes,]
-        if(dim(subExprMat)[1] > 1){ stop('One gene name is duplicated in your gene expression matrix.')}
-
-        list(submotifMat, subExprMat)
-    })
-
-    ## Now iterate over the list and run a Zero-inflated spearman for all combinations of tiles and genes. 
-    cl <- parallel::makeCluster(numCores)
-    backgroundDF <- pbapply::pblapply(cl = cl, X = iterList, motifGeneCorrelations)
-    backgroundDF <- do.call('rbind', backgroundDF)
-    parallel::stopCluster(cl)
-  
-    if (verbose) {
-      message("Generating p-values.")
-    }
-
-    greatList <- unlist(pbapply::pblapply(foregroundDF$Correlation[which(foregroundDF$Correlation > 0)],
-        function(x){
-                  return(sum(x > backgroundDF$Correlation))
-          }, cl = NULL))/length(backgroundDF$Correlation)
-
-    lesserList <- unlist(pbapply::pblapply(foregroundDF$Correlation[which(foregroundDF$Correlation < 0)], 
-          function(x){
-                  return(sum(x < backgroundDF$Correlation))
-          }, cl = NULL))/length(backgroundDF$Correlation)
-
-
-    foregroundDF$pValues <- rep(NA, length(foregroundDF$Correlation))
-    foregroundDF$pValues[which(foregroundDF$Correlation > 0)] = 1-greatList
-    foregroundDF$pValues[which(foregroundDF$Correlation < 0)] = 1-lesserList
-
-    foregroundDF$FDR <- p.adjust(foregroundDF$pValues, method = 'fdr')
+    linkOutput <- getGeneralLinks(Obj1 = ChromVARObj, 
+                    Obj2 = SampleGeneObj
+                    Obj1List = DUMList,
+                    Obj2List = DEGList,
+                    returnBackground = returnBackground,
+                    ZI_inflated = FALSE,
+                    numCores = numCores,
+                    verbose = verbose)
 
     if(returnBackground){
 
-        returnList <- list(foregroundDF, backgroundDF)
-        names(returnList) <- c('Foreground', 'Background')
-        return(returnList)
+        colnames(linkOutput$Foreground) <- c('Motifs','Genes','Correlations','pValues', 'FDR')
+        colnames(linkOutput$Background) <- c('Motifs','Genes','Correlations')
+        return(linkOutput)
         
     }else{
 
-        return(foregroundDF)
+        colnames(linkOutput$Background) <- c('Motifs','Genes','Correlations','pValues', 'FDR')
+        return(linkOutput)
+
     }
-
-}
-
-
-motifGeneCorrelations <- function(iterList){
-
-    motifMat <- iterList[[1]]
-    exprMat <- iterList[[2]]
-
-    spearmanCorr <- wCorr::weightedCorr(x = x, y = y, weights = w, method = "Spearman")
-    te_corr <- unlist(lapply(1:nrows(exprMat), function(x){
-        wCorr::weightedCorr(motifMat[1,],exprMat[x,],method = "Spearman")
-    }))
-
-    df <- data.frame(Motifs = rep(rownames(motifMat), length(te_corr)),
-                     Genes = rownames(exprMat),
-                     Correlations = te_corr)
-    return(df)
+ 
 }

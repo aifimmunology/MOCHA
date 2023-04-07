@@ -130,7 +130,7 @@ simplifiedDA <- function(ref){
   tile_values <- ref[[2]]
   group <- ref[[3]]
 
-  if(is.na(tile_values)){
+  if(any(is.na(tile_values))){
     DA_value <- data.frame(Tile = tileName, 
           P_value = NA,
           TestStatistic = NA,
