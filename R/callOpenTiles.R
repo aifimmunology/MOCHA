@@ -689,9 +689,11 @@ setMethod(
         popFrags = popFrags,
         normFactor = normalization_factors / 10^6,
         filterEmpty = FALSE,
+        type = 'Accessibility',
         cl = cl, TxDb = TxDb
       )
-      saveRDS(covFiles, paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
+      saveRDS(covFiles[[1]], paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = ""))
+      saveRDS(covFiles[[2]], paste(outDir, "/", cellPop, "_InsertionFiles.RDS", sep = ""))
       rm(covFiles)
     }
 

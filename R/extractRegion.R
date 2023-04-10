@@ -4,6 +4,7 @@
 #'   by callOpenTiles and return a specific region's coverage
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
+#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE, exports Insertions. 
 #' @param region a GRanges object or vector or strings containing the regions of interest. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
@@ -13,7 +14,8 @@
 #' @param subGroups a list of subgroup(s) within the groupColumn from the metadata. Optional, default is NULL, all labels within groupColumn will be used.
 #' @param sampleSpecific If TRUE, get a sample-specific count dataframe out. Default is FALSE, average across samples and get a dataframe out.
 #' @param approxLimit Optional limit to region size, where if region is larger than approxLimit basepairs, binning will be used. Default is 100000.
-#' @param binSize Optional, size of bins in basepairs when binning is used. Default is 250.
+#' @param binSize Optional numeric, size of bins in basepairs when binning is used. Default is 250.
+#' @param sliding Optional numeric. Default is NULL. This number is the size of the sliding window for generating average intensities. 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -35,6 +37,7 @@
 #'
 
 extractRegion <- function(SampleTileObj,
+                          type = TRUE,
                           region,
                           cellPopulations = "ALL",
                           groupColumn = NULL,
@@ -76,7 +79,6 @@ extractRegion <- function(SampleTileObj,
     stop("Some or all cell populations provided are not found.")
   }
 
-
   # Pull out a list of samples by group.
 
   if (!is.null(subGroups) & !is.null(groupColumn)) {
@@ -101,15 +103,28 @@ extractRegion <- function(SampleTileObj,
     if (verbose) {
       message(stringr::str_interp("Size of region exceeds ${approxLimit}bp. Binning data over ${binSize}bp windows."))
     }
-    binnedData <- regionGRanges %>%
-      plyranges::tile_ranges(., binSize) %>%
-      dplyr::mutate(idx = c(1:length(.)))
+    if(is.null(sliding)){
+        binnedData <- regionGRanges %>%
+        plyranges::tile_ranges(., binSize) %>%
+        dplyr::mutate(idx = c(1:length(.)))
+    }else if(is.numeric(sliding)){
+      binnedData <- regionGRanges %>%
+        plyranges::slide_ranges(., width = binSize, step = sliding) %>%
+        dplyr::mutate(idx = c(1:length(.)))
+    }
+  }else if(!is.null(sliding)){
+    stop('The sliding average is completely ignored, because the approxLimit is larger than than the window size. Please change approxLimit if you want to use a sliding average.')
   }
 
   cl <- parallel::makeCluster(numCores)
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
-    originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    
+    if(type){
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    }else{
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_InsertionFiles.RDS", sep = ""))
+    }
 
     if (verbose) {
       message(stringr::str_interp("Extracting coverage from {x}."))
@@ -179,8 +194,9 @@ extractRegion <- function(SampleTileObj,
 
   names(allGroupsDF) <- names(allGroups)
 
+  if(type){ Type1 = 'Coverage'}else{Type1 = 'Insertions'}
   countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
-    metadata = SampleTileObj@metadata
+    metadata = append(SampleTileObj@metadata, list('Type' = Type1))
   )
 
   return(countSE)
@@ -203,23 +219,66 @@ subsetBPCoverage <- function(iterList){
 ## Efficiently generates average single basepair coverage for a given region
 averageBPCoverage <- function(iterList){
 
-    regionGRanges <- iterList[[1]]
     sampleCount <- length(iterList[[2]])
     
     filterCounts <- lapply(1:sampleCount, function(z) {
-        plyranges::join_overlap_intersect(iterList[[2]][[z]], regionGRanges)
+        plyranges::join_overlap_intersect(iterList[[2]][[z]], iterList[[1]])
+    })
+                        
+    mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, iterList[[1]]) 
+    mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, iterList[[1]])
+                           
+    return(mergedCounts)
+}
+
+## Efficiently subsets and bins coverage for a given region across samples
+subsetBinCoverage <- function(iterList){
+
+    regionGRanges_tmp <- plyranges::reduce_ranges(iterList[[1]])
+    indTiles <- plyranges::select(plyranges::tile_ranges(regionGRanges_tmp, 1), -partition)
+
+    tmpCounts <- lapply(iterList[[2]], function(z) {
+        tmpGR <- plyranges::join_overlap_intersect(z, indTiles)
+        tmpGR <- plyranges::join_overlap_intersect(tmpGR, iterList[[1]])
+        tmpGR <- plyranges::group_by(tmpGR, idx) %>%
+        tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
+        tmpGR <- dplyr::ungroup(tmpGR)
+        tmpGR
+    })
+                           
+    return(tmpCounts)
+}
+                        
+## Efficiently generates averaged coverage across samples by bins within a given region
+averageBinCoverage <- function(iterList){
+
+    regionGRanges_tmp <- plyranges::reduce_ranges(iterList[[1]])
+    indTiles <- plyranges::select(plyranges::tile_ranges(regionGRanges_tmp, 1), -partition)
+    sampleCount <- length(iterList[[2]])
+    
+    filterCounts <- lapply(iterList[[2]], function(z) {
+        tmpGR <- plyranges::join_overlap_intersect(z, indTiles)
+        tmpGR <- plyranges::join_overlap_intersect(tmpGR, iterList[[1]])
+        tmpGR <- plyranges::group_by(tmpGR, idx) %>%
+        tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
+        tmpGR <- dplyr::ungroup(tmpGR)
+        tmpGR
     })
                         
     mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges) 
     mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, iterList[[1]])
+                           
                            
     return(mergedCounts)
 }
 
 ## Efficiently subsets and bins coverage for a given region across samples
-subsetBinCoverag <- function(iterList){
+subsetSlidingBinCoverag <- function(iterList){
 
     binnedData <- iterList[[1]]
     regionGRanges <- plyranges::reduce_ranges(binnedData)
@@ -237,10 +296,9 @@ subsetBinCoverag <- function(iterList){
 }
                         
 ## Efficiently generates averaged coverage across samples by bins within a given region
-averageBinCoverage <- function(iterList){
+averageSlidingBinCoverage <- function(iterList){
 
-    binnedData <- iterList[[1]]
-    regionGRanges <- plyranges::reduce_ranges(binnedData)
+    regionGRanges <- plyranges::reduce_ranges(iterList[[1]])
     sampleCount <- length(iterList[[2]])
     
     filterCounts <- lapply(1:sampleCount, function(z) {
@@ -251,11 +309,12 @@ averageBinCoverage <- function(iterList){
     mergedCounts <- plyranges::join_overlap_intersect( mergedCounts, regionGRanges) 
     mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
-    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, binnedData)
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, iterList[[1]])
                            
                            
     return(mergedCounts)
 }
+
 
 cleanDataFrame1 <- function(iterList){
   group1 <- iterList[[1]]

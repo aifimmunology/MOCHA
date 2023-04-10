@@ -25,17 +25,25 @@ getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, ver
 
   })
 
+
   # Summarize the coverage over the region window at a single basepair resolution
   popCounts <- pbapply::pblapply(popFragList, calculateCoverage, cl = cl)
+  # Summarize the coverage over the region window at a single basepair resolution
+  insertCounts <- pbapply::pblapply(popFragList, calculateInsertionCoverage, cl = cl)
 
   popCounts <- lapply(popCounts, function(x){
           GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
           x
   })
-    
   names(popCounts) <- names(popFrags)
 
-  return(popCounts)
+  insertCounts <- lapply(insertCounts, function(x){
+          GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
+          x
+  })
+  names(insertCounts) <- names(popFrags)
+
+  return(list('Accessibility' = popCounts, 'Insertions' = insertCounts))
 }
 
 ######## calculateCoverage: Function that takes in a GRanges fragment object and generates coverage GRanges.
@@ -74,4 +82,28 @@ getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
   }, mc.cores = numCores)
 
   return(counts)
+}
+
+
+######## calculateInsertionCoverage: Function that takes in a GRanges fragment object and generates coverage GRanges for insertions.
+## @param ref
+calculateInsertionCoverage <- function(ref){
+
+  popFrags <- ref[[1]]
+  Num <- ref[[2]]
+  filterEmpty <- ref[[3]]
+
+  cutstart <- GRanges(seqnames = as(seqnames(popFrags), "vector"), 
+                  ranges = IRanges(start = start(popFrags), width = 1), strand = "*")
+  cutend <- GRanges(seqnames = as(seqnames(popFrags), "vector"), 
+                  ranges = IRanges(start = end(popFrags), width = 1), strand = "*")
+
+  counts_gr <- plyranges::compute_coverage(plyranges::bind_ranges(cutstart, cutend))
+  counts_gr <- plyranges::mutate(counts_gr,score = score / Num)
+
+  if (filterEmpty) {
+    plyranges::filter(counts_gr, score > 0)
+  } else {
+    counts_gr
+  }
 }

@@ -493,7 +493,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   newAssays <- list(do.call("cbind", as(assays, "list")))
   newSamplesNames <- unlist(lapply(names(assays), function(x) {
-    paste(x, colnames(SampleTileObj), sep = "__") %>% gsub(" ", "", .)
+    gsub(" ", "_", paste(x, colnames(SampleTileObj), sep = "__"))
   }))
 
   names(newAssays) <- "counts"
@@ -506,17 +506,17 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
     tmp_meta <- coldata
-    tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "_", .)
+    tmp_meta$Sample <- gsub(" ", "_",paste(x, tmp_meta$Sample, sep = "__"))
     tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
   }))
   
   cellTypeLabelList <- Var1 <- NULL
-  cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts) %>%
-    dplyr::mutate(
-      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
-    dplyr::select(Sample, Freq)
+  cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts)
+  cellCounts <- dplyr::mutate(cellCounts,
+      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__")))
+  cellCounts <- dplyr::select(cellCounts, Sample, Freq)
 
   allSampleData <- dplyr::left_join(
     as.data.frame(allSampleData), cellCounts, by = "Sample")

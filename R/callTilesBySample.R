@@ -119,20 +119,14 @@ callTilesBySample <- function(blackList,
 #' 
 
 simplifiedTilesBySample <- function(x){
-
-  blackList <- x[[1]]
-  frags <- x[[2]]
-  normalization_factors <- length(frags)
-  verbose <- x[[3]]
-  study_prefactor <- x[[4]]
   
   MOCHA:::callTilesBySample(
-          blackList = blackList,
+          blackList =  x[[1]],
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors,
-          fragsList = frags,
-          verbose = verbose,
-          StudypreFactor = study_prefactor
+          totalFrags =  length(x[[2]]),
+          fragsList = x[[2]],
+          verbose =x[[3]],
+          StudypreFactor = x[[4]]
         )
 
 }

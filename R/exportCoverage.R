@@ -8,9 +8,11 @@
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations. Default is 'ALL'.
+#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE, exports Insertions. 
 #' @param groupColumn Optional, the column containing sample group labels for returning coverage within sample groups. Default is NULL, all samples will be used.
 #' @param subGroups a list of subgroup(s) within the groupColumn from the metadata. Optional, default is NULL, all labels within groupColumn will be used.
 #' @param sampleSpecific If TRUE, a BigWig will export for each sample-cell type combination.
+#' @param saveFile Boolean. If TRUE, it will save to a BigWig. If FALSE, it will return the GRangesList. 
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -32,10 +34,12 @@
 
 exportCoverage<- function(SampleTileObj,
                           dir = getwd(),
+                          type = TRUE,
                           cellPopulations = "ALL",
                           groupColumn = NULL,
                           subGroups = NULL,
                           sampleSpecific = FALSE,
+                          saveFile = TRUE,
                           numCores = 1,
                           verbose = FALSE) {
   . <- idx <- score <- NULL
@@ -85,8 +89,13 @@ exportCoverage<- function(SampleTileObj,
     library(GenomicRanges)
   })
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
+  GRangesList1 <- NULL
   for(x in cellPopulations) {
-    originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    if(type){
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    }else{
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_InsertionFiles.RDS", sep = ""))
+    }
 
     if (verbose) {
       message(stringr::str_interp("Extracting coverage from {x}."))
@@ -105,12 +114,22 @@ exportCoverage<- function(SampleTileObj,
         cellPopSubsampleCov <- unlist(iterList, recursive = FALSE)
         names(cellPopSubsampleCov) <- gsub("\\.","__", names(cellPopSubsampleCov))
     }
+
     for(i in 1:length(cellPopSubsampleCov)){
         fileName <- gsub(" ","__", paste(groupColumn, names(cellPopSubsampleCov), sep = "__"))
+        if(!type){
+          fileName = paste(fileName, "__Insertions", sep = '')
+        }
         plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, '.bw', sep =''))
     }
-
+    if(saveFile){
+      GRangesList1 <- append(GRangesList1, cellPopSubsampleCov)
+      names(GRangesList1) <- c(names(GRangesList1), x)
+    }
+    
   }
+
+  return(GRangesList1)
 }
 
 
