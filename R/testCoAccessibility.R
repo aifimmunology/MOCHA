@@ -483,7 +483,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   Sample <- Freq <- . <- NULL
   # Extract all the Sample-Tile Matrices for each cell type
-  assays <- SummarizedExperiment::assays(SampleTileObj)
+  assays_tmp <- SummarizedExperiment::assays(SampleTileObj)
 
   coldata <- SummarizedExperiment::colData(SampleTileObj)
   
@@ -491,8 +491,8 @@ combineSampleTileMatrix <- function(SampleTileObj,
   # the intensity for a given cell, as well as the
   # median intensity per sample-tile for all other cell types (i.e. the background)
 
-  newAssays <- list(do.call("cbind", as(assays, "list")))
-  newSamplesNames <- unlist(lapply(names(assays), function(x) {
+  newAssays <- list(do.call("cbind", as(assays_tmp, "list")))
+  newSamplesNames <- unlist(lapply(names(assays_tmp), function(x) {
     paste(x, colnames(SampleTileObj), sep = "__") %>% gsub(" ", "", .)
   }))
 
@@ -504,7 +504,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   }
 
 
-  allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
+  allSampleData <- do.call("rbind", lapply(names(assays_tmp), function(x) {
     tmp_meta <- coldata
     tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "_", .)
     tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
@@ -517,12 +517,24 @@ combineSampleTileMatrix <- function(SampleTileObj,
     dplyr::mutate(
       Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
     dplyr::select(Sample, Freq)
+  names(cellCounts) = c('Sample', 'CellNumber')
+
+  fragCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$FragmentCounts) %>%
+    dplyr::select(dplyr::one_of(names(assays_tmp))) %>%
+    dplyr::mutate(.,Sample = rownames(.)) %>%
+    tidyr::pivot_longer(cols = names(assays_tmp), names_to = 'CellTypes', values_to = 'FragNumber') %>%
+    dplyr::mutate(Sample = gsub(" ", "_", paste(CellTypes, Sample, sep = "__"))) %>% 
+    dplyr::select(Sample, FragNumber)
 
   allSampleData <- dplyr::left_join(
     as.data.frame(allSampleData), cellCounts, by = "Sample")
 
+  allSampleData <- dplyr::left_join(
+    allSampleData,  fragCounts, by = 'Sample'
+  )
+
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
-  for (i in names(assays)) {
+  for (i in names(assays_tmp)) {
     GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
   }
 
