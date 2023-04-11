@@ -493,7 +493,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   newAssays <- list(do.call("cbind", as(assays_tmp, "list")))
   newSamplesNames <- unlist(lapply(names(assays_tmp), function(x) {
-    paste(x, colnames(SampleTileObj), sep = "__") %>% gsub(" ", "", .)
+    paste(x, colnames(SampleTileObj), sep = "__") %>% gsub(" ", "_", .)
   }))
 
   names(newAssays) <- "counts"
@@ -556,6 +556,5 @@ combineSampleTileMatrix <- function(SampleTileObj,
     
     SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(rowData(newObj)$bias, na.rm = TRUE)
   }
-
   return(newObj)
 }
