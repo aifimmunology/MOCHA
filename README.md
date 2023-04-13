@@ -169,7 +169,7 @@ Results of `MOCHA::getDifferentialAccessibleTiles` is given as a `data.table` an
 8052:         0              3.755235            0
 ```
 
-*Note that these statistics refelct a small \# of samples in the example vignette.*
+*Note that these statistics reflect a small \# of samples in the example vignette.*
 
 ## getCoAccessibleLinks results
 
