@@ -45,9 +45,9 @@ plotConsensus <- function(tileObject,
     list(subTileResults[[x]], sampleData, groupColumn, returnPlotList)
   })
 
-  cl <- parallel::makeCluster(numCores)
+  #cl <- parallel::makeCluster(numCores)
 
-  alldf <- pbapply::pblapply(cl = cl, X = iterList, cellTypeDF)
+  alldf <- pbapply::pblapply(cl = numCores, X = iterList, cellTypeDF)
 
   names(alldf) <- names(subTileResults)
 
