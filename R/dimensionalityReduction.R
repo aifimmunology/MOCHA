@@ -1,6 +1,6 @@
 #' @title \code{bulkDimReduction}
 #'
-#' @description \code{bulkDimReduction} runs dimensionality reduction (either PCA or LSI).
+#' @description \code{bulkDimReduction} runs dimensionality reduction (either PCA or LSI). We adapt Signac's 
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
 #' @param cellType vector of strings. Cell subsets for which to call
@@ -13,6 +13,8 @@
 #'
 #' @return SEObj a SummarizedExperiment containing PC components from dimensionality reduction and metadata from the SampleTileObj
 #' 
+#' @ref LSI method adapted from Andrew Hill: http://andrewjohnhill.com/blog/2019/05/06/dimensionality-reduction-for-scatac-data/  
+#'
 #' @examples
 #' \dontrun{
 #' LSIObj <- MOCHA::bulkDimReduction(SampleTileObj, cellType = 'CD16_Mono')
@@ -59,7 +61,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
       diag(svdDiag) <- svd$d
       matSVD <- t(svdDiag %*% t(svd$v))
       rownames(matSVD) <- colnames(countMat)
-      colnames(matSVD) <- paste0("PC",seq_len(ncol(matSVD)))   
+      colnames(matSVD) <- paste0("LSI",seq_len(ncol(matSVD)))   
 
       assayList1 <- list(t(matSVD))
       names(assayList1) = 'LSI'
