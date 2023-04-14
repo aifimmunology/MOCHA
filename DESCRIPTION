@@ -75,7 +75,8 @@ Imports:
     qvalue,
     scales,
     tidyr,
-    ggridges
+    ggridges,
+    lmerTest
 Suggests: 
     ArchR,
     RMariaDB,
