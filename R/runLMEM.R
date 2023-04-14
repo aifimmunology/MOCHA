@@ -12,13 +12,11 @@
 #'   format (exp ~ factors). All factors must be found in column names
 #'   of the ExperimentObj metadata. modelFormula must start with 'exp' as the response.
 #'   See \link[lmerTest]{lmer}.
-#' @param initialSampling Size of data to use for pilot
+#' @param initialSampling Size of data to use for pilot.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
 #' @return
-#'
-#'
 #'
 #' @examples
 #' \dontrun{
