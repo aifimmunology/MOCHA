@@ -28,8 +28,9 @@ runZIGLMM <- function(TSAM_Object,
     stop("No cell type name not found within TSAM_Object.")
   }
 
-  modelingData <- as.data.frame(getCellPopMatrix(TSAM_Object, cellPopulation = cellTypeName, NAtoZero = TRUE))
-  MetaDF <- as.data.frame(SummarizedExperiment::colData(TSAM_Object))
+  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+  modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
+  MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
   if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
@@ -67,7 +68,7 @@ runZIGLMM <- function(TSAM_Object,
         glmmTMB::glmmTMB(continuousFormula,
           ziformula = ziformula,
           data = df,
-          family = gaussian(),
+          family = stats::gaussian(),
           REML = TRUE
         )
       },
@@ -81,7 +82,17 @@ runZIGLMM <- function(TSAM_Object,
     stop("For the initial sampling, every test model failed. Reconsider modelFormula or increase initial sampling size.")
   } else {
     idx <- which(!is.na(unlist(modelList)))
-    nullDF <- lapply(summary(modelList[[idx[1]]])$coefficients, as.data.frame)
+    coeffList <- lapply(1:length(idx), function(x){
+      tryCatch(
+      {
+         summary(modelList[[x]])$coefficients
+      }, error = function(e){ NA})
+    })
+    if (all(is.na(unlist(coeffList)))) {
+      stop("For the initial sampling, every test model failed. Reconsider modelFormula or increase initial sampling size.")
+    }
+    coeff2 <- coeffList[!is.na(unlist(coeffList))]
+    nullDF <- lapply(coeff2[[1]], as.data.frame)
     nullDF$cond[!is.na(nullDF$cond)] <- NA
     nullDF$zi[!is.na(nullDF$zi)] <- NA
     rm(modelList)
@@ -131,7 +142,7 @@ runZIGLMM <- function(TSAM_Object,
     cond1 <- output_list[["cond"]][[x]]
     zi1 <- output_list[["zi"]][[x]]
 
-    colnames(zi1) <- paste("ZI_", colnames(zi1), paste = "")
+    colnames(zi1) <- paste("ZI_", colnames(zi1), sep = "")
     cbind(cond1, zi1)
   })
 
@@ -139,8 +150,8 @@ runZIGLMM <- function(TSAM_Object,
 
   results <- SummarizedExperiment::SummarizedExperiment(
     combinedList,
-    rowRanges = SummarizedExperiment::rowRanges(TSAM_Object),
-    metadata = metadata(TSAM_Object)
+    rowRanges = SummarizedExperiment::rowRanges(newObj),
+    metadata = newObj@metadata
   )
 
   return(results)
@@ -215,8 +226,9 @@ pilotZIGLMM <- function(TSAM_Object,
     stop("Cell type name not found within TSAM_Object.")
   }
 
-  modelingData <- as.data.frame(getCellPopMatrix(TSAM_Object, cellPopulation = cellTypeName, NAtoZero = TRUE))
-  MetaDF <- as.data.frame(SummarizedExperiment::colData(TSAM_Object))
+  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+  modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
+  MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
   if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
@@ -230,7 +242,6 @@ pilotZIGLMM <- function(TSAM_Object,
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[pilotIndices, match(colnames(modelingData), MetaDF$Sample)]
-
 
   # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]

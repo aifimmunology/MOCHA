@@ -77,6 +77,8 @@ Imports:
     tidyr,
     ggridges,
     lmerTest
+    lmerTest,
+    pbapply
 Suggests: 
     ArchR,
     RMariaDB,
