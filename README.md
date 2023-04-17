@@ -30,7 +30,7 @@ Please view the example usage found in the vignette found under
 
 The example usage demonstrates this workflow: 
 
-![Workflow](inst/extData/workflow.svg)
+![Workflow](inst/extData/workflow_diagram_v3_website.png)
 
 # <a name="results"></a> Tips: Result formats
 
