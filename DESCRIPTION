@@ -1,7 +1,7 @@
 Package: MOCHA
 Type: Package
 Title: Modeling for Single-Cell Open Chromatin Analysis
-Version: 0.2.4
+Version: 0.2.5
 Authors@R: 
     c(person(given = "Samir",
            family = "Rachid Zaim",
