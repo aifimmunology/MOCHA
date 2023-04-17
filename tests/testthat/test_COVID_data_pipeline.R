@@ -7,7 +7,8 @@ if (
     dir.exists(ArchRProjDir) &&
     require("ArchR", quietly = TRUE)
 ) {
-  
+  oldw <- getOption("warn")
+  options(warn = -1)
   test_that("We reproduce the COVID CD16 Monocyte analysis", {
     
     ArchRProjDir <- "../../../FullCovid"
@@ -53,8 +54,8 @@ if (
       ArchRProj,
       cellPopLabel = "CellSubsets",
       cellPopulations = "CD16 Mono",
-      TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-      Org = org.Hs.eg.db,
+      TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+      Org = "org.Hs.eg.db",
       numCores = 50,
       studySignal = studySignal, # should be 3628
       outDir = tempdir()
@@ -117,7 +118,6 @@ if (
         groupColumn = "COVID_status",
         foreground = "Positive",
         background = "Negative",
-        fdrToDisplay = 1,
         outputGRanges = TRUE,
         numCores = 40
     ))
@@ -126,12 +126,19 @@ if (
     # GRanges snapshot includes head/tail of all values
     expect_snapshot(cd16_differentials)
     expect_equal(length(cd16_differentials), 6211)
-    # Expected values from results of CD16 Monnocyte analysis
-    cd16Summary <- summary(cd16_differentials$FDR)
-    expect_equal(cd16Summary[["Min."]], 0.01887700776)
-    expect_equal(round(cd16Summary[["Max."]], 7), 0.1983282)
-    expect_equal(round(cd16Summary[["Mean"]], 7), 0.1192888)
-    expect_equal(round(cd16Summary[["Median"]], 7), 0.1211614)
+    
+    # Expected values from results of CD16 Monocyte analysis
+    FDRSummary <- summary(cd16_differentials$FDR)
+    expect_equal(FDRSummary[["Min."]], 0.01887700776)
+    expect_equal(round(FDRSummary[["Max."]], 7), 0.1983282)
+    expect_equal(round(FDRSummary[["Mean"]], 7), 0.1192888)
+    expect_equal(round(FDRSummary[["Median"]], 7), 0.1211614)
+    
+    IntensitySummary <- summary(cd16_differentials$Avg_Intensity_Case)
+    expect_equal(round(IntensitySummary[["Min."]], 5), 7.522832)
+    expect_equal(round(IntensitySummary[["Max."]], 5), 16.88269)
+    expect_equal(round(IntensitySummary[["Mean"]], 5), 13.14367)
+    expect_equal(round(IntensitySummary[["Median"]], 5), 13.21955)
 
     capture.output(
       unFilteredSummaries <- MOCHA::getDifferentialAccessibleTiles(
@@ -140,7 +147,6 @@ if (
         groupColumn = "COVID_status",
         foreground = "Positive",
         background = "Negative",
-        fdrToDisplay = 0.2,
         outputGRanges = FALSE,
         numCores = 40,
         signalThreshold = 0,
@@ -149,4 +155,5 @@ if (
     expect_snapshot(unFilteredSummaries)
     expect_equal(dim(unFilteredSummaries)[1], 215649)
   })
+  options(warn = oldw)
 }
