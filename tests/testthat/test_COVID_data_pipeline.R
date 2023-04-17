@@ -10,16 +10,15 @@ if (
   oldw <- getOption("warn")
   options(warn = -1)
   test_that("We reproduce the COVID CD16 Monocyte analysis", {
-    
     ArchRProjDir <- "../../../FullCovid"
     # If running line-by-line:
     # ArchRProj <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
     ArchRProj <- ArchR::loadArchRProject(ArchRProjDir)
     metadata <- data.table::as.data.table(ArchR::getCellColData(ArchRProj))
     studySignal <- median(metadata$nFrags)
-    
+
     expect_equal(studySignal, 3628)
-    
+
     # Get metadata information at the sample level
     lookup_table <- unique(
       metadata[, c(
@@ -60,10 +59,11 @@ if (
       studySignal = studySignal, # should be 3628
       outDir = tempdir()
     ))
-    
+
     # Snapshot test of summary()
     tileResultAssay <- RaggedExperiment::compactAssay(
-      MultiAssayExperiment::experiments(tileResults)[[1]], i="TotalIntensity"
+      MultiAssayExperiment::experiments(tileResults)[[1]],
+      i = "TotalIntensity"
     )
     expect_snapshot(summary(tileResultAssay))
     expect_snapshot(head(tileResultAssay))
@@ -84,7 +84,7 @@ if (
       threshold = 0.2,
       verbose = FALSE
     ))
-    
+
     # Snapshot test of summary()
     SampleTileMatrixAssay <- assays(SampleTileMatrices)[[1]]
     expect_snapshot(summary(SampleTileMatrixAssay))
@@ -92,17 +92,17 @@ if (
     expect_snapshot(tail(SampleTileMatrixAssay))
 
     capture.output(cd16matrix <- MOCHA::getCellPopMatrix(
-         SampleTileObj = SampleTileMatrices,
-         cellPopulation = "CD16 Mono",
-         dropSamples = TRUE,
-         NAtoZero = TRUE
+      SampleTileObj = SampleTileMatrices,
+      cellPopulation = "CD16 Mono",
+      dropSamples = TRUE,
+      NAtoZero = TRUE
     ))
-    
+
     # Snapshot test of summary()
     expect_snapshot(summary(cd16matrix))
     expect_snapshot(head(cd16matrix))
     expect_snapshot(tail(cd16matrix))
-    
+
     ###########################################################
     # 4. Get differential accessibility for specific
     #    cell populations. Here we are comparing MAIT
@@ -120,20 +120,21 @@ if (
         background = "Negative",
         outputGRanges = TRUE,
         numCores = 40
-    ))
+      )
+    )
     cd16_differentials <- plyranges::filter(differentials, FDR <= 0.2)
-    
+
     # GRanges snapshot includes head/tail of all values
     expect_snapshot(cd16_differentials)
     expect_equal(length(cd16_differentials), 6211)
-    
+
     # Expected values from results of CD16 Monocyte analysis
     FDRSummary <- summary(cd16_differentials$FDR)
     expect_equal(round(FDRSummary[["Min."]], 11), 0.01887700776)
     expect_equal(round(FDRSummary[["Max."]], 7), 0.1983282)
     expect_equal(round(FDRSummary[["Mean"]], 7), 0.1192888)
     expect_equal(round(FDRSummary[["Median"]], 7), 0.1211614)
-    
+
     IntensitySummary <- summary(cd16_differentials$Avg_Intensity_Case)
     expect_equal(round(IntensitySummary[["Min."]], 6), 7.522832)
     expect_equal(round(IntensitySummary[["Max."]], 5), 16.88269)
@@ -151,7 +152,8 @@ if (
         numCores = 40,
         signalThreshold = 0,
         minZeroDiff = 0
-    ))
+      )
+    )
     expect_snapshot(unFilteredSummaries)
     expect_equal(dim(unFilteredSummaries)[1], 215649)
   })
