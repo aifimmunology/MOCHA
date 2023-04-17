@@ -129,13 +129,13 @@ if (
     
     # Expected values from results of CD16 Monocyte analysis
     FDRSummary <- summary(cd16_differentials$FDR)
-    expect_equal(FDRSummary[["Min."]], 0.01887700776)
+    expect_equal(round(FDRSummary[["Min."]], 11), 0.01887700776)
     expect_equal(round(FDRSummary[["Max."]], 7), 0.1983282)
     expect_equal(round(FDRSummary[["Mean"]], 7), 0.1192888)
     expect_equal(round(FDRSummary[["Median"]], 7), 0.1211614)
     
     IntensitySummary <- summary(cd16_differentials$Avg_Intensity_Case)
-    expect_equal(round(IntensitySummary[["Min."]], 5), 7.522832)
+    expect_equal(round(IntensitySummary[["Min."]], 6), 7.522832)
     expect_equal(round(IntensitySummary[["Max."]], 5), 16.88269)
     expect_equal(round(IntensitySummary[["Mean"]], 5), 13.14367)
     expect_equal(round(IntensitySummary[["Median"]], 5), 13.21955)
