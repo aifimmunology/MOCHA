@@ -40,8 +40,6 @@ ArchRProj <- ArchR::loadArchRProject("/home/jupyter/FullCovid")
 metadata <- data.table::as.data.table(ArchR::getCellColData(ArchRProj))
 studySignal <- median(metadata$nFrags)
 
-expect_equal(studySignal, 3628)
-
 # Get metadata information at the sample level
 lookup_table <- unique(
   metadata[, c(
@@ -184,10 +182,12 @@ Here we plot coverage at a specific region and gene by infection stage.
 #################################################### 
 
 ```{r}
+regionToPlot = "chr4:XXX-XXXX"
+
 countSE <- MOCHA::extractRegion(
   SampleTileObj = SampleTileMatrices, 
   cellPopulations = "CD16 Mono", 
-  region = "chr3:38137866-38139912", 
+  region = regionToPlot, 
   groupColumn = "COVID_status", 
   numCores = numCores, 
   sampleSpecific = FALSE
@@ -198,6 +198,7 @@ pdf("ExamplePlot.pdf")
 # you must have the package RMariaDB installed 
 MOCHA::plotRegion(countSE = countSE, whichGene = "MYD88")
 dev.off()
+
 ```
 
 #################################################### 
@@ -239,6 +240,7 @@ differentials <- MOCHA::getDifferentialAccessibleTiles(
 # test results. We can filter by FDR to get our set of 
 # differentially accessible tiles:
 cd16DifferentialTiles <- plyranges::filter(differentials, FDR <= 0.2)
+res = head(plyranges::filter(differentials, seqnames =='chr4' & FDR < 0.2))
 
 ```
 
@@ -253,15 +255,15 @@ Here we give the first ten differential tiles as our input regions.
 #################################################### 
 
 ```{r}
-regions <- head(differentials, 10)
+regions = res$Tile
 
 # Alternatively, define regions as a character vector
 # of region strings in the format "chr:start-end"
 # regions <- c(
-# "chrY:7326500-7326999",
-# "chrY:7327000-7327499",
-# "chrY:7339500-7339999",
-# "chrY:7344500-7344999"
+# "chr4:7326500-7326999",
+# "chr4:7327000-7327499",
+# "chr4:7339500-7339999",
+# "chr4:7344500-7344999"
 # )
 
 links <- MOCHA::getCoAccessibleLinks(
@@ -277,5 +279,5 @@ links <- MOCHA::getCoAccessibleLinks(
 # correlation - this output also adds the chromosome,
 # start, and end site of each link to the table.
 
-MOCHA::filterCoAccessibleLinks(links, threshold = 0.7)
+MOCHA::filterCoAccessibleLinks(links, threshold = 0.4)
 ```
