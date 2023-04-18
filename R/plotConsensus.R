@@ -25,7 +25,7 @@ plotConsensus <- function(tileObject,
                           numCores = 1) {
   Reproducibility <- PeakNumber <- groups <- GroupName <- NULL
 
-  if (length(cellPopulations) == 1 & all(tolower(cellPopulations) == "all")) {
+  if (all(tolower(cellPopulations) == "all")) {
     subTileResults <- tileObject
     cellPopulations <- names(tileObject)
   } else {
@@ -41,12 +41,15 @@ plotConsensus <- function(tileObject,
 
   sampleData <- MultiAssayExperiment::colData(tileObject)
 
-  alldf <- parallel::mclapply(names(subTileResults), function(x) {
-    cellTypeDF(
-      peaksExperiment = subTileResults[[x]], sampleData = sampleData,
-      groupColumn = groupColumn, returnPlotList = returnPlotList
-    )
-  }, mc.cores = numCores)
+
+  iterList <- lapply(names(subTileResults),function(x) {
+    list(subTileResults[[x]], sampleData, groupColumn, returnPlotList)
+  })
+
+  #return(iterList)
+  #cl <- parallel::makeCluster(numCores)
+
+  alldf <- pbapply::pblapply(cl = numCores, X = iterList, cellTypeDF)
 
   names(alldf) <- names(subTileResults)
 
@@ -55,27 +58,30 @@ plotConsensus <- function(tileObject,
   }
 
   if (returnPlotList) {
-    if (!is.null(groupColumn)) {
-      allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
+    if (!is.null(groupColumn)){
+      allPlots2 <- lapply(seq_along(alldf), function(x) {
         ggplot2::ggplot(alldf[[x]], ggplot2::aes(x = Reproducibility, y = PeakNumber, group = GroupName, color = GroupName)) +
           ggplot2::geom_point() +
           ggplot2::ggtitle(names(alldf)[x]) +
           ggplot2::scale_y_continuous(trans = "log2") +
           ggplot2::ylab("Peak Number") +
           ggplot2::theme_bw()
-      }, mc.cores = numCores)
+      })
+      
+      return(allPlots2)
     } else {
-      allPlots <- parallel::mclapply(seq_along(alldf), function(x) {
+      allPlots <- lapply(seq_along(alldf), function(x) {
         ggplot2::ggplot(alldf[[x]], ggplot2::aes(x = Reproducibility, y = PeakNumber)) +
           ggplot2::geom_point() +
           ggplot2::ggtitle(names(alldf)[x]) +
           ggplot2::scale_y_continuous(trans = "log2") +
           ggplot2::ylab("Peak Number") +
           ggplot2::theme_bw()
-      }, mc.cores = numCores)
+      })
+      return(allPlots)
     }
+    
 
-    return(allPlots)
   } else {
     combinedDF <- do.call("rbind", alldf)
     combinedDF$CellPop <- gsub("\\.", "", gsub("[0-9]{1,3}", "", rownames(combinedDF)))
@@ -97,7 +103,14 @@ plotConsensus <- function(tileObject,
 }
 
 
-cellTypeDF <- function(peaksExperiment, sampleData, groupColumn = NULL, returnPlotList = FALSE) {
+cellTypeDF <- function(list1 = NULL, peaksExperiment, sampleData, groupColumn, returnPlotList = FALSE) {
+
+  if(!is.null(list1)){
+    peaksExperiment <- list1[[1]]
+    sampleData <- list1[[2]]
+    groupColumn <- list1[[3]]
+    returnPlotList <- list1[[4]]
+  }
   samplePeakMat <- RaggedExperiment::compactAssay(
     peaksExperiment,
     i = "peak"
