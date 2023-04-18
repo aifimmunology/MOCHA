@@ -239,7 +239,7 @@ differentials <- MOCHA::getDifferentialAccessibleTiles(
 # The output contains a GRanges with all tiles and their differential 
 # test results. We can filter by FDR to get our set of 
 # differentially accessible tiles:
-cd16DifferentialTiles <- plyranges::filter(differentials, FDR <= 0.2)
+
 res = head(plyranges::filter(differentials, seqnames =='chr4' & FDR < 0.2))
 
 ```
