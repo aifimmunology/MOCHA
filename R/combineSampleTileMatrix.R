@@ -57,8 +57,19 @@ combineSampleTileMatrix <- function(SampleTileObj,
       Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__")))
   cellCounts <- dplyr::select(cellCounts, Sample, Freq)
 
+  fragCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$FragmentCounts)
+  fragCounts <-  dplyr::select(fragCounts, dplyr::one_of(names(assays))) 
+  fragCounts <-  dplyr::mutate(fragCounts, Sample = rownames(fragCounts))
+  fragCounts <-  tidyr::pivot_longer(fragCounts, cols = names(assays), names_to = 'CellTypes', values_to = 'FragNumber') 
+  fragCounts <-  dplyr::mutate(fragCounts, Sample = gsub(" ", "_", paste(CellTypes, Sample, sep = "__")))
+  fragCounts <-  dplyr::select(fragCounts, Sample, FragNumber)
+
   allSampleData <- dplyr::left_join(
     as.data.frame(allSampleData), cellCounts, by = "Sample")
+
+  allSampleData <- dplyr::left_join(
+    allSampleData,  fragCounts, by = 'Sample'
+  )
 
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
   for (i in names(assays)) {
