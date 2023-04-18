@@ -71,9 +71,6 @@ colData names(186): Sample well_id ... ATAC_WellID AIFI.Batch
 
 It also holds metadata related to the genome, transcript database, and annotations: `metadata(SampleTileMatrices)`
 
-Individual sample-tile matrices for each cell population can be accessed as follows. These are filtered to only return tiles called for the given cell population.
-
-
 ## getDifferentialAccessibleTiles results
 
 Results of `MOCHA::getDifferentialAccessibleTiles` is given as a `data.table` and can be filtered using data.table syntax:
