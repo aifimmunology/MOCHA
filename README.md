@@ -73,7 +73,7 @@ It also holds metadata related to the genome, transcript database, and annotatio
 
 ## getDifferentialAccessibleTiles results
 
-Results of `MOCHA::getDifferentialAccessibleTiles` is given as a `data.table` and can be filtered using data.table syntax:
+Results of `MOCHA::getDifferentialAccessibleTiles` is given either as a `data.table` or a 'granges' and can be filtered accordingly:
 
 ``` r
 > head(plyranges::filter(differentials, seqnames =='chr4' & FDR < 0.2))
