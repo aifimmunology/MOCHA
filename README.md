@@ -17,11 +17,7 @@
 MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
 # <a name="library"></a> Install package and load library
-
-To install in a HISE IDE, run the following lines of code to install directly from GitHub replacing 'your_token' with your [GitHub Personal Access Token](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
-
-    Sys.setenv(GITHUB_PAT='your_token') 
-    devtools::install_github("aifimmunology/MOCHA")
+install.packages('MOCHA') 
 
 # <a name="vignette"></a> Usage
 
