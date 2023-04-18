@@ -17,7 +17,11 @@
 MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
 # <a name="library"></a> Install package and load library
-install.packages('MOCHA') 
+You can install MOCHA directly from CRAN using the following command. 
+  
+ ``` r
+ install.packages('MOCHA')
+ ```
 
 # <a name="vignette"></a> Usage
 
