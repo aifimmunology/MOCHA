@@ -38,7 +38,6 @@ ul.task-list{list-style: none;}
 </style>
 
 
-
 <style type="text/css">
 code {
 white-space: pre;
@@ -354,31 +353,29 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> data.table<span class="sc">::</span><span class="fu">as.data.table</span>(ArchR<span class="sc">::</span><span class="fu">getCellColData</span>(ArchRProj))</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>studySignal <span class="ot">&lt;-</span> <span class="fu">median</span>(metadata<span class="sc">$</span>nFrags)</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">expect_equal</span>(studySignal, <span class="dv">3628</span>)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Get metadata information at the sample level</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>lookup_table <span class="ot">&lt;-</span> <span class="fu">unique</span>(</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  metadata[, <span class="fu">c</span>(</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Sample&quot;</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;COVID_status&quot;</span>,</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Visit&quot;</span>,</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;days_since_symptoms&quot;</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">with =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  ]</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset to visit 1 and extract samples</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>samplesToKeep <span class="ot">&lt;-</span> lookup_table<span class="sc">$</span>Sample[</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  lookup_table<span class="sc">$</span>Visit <span class="sc">==</span> <span class="st">&quot;FH3 COVID-19 Visit 1&quot;</span> <span class="sc">&amp;</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    lookup_table<span class="sc">$</span>days_since_symptoms <span class="sc">&lt;=</span> <span class="dv">15</span> <span class="sc">|</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">is.na</span>(lookup_table<span class="sc">$</span>days_since_symptoms)</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co"># subset ArchR Project</span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>idxSample <span class="ot">&lt;-</span> BiocGenerics<span class="sc">::</span><span class="fu">which</span>(ArchRProj<span class="sc">$</span>Sample <span class="sc">%in%</span> samplesToKeep)</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>cellsSample <span class="ot">&lt;-</span> ArchRProj<span class="sc">$</span>cellNames[idxSample]</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>ArchRProj <span class="ot">&lt;-</span> ArchRProj[cellsSample, ]</span></code></pre></div>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Get metadata information at the sample level</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>lookup_table <span class="ot">&lt;-</span> <span class="fu">unique</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  metadata[, <span class="fu">c</span>(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Sample&quot;</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;COVID_status&quot;</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Visit&quot;</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;days_since_symptoms&quot;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">with =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset to visit 1 and extract samples</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>samplesToKeep <span class="ot">&lt;-</span> lookup_table<span class="sc">$</span>Sample[</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  lookup_table<span class="sc">$</span>Visit <span class="sc">==</span> <span class="st">&quot;FH3 COVID-19 Visit 1&quot;</span> <span class="sc">&amp;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    lookup_table<span class="sc">$</span>days_since_symptoms <span class="sc">&lt;=</span> <span class="dv">15</span> <span class="sc">|</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">is.na</span>(lookup_table<span class="sc">$</span>days_since_symptoms)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co"># subset ArchR Project</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>idxSample <span class="ot">&lt;-</span> BiocGenerics<span class="sc">::</span><span class="fu">which</span>(ArchRProj<span class="sc">$</span>Sample <span class="sc">%in%</span> samplesToKeep)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>cellsSample <span class="ot">&lt;-</span> ArchRProj<span class="sc">$</span>cellNames[idxSample]</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>ArchRProj <span class="ot">&lt;-</span> ArchRProj[cellsSample, ]</span></code></pre></div>
 </div>
 <div id="section-2" class="section level52">
 <p class="heading"></p>
@@ -505,20 +502,22 @@ for differential accessibility nor coaccessibility.</p>
 stage.</p>
 <div id="section-11" class="section level52">
 <p class="heading"></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>countSE <span class="ot">&lt;-</span> MOCHA<span class="sc">::</span><span class="fu">extractRegion</span>(</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">SampleTileObj =</span> SampleTileMatrices, </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">cellPopulations =</span> <span class="st">&quot;CD16 Mono&quot;</span>, </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">region =</span> <span class="st">&quot;chr3:38137866-38139912&quot;</span>, </span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">groupColumn =</span> <span class="st">&quot;COVID_status&quot;</span>, </span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">numCores =</span> numCores, </span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sampleSpecific =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="fu">pdf</span>(<span class="st">&quot;ExamplePlot.pdf&quot;</span>)</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Note that to show specific genes with the option&#39; whichGene&#39;</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># you must have the package RMariaDB installed </span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>MOCHA<span class="sc">::</span><span class="fu">plotRegion</span>(<span class="at">countSE =</span> countSE, <span class="at">whichGene =</span> <span class="st">&quot;MYD88&quot;</span>)</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>regionToPlot <span class="ot">=</span> <span class="st">&quot;chr4:XXX-XXXX&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>countSE <span class="ot">&lt;-</span> MOCHA<span class="sc">::</span><span class="fu">extractRegion</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">SampleTileObj =</span> SampleTileMatrices, </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">cellPopulations =</span> <span class="st">&quot;CD16 Mono&quot;</span>, </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">region =</span> regionToPlot, </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">groupColumn =</span> <span class="st">&quot;COVID_status&quot;</span>, </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">numCores =</span> numCores, </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">sampleSpecific =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">pdf</span>(<span class="st">&quot;ExamplePlot.pdf&quot;</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Note that to show specific genes with the option&#39; whichGene&#39;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># you must have the package RMariaDB installed </span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>MOCHA<span class="sc">::</span><span class="fu">plotRegion</span>(<span class="at">countSE =</span> countSE, <span class="at">whichGene =</span> <span class="st">&quot;MYD88&quot;</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
 </div>
 <div id="section-12" class="section level52">
 <p class="heading"></p>
@@ -560,7 +559,7 @@ samples (our background).</p>
 <span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="co"># The output contains a GRanges with all tiles and their differential </span></span>
 <span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="co"># test results. We can filter by FDR to get our set of </span></span>
 <span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="co"># differentially accessible tiles:</span></span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>cd16DifferentialTiles <span class="ot">&lt;-</span> plyranges<span class="sc">::</span><span class="fu">filter</span>(differentials, FDR <span class="sc">&lt;=</span> <span class="fl">0.2</span>)</span></code></pre></div>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>res <span class="ot">=</span> <span class="fu">head</span>(plyranges<span class="sc">::</span><span class="fu">filter</span>(differentials, seqnames <span class="sc">==</span><span class="st">&#39;chr4&#39;</span> <span class="sc">&amp;</span> FDR <span class="sc">&lt;</span> <span class="fl">0.2</span>))</span></code></pre></div>
 </div>
 <div id="section-14" class="section level52">
 <p class="heading"></p>
@@ -574,15 +573,15 @@ window.</p>
 regions.</p>
 <div id="section-15" class="section level52">
 <p class="heading"></p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>regions <span class="ot">&lt;-</span> <span class="fu">head</span>(differentials, <span class="dv">10</span>)</span>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>regions <span class="ot">=</span> res<span class="sc">$</span>Tile</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Alternatively, define regions as a character vector</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># of region strings in the format &quot;chr:start-end&quot;</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># regions &lt;- c(</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chrY:7326500-7326999&quot;,</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chrY:7327000-7327499&quot;,</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chrY:7339500-7339999&quot;,</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chrY:7344500-7344999&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chr4:7326500-7326999&quot;,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chr4:7327000-7327499&quot;,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chr4:7339500-7339999&quot;,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;chr4:7344500-7344999&quot;</span></span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># )</span></span>
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>links <span class="ot">&lt;-</span> MOCHA<span class="sc">::</span><span class="fu">getCoAccessibleLinks</span>(</span>
@@ -598,7 +597,7 @@ regions.</p>
 <span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="co"># correlation - this output also adds the chromosome,</span></span>
 <span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="co"># start, and end site of each link to the table.</span></span>
 <span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>MOCHA<span class="sc">::</span><span class="fu">filterCoAccessibleLinks</span>(links, <span class="at">threshold =</span> <span class="fl">0.7</span>)</span></code></pre></div>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>MOCHA<span class="sc">::</span><span class="fu">filterCoAccessibleLinks</span>(links, <span class="at">threshold =</span> <span class="fl">0.4</span>)</span></code></pre></div>
 </div>
 </div>
 
