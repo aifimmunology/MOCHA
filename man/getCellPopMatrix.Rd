@@ -12,19 +12,22 @@ getCellPopMatrix(
 )
 }
 \arguments{
-\item{SampleTileObj}{The output from getSampleTileMatrix, a SummarizedExperiment of pseudobulk
-intensities across all tiles & cell types.}
+\item{SampleTileObj}{The output from getSampleTileMatrix, a
+SummarizedExperiment of pseudobulk intensities across all tiles & cell
+types.}
 
 \item{cellPopulation}{The cell population you want to pull out.}
 
-\item{dropSamples}{Boolean flag to determine whether to drop samples that were too small for peak calling.}
+\item{dropSamples}{Boolean flag to determine whether to drop samples that
+were too small for peak calling.}
 
 \item{NAtoZero}{Boolean flag to determine whether to replace NAs with zero}
 }
 \value{
-sampleTileMatrix a matrix of samples by called tiles for a given cell population.
+sampleTileMatrix a matrix of samples by called tiles for a given cell
+  population.
 }
 \description{
-\code{getCellPopMatrix} pulls out the SampleTileMatrix of tiles called in one
-  given cell population.
+\code{getCellPopMatrix} pulls out the SampleTileMatrix of tiles
+  called in one given cell population.
 }
