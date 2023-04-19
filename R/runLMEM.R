@@ -16,7 +16,7 @@
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
-#' @return
+#' @return results a SummarizedExperiment containing LMEM results
 #'
 #'
 #'
@@ -222,14 +222,8 @@ individualLMEM <- function(x) {
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
-#' @return
+#' @return modelList a list of outputs from lmerTest::lmer
 #'
-#'
-#'
-#' @examples
-#' \dontrun{
-#'
-#' }
 #'
 #' @export
 pilotLMEM <- function(ExperimentObj,
