@@ -15,9 +15,9 @@
 #'      phyper(m1, n1, nall-n1, ma, lower.tail=F, log.p=F)
 #'
 #' @param ligandTFMatrix NicheNet Ligand-TF matrix
-#' @param MotifEnrichment Dataframe (unfiltered), with a motifColumn with motif
+#' @param motifEnrichmentDF Dataframe (unfiltered), with a motifColumn with motif
 #'   names, and a column with the -log10 adjusted p-values.
-#' @param motifColumn Column name within the MotifEnrichmentDF that has motif
+#' @param motifColumn Column name within the motifEnrichmentDF that has motif
 #'   names. Default is 'feature'.
 #' @param specLigand Name of the specific ligand you want to test
 #' @param statThreshold Significance threshold used to select significant motif
@@ -25,7 +25,7 @@
 #' @param verbose Set TRUE to display additional messages, including the the
 #'   n-all, n-1, m-all, and m-1 values. Default is FALSE.
 #'
-#' @return
+#' @return output of stats::phyper
 #'
 #' @noRd
 #'
@@ -57,7 +57,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
   if (any(colnames(ligandTFMatrix) %in% colnames(motifEnrichmentDF))) {
     if (verbose) {
       warning(
-        "Column names in MotifEnrichmentDF and ligandTFMatrix cannot be",
+        "Column names in motifEnrichmentDF and ligandTFMatrix cannot be",
         " the same. Renaming identical columns 'TranscriptionFactor'",
         " and setting motifColumn to 'TranscriptionFactor'"
       )
@@ -66,14 +66,14 @@ PHyperLigandTF <- function(ligandTFMatrix,
     motifColumn <- "TranscriptionFactor"
   }
 
-  # Filter ligandTFMatrix down to those interactions with TFs within MotifEnrichment
+  # Filter ligandTFMatrix down to those interactions with TFs within motifEnrichmentDF
   allTFsByAnyLigand <- ligandTFMatrix[rownames(ligandTFMatrix) %in% allMotifNames, ]
   allTFsByAnyLigand <- allTFsByAnyLigand[, colSums(allTFsByAnyLigand) > 0]
 
-  if (!ligand %in% colnames(allTFsByAnyLigand)) {
+  if (!specLigand %in% colnames(allTFsByAnyLigand)) {
     stop(
       stringr::str_interp(
-        "The ligand named ${ligand} does not have any interactions with motif set"
+        "The ligand named ${specLigand} does not have any interactions with motif set"
       )
     )
   }
@@ -81,7 +81,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
   TFMat <- as.data.frame(allTFsByAnyLigand)
   TFMat$TranscriptionFactor <- rownames(allTFsByAnyLigand)
 
-  # Check for number of overlaping Transcription Factors between NicheNet and MotifEnrichment set.
+  # Check for number of overlaping Transcription Factors between NicheNet and motifEnrichmentDF set.
   NicheNet_Motif_overlap <- sum(TFMat$TranscriptionFactor %in% allMotifNames)
 
   # Merge data into one.
@@ -101,7 +101,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
   )
 
   nall <- dim(allTFsByAnyLigand)[1]
-  n1 <- sum(allTFsByAnyLigand[, ligand] > 0)
+  n1 <- sum(allTFsByAnyLigand[, specLigand] > 0)
 
   # Filter to just significantly enriched motifs
   mlog10Padj <- NULL
@@ -113,7 +113,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
   # Number of enriched TFs that could be downstream of a given ligand
   m1 <- sum(
     unique(mergedDF_f$TranscriptionFactor) %in%
-      rownames(allTFsByAnyLigand)[allTFsByAnyLigand[, ligand] > 0]
+      rownames(allTFsByAnyLigand)[allTFsByAnyLigand[, specLigand] > 0]
   )
 
   if (verbose) {
@@ -123,16 +123,16 @@ PHyperLigandTF <- function(ligandTFMatrix,
     message("Enriched TF Downstream of Ligand: ", m1, sep = "")
   }
 
-  phyper(m1, n1, nall - n1, mall, lower.tail = F, log.p = F)
+  stats::phyper(m1, n1, nall - n1, mall, lower.tail = F, log.p = F)
 }
 
 
 #' @title \code{MotifSetEnrichmentAnalysis}
 #'
-#' @description \code{MotifSetEnrichmentAnalysis} This analogous to Gene Set
+#' @description This analogous to Gene Set
 #'   Enrichment Analysis. Instead of testing for enrichment of a geneset with a
 #'   given gene set in a pathway, we are testing the enrichment of a given TF
-#'   Motif set against a motif set downstream of a multiple ligands. If there is
+#'   motif set against a motif set downstream of a multiple ligands. If there is
 #'   enrichment, it's a sign that that ligand could drive that set of motifs.
 #'
 #'
@@ -140,7 +140,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
 #' @param motifEnrichmentDF Dataframe (unfiltered) from ArchR's peakAnnoEnrich
 #'   step. Expected to have a column with motif names, and a column with the
 #'   -log10 adjusted p-values.
-#' @param motifColumn Column name within the MotifEnrichmentDF that has motif
+#' @param motifColumn Column name within the motifEnrichmentDF that has motif
 #'   names. Default is 'feature'.
 #' @param ligands Vector of ligands to test
 #' @param statThreshold Significance threshold used to select significant motif
@@ -153,7 +153,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
 #'   1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @return specDF A dataframe containing
+#' @return specDF A dataframe containing enrichment analysis results
 #'
 #' @export
 #'
@@ -171,28 +171,28 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
     stop("Some ligands does not appear in NicheNet matrix, or are duplicated.")
   }
 
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterExport(
-    cl,
-    varlist = c(
-      "ligandTFMatrix", "MotifEnrichment", "motifColumn", "verbose",
-      "statThreshold", "PHyperLigandTF"
-    ),
-    envir = environment()
-  )
+  # cl <- parallel::makeCluster(numCores)
+  # parallel::clusterExport(
+  #   cl,
+  #   varlist = c(
+  #     "ligandTFMatrix", "motifEnrichmentDF", "motifColumn", "verbose",
+  #     "statThreshold", "PHyperLigandTF"
+  #   ),
+  #   envir = environment()
+  # )
 
   specificLigands <- pbapply::pblapply(ligands, function(x) {
-    MOCHA::PHyperLigandTF(ligandTFMatrix,
+    PHyperLigandTF(ligandTFMatrix,
       motifEnrichmentDF,
       specLigand = x,
       motifColumn = motifColumn,
       statThreshold = statThreshold,
       verbose = verbose
     )
-  }, cl = cl)
+  }, cl = NULL)
   names(specificLigands) <- ligands
 
-  parallel::stopCluster(cl)
+  # parallel::stopCluster(cl)
 
   # return(specificLigands)
 
@@ -210,13 +210,13 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
 
   # Subset ligand matrix down to all TFs related to ligands
   subsetMat <- ligandTFMatrix[
-    rownames(ligandTFMatrix) %in% MotifEnrichment[, motifColumn],
+    rownames(ligandTFMatrix) %in% motifEnrichmentDF[, motifColumn],
     colnames(ligandTFMatrix) %in% ligands
   ]
 
   # Identify significant motifs
   sigMotifs <- unlist(unique(
-    MotifEnrichment[MotifEnrichment$mlog10Padj > statThreshold, motifColumn]
+    motifEnrichmentDF[motifEnrichmentDF$mlog10Padj > statThreshold, motifColumn]
   ))
 
   # Subset ligand matrix down to significant motifs that are associated with ligands
