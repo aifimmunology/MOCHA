@@ -16,10 +16,12 @@
 #'
 #' @param ligandTFMatrix NicheNet Ligand-TF matrix
 #' @param motifEnrichmentDF Dataframe (unfiltered), with a motifColumn with motif
-#'   names, and a column with the -log10 adjusted p-values.
+#'   names, and a column with the -log10 adjusted p-values
 #' @param motifColumn Column name within the motifEnrichmentDF that has motif
-#'   names. Default is 'feature'.
+#'   names
 #' @param specLigand Name of the specific ligand you want to test
+#' @param statColumn Column name in motifEnrichmentDF containing the statistic
+#'   to test
 #' @param statThreshold Significance threshold used to select significant motif
 #'   set
 #' @param verbose Set TRUE to display additional messages, including the the
@@ -32,8 +34,9 @@
 PHyperLigandTF <- function(ligandTFMatrix,
                            motifEnrichmentDF,
                            specLigand,
-                           motifColumn = "feature",
-                           statThreshold = 2,
+                           motifColumn,
+                           statColumn,
+                           statThreshold,
                            verbose = FALSE) {
   motifEnrichmentDF <- as.data.frame(motifEnrichmentDF)
 
@@ -81,10 +84,9 @@ PHyperLigandTF <- function(ligandTFMatrix,
   TFMat <- as.data.frame(allTFsByAnyLigand)
   TFMat$TranscriptionFactor <- rownames(allTFsByAnyLigand)
 
-  # Check for number of overlaping Transcription Factors between NicheNet and motifEnrichmentDF set.
+  # Check for number of overlapping Transcription Factors between 
+  # NicheNet and motifEnrichmentDF
   NicheNet_Motif_overlap <- sum(TFMat$TranscriptionFactor %in% allMotifNames)
-
-  # Merge data into one.
 
   otherMotifs <- "TranscriptionFactor"
   joinedDF <- dplyr::inner_join(
@@ -104,8 +106,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
   n1 <- sum(allTFsByAnyLigand[, specLigand] > 0)
 
   # Filter to just significantly enriched motifs
-  mlog10Padj <- NULL
-  mergedDF_f <- dplyr::filter(mergedDF, mlog10Padj > statThreshold)
+  mergedDF_f <- dplyr::filter(mergedDF, .data[[statColumn]] > statThreshold)
 
   # Number of significantly enrichment motifs
   mall <- length(unique(mergedDF_f$TranscriptionFactor))
@@ -141,10 +142,12 @@ PHyperLigandTF <- function(ligandTFMatrix,
 #'   step. Expected to have a column with motif names, and a column with the
 #'   -log10 adjusted p-values.
 #' @param motifColumn Column name within the motifEnrichmentDF that has motif
-#'   names. Default is 'feature'.
+#'   names.
 #' @param ligands Vector of ligands to test
+#' @param statColumn Column name in motifEnrichmentDF containing the statistic
+#'   to test
 #' @param statThreshold Significance threshold used to select significant motif
-#'   set. Default is 2.
+#'   set
 #' @param annotation Optional annotation value added to all rows of the output
 #'   motif dataframe. Can be character vector or numeric. Default is "none".
 #' @param annotationName Optional column name for the annotation. Default is
@@ -159,9 +162,10 @@ PHyperLigandTF <- function(ligandTFMatrix,
 #'
 MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
                                        motifEnrichmentDF,
-                                       motifColumn = "feature",
+                                       motifColumn,
                                        ligands,
-                                       statThreshold = 2,
+                                       statColumn,
+                                       statThreshold,
                                        annotationName = "CellType",
                                        annotation = "none",
                                        numCores = 1, verbose = FALSE) {
@@ -176,7 +180,7 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
   #   cl,
   #   varlist = c(
   #     "ligandTFMatrix", "motifEnrichmentDF", "motifColumn", "verbose",
-  #     "statThreshold", "PHyperLigandTF"
+  #     "statThreshold", "PHyperLigandTF", "statColumn"
   #   ),
   #   envir = environment()
   # )
@@ -187,6 +191,7 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
       specLigand = x,
       motifColumn = motifColumn,
       statThreshold = statThreshold,
+      statColumn = statColumn,
       verbose = verbose
     )
   }, cl = NULL)
@@ -194,20 +199,21 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
 
   # parallel::stopCluster(cl)
 
-  # return(specificLigands)
-
   # create data frame of ligand, p-val, adjusted p-value, and percentage of ligand-TFs in motif set.
   specDF <- data.frame(
     ligand = names(specificLigands),
     p_val = unlist(specificLigands)
   )
 
-  #The PHyperLigandTF function will return 0, which is simply because it's a small number than R can record. The function will set these values to the e-323, which is close to the lower limit in R, so the -log10 of the pvalue doesn't generate an error. 
+  # The PHyperLigandTF function will return 0, which is simply because it's 
+  # a small number than R can record. The function will set these values to 
+  # the e-323, which is close to the lower limit in R, so the -log10 of the 
+  # pvalue doesn't generate an error. 
   if (any(specDF$p_val == 0, na.rm = TRUE)) {
     specDF$p_val[specDF$p_val == 0] <- 1e-323
   }
   specDF$adjp_val <- p.adjust(specDF$p_val, method = "fdr")
-
+  
   # Subset ligand matrix down to all TFs related to ligands
   subsetMat <- ligandTFMatrix[
     rownames(ligandTFMatrix) %in% motifEnrichmentDF[, motifColumn],
@@ -216,22 +222,27 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
 
   # Identify significant motifs
   sigMotifs <- unlist(unique(
-    motifEnrichmentDF[motifEnrichmentDF$mlog10Padj > statThreshold, motifColumn]
+    motifEnrichmentDF[motifEnrichmentDF[[statColumn]] > statThreshold, motifColumn]
   ))
-
-  # Subset ligand matrix down to significant motifs that are associated with ligands
+  
+  # Subset ligand matrix down to significant motifs that are associated
+  # with ligands
   sigSubsetMat <- ligandTFMatrix[
     rownames(ligandTFMatrix) %in% sigMotifs,
     colnames(ligandTFMatrix) %in% ligands
   ]
 
-  # Calculate percentage of significant motifs against background of all motifs for each tested ligand
+  # Order columns of subset matrices by ligand order
+  subsetMat <- subsetMat[ , specDF$ligand]
+  sigSubsetMat <- sigSubsetMat[ , specDF$ligand]
+  
+  # Calculate percentage of significant motifs against background of 
+  # all motifs for each tested ligand
   specDF$PercentSigTF <- colSums(sigSubsetMat > 0) / colSums(subsetMat > 0)
-
-  # Calculate percentage of significant motifs that interact with a given ligand against the background of all significant motifs
-  specDF$PercInNicheNet <- colSums(sigSubsetMat > 0) /
-    length(sigMotifs)
-
+  # Calculate percentage of significant motifs that interact with a given 
+  # ligand against the background of all significant motifs
+  specDF$PercInNicheNet <- colSums(sigSubsetMat > 0) / length(sigMotifs)
+  
   # Label these values
   specDF[, annotationName] <- annotation
   specDF
