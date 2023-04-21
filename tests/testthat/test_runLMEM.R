@@ -48,7 +48,7 @@ test_that("runLMEM errors when failing to converge on a 3-sample dataset", {
   )
 })
 
-test_that("pilotLMEM works on a 1 sample test dataset", {
+test_that("pilotLMEM errors with formula on a 1-sample dataset", {
   cellPopulations <- c("C2", "C5")
 
   capture.output(
@@ -61,21 +61,17 @@ test_that("pilotLMEM works on a 1 sample test dataset", {
   )
   
   modelFormula <- exp ~ Sample+PassQC
-
-  modelList <- pilotLMEM(
+  
+  expect_error(modelList <- pilotLMEM(
     ExperimentObj,
     cellPopulation = "C2",
     pilotIndices = c(1:5),
     modelFormula = exp ~ Sample+PassQC
-  )
+  ), "No random effects terms specified in formula")
 
-  expect_snapshot_output(
-    modelList,
-    variant = "1sample"
-  )
 })
 
-test_that("pilotLMEM works on a 3-sample dataset", {
+test_that("pilotLMEM errors with formula on a 3-sample dataset", {
   cellPopulations <- c("C2", "C3")
   capture.output(
     ExperimentObj <- MOCHA::getSampleTileMatrix(
@@ -85,17 +81,13 @@ test_that("pilotLMEM works on a 3-sample dataset", {
     )
   )
   
-  modelList <- pilotLMEM(
+  expect_error(modelList <- pilotLMEM(
     ExperimentObj,
     cellPopulation = "C2",
     pilotIndices = c(1:5),
-    modelFormula = exp ~ PassQC
-  )
+    modelFormula = exp ~ Sample+PassQC
+  ), "No random effects terms specified in formula")
 
-  expect_snapshot_output(
-    modelList,
-    variant = "3sample"
-  )
 })
 
 test_that("runLMEM errors with invalid formula", {

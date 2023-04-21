@@ -1,4 +1,4 @@
-test_that("bulkLSI works on a 3 sample test dataset", {
+test_that("bulkDimReduction works on a 3 sample test dataset", {
   cellPopulations <- c("C2", "C3")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
@@ -26,7 +26,7 @@ test_that("bulkLSI works on a 3 sample test dataset", {
   SummarizedExperiment::assays(SampleTileMatrix)[[2]] <- c3
 
   capture.output(
-    LSIObj <- MOCHA::bulkLSI(SampleTileMatrix, cellType = 'all', componentNumber=2)
+    LSIObj <- MOCHA::bulkDimReduction(SampleTileMatrix, cellType = 'all', componentNumber=2)
   )
   
   capture.output(
@@ -44,7 +44,7 @@ test_that("bulkLSI works on a 3 sample test dataset", {
   
 })
 
-test_that("bulkLSI errors NA columns", {
+test_that("bulkDimReduction errors NA columns", {
   cellPopulations <- c("C2", "C3")
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
@@ -56,7 +56,7 @@ test_that("bulkLSI errors NA columns", {
   )
 
   expect_error(
-    LSIse <- MOCHA::bulkLSI(SampleTileMatrix, cellType = 'all', componentNumber=2),
+    LSIse <- MOCHA::bulkDimReduction(SampleTileMatrix, cellType = 'all', componentNumber=2),
     "starting vector near the null space"
   )
 })

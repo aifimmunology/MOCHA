@@ -17,7 +17,7 @@ test_that("annotateTiles works on a 1 sample test dataset", {
   )
 
   expect_snapshot(
-    rowRanges(STM),
+    SummarizedExperiment::rowRanges(STM),
     variant = "1sample"
   )
 })
@@ -40,7 +40,7 @@ test_that("annotateTiles works on a 3 sample test dataset", {
   )
 
   expect_snapshot(
-    rowRanges(STM),
+    SummarizedExperiment::rowRanges(STM),
     variant = "3sample"
   )
 })
@@ -59,7 +59,7 @@ if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
       type = "message"
     )
     capture.output(
-      ranges <- MOCHA::annotateTiles(rowRanges(SampleTileMatrix),
+      ranges <- MOCHA::annotateTiles(SummarizedExperiment::rowRanges(SampleTileMatrix),
         TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
         Org = org.Hs.eg.db,
         promoterRegion = c(2000, 100)
