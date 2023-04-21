@@ -27,13 +27,10 @@ the ExperimentObj matrix. Default is 1:10.}
 
 \item{numCores}{integer. Number of cores to parallelize across.}
 }
-
 \value{
 modelList a list of outputs from lmerTest::lmer
 }
-
 \description{
 \code{pilotLMEM} Runs linear mixed-effects modeling for
   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 }
-

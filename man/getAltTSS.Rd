@@ -10,9 +10,7 @@ getAltTSS(
   returnAllTSS = FALSE,
   nuancedTSS = TRUE,
   nuancedTSSGap = 150,
-  threshold = 0.2,
-  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-  Org = org.Hs.eg.db
+  threshold = 0.2
 )
 }
 \arguments{
@@ -30,13 +28,13 @@ the same tile, then that tile will be repeated for each TSS.}
 should be filtered out if all their differential TSS usage falls within too
 small of a range. Default is TRUE}
 
-\item{threshold}{FDR Threshold for determining significant vs non-significant
-changes in accessibility. Following MOCHA's standards, default is 0.2.}
-
-\item{nuancedTSSGAP}{Minimum distance betweeen TSSs needed for them to
+\item{nuancedTSSGap}{Minimum distance betweeen TSSs needed for them to
 considered distinctly regulated TSSs. If two TSSs are too close, it is
 unclear and highly unlikely that ATAC data can distinguish between them.
 Default is 150 bp.}
+
+\item{threshold}{FDR Threshold for determining significant vs non-significant
+changes in accessibility. Following MOCHA's standards, default is 0.2.}
 }
 \value{
 tpeaks A GRanges containing annotated peaks falling in TSS

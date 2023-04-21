@@ -152,9 +152,9 @@ tileResults <- MOCHA::callOpenTiles(
 \donttest{
 # Starting from GRangesList
 if (
-  requireNamespace(BSgenome.Hsapiens.UCSC.hg19) &&
-    requireNamespace(TxDb.Hsapiens.UCSC.hg38.refGene) &&
-    requireNamespace(org.Hs.eg.db)
+  requireNamespace("BSgenome.Hsapiens.UCSC.hg19") &&
+    requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
+    requireNamespace("org.Hs.eg.db")
 ) {
   tiles <- MOCHA::callOpenTiles(
     ATACFragments = MOCHA::exampleFragments,
