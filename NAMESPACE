@@ -2,6 +2,7 @@
 
 export(GRangesToString)
 export(MotifEnrichment)
+export(MotifSetEnrichmentAnalysis)
 export(StringsToGRanges)
 export(addAccessibilityShift)
 export(addMotifSet)

@@ -30,6 +30,11 @@ See \link[lmerTest]{lmer}.}
 
 \item{numCores}{integer. Number of cores to parallelize across.}
 }
+
+\value{
+results a SummarizedExperiment containing LMEM results
+}
+
 \description{
 \code{runLMEM} Runs linear mixed-effects modeling for
   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
