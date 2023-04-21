@@ -84,7 +84,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
   TFMat <- as.data.frame(allTFsByAnyLigand)
   TFMat$TranscriptionFactor <- rownames(allTFsByAnyLigand)
 
-  # Check for number of overlapping Transcription Factors between 
+  # Check for number of overlapping Transcription Factors between
   # NicheNet and motifEnrichmentDF
   NicheNet_Motif_overlap <- sum(TFMat$TranscriptionFactor %in% allMotifNames)
 
@@ -205,44 +205,46 @@ MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
     p_val = unlist(specificLigands)
   )
 
-  # The PHyperLigandTF function will return 0, which is simply because it's 
-  # a small number than R can record. The function will set these values to 
-  # the e-323, which is close to the lower limit in R, so the -log10 of the 
-  # pvalue doesn't generate an error. 
+  # The PHyperLigandTF function will return 0, which is simply because it's
+  # a small number than R can record. The function will set these values to
+  # the e-323, which is close to the lower limit in R, so the -log10 of the
+  # pvalue doesn't generate an error.
   if (any(specDF$p_val == 0, na.rm = TRUE)) {
     specDF$p_val[specDF$p_val == 0] <- 1e-323
   }
   specDF$adjp_val <- p.adjust(specDF$p_val, method = "fdr")
-  
+
   # Subset ligand matrix down to all TFs related to ligands
   subsetMat <- ligandTFMatrix[
     rownames(ligandTFMatrix) %in% motifEnrichmentDF[, motifColumn],
-    colnames(ligandTFMatrix) %in% ligands
+    colnames(ligandTFMatrix) %in% ligands,
+    drop = FALSE
   ]
 
   # Identify significant motifs
   sigMotifs <- unlist(unique(
     motifEnrichmentDF[motifEnrichmentDF[[statColumn]] > statThreshold, motifColumn]
   ))
-  
+
   # Subset ligand matrix down to significant motifs that are associated
   # with ligands
   sigSubsetMat <- ligandTFMatrix[
     rownames(ligandTFMatrix) %in% sigMotifs,
-    colnames(ligandTFMatrix) %in% ligands
+    colnames(ligandTFMatrix) %in% ligands,
+    drop = FALSE
   ]
 
   # Order columns of subset matrices by ligand order
-  subsetMat <- subsetMat[ , specDF$ligand]
-  sigSubsetMat <- sigSubsetMat[ , specDF$ligand]
-  
-  # Calculate percentage of significant motifs against background of 
+  subsetMat <- subsetMat[, specDF$ligand]
+  sigSubsetMat <- sigSubsetMat[, specDF$ligand]
+
+  # Calculate percentage of significant motifs against background of
   # all motifs for each tested ligand
   specDF$PercentSigTF <- colSums(sigSubsetMat > 0) / colSums(subsetMat > 0)
-  # Calculate percentage of significant motifs that interact with a given 
+  # Calculate percentage of significant motifs that interact with a given
   # ligand against the background of all significant motifs
   specDF$PercInNicheNet <- colSums(sigSubsetMat > 0) / length(sigMotifs)
-  
+
   # Label these values
   specDF[, annotationName] <- annotation
   specDF
