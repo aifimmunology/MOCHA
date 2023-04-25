@@ -97,6 +97,7 @@ setGeneric(
            cellPopLabel,
            cellPopulations = "ALL",
            studySignal = NULL,
+           cellCol = 'RG',
            TxDb,
            OrgDb,
            outDir,
@@ -117,6 +118,7 @@ setGeneric(
                                    cellPopLabel,
                                    cellPopulations = "ALL",
                                    studySignal = NULL,
+                                   cellCol = 'RG',
                                    TxDb,
                                    OrgDb,
                                    outDir,
@@ -145,6 +147,34 @@ setGeneric(
       "cellColData. cellColData must contain column cellPopLabel."
     )
   }
+    
+  if (!file.exists(outDir)) {
+    if (verbose) {
+      message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    }
+    dir.create(outDir)
+  }
+    
+  ## Filter out fragments that are not aligned to the Genome.
+  allnames <- names(ATACFragments)  
+  beforeLengths <- lengths(ATACFragments)
+  ATACFragments <- lapply(ATACFragments, function(x){
+        
+            plyranges::filter(x, seqnames %in% seqnames(genome))
+        
+  })
+  names(ATACFragments) <- allnames
+
+  if(verbose){
+      warning('Some fragments are not aligned to BS.Genome provided.', sum(beforeLengths) - sum(lengths(ATACFragments)), 
+              ' fragments were removed.')
+  }
+    
+  if(verbose & any(lengths(ATACFragments) == 0)){
+      warning('Some cell type sample combinations did not have any aligned fragments, including ',
+              paste(names(ATACFragments)[lengths(ATACFragments) == 0], collapse = ", "))
+  }
+
 
   # Save the fragment number per population-sample
   cellPopList <- sapply(names(ATACFragments), function(x) {
@@ -179,6 +209,7 @@ setGeneric(
     cellPopLabel,
     cellPopulations,
     studySignal,
+    cellCol,
     TxDb,
     OrgDb,
     outDir,
@@ -287,6 +318,7 @@ setMethod(
     cellPopLabel,
     cellPopulations,
     studySignal,
+    cellCol = "RG",
     TxDb,
     OrgDb,
     outDir,
@@ -296,6 +328,7 @@ setMethod(
     useArchR = TRUE
   )
 }
+
 setMethod(
   "callOpenTiles",
   signature(ATACFragments = "ArchRProject"),
@@ -312,6 +345,7 @@ setMethod(
     cellPopLabel,
     cellPopulations,
     studySignal,
+    cellCol,
     TxDb,
     OrgDb,
     outDir,
@@ -406,6 +440,7 @@ setMethod(
     # Calculate normalization factors as the number of fragments for
     # each celltype_samples
     normalization_factors <- as.integer(lengths(frags))
+      
     cl <- parallel::makeCluster(numCores)
     # save coverage files to folder.
     # This doesn't include empty samples and might break. We may need to
@@ -434,10 +469,10 @@ setMethod(
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     iterList <- lapply(seq_along(frags), function(x) {
-      list(blackList, frags[[x]], verbose, study_prefactor)
+      list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
     tilesGRangesList <- pbapply::pblapply(
-      cl = cl,
+      cl = NULL,#cl,
       X = iterList,
       FUN = simplifiedTilesBySample
     )
@@ -484,12 +519,12 @@ setMethod(
         numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE
       )
     }
-
+    browser()
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesList
     )
-
+    
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
