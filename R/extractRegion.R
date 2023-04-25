@@ -110,6 +110,19 @@ extractRegion <- function(SampleTileObj,
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
     originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    
+    # Edge case: One or more samples are missing coverage for this cell population,
+    # e.g. if a cell population only exists in one sample. 
+    lapply(seq_along(subSamples), function(y){
+      if (!all(subSamples[[y]] %in% names(originalCovGRanges))){
+        missingSamples <- paste(subSamples[[y]][!subSamples[[y]] %in% names(originalCovGRanges)], collapse=", ")
+        stop(stringr::str_interp(c(
+          "There is no fragment coverage for cell population '${x}' in the ",
+          "following samples in sample grouping '${names(subSamples)[y]}': ",
+          "${missingSamples}"
+        )))
+      }
+    })
 
     if (verbose) {
       message(stringr::str_interp("Extracting coverage from {x}."))
@@ -126,7 +139,7 @@ extractRegion <- function(SampleTileObj,
       # if it is sample specific, just subset down the coverage to the region of interest. 
       if (!sampleSpecific) {
         cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, averageBinCoverage)
-      }else{
+      } else {
         cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, subsetBinCoverage)
       }
 
@@ -140,7 +153,7 @@ extractRegion <- function(SampleTileObj,
       #If not sample specific, take the average coverage across samples. 
       # if it is sample specific, just subset down the coverage to the region of interest. 
       if (!sampleSpecific) {
-        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, averageBPCoverage)
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X = iterList, averageBPCoverage)
       }else{
         cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, subsetBPCoverage)
       }
@@ -200,7 +213,7 @@ subsetBPCoverage <- function(iterList){
     return(tmpCounts)
 }
                         
-## Efficiently generates average single basepair coverage for a given region
+# Generates average single basepair coverage for a given region
 averageBPCoverage <- function(iterList){
 
     regionGRanges <- iterList[[1]]
@@ -218,8 +231,8 @@ averageBPCoverage <- function(iterList){
     return(mergedCounts)
 }
 
-## Efficiently subsets and bins coverage for a given region across samples
-subsetBinCoverag <- function(iterList){
+# Subsets and bins coverage for a given region across samples
+subsetBinCoverage <- function(iterList){
 
     binnedData <- iterList[[1]]
     regionGRanges <- plyranges::reduce_ranges(binnedData)
@@ -236,7 +249,7 @@ subsetBinCoverag <- function(iterList){
     return(tmpCounts)
 }
                         
-## Efficiently generates averaged coverage across samples by bins within a given region
+# Generates averaged coverage across samples by bins within a given region
 averageBinCoverage <- function(iterList){
 
     binnedData <- iterList[[1]]
@@ -248,7 +261,7 @@ averageBinCoverage <- function(iterList){
     })
                         
     mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
-    mergedCounts <- plyranges::join_overlap_intersect( mergedCounts, regionGRanges) 
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges) 
     mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, binnedData)
