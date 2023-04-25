@@ -519,7 +519,6 @@ setMethod(
         numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE
       )
     }
-    browser()
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesList
