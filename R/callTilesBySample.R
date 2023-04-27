@@ -104,7 +104,7 @@ callTilesBySample <- function(blackList,
 #'   that serves as a wrapper function to call peaks provided a set of fragment
 #'   files and cell metadata
 #'
-#' @param ref a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..\
+#' @param x a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..
 #' 
 #' @return scMACs_PeakList an list containing peak calls for each cell
 #'   population passed on in the cell subsets argument. Each peak call is
@@ -120,19 +120,19 @@ callTilesBySample <- function(blackList,
 
 simplifiedTilesBySample <- function(x){
 
-  blackList <- x[[1]]
-  frags <- x[[2]]
-  normalization_factors <- length(frags)
-  verbose <- x[[3]]
-  study_prefactor <- x[[4]]
+  #blackList <- x[[1]]
+  #frags <- x[[2]]
+  #normalization_factors <- length(frags)
+  #verbose <- x[[3]]
+  #study_prefactor <- x[[4]]
   
   MOCHA:::callTilesBySample(
-          blackList = blackList,
+          blackList =  x[[1]],
           returnAllTiles = TRUE,
-          totalFrags = normalization_factors,
-          fragsList = frags,
-          verbose = verbose,
-          StudypreFactor = study_prefactor
+          totalFrags = length(x[[2]]),
+          fragsList = x[[2]],
+          verbose = x[[3]],
+          StudypreFactor = x[[4]]
         )
 
 }

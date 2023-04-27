@@ -4,7 +4,7 @@
 #'   pairs and tests whether they are significantly different compared to a
 #'   background set found via ChromVAR
 #'
-#' @param SampleTileMatrix The SummarizedExperiment object output from
+#' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
 #' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs
 #'   to test (first tile in each pair)
@@ -27,7 +27,7 @@
 #'
 #' @export
 #' 
-testCoAccessibilityChromVar <- function(SampleTileMatrix,
+testCoAccessibilityChromVar <- function(SampleTileObj,
                                         tile1,
                                         tile2,
                                         numCores = 1,
@@ -42,7 +42,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
     stop("tile1 and tile2 must be the same length.")
   }
   
-  fullObj <- combineSampleTileMatrix(SampleTileMatrix)
+  fullObj <- combineSampleTileMatrix(SampleTileObj)
   
   backPeaks <- chromVAR::getBackgroundPeaks(fullObj)
 
@@ -216,7 +216,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 #' @description \code{testCoAccessibilityRandom} takes an input set of tile
 #'   pairs and tests whether they are significantly different compared to
 #'   random, non-overlapping background set.
-#' @param SampleTileMatrix The SummarizedExperiment object output from
+#' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
 #' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs
 #'   to test (first tile in each pair)
@@ -236,7 +236,7 @@ testCoAccessibilityChromVar <- function(SampleTileMatrix,
 #'
 #' @export
 #' 
-testCoAccessibilityRandom <- function(SampleTileMatrix,
+testCoAccessibilityRandom <- function(SampleTileObj,
                                       tile1,
                                       tile2,
                                       numCores = 1,
@@ -251,7 +251,7 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
     stop("tile1 and tile2 must be the same length.")
   }
 
-  fullObj <- combineSampleTileMatrix(SampleTileMatrix)
+  fullObj <- combineSampleTileMatrix(SampleTileObj)
 
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
@@ -396,7 +396,7 @@ testCoAccessibilityRandom <- function(SampleTileMatrix,
 #'
 #' @description \code{runCoAccessibility}
 #'
-#' @param SampleTileMatrix The SummarizedExperiment object output from
+#' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
 #' @param accMat accessibility matrix to use for correlations
 #' @param pairs data.frame for pairs of tiles to test. Must be tileNames
@@ -456,94 +456,4 @@ runCoAccessibility <- function(accMat, pairs, ZI = TRUE, verbose = TRUE, numCore
   )
 
   return(zi_spear_mat_tmp)
-}
-
-
-#' @title \code{combineSampleTileMatrix}
-#'
-#' @description \code{combineSampleTileMatrix} combines all celltypes in a
-#'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
-#'   across all cell types and samples, annotating GC bias using
-#'   chromVAR.
-#'
-#' @param SampleTileMatrix The SummarizedExperiment object output from
-#'   getSampleTileMatrix containing your sample-tile matrices
-#' @param NAToZero Set NA values in the sample-tile matrix to zero
-#' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @return TileCorr A data.table correlation matrix
-#'
-#'
-#' @export
-combineSampleTileMatrix <- function(SampleTileMatrix,
-                                    NAtoZero = TRUE, 
-                                    verbose = FALSE) {
-  
-  genome <- S4Vectors::metadata(SampleTileMatrix)$Genome
-  genome <- BSgenome::getBSgenome(genome)
-
-  Sample <- Freq <- . <- NULL
-  # Extract all the Sample-Tile Matrices for each cell type
-  assays <- SummarizedExperiment::assays(SampleTileMatrix)
-
-  coldata <- SummarizedExperiment::colData(SampleTileMatrix)
-  
-  # Let's generate a new assay, that will contain the
-  # the intensity for a given cell, as well as the
-  # median intensity per sample-tile for all other cell types (i.e. the background)
-
-  newAssays <- list(do.call("cbind", as(assays, "list")))
-  newSamplesNames <- unlist(lapply(names(assays), function(x) {
-    paste(x, colnames(SampleTileMatrix), sep = "__") %>% gsub(" ", "", .)
-  }))
-
-  names(newAssays) <- "counts"
-  colnames(newAssays[[1]]) <- newSamplesNames
-
-  if (NAtoZero) {
-    newAssays[[1]][is.na(newAssays[[1]])] <- 0
-  }
-
-
-  allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
-    tmp_meta <- coldata
-    tmp_meta$Sample <- paste(x, tmp_meta$Sample, sep = "__") %>% gsub(" ", "_", .)
-    tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
-    rownames(tmp_meta) <- tmp_meta$Sample
-    tmp_meta
-  }))
-  
-  cellTypeLabelList <- Var1 <- NULL
-  cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileMatrix)$CellCounts) %>%
-    dplyr::mutate(
-      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__"))) %>%
-    dplyr::select(Sample, Freq)
-
-  allSampleData <- dplyr::left_join(
-    as.data.frame(allSampleData), cellCounts, by = "Sample")
-
-  allRanges <- SummarizedExperiment::rowRanges(SampleTileMatrix)
-  for (i in names(assays)) {
-    GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
-  }
-
-  newObj <- SummarizedExperiment::SummarizedExperiment(
-    assays = newAssays,
-    colData = allSampleData,
-    rowRanges = allRanges,
-    metadata = S4Vectors::metadata(SampleTileMatrix)
-  )
-  
-  newObj <- chromVAR::addGCBias(newObj, genome = genome)
-  
-  if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
-    naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
-    
-    if (verbose) {
-      warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
-    }
-    
-    SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(rowData(newObj)$bias, na.rm = TRUE)
-  }
-
-  return(newObj)
 }
