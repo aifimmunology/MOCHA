@@ -43,9 +43,15 @@ varZIGLMM <- function(TSAM_Object,
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[, match(colnames(modelingData), MetaDF$Sample)]
+  
+  #browser()
 
   # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
+
+  if (any(is.na(MetaDF))) {
+    stop("NAs are included in the MetaDF. Please remove them and try again.")
+  }
 
 
   #Generate null results.
@@ -58,20 +64,28 @@ varZIGLMM <- function(TSAM_Object,
   }
   
   # Make your clusters for efficient parallelization
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterEvalQ(cl, {
-    library(glmmTMB)
-  })
+  if(numCores > 1){
+      cl <- parallel::makeCluster(numCores)
+      parallel::clusterEvalQ(cl, {
+                library(glmmTMB)
+        })
+        
+      parallel::clusterExport(cl = cl, 
+        varlist = c("continuousFormula", "ziformula", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
+        envir = environment()
+      )
 
+  }else{
 
-  browser()
-  parallel::clusterExport(
-    cl = cl, varlist = c("continuousFormula", "ziformula", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
-    envir = environment()
-  )
+    cl = NULL
+  }
 
   varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
-  parallel::stopCluster(cl)
+
+  if(!is.null(cl)){
+    parallel::stopCluster(cl)
+  }
+
 
   results <- do.call('rbind', varDecompList)
   rownames(results) <- rownames(modelingData)
