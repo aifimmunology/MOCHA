@@ -32,10 +32,8 @@ getRegulation <- function(GeneMotifLinks,
     sumDF$Tiles <- TileGeneLinks$Tiles[sumDF$Index]
 
     TGLinks <- dplyr::full_join(TileGeneLinks, sumDF, by = 'Tiles')
-    colnames(TGLinks)[grep('Tiles|Genes|Motifs', colnames(TGLinks), value = T, invert = T)] <- 
-        paste('TG_', grep('Tiles|Genes|Motifs', colnames(TGLinks), value = T, invert = T))
-    colnames(GeneMotifLinks)[grep('Tiles|Genes|Motifs', colnames(GeneMotifLinks), value = T, invert = T)] <- 
-        paste('GM_', grep('Tiles|Genes|Motifs', colnames(GeneMotifLinks),  value = T, invert = T))
+    colnames(TGLinks)[grep('Tiles|Genes|Motifs', colnames(TGLinks), value = T, invert = T)] <- paste('TG_', grep('Tiles|Genes|Motifs', colnames(TGLinks), value = T, invert = T))
+    colnames(GeneMotifLinks)[grep('Tiles|Genes|Motifs', colnames(GeneMotifLinks), value = T, invert = T)] <- paste('GM_', grep('Tiles|Genes|Motifs', colnames(GeneMotifLinks),  value = T, invert = T))
     fullDF <- dplyr::left_join(TGLinks, GeneMotifLinks, by = ('Genes' = 'Genes', 'Motifs'= 'Motifs'))
 
     return(fullDF)
