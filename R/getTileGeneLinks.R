@@ -186,7 +186,7 @@ tileGeneCorrelations <- function(iterList){
     accMat <- iterList[[1]]
     exprMat <- iterList[[2]]
 
-    te_corr <- unlist(lapply(1:nrows(accMat){
+    te_corr <- unlist(lapply(1:nrows(accMat), function(x){
         weightedZISpearman(exprMat[1,], accMat[x,], ZI = TRUE)
     }))
 
