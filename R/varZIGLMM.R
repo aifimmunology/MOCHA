@@ -39,12 +39,10 @@ varZIGLMM <- function(TSAM_Object,
     zi_form = ziRandom
     variableList <- continuousRandom
   }
-  ziformula = paste("~ ", zi_form)
+  ziformula = as.formula(paste("~ ", zi_form))
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[, match(colnames(modelingData), MetaDF$Sample)]
-  
-  #browser()
 
   # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
@@ -79,7 +77,6 @@ varZIGLMM <- function(TSAM_Object,
 
     cl = NULL
   }
-
   varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
 
   if(!is.null(cl)){
