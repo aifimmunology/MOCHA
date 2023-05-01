@@ -1,14 +1,40 @@
-## To do: Implement ZI options, and figure out how to handle Log2 or not log2.
 
-## Will take data (metadata and modeling data), and use it to model a given formula.
-## It then returns a data.frame of intercept, slope, significance, and (residual?)
-## for each row of modelingData
-
-## formula must be in the form exp ~ <variables>
-
-
-# example: runZIGLMM(STM[c(1:1000),], 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), ~ Age, verbose = TRUE, numCores = 35 )
-
+#' @title Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked scATAC data
+#'
+#' @description \code{runZIGLMM} Runs linear mixed-effects modeling for
+#'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
+#'
+#' @param TSAM_Object A SummarizedExperiment object generated from
+#'   getSampleTileMatrix. 
+#' @param cellTypeName Name of a cell type. Should match up exactly with the assay name within SummarizedExperiment. 
+#' @param continuousFormula The formula for the continuous data that should be used within glmmTMB. It should be in the
+#'   format (exp ~ factors). All factors must be found in column names
+#'   of the TSAM_Object metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.
+#'   modelFormula must start with 'exp' as the response.
+#'   See \link[glmmTMB]{glmmTMB}.
+#' @param ziformula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
+#'   format ( ~ factors). All factors must be found in column names
+#'   of the TSAM_Object colData metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.
+#' @param initialSampling Size of data to use for pilot
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param numCores integer. Number of cores to parallelize across.
+#'
+#' @return results a SummarizedExperiment containing LMEM results
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#'   modelList <- runZIGLMM(STM[c(1:1000),], 
+#'                  cellTypeName = 'CD16 Mono',
+#'                  continuousFormula = exp~ Age + Sex + days_since_symptoms + (1|PTID), 
+#'                  ziformula = ~ FragNumber + Age, 
+#'                  verbose = TRUE, 
+#'                  numCores = 35 )
+#' }
+#'
+#' @export
+#' 
 runZIGLMM <- function(TSAM_Object,
                       cellTypeName = NULL,
                       continuousFormula = NULL,
@@ -268,3 +294,5 @@ pilotZIGLMM <- function(TSAM_Object,
 
   return(modelList)
 }
+
+
