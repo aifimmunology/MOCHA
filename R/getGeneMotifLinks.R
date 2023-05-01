@@ -65,7 +65,7 @@ getGeneMotifLinks <- function(ChromVARObj,
     ChromVARObj
 
     linkOutput <- getGeneralLinks(Obj1 = ChromVARObj, 
-                    Obj2 = SampleGeneObj
+                    Obj2 = SampleGeneObj,
                     Obj1List = DUMList,
                     Obj2List = DEGList,
                     returnBackground = returnBackground,
