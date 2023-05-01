@@ -1,4 +1,3 @@
-
 #' @title Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked scATAC data
 #'
 #' @description \code{runZIGLMM} Runs linear mixed-effects modeling for
