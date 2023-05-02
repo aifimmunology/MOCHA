@@ -103,9 +103,9 @@ extractRegion <- function(SampleTileObj,
     }
     binnedData <- regionGRanges %>%
       plyranges::tile_ranges(., binSize) %>%
-      dplyr::mutate(idx = c(1:length(.)))
+      dplyr::mutate(idx = c(1:length(.))) 
   }
-
+  
   cl <- parallel::makeCluster(numCores)
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
@@ -125,7 +125,7 @@ extractRegion <- function(SampleTileObj,
     })
 
     if (verbose) {
-      message(stringr::str_interp("Extracting coverage from {x}."))
+      message(stringr::str_interp("Extracting coverage from cell population '${x}'"))
     }
 
     #If the region is too large, bin the data. 
@@ -172,11 +172,6 @@ extractRegion <- function(SampleTileObj,
   }
 
   ## Generate a data.frame for export.
-
-  if (verbose) {
-     message(stringr::str_interp("Converting from GRanges."))
-  }
-
   iterList <- lapply(seq_along(allGroups), function(x) { list(allGroups[[x]], names(allGroups)[x]) })
 
   if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
@@ -235,12 +230,13 @@ averageBPCoverage <- function(iterList){
 subsetBinCoverage <- function(iterList){
 
     binnedData <- iterList[[1]]
+    subList <- iterList[[2]]
     regionGRanges <- plyranges::reduce_ranges(binnedData)
     
     tmpCounts <- lapply(subList, function(z) {
-        tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges) %>%
+        tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges)
         tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData)
-        tmpGR <- plyranges::group_by(tmpGR, idx) %>%
+        tmpGR <- plyranges::group_by(tmpGR, idx)
         tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
         tmpGR <- dplyr::ungroup(tmpGR)
         tmpGR
