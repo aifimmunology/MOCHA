@@ -6,7 +6,9 @@
 #'   files and an ArchR Project for meta-data purposes
 #'
 #'
-#' @param ATACFragments an ArchR Project, or a GRangesList of fragments
+#' @param ATACFragments an ArchR Project, or a GRangesList of fragments. Each
+#'   GRanges in the GRanges list must have unique cell IDs in the column given
+#'   by 'cellCol'.
 #' @param cellPopLabel string indicating which column in the ArchRProject
 #'   metadata contains the cell population label.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
@@ -14,8 +16,9 @@
 #'   the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 #'   calling is done on all cell populations in the ArchR project metadata.
 #'   Default is 'ALL'.
-#' @param cellColData A DataFrame containing cell-level metadata and a 'Sample' 
-#'   column
+#' @param cellColData A DataFrame containing cell-level metadata. This must 
+#'   contain both a column 'Sample' with unique sample IDs and the column 
+#'   specified by 'cellPopLabel'.
 #' @param blackList A GRanges of blacklisted regions
 #' @param genome A BSgenome object, or the full name of an installed 
 #'   BSgenome data package, or a short string specifying the name of an NCBI 
@@ -128,12 +131,22 @@ setGeneric(
   genome <- BSgenome::getBSgenome(genome)
   
   validGRanges <- sapply(ATACFragments, function(obj) {
-    methods::is(obj, "GRanges")
+    all(
+      methods::is(obj, "GRanges"),
+      cellCol %in% colnames(GenomicRanges::mcols(obj))
+    )
   })
   if (!all(validGRanges)) {
     stop(
       "Invalid ATACFragments. ATACFragments must be a list of GRanges or ",
-      "GRangesList."
+      "GRangesList, each containing a column given by 'cellCol' containing ",
+      "unique cell IDs."
+    )
+  }
+  
+  if (!methods::is(blackList, "GRanges")){
+    stop(
+      "Invalid blackList. blackList must be a GRanges"
     )
   }
   if (!("Sample" %in% colnames(cellColData))) {
@@ -142,8 +155,15 @@ setGeneric(
   if (!(cellPopLabel %in% colnames(cellColData))) {
     stop(
       stringr::str_interp("cellPopLabel {cellPopLabel} not found in "),
-      "cellColData. cellColData must contain column cellPopLabel."
+      "cellColData. cellColData must contain column 'cellPopLabel'."
     )
+  }
+  
+  if (!file.exists(outDir)) {
+    if (verbose) {
+      message(stringr::str_interp("Creating directory for MOCHA at ${outDir}"))
+    }
+    dir.create(outDir)
   }
 
   # Save the fragment number per population-sample
