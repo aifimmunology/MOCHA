@@ -1,14 +1,43 @@
-## To do: Implement ZI options, and figure out how to handle Log2 or not log2.
-
-## Will take data (metadata and modeling data), and use it to model a given formula.
-## It then returns a data.frame of intercept, slope, significance, and (residual?)
-## for each row of modelingData
-
-## formula must be in the form exp ~ <variables>
-
-
-# example: runZIGLMM(STM[c(1:1000),], 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), ~ Age, verbose = TRUE, numCores = 35 )
-
+#' @title Run Zero-Inflated Generalized Linear Mixed-Modeling for zero inflated
+#'   data
+#'
+#' @description \code{runZIGLMM} Runs linear mixed-effects modeling for
+#'   continuous, non-zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
+#'
+#' @param TSAM_Object A SummarizedExperiment object generated from
+#'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only one
+#'   assay, or only the first assay will be used for the model. Data should not
+#'   be zero-inflated.
+#' @param continuousFormula The formula, see \code{\link[glmmTMB]{glmmTMB}}.
+#'   Combined fixed and random effects formula, following lme4 syntax.
+#' @param ziformula The zero-inflated formula, see
+#'   \code{\link[glmmTMB]{glmmTMB}}. a one-sided (i.e., no response variable)
+#'   formula for zero-inflation combining fixed and random effects: the default
+#'   ~0 specifies no zero-inflation. Specifying ~. sets the zero-inflation
+#'   formula identical to the right-hand side of formula (i.e., the conditional
+#'   effects formula); terms can also be added or subtracted. When using ~. as
+#'   the zero-inflation formula in models where the conditional effects formula
+#'   contains an offset term, the offset term will automatically be dropped. The
+#'   zero-inflation model uses a logit link.
+#' @param initialSampling Size of data to use for pilot
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param numCores integer. Number of cores to parallelize across.
+#'
+#' @return results a SummarizedExperiment containing LMEM results
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#'   modelList <- runLMEM(ExperimentObj,
+#'     modelFormula = NULL,
+#'     initialSampling = 5,
+#'     verbose = FALSE,
+#'     numCores = 1
+#'  )
+#' }
+#'
+#' @export
 runZIGLMM <- function(TSAM_Object,
                       cellTypeName = NULL,
                       continuousFormula = NULL,
@@ -168,17 +197,6 @@ extractVariable <- function(varDF, variable) {
 }
 
 
-#' @title \code{IndividualLMEM}
-#'
-#' @description \code{IndividualLMEM} Runs linear modeling on data provided. Written for efficient parallelization.
-#'
-#' @param refList. A list where the first index is a data.frame to use for modeling, and the second is the formula for modeling.
-#'
-#' @return A linear model
-
-#' @export
-#'
-#'
 individualZIGLMM <- function(x) {
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
@@ -203,11 +221,32 @@ individualZIGLMM <- function(x) {
 }
 
 
-## Code for testing out formulas on the data. Runs a given formula on a subset of the data, and returns the model results.
-## This is meant to help during the model selection process.
-
-# example: pilotZIGLMM(STM, 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), ~ 0, verbose = TRUE )
-
+#' @title Execute a pilot run of model on a subset of data
+#'
+#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
+#'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
+#'
+#' @param TSAM_Object A SummarizedExperiment object generated from
+#'   getSampleTileMatrix, chromVAR, or other.
+#' @param continuousFormula The formula, see \code{\link[glmmTMB]{glmmTMB}}.
+#'   Combined fixed and random effects formula, following lme4 syntax.
+#' @param ziformula The zero-inflated formula, see
+#'   \code{\link[glmmTMB]{glmmTMB}}. a one-sided (i.e., no response variable)
+#'   formula for zero-inflation combining fixed and random effects: the default
+#'   ~0 specifies no zero-inflation. Specifying ~. sets the zero-inflation
+#'   formula identical to the right-hand side of formula (i.e., the conditional
+#'   effects formula); terms can also be added or subtracted. When using ~. as
+#'   the zero-inflation formula in models where the conditional effects formula
+#'   contains an offset term, the offset term will automatically be dropped. The
+#'   zero-inflation model uses a logit link.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param pilotIndices A vector of integers defining the subset of
+#'   the ExperimentObj matrix. Default is 1:10.
+#'
+#' @return modelList a list of outputs from glmmTMB::glmmTMB
+#'
+#'
+#' @export
 pilotZIGLMM <- function(TSAM_Object,
                         cellTypeName = NULL,
                         continuousFormula = NULL,

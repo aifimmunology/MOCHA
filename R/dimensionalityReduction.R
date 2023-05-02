@@ -13,7 +13,7 @@
 #'
 #' @return SEObj a SummarizedExperiment containing PC components from dimensionality reduction and metadata from the SampleTileObj
 #' 
-#' @ref LSI method adapted from Andrew Hill: http://andrewjohnhill.com/blog/2019/05/06/dimensionality-reduction-for-scatac-data/  
+#' @references LSI method adapted from Andrew Hill: http://andrewjohnhill.com/blog/2019/05/06/dimensionality-reduction-for-scatac-data/  
 #'
 #' @examples
 #' \dontrun{
