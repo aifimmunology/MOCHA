@@ -1,5 +1,5 @@
 ---
-title: "Importing-From-Other-Sources"
+title: "Importing From Other Sources"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Importing-From-Other-Sources}
@@ -14,8 +14,6 @@ knitr::opts_chunk$set(
   eval = FALSE
 )
 ```
-
-# Importing from other sources
 
 MOCHA is intended for use after clustering and cell labeling, since all functions of MOCHA operate on per-sample basis within each cell population. MOCHA can be used with an ArchR Project as input, as well as with a generic input. This tutorial has two sections: demonstrating MOCHA with generic inputs - [Importing from Signac](#signac) and [Importing from SnapATAC](#snapatac).
 
@@ -144,8 +142,12 @@ fragObj <- Fragments(pbmc)
 Signac's training dataset only has one sample, so to simulate multiple samples, we will duplicate the data here. ***This should not be necessary with a large dataset.***
 
 ```{r}
-full_pbmc <- merge(pbmc, y = c(pbmc, pbmc), add.cell.ids = c('Sample1', 'Sample2', 'Sample3'),
-                   project = 'DuplicateData') 
+full_pbmc <- merge(
+  pbmc, 
+  y = c(pbmc, pbmc), 
+  add.cell.ids = c('Sample1', 'Sample2', 'Sample3'),
+  project = 'DuplicateData'
+) 
 ```
 
 For a larger dataset, you would interact over the fragObj list and extract each fragments.tsv.gz file.
@@ -156,20 +158,19 @@ More importantly, you do need to modify the barcode in the fragment file so it m
 
 ```{r}
 fragList <- parallel::mclapply(1:3, function(x){
-    
-        frags <- read.table(GetFragmentData(fragObj[[1]]))
-        names(frags) <- c('chr', 'start', 'end', 'barcode', 'val')
-        frags$barcode <- paste("Sample",x,"_", frags$barcode, sep ='')
-        frags
-    }, mc.cores = 3)
+    frags <- read.table(GetFragmentData(fragObj[[1]]))
+    names(frags) <- c('chr', 'start', 'end', 'barcode', 'val')
+    frags$barcode <- paste("Sample",x,"_", frags$barcode, sep ='')
+    frags
+}, mc.cores = 3)
 names(fragList) <- c('Sample1', 'Sample2', 'Sample3')
 ```
 
 ### Format metadata and fragments for MOCHA
 
-Generate your sample/cell type list by finding all combinations of Samples and Cell Populatoins
+Generate your sample/cell type list by finding all combinations of Samples and Cell Populations
 
-Here we must also rename the GRangesList to have names in the format `Sample#CellPopulation`.
+Here we must also rename the GRangesList to have names in the format `CellPopulation#Sample`.
 
 ```{r}
 celltype_sample_list <- apply(expand.grid(unique(pbmc@meta.data$predicted.id), names(fragList)), 1, paste, collapse = "#")
@@ -178,16 +179,15 @@ fullMeta <- full_pbmc@meta.data
 fullMeta$Sample = gsub("_.*","", rownames(full_pbmc@meta.data))
 fullMeta$CellBarcode = gsub(".*_","", rownames(full_pbmc@meta.data))
 
-# Reprocess the Sample_CellPopulation format to Sample#CellPopulation
+# Change the CellPopulation_Sample format to CellPopulation#Sample for MOCHA
 rownames(fullMeta) <- gsub("_","#", rownames(fullMeta))
 CellType_GRanges <- pbapply::pblapply(cl = 30, celltype_sample_list, function(x){
-    
-    celltype = gsub("#.*","", x)
-    sample = gsub(".*#","", x)
-    sortedMeta <- dplyr::filter(fullMeta, predicted.id == celltype, Sample == sample)
-    sortedFrags <- dplyr::filter(fragList[[sample]], barcode %in% rownames(sortedMeta))
-    makeGRangesFromDataFrame(sortedFrags, keep.extra.columns = TRUE)
-    })
+  celltype <- gsub("#.*","", x)
+  sample <- gsub(".*#","", x)
+  sortedMeta <- dplyr::filter(fullMeta, predicted.id == celltype, Sample == sample)
+  sortedFrags <- dplyr::filter(fragList[[sample]], barcode %in% rownames(sortedMeta))
+  makeGRangesFromDataFrame(sortedFrags, keep.extra.columns = TRUE)
+})
 
 names(CellType_GRanges) <- celltype_sample_list
 ```
@@ -444,11 +444,12 @@ Now we have a Snap object with metadata containing barcodes, unique cell ids (co
 
 > Note: Following the tutorial from SnapATAC can often result in a segfault when extracting fragments with `SnapATAC::extractReads`. We recommend running on a machine with large RAM and avoiding parallelization.
 
-Next we extract reads by sample and cell population, ensuring our final GRanges list is named following the pattern `Sample#CellPopulation`.
+Next we extract reads by sample and cell population, ensuring our final GRanges list is named following the pattern `CellPopulation#Sample`.
 
 ```{r}
 snapMetadata <- read.csv("./snapMetadataforMOCHA.csv")
-cellCol <- "cell_id"
+cellCol <- "barcode"
+cellPopLabel <- "cluster"
 cellPopulations <- unique(snapMetadata$cluster)
 allSamples <- unique(snapMetadata$Sample)
 
@@ -463,9 +464,9 @@ fragmentsGRangesList <- unlist(lapply(allSamples, function(sample){
     files <- snapMetadata[cellPopIdx,]$files
     
     # Extract fragments
-    cellPopFrags <- repGR #SnapATAC::extractReads(cellPopBarcodes, files, do.par = FALSE)
+    cellPopFrags <- SnapATAC::extractReads(cellPopBarcodes, files, do.par = FALSE)
   })
-  names(barcodesList) <- paste(sample, cellPopulations, sep="#")
+  names(barcodesList) <- paste(cellPopulations, sample, sep="#")
   barcodesList
 }))
 ```
@@ -489,7 +490,7 @@ tileResults <- MOCHA::callOpenTiles(
   cellColData = snapMetadata, 
   blackList = black_list.gr, 
   genome = "BSgenome.Hsapiens.UCSC.hg38",
-  cellPopLabel = 'predicted.id',
+  cellPopLabel = cellPopLabel,
   cellPopulations = cellPopulations,
   studySignal = studySignal,
   cellCol = cellCol,
