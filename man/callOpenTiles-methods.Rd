@@ -18,6 +18,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  cellCol = "RG",
   TxDb,
   OrgDb,
   outDir,
@@ -35,6 +36,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  cellCol = "RG",
   TxDb,
   OrgDb,
   outDir,
@@ -51,6 +53,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  cellCol = "RG",
   TxDb,
   OrgDb,
   outDir,
@@ -74,10 +77,13 @@ callOpenTiles(
 )
 }
 \arguments{
-\item{ATACFragments}{an ArchR Project, or a GRangesList of fragments}
+\item{ATACFragments}{an ArchR Project, or a GRangesList of fragments. Each
+GRanges in the GRanges list must have unique cell IDs in the column given
+by 'cellCol'.}
 
-\item{cellColData}{A DataFrame containing cell-level metadata and a 'Sample' 
-column}
+\item{cellColData}{A DataFrame containing cell-level metadata. This must 
+contain both a column 'Sample' with unique sample IDs and the column 
+specified by 'cellPopLabel'.}
 
 \item{blackList}{A GRanges of blacklisted regions}
 
