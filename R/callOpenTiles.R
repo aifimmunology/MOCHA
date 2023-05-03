@@ -196,6 +196,17 @@ setGeneric(
     sample <- unlist(stringr::str_split(x, "#"))[2]
     unlist(stringr::str_split(sample, "__"))[1]
   })
+  # Verify that cell populations and samples in ATACFragments names match those
+  # in cellPopData
+  if (!all(cellPopList %in% cellColData[[cellPopLabel]])){
+    stop("Cell populations in names of ATACFragments do not match those in cellPopData.",
+         " Names of ATACFragments must be in format `CellPopulation#Sample`")
+  }
+  if (!all(sampleList %in% cellColData[["Sample"]])){
+    stop("Sample names in names of ATACFragments do not match those in cellPopData.", 
+         " Names of ATACFragments must be in format `CellPopulation#Sample`")
+  }
+  
   nFragsList <- sapply(ATACFragments, function(x) {
     length(x)
   })
@@ -432,7 +443,10 @@ setMethod(
         verbose = verbose
       )
     } else {
-      frags <- ATACFragments[grep(cellPop, names(ATACFragments))]
+      cellPopList <- sapply(names(ATACFragments), function(x) {
+        unlist(stringr::str_split(x, "#"))[1]
+      })
+      frags <- ATACFragments[which(cellPop == cellPopList)]
       if (length(frags) == 0) {
         stop(
           "Provided ATACFragments does not contain any sample fragments ",
@@ -484,7 +498,7 @@ setMethod(
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
     tilesGRangesList <- pbapply::pblapply(
-      cl = NULL,#cl,
+      cl = cl,
       X = iterList,
       FUN = simplifiedTilesBySample
     )
@@ -531,6 +545,7 @@ setMethod(
         numCells = 0, Prediction = 0, PredictionStrength = 0, peak = FALSE
       )
     }
+    
     # Package rangeList into a RaggedExperiment
     ragExp <- RaggedExperiment::RaggedExperiment(
       tilesGRangesList
