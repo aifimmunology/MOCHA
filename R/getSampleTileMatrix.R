@@ -103,6 +103,13 @@ getSampleTileMatrix <- function(tileResults,
   tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
   names(tilesByCellPop) <- names(subTileResults)
   
+  if (any(is.na(tilesByCellPop))) {
+    stop(
+      "No consensus tiles could be calculated - there may be no peaks called",
+      " in the given TileResults."
+    )
+  }
+  
   rm(iterList)
   errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
   names(errorMessages) <- names(subTileResults)
@@ -128,7 +135,6 @@ getSampleTileMatrix <- function(tileResults,
   iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
     list(MultiAssayExperiment::experiments(subTileResults)[[x]], allTiles)
   })
-
 
   sampleTileIntensityMatList <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedSampleTile)
   names(sampleTileIntensityMatList) <- names(subTileResults)
