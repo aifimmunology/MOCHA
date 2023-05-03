@@ -8,6 +8,7 @@
 #'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only
 #'   one assay, or only the first assay will be used for the model.
 #'   Data should not be zero-inflated.
+#' @param assayName The name of the assay to model within the SummarizedExperiment. 
 #' @param modelFormula The formula to use with lmerTest::lmer, in the
 #'   format (exp ~ factors). All factors must be found in column names
 #'   of the ExperimentObj metadata. modelFormula must start with 'exp' as the response.
@@ -32,14 +33,19 @@
 #'
 #' @export
 runLMEM <- function(ExperimentObj,
+                    assayName = NULL,
                     modelFormula = NULL,
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 1) {
   Sample <- NULL
   
+  if(names(SummarizedExperiment::assays(ExperimentObj)) != assays){
+    stop('ExperimentObj does not contain an assay that matches the assayName input variable.')
+  }
+
   modelingData <- as.data.frame(
-    SummarizedExperiment::assays(ExperimentObj)[[1]]
+    SummarizedExperiment::assays(ExperimentObj)[[assayName]]
   )
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
   
