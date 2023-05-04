@@ -26,7 +26,7 @@ if (
     ))
 
     # data.table
-    tpeaksDT <- getAltTSS(
+    tpeaksDT <- MOCHA::getAltTSS(
       completeDAPs = testPeakDT,
       returnAllTSS = FALSE,
       nuancedTSS = FALSE,
@@ -37,7 +37,7 @@ if (
     )
 
     # data.frame
-    tpeaksDF <- getAltTSS(
+    tpeaksDF <- MOCHA::getAltTSS(
       completeDAPs = testPeakDF,
       returnAllTSS = FALSE,
       nuancedTSS = FALSE,
@@ -48,7 +48,7 @@ if (
     )
 
     # GRanges
-    tpeaksGR <- getAltTSS(
+    tpeaksGR <- MOCHA::getAltTSS(
       completeDAPs = testPeakGR,
       returnAllTSS = FALSE,
       nuancedTSS = FALSE,
@@ -75,7 +75,7 @@ if (
     set.seed(2023)
     testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDT), replace=TRUE)
 
-    tpeaks <- getAltTSS(
+    tpeaks <- MOCHA::getAltTSS(
       completeDAPs = testPeakDT,
       returnAllTSS = TRUE,
       nuancedTSS = FALSE,
@@ -98,7 +98,7 @@ if (
     set.seed(2023)
     testPeakDT$Log2FC_C <- sample(seq(-4, 4, .1), nrow(testPeakDT), replace=TRUE)
 
-    tpeaksDT <- getAltTSS(
+    tpeaksDT <- MOCHA::getAltTSS(
       completeDAPs = testPeakDT,
       returnAllTSS = FALSE,
       nuancedTSS = TRUE,

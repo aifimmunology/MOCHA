@@ -30,9 +30,8 @@ test_that("bulkDimReduction works on a 3 sample test dataset", {
   )
   
   capture.output(
-    UMAPvalues <- MOCHA::bulkUMAP(LSIObj, components = c(1:2), n_neighbors=4)
+    UMAPvalues <- MOCHA::bulkUMAP(LSIObj, components = c(1:2), nNeighbors=4)
   )
-  
   
   expect_snapshot(
     LSIObj

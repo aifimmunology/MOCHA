@@ -2,7 +2,7 @@ if (requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
   
   test_that("getCoverage works on a 1 sample test dataset", {
     capture.output(
-      covFiles <- getCoverage(
+      covFiles <- MOCHA::getCoverage(
         popFrags = MOCHA::exampleFragments,
         normFactor = c(1,1),
         filterEmpty = FALSE,
@@ -14,7 +14,7 @@ if (requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
   
   test_that("getCoverage works on a 1 sample test dataset with filterEmpty=TRUE", {
     capture.output(
-      covFiles <- getCoverage(
+      covFiles <- MOCHA::getCoverage(
         popFrags = MOCHA::exampleFragments,
         normFactor = c(1,1),
         filterEmpty = TRUE,
@@ -26,7 +26,7 @@ if (requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
   
   test_that("getSpecificCoverage works on a 1 sample test dataset", {
     capture.output(
-      covFiles <- getCoverage(
+      covFiles <- MOCHA::getCoverage(
         popFrags = MOCHA::exampleFragments,
         normFactor = c(1,1),
         filterEmpty = TRUE,
