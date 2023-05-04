@@ -89,6 +89,7 @@ Suggests:
     withr,
     knitr,
     rmarkdown,
+    chromVAR,
     testthat (>= 3.0.0)
 Additional_repositories: https://imran-aifi.github.io/drat
 biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization

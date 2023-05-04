@@ -35,6 +35,11 @@ the normal Spearman.}
 
 \item{backNumber}{number of background pairs. Default is 1000.}
 
+\item{calcPValue}{Boolean, if TRUE calculate p-values. Default is TRUE.}
+
+\item{returnBackGround}{Boolean, if TRUE return the background correlations
+as well as foreground. Default is FALSE.}
+
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{

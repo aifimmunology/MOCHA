@@ -6,7 +6,7 @@
 \usage{
 pilotZIGLMM(
   TSAM_Object,
-  cellTypeName = NULL,
+  cellPopulation = NULL,
   continuousFormula = NULL,
   ziformula = NULL,
   verbose = FALSE,
@@ -16,6 +16,9 @@ pilotZIGLMM(
 \arguments{
 \item{TSAM_Object}{A SummarizedExperiment object generated from
 getSampleTileMatrix, chromVAR, or other.}
+
+\item{cellPopulation}{A single cell population on which to run this pilot 
+model}
 
 \item{continuousFormula}{The formula, see \code{\link[glmmTMB]{glmmTMB}}.
 Combined fixed and random effects formula, following lme4 syntax.}

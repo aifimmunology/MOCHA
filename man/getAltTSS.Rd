@@ -2,7 +2,7 @@
 % Please edit documentation in R/getAltTSS.R
 \name{getAltTSS}
 \alias{getAltTSS}
-\title{\code{getAltTSS} Annotate Peaks falling in Transcription Start Sites
+\title{Annotate Peaks falling in Transcription Start Sites
   (TSS) and identify alternatively regulated TSSs for each gene.}
 \usage{
 getAltTSS(
@@ -11,8 +11,8 @@ getAltTSS(
   nuancedTSS = TRUE,
   nuancedTSSGap = 150,
   threshold = 0.2,
-  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-  Org = org.Hs.eg.db
+  TxDb,
+  OrgDb
 )
 }
 \arguments{

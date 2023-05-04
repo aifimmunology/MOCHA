@@ -7,7 +7,7 @@
 \usage{
 runZIGLMM(
   TSAM_Object,
-  cellTypeName = NULL,
+  cellPopulation = NULL,
   continuousFormula = NULL,
   ziformula = NULL,
   initialSampling = 5,
@@ -20,6 +20,8 @@ runZIGLMM(
 getSampleTileMatrix, chromVAR, or other. It is expected to contain only one
 assay, or only the first assay will be used for the model. Data should not
 be zero-inflated.}
+
+\item{cellPopulation}{A single cell population on which to run this model}
 
 \item{continuousFormula}{The formula, see \code{\link[glmmTMB]{glmmTMB}}.
 Combined fixed and random effects formula, following lme4 syntax.}
