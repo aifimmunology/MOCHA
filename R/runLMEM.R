@@ -214,13 +214,14 @@ individualLMEM <- function(x) {
 #'
 #' @param ExperimentObj A SummarizedExperiment object generated from
 #'   getSampleTileMatrix, chromVAR, or other.
+#' @param cellPopulation A single cell population on which to run this pilot 
+#'   model
 #' @param modelFormula The formula to use with lmerTest::lmer, in the
 #'   format (exp ~ factors). All factors must be found in column names
 #'   of the ExperimentObj metadata.
 #' @param pilotIndices A vector of integers defining the subset of
 #'   the ExperimentObj matrix. Default is 1:10.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param numCores integer. Number of cores to parallelize across.
 #'
 #' @return modelList a list of outputs from lmerTest::lmer
 #'

@@ -47,7 +47,7 @@ getAltTSS <- function(completeDAPs,
                       nuancedTSSGap = 150,
                       threshold = 0.2,
                       TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-                      Org = org.Hs.eg.db) {
+                      OrgDb = org.Hs.eg.db) {
   . <- exactTSS <- name <- FDR <- Log2FC_C <- strand <- seqnames <- NULL
 
   if (grepl("data.table|data.frame", class(completeDAPs)[1])) {
@@ -76,7 +76,7 @@ getAltTSS <- function(completeDAPs,
 
   tss1 <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ("gene")))
 
-  names(tss1) <- AnnotationDbi::mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
+  names(tss1) <- AnnotationDbi::mapIds(OrgDb, names(tss1), "SYMBOL", "ENTREZID")
 
   allT <- suppressWarnings(IRanges::stack(tss1) %>%
     GenomicRanges::trim(.) %>%

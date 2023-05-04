@@ -12,6 +12,8 @@
 #'   to test (second tile in each pair)
 #' @param backNumber number of ChromVAR-matched background pairs. Default is
 #'   1000.
+#' @param returnBackGround Boolean, if TRUE return the background correlations
+#'   as well as foreground. Default is FALSE.
 #' @param highMem Boolean to control memory usage. Default is FALSE. Only set
 #'   highMem to TRUE if you have plenty of memory and want to run this function
 #'   faster.s
@@ -177,7 +179,6 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
 
       gc()
 
-      # backGround <- append(backGround, tmp_background)
       backGround <- append(backGround, list(tmp_background))
     }
   }
@@ -223,6 +224,9 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
 #' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs
 #'   to test (second tile in each pair)
 #' @param backNumber number of background pairs. Default is 1000.
+#' @param calcPValue Boolean, if TRUE calculate p-values. Default is TRUE.
+#' @param returnBackGround Boolean, if TRUE return the background correlations
+#'   as well as foreground. Default is FALSE.
 #' @param numCores Optional, the number of cores to use with multiprocessing.
 #'   Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -342,7 +346,6 @@ testCoAccessibilityRandom <- function(SampleTileObj,
 
   ## Now we need to test the background set
 
-  if(calcPValue)
   if (verbose) {
     message("Identifying background correlations.")
   }
@@ -360,7 +363,6 @@ testCoAccessibilityRandom <- function(SampleTileObj,
   rm(fullObj)
 
   if(calcPValue){
-  
 
     if (verbose) {
       message("Generating p-values.")

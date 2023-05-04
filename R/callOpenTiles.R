@@ -30,6 +30,8 @@
 #'   not set, this will be calculated using the input ArchR project but relies 
 #'   on the assumption that the ArchR project encompasses your whole study (i.e. 
 #'   is not a subset).
+#' @param cellCol The column in cellColData specifying unique cell ids or 
+#'   barcodes. Default is "RG", the unique cell identifier used by ArchR.
 #' @param TxDb The exact package name of a TxDb-class transcript annotation 
 #'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
 #'   must be installed. See 

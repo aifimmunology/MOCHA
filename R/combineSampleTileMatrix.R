@@ -8,7 +8,7 @@
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
-#' @param NAToZero Set NA values in the sample-tile matrix to zero
+#' @param NAtoZero Set NA values in the sample-tile matrix to zero
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @return TileCorr A data.table correlation matrix
 #'
