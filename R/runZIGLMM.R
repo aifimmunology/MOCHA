@@ -46,6 +46,8 @@ runZIGLMM <- function(TSAM_Object,
                       initialSampling = 5,
                       verbose = FALSE,
                       numCores = 1) {
+  Sample <- NULL
+  
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }
@@ -135,14 +137,27 @@ runZIGLMM <- function(TSAM_Object,
 
   # Make your clusters for efficient parallelization
   cl <- parallel::makeCluster(numCores)
+  iterList <- lapply(rownames(modelingData), function(x){
+    list(x, continuousFormula, ziformula, modelingData, MetaDF, nullDF)
+  })
   parallel::clusterEvalQ(cl, {
     library(glmmTMB)
   })
   parallel::clusterExport(
-    cl = cl, varlist = c("continuousFormula", "ziformula", "modelingData", "MetaDF", "individualZIGLMM", "nullDF"),
+    cl = cl, varlist = c(
+      iterList
+      # "continuousFormula", 
+      # "ziformula", 
+      # "modelingData", 
+      # "MetaDF", "individualZIGLMM", "nullDF"
+    ),
     envir = environment()
   )
-  coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
+  coeffList <- pbapply::pblapply(
+    cl = cl, 
+    X = iterList, 
+    individualZIGLMM
+  )
   parallel::stopCluster(cl)
 
   output_list <- lapply(list("cond", "zi"), function(varType) {
@@ -197,8 +212,25 @@ extractVariable <- function(varDF, variable) {
   }
 }
 
-
-individualZIGLMM <- function(x) {
+#' @title Internal function to run linear modeling
+#'
+#' @description \code{IndividualLMEM} Runs linear modeling
+#'   with lmerTest::lmer
+#' @param iterList A list where the first index is a data.frame
+#'   to use for modeling, and the second is the formula for modeling.
+#'   list(x, continuousFormula, ziformula, modelingData, MetaDF, nullDF)
+#' 
+#' @return output_vector A linear model
+#'
+#' @noRd
+individualZIGLMM <- function(iterList) {
+  x <- iterList[[1]]
+  continuousFormula <- iterList[[2]]
+  ziformula <- iterList[[3]]
+  modelingData <- iterList[[4]]
+  MetaDF <- iterList[[5]]
+  nullDF <- iterList[[6]]
+  
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
     MetaDF, stringsAsFactors = FALSE
@@ -256,6 +288,8 @@ pilotZIGLMM <- function(TSAM_Object,
                         ziformula = NULL,
                         verbose = FALSE,
                         pilotIndices = 1:10) {
+  Sample <- NULL
+  
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }

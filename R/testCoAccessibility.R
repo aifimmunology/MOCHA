@@ -39,6 +39,10 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
                                         highMem = FALSE,
                                         verbose = TRUE) {
   . <- NULL
+  
+  if (!requireNamespace("chromVAR", quietly = TRUE)) {
+    stop("The chromVAR package must be installed to use this functionality")
+  }
 
   if (length(tile1) != length(tile2)) {
     stop("tile1 and tile2 must be the same length.")

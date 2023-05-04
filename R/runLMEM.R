@@ -43,7 +43,7 @@ runLMEM <- function(ExperimentObj,
   )
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
   
-  if (!is(modelFormula, "formula")){
+  if (!methods::is(modelFormula, "formula")){
     stop("modelFormula is not a formula. modelFormula must be a formula in the format ",
         "(exp ~ factors)")   
   }
@@ -117,10 +117,14 @@ runLMEM <- function(ExperimentObj,
   }
 
   cl <- parallel::makeCluster(numCores)
+  iterList <- lapply(rownames(modelingData), function(x){
+    list(x, modelFormula, modelingData, MetaDF, nullDF)
+  })
   parallel::clusterExport(
     cl = cl, varlist = c(
-      "modelFormula", "modelingData",
-      "MetaDF", "individualLMEM", "nullDF" 
+      iterList
+      # "modelFormula", "modelingData",
+      # "MetaDF", "individualLMEM", "nullDF" 
     ),
     envir = environment()
   )
@@ -129,7 +133,7 @@ runLMEM <- function(ExperimentObj,
   })
   coeffList <- pbapply::pblapply(
     cl = cl,
-    X = rownames(modelingData),
+    X = iterList,
     individualLMEM
   )
   parallel::stopCluster(cl)
@@ -183,13 +187,21 @@ runLMEM <- function(ExperimentObj,
 #' @title Internal function to run linear modeling
 #'
 #' @description \code{IndividualLMEM} Runs linear modeling
-#'   on data provided. Written for efficient parallelization.
-#' @param refList. A list where the first index is a data.frame
+#'   with lmerTest::lmer
+#' @param iterList A list where the first index is a data.frame
 #'   to use for modeling, and the second is the formula for modeling.
-#' @return A linear model
+#'   list(x, modelFormula, modelingData, MetaDF, nullDF)
+#' 
+#' @return output_vector A linear model
 #'
 #' @noRd
-individualLMEM <- function(x) {
+individualLMEM <- function(iterList) {
+  x <- iterList[[1]]
+  modelFormula <- iterList[[2]]
+  modelingData <- iterList[[3]]
+  MetaDF <- iterList[[4]]
+  nullDF <- iterList[[5]]
+  
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
     MetaDF, stringsAsFactors = FALSE
@@ -232,6 +244,7 @@ pilotLMEM <- function(ExperimentObj,
                       modelFormula = NULL,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
+  Sample <- NULL
   if (length(cellPopulation) > 1) {
     stop(
       "More than one cell population was provided. ",
@@ -253,7 +266,7 @@ pilotLMEM <- function(ExperimentObj,
   )
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
   
-  if (!is(modelFormula, "formula")){
+  if (!methods::is(modelFormula, "formula")){
     stop("modelFormula is not a formula. modelFormula must be a formula in the format ",
         "(exp ~ factors)")   
   }

@@ -54,7 +54,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
         {svd <- irlba::irlba(tfidf, componentNumber, componentNumber)},
         error=function(cond){
           message(cond)
-          error("Columns containing all NAs may be present in SampleTileObj")
+          stop("Columns containing all NAs may be present in SampleTileObj")
         }
       )
       svdDiag <- matrix(0, nrow=componentNumber, ncol=componentNumber)
@@ -78,7 +78,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
         {pca <- irlba::prcomp_irlba(countMat, componentNumber)},
         error=function(cond){
           message(cond)
-          error("Columns containing all NAs may be present in SampleTileObj")
+          stop("Columns containing all NAs may be present in SampleTileObj")
         }
       )
 

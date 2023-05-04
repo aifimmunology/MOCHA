@@ -130,7 +130,7 @@ setGeneric(
                                    numCores = 30,
                                    verbose = FALSE,
                                    force = FALSE) {
-  
+  Sample <- seqnames <- NULL
   # Load Genome
   genome <- BSgenome::getBSgenome(genome)
   
@@ -175,7 +175,7 @@ setGeneric(
   beforeLengths <- lengths(ATACFragments)
   ATACFragments <- lapply(ATACFragments, function(x){
         
-            plyranges::filter(x, seqnames %in% seqnames(genome))
+            plyranges::filter(x, seqnames %in% GenomeInfoDb::seqnames(genome))
         
   })
   names(ATACFragments) <- allnames
@@ -273,7 +273,7 @@ setMethod(
                                  numCores = 30,
                                  verbose = FALSE,
                                  force = FALSE) {
-  
+  Sample <- nFrags <- NULL
   # Load Genome
   genome <- ArchR::validBSgenome(ArchR::getGenome(ATACFragments))
   
@@ -555,7 +555,7 @@ setMethod(
     metadata = list(
       "CellCounts" = allCellCounts,
       "FragmentCounts" = allFragmentCounts,
-      "Genome" = metadata(genome)$genome,
+      "Genome" = S4Vectors::metadata(genome)$genome,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
       "Directory" = outDir

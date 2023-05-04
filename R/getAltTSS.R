@@ -1,4 +1,4 @@
-#' @title \code{getAltTSS} Annotate Peaks falling in Transcription Start Sites
+#' @title Annotate Peaks falling in Transcription Start Sites
 #'   (TSS) and identify alternatively regulated TSSs for each gene.
 #'
 #' @description \code{getAltTSS} Pulls out all peaks that fall in TSS,
@@ -46,8 +46,8 @@ getAltTSS <- function(completeDAPs,
                       nuancedTSS = TRUE,
                       nuancedTSSGap = 150,
                       threshold = 0.2,
-                      TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-                      OrgDb = org.Hs.eg.db) {
+                      TxDb,
+                      OrgDb) {
   . <- exactTSS <- name <- FDR <- Log2FC_C <- strand <- seqnames <- NULL
 
   if (grepl("data.table|data.frame", class(completeDAPs)[1])) {
@@ -81,7 +81,7 @@ getAltTSS <- function(completeDAPs,
   allT <- suppressWarnings(IRanges::stack(tss1) %>%
     GenomicRanges::trim(.) %>%
     GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
-    plyranges::mutate(exactTSS = start(.)) %>%
+    plyranges::mutate(exactTSS = IRanges::start(.)) %>%
     plyranges::filter(!duplicated(exactTSS)) %>%
     plyranges::anchor_3p(.) %>%
     plyranges::stretch(., extend = 125) %>%

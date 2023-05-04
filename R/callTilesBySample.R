@@ -112,9 +112,6 @@ callTilesBySample <- function(blackList,
 #'   population passed on in the cell subsets argument. Each peak call is
 #'   returned as as Genomic Ranges object.
 #'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
 #'
 #' @noRd
 #'
@@ -122,7 +119,7 @@ callTilesBySample <- function(blackList,
 
 simplifiedTilesBySample <- function(x){
   
-  MOCHA:::callTilesBySample(
+  callTilesBySample(
           blackList =  x[[1]],
           returnAllTiles = TRUE,
           totalFrags = length(x[[2]]),

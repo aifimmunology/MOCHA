@@ -173,7 +173,7 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
 #' @noRd
 getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   
-  if (!is(dbName, "character")){
+  if (!methods::is(dbName, "character")){
     stop("dbName must be a character string. ",
          "Please provide TxDb or OrgDb as a string.")
   }
@@ -194,7 +194,7 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   
   db <- try(get(dbName, envir=pkgenvir, inherits=FALSE), silent=TRUE)
   
-  if (!is(db, type))
+  if (!methods::is(db, type))
     stop(dbName, " doesn't look like a valid ", type, " data package")
   db
 }

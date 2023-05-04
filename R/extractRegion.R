@@ -228,6 +228,7 @@ averageBPCoverage <- function(iterList){
 
 # Subsets and bins coverage for a given region across samples
 subsetBinCoverage <- function(iterList){
+  idx <- score <- NULL
 
     binnedData <- iterList[[1]]
     subList <- iterList[[2]]
