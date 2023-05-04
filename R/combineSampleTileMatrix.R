@@ -71,6 +71,7 @@ combinePseudobulkSE <- function(SummarizedExp,
     cellCounts <- dplyr::mutate(cellCounts,
         Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__")))
     cellCounts <- dplyr::select(cellCounts, Sample, Freq)
+    colnames(cellCounts) <- c('Sample','CellCounts')
 
   }
 
