@@ -111,8 +111,9 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
 #' @param components A vector of integers. Number of components to include in LSI (1:30 typically).
 #' @param seed an integer. Represents the seed to pass to the umap. 
 #' @param returnModel A boolean. Default is FALSE. If set to true, it will return a list, where the first is the UMAP coordinates with metadata for plotting, and the second is the full UMAP model so further projection can occur. 
-#' @param n_neighbors See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
+#' @param nNeighbors See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
 #'           neighboring sample points) used for manifold approximation. Default is 15.
+#' @param ... Additional arguments to be passed to \link[uwot]{umap}.
 #' 
 #' @return fullUMAP data.frame of UMAP values with metadata attached. 
 #' 
@@ -125,9 +126,10 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
 bulkUMAP <- function(SEObj, 
                      assay = 'LSI', 
                      components = c(1:30), 
-                     n_neighbors = 15, 
+                     nNeighbors = 15, 
                      returnModel = FALSE, 
-                     seed = 1
+                     seed = 1,
+                     ...
                      ){
 
     set.seed(seed)
@@ -144,7 +146,7 @@ bulkUMAP <- function(SEObj,
     
     if(!returnModel){
       subUMAP <- as.data.frame(
-      uwot::umap(countMat[,components], n_neighbors=n_neighbors, batch = TRUE, ...)
+      uwot::umap(countMat[,components], n_neighbors=nNeighbors, batch = TRUE, ...)
       )
 
       colnames(subUMAP) <- c('UMAP1', 'UMAP2')
@@ -159,7 +161,7 @@ bulkUMAP <- function(SEObj,
       return(fullUMAP)
     }else{
 
-      umapOut <- uwot::umap(countMat[,components], n_neighbors=n_neighbors, ret_model = TRUE, batch = TRUE, ...)
+      umapOut <- uwot::umap(countMat[,components], n_neighbors=nNeighbors, ret_model = TRUE, batch = TRUE, ...)
       subUMAP <- as.data.frame(umapOut$embedding)
       colnames(subUMAP) <- c('UMAP1', 'UMAP2')
       subUMAP$Sample <- rownames(subUMAP)
