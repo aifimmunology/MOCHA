@@ -206,7 +206,7 @@ if (
         cellPopulations = c("C2", "C5"),
         numCores = 1
       ),
-      regexp = "cellColData must contain column cellPopLabel"
+      regexp = "cellColData must contain column 'cellPopLabel'"
     )
   })
   
