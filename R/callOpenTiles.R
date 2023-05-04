@@ -317,23 +317,6 @@ setMethod(
   rownames(allFragmentCounts) <- allFragmentCounts$Sample
   allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
 
-  if (fast) {
-    warning("The 'fast' option for callOpenTiles is deprecated")
-    tileResults <- .callOpenTilesFast(
-      ATACFragments,
-      cellPopLabel,
-      cellPopulations,
-      TxDb,
-      OrgDb,
-      outDir,
-      numCores,
-      force,
-      studySignal,
-      verbose = verbose
-    )
-    return(tileResults)
-  }
-
   .callOpenTiles(
     ATACFragments,
     allFragmentCounts,
