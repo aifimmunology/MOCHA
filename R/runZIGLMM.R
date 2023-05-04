@@ -5,15 +5,15 @@
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix. 
-#' @param cellTypeName Name of a cell type. Should match up exactly with the assay name within SummarizedExperiment. 
+#' @param cellTypeName Name of a cell type(s), or 'all'. The function will combine the cell types mentioned into one matrix before running the model.
 #' @param continuousFormula The formula for the continuous data that should be used within glmmTMB. It should be in the
 #'   format (exp ~ factors). All factors must be found in column names
-#'   of the TSAM_Object metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.
+#'   of the TSAM_Object metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
 #'   modelFormula must start with 'exp' as the response.
 #'   See \link[glmmTMB]{glmmTMB}.
 #' @param ziformula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
 #'   format ( ~ factors). All factors must be found in column names
-#'   of the TSAM_Object colData metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.
+#'   of the TSAM_Object colData metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
 #' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
@@ -35,7 +35,7 @@
 #' @export
 #' 
 runZIGLMM <- function(TSAM_Object,
-                      cellTypeName = NULL,
+                      cellTypeName = 'all',
                       continuousFormula = NULL,
                       ziformula = NULL,
                       initialSampling = 5,
@@ -47,13 +47,22 @@ runZIGLMM <- function(TSAM_Object,
 
   if (is.null(cellTypeName)) {
     stop("No cell type name was provided.")
-  } else if (length(cellTypeName) > 1) {
-    stop("Please provide only one string within cellTypeName. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellTypeName = 'counts'")
-  } else if (!cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object))) {
-    stop("No cell type name not found within TSAM_Object.")
-  }
+  } else if (all(tolower(cellTypeName) == 'all')) {
 
-  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+    #Merge all together. 
+    newObj <- combineSampleTileMatrix(TSAM_Object)
+
+  } else if (all(cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object)))) {
+
+    #Subset down to just those
+    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+
+  } else {
+  
+    stop("Error around cell type name. Some or all were not found within TSAM_Object.")
+
+  }
+  
   modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
