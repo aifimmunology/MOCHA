@@ -13,7 +13,7 @@
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
-#' @return results a SummarizedExperiment containing LMEM results
+#' @return results a SummarizedExperiment containing results from ZIGLMM (Fixed effect estiamtes, P-values, and Std Error)
 #'
 #'
 #'
@@ -45,7 +45,7 @@ varZIGLMM <- function(TSAM_Object,
     stop("No cell type name not found within TSAM_Object.")
   }
  
-  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', na.rm = TRUE, groupList = cellTypeName, subsetPeaks = TRUE))
   modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
@@ -71,7 +71,6 @@ varZIGLMM <- function(TSAM_Object,
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[, match(colnames(modelingData), MetaDF$Sample)]
-<<<<<<< Updated upstream
 
   # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
@@ -80,8 +79,6 @@ varZIGLMM <- function(TSAM_Object,
     stop("NAs are included in the MetaDF. Please remove them and try again.")
   }
 
-=======
->>>>>>> Stashed changes
 
   #Generate null results.
   if(all(ziRandom != 0)){
@@ -115,20 +112,13 @@ varZIGLMM <- function(TSAM_Object,
 
     cl = NULL
   }
-<<<<<<< Updated upstream
+   
+  browser()
   varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
 
   if(!is.null(cl)){
     parallel::stopCluster(cl)
-=======
-            
-  if (verbose) {
-    message("Calculating variance....")
->>>>>>> Stashed changes
   }
-  
-  varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
-  parallel::stopCluster(cl)
                                     
   results <- do.call('rbind', varDecompList)
   rownames(results) <- rownames(modelingData)
@@ -160,12 +150,27 @@ individualVarZIGLMM <- function(x) {
     
   output_vector <- tryCatch(
     {
-      modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
-        ziformula = as.formula(ziformula),
-        data = df,
-        family = stats::gaussian(),
-        REML = TRUE
-      )
+      if(all(df$exp !=0)){
+        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
+          ziformula = ~ 0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      }else{
+        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
+          ziformula = as.formula(ziformula),
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      }
+
+      if(!modelRes$sdr$pdHess){
+        return(nullDF)
+      }
+
+
       cond_other = unlist(glmmTMB::VarCorr(modelRes)$cond)
       names(cond_other) = paste('Cond', names(cond_other), sep = "_")
       residual = as.vector(attr(glmmTMB::VarCorr(modelRes)$cond, "sc")^2)
@@ -175,12 +180,17 @@ individualVarZIGLMM <- function(x) {
         zi_other = unlist(glmmTMB::VarCorr(modelRes)$zi)
         names(zi_other) = paste('ZI', names(zi_other), sep = "_")
         varcor_df <- c(cond_other, zi_other,residual)
-      }else{
+      }else if(all(df$exp !=0)){
+        subNull = nullDF[grepl('ZI_', names(nullDF))]
+        zi_other = rep(0, length(subNull))
+        names(zi_other) = names(subNull)
+        varcor_df <- c(cond_other, zi_other,residual)
+      }else {
         varcor_df <- c(cond_other, residual)
       }
 
       varDecomp <- varcor_df/sum(varcor_df)
-      varDecomp
+      return(varDecomp)
 
     },
     error = function(e) {
