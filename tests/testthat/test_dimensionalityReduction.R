@@ -12,17 +12,17 @@ test_that("bulkDimReduction works on a 3 sample test dataset", {
   # Spoof data to remove NAs
   c2 <- SummarizedExperiment::assays(SampleTileMatrix)[[1]] 
   set.seed(1)
-  c2[,2] <- runif(dim(c2)[1], min=1100, max=8700)
+  c2[,2] <- stats::runif(dim(c2)[1], min=1100, max=8700)
   set.seed(2)
-  c2[,3] <- runif(dim(c2)[1], min=1100, max=8700)
+  c2[,3] <- stats::runif(dim(c2)[1], min=1100, max=8700)
   SummarizedExperiment::assays(SampleTileMatrix)[[1]] <- c2
   
   # Spoof data to remove NAs
   c3 <- SummarizedExperiment::assays(SampleTileMatrix)[[2]] 
   set.seed(3)
-  c3[,2] <- runif(dim(c3)[1], min=1100, max=8700)
+  c3[,2] <- stats::runif(dim(c3)[1], min=1100, max=8700)
   set.seed(4)
-  c3[,3] <- runif(dim(c3)[1], min=1100, max=8700)
+  c3[,3] <- stats::runif(dim(c3)[1], min=1100, max=8700)
   SummarizedExperiment::assays(SampleTileMatrix)[[2]] <- c3
 
   capture.output(
