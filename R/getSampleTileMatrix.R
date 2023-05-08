@@ -65,6 +65,17 @@ getSampleTileMatrix <- function(tileResults,
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
   }
+  
+  # Validate that tileResults contains called tiles.
+  for (i in seq_along(tileResults)) {
+    peaks <- RaggedExperiment::compactAssay(tileResults[[i]], i = "peak")
+    if (all(is.na(peaks))) {
+      stop(stringr::str_interp(
+        "No peaks identified in cell population '${names(tileResults)[[i]]}'",
+        " in the given TileResults."
+      ))
+    }
+  }
 
   # Any column can be used to group samples
   # Note that these are case-sensitive
@@ -90,7 +101,6 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
 
-
   if (verbose) {
     message(stringr::str_interp("Extracting consensus tile set for each population"))
   }
@@ -102,13 +112,6 @@ getSampleTileMatrix <- function(tileResults,
   cl <- parallel::makeCluster(numCores)
   tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
   names(tilesByCellPop) <- names(subTileResults)
-  
-  if (any(is.na(tilesByCellPop))) {
-    stop(
-      "No consensus tiles could be calculated - there may be no peaks called",
-      " in the given TileResults."
-    )
-  }
   
   rm(iterList)
   errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
