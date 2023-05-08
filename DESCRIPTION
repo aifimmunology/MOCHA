@@ -77,7 +77,14 @@ Imports:
     tidyr,
     ggridges,
     lmerTest,
-    pbapply
+    pbapply,
+    BSgenome,
+    Matrix,
+    glmmTMB,
+    irlba,
+    tidyselect,
+    uwot,
+    purrr
 Suggests: 
     ArchR,
     RMariaDB,
