@@ -35,7 +35,7 @@ if (requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
     )
     regions <- StringsToGRanges(c("chr1:565291-569412", "chr2:243031253-243034339"))
     seqinfo(regions) <- seqinfo(covFiles[[1]])
-    counts <- getSpecificCoverage(
+    counts <- MOCHA:::getSpecificCoverage(
       covFiles, 
       regions, 
       numCores = 1
