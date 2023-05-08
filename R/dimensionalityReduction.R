@@ -86,7 +86,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
       rownames(pc_rotation) <- colnames(countMat)
       loadings <- pca$x
       rownames(loadings) <- rownames(countMat)
-      metadata1 = append(pca[c('scale', 'totalvar', 'sdev', 'center')], fullObj@metadata)
+      metadata1 <- append(pca[c('scale', 'totalvar', 'sdev', 'center')], fullObj@metadata)
 
       assayList1 <- list(t(pc_rotation))
       names(assayList1) = c('PCA')

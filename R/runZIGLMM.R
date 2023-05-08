@@ -215,7 +215,7 @@ extractVariable <- function(varDF, variable) {
 #' @title Internal function to run linear modeling
 #'
 #' @description \code{IndividualLMEM} Runs linear modeling
-#'   with lmerTest::lmer
+#'   with glmmTMB::glmmTMB
 #' @param iterList A list where the first index is a data.frame
 #'   to use for modeling, and the second is the formula for modeling.
 #'   list(x, continuousFormula, ziformula, modelingData, MetaDF, nullDF)
