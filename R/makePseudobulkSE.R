@@ -7,6 +7,11 @@ makePseudobulkSE <- function(SO, cellTypeColumn, sampleColumn,
                                  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, 
                                  OrgDb = org.Hs.eg.db){
 
+    if(c(cellTypeColumn, sampleColumn) %in% colnames(SO@meta.data)){
+
+        stop('Sample or cell type columns are missing from Seurat object. Please verify that the provided column names are correct.')
+
+    }
 
     SO@meta.data$sample_celltype = paste(SO@meta.data[,cellTypeColumn], SO@meta.data[,sampleColumn], sep = '__')
 

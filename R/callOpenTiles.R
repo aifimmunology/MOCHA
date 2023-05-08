@@ -507,7 +507,7 @@ setMethod(
     experiments = experimentList,
     colData = sampleData,
     metadata = list(
-      "CellCounts" = allCellCounts,
+      "CellCounts" = as.data.frame(allCellCounts),
       "FragmentCounts" = allFragmentCounts,
       "Genome" = metadata(genome)$genome,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
