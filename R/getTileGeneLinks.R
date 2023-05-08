@@ -25,6 +25,9 @@
 #'
 #'
 #' @export
+#' 
+#' Thoughts: Test interaction between a region and variable (or direct)
+
 getTileGeneLinks <- function(SampleTileObj,
                           SampleGeneObj,
                           cellPopulation = "All",
