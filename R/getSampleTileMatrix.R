@@ -1,4 +1,3 @@
-@@ -1,46 +1,46 @@
 #' @title \code{getSampleTileMatrix}
 #'
 #' @description \code{getSampleTileMatrix} takes the output of peak calling with
