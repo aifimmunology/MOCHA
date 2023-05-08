@@ -1,13 +1,26 @@
+#' @title \code{makePseudobulkRNA}
+#'
+#' @description \code{makePseuduoulkRNA} pseodubulks a Seurat object by sample and cell type into a SummarizedExperiment, similar to MOCHA
 
-## work flow
-
-
-makePseudobulkSE <- function(SO, cellTypeColumn, sampleColumn, 
+#'
+#' @param SO Seurat Object 
+#' @param cellTypeColumn The column of the Seurat object with cell type information
+#' @param Sample The column of the Seurat object with sample information
+#' @param filterByRowData A boolean flag that determines whether to export a summarizedExperiment with Genomic location for each gene (and thus filter the object to genes that match the database)
+#' @param TxDb Transcript database to be used for identifying gene locations. 
+#' @param OrgDb Organism database to match up gene names and locations.
+#' @return A SummarizedExperiment carrying pseudobulked average expression per 1000 cells for each cell type. 
+#'
+#'
+#' @export
+makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample", 
+                                 dataSlot = 'data',
                                  filterByRowData = TRUE,
-                                 TxDb = TxDb.Hsapiens.UCSC.hg38.refGene, 
-                                 OrgDb = org.Hs.eg.db){
+                                 Seurat_format = 'SYMBOL',
+                                 TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene", 
+                                 OrgDb = "org.Hs.eg.db"){
 
-    if(c(cellTypeColumn, sampleColumn) %in% colnames(SO@meta.data)){
+    if(any(!c(cellTypeColumn, sampleColumn) %in% colnames(SO@meta.data))){
 
         stop('Sample or cell type columns are missing from Seurat object. Please verify that the provided column names are correct.')
 
@@ -15,17 +28,18 @@ makePseudobulkSE <- function(SO, cellTypeColumn, sampleColumn,
 
     SO@meta.data$sample_celltype = paste(SO@meta.data[,cellTypeColumn], SO@meta.data[,sampleColumn], sep = '__')
 
-    mat <- Seurat::AverageExpression(SO, assays = 'RNA', slot = 'counts', group.by = 'sample_celltype', return.seurat = FALSE)
+    mat <- Seurat::AverageExpression(SO, assays = "RNA", slot = dataSlot, group.by = 'sample_celltype', return.seurat = FALSE)
     mat_df <- as.data.frame(mat$RNA)
     colnames(mat_df) <- gsub(" ","_", colnames(mat_df))
     mat_df$AllGenes <- rownames(mat_df)
     ## Clean up isoforms, if any. 
     mat_df$Genes <- gsub("\\.*","", mat_df$AllGenes) 
 
+
     summarizeMat <- dplyr::group_by(mat_df, Genes) 
     summarizeMat <- dplyr::select(summarizeMat, !AllGenes)
     summarizeMat <- dplyr::summarise_all(summarizeMat, mean)
-    newSumMat <- as.data.frame(summarizeMat[,-1])
+    newSumMat <- as.data.frame(summarizeMat[,-1])*1000
     rownames(newSumMat) <- summarizeMat$Genes 
 
     ##Sort sample-level metadata
@@ -48,16 +62,19 @@ makePseudobulkSE <- function(SO, cellTypeColumn, sampleColumn,
 
     fullMeta <- dplyr::group_by_at(as.data.frame(SO@meta.data), c(sampleColumn, cellTypeColumn))
 
-    fullMeta[,percentMito] = as.numeric(unlist(fullMeta[,percentMito] ))
     countInfo <- dplyr::summarise(fullMeta, nCount = sum(nCount_RNA), nFeature = sum(nFeature_RNA),
                                       CellCount = dplyr::n())
 
     if(filterByRowData){
+        
+        TxDb <- MOCHA:::getAnnotationDbFromInstalledPkgname(dbName=TxDb, type="TxDb")
+        OrgDb <- MOCHA:::getAnnotationDbFromInstalledPkgname(dbName=OrgDb, type="OrgDb")
+
         txList <-suppressWarnings(GenomicFeatures::genes(TxDb, single.strand.genes.only = TRUE))
         txList <- GenomeInfoDb::keepStandardChromosomes(sort(txList), species='Homo_sapiens',
                                       pruning.mode = 'coarse')
         txList <- plyranges::reduce_ranges(plyranges::group_by(txList, gene_id))
-        txList$GeneSymbol <- suppressWarnings(AnnotationDbi::mapIds(OrgDb, as.character(txList$gene_id), "SYMBOL", "ENTREZID"))
+        txList$GeneSymbol <- suppressWarnings(AnnotationDbi::mapIds(OrgDb, as.character(txList$gene_id), Seurat_format, "ENTREZID"))
         txList <- plyranges::filter(txList, !is.na(GeneSymbol) & GeneSymbol %in% rownames(newSumMat))
         txList <- plyranges::reduce_ranges(plyranges::group_by(txList, GeneSymbol))
         names(txList) <- txList$GeneSymbol
