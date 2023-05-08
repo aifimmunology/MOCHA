@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #' @title Run Zero-Inflated Generalized Linear Mixed-Modeling for zero inflated
 #'   data
 #'
@@ -39,6 +40,19 @@
 #' }
 #'
 #' @export
+=======
+## To do: Implement ZI options, and figure out how to handle Log2 or not log2.
+
+## Will take data (metadata and modeling data), and use it to model a given formula.
+## It then returns a data.frame of intercept, slope, significance, and (residual?)
+## for each row of modelingData
+
+## formula must be in the form exp ~ <variables>
+
+
+# example: runZIGLMM(STM[c(1:1000),], 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), ~ Age, verbose = TRUE, numCores = 35 )
+
+>>>>>>> parent of 96e59b9... DOC update missing docs for cran checks
 runZIGLMM <- function(TSAM_Object,
                       cellPopulation = NULL,
                       continuousFormula = NULL,
@@ -212,6 +226,7 @@ extractVariable <- function(varDF, variable) {
   }
 }
 
+<<<<<<< HEAD
 #' @title Internal function to run linear modeling
 #'
 #' @description \code{IndividualLMEM} Runs linear modeling
@@ -231,6 +246,21 @@ individualZIGLMM <- function(iterList) {
   MetaDF <- iterList[[5]]
   nullDF <- iterList[[6]]
   
+=======
+
+#' @title \code{IndividualLMEM}
+#'
+#' @description \code{IndividualLMEM} Runs linear modeling on data provided. Written for efficient parallelization.
+#'
+#' @param refList. A list where the first index is a data.frame to use for modeling, and the second is the formula for modeling.
+#'
+#' @return A linear model
+
+#' @export
+#'
+#'
+individualZIGLMM <- function(x) {
+>>>>>>> parent of 96e59b9... DOC update missing docs for cran checks
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
     MetaDF, stringsAsFactors = FALSE
@@ -254,6 +284,7 @@ individualZIGLMM <- function(iterList) {
 }
 
 
+<<<<<<< HEAD
 #' @title Execute a pilot run of model on a subset of data
 #'
 #' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
@@ -282,6 +313,13 @@ individualZIGLMM <- function(iterList) {
 #'
 #'
 #' @export
+=======
+## Code for testing out formulas on the data. Runs a given formula on a subset of the data, and returns the model results.
+## This is meant to help during the model selection process.
+
+# example: pilotZIGLMM(STM, 'CD16 Mono',exp~ Age + Sex + days_since_symptoms + (1|PTID), ~ 0, verbose = TRUE )
+
+>>>>>>> parent of 96e59b9... DOC update missing docs for cran checks
 pilotZIGLMM <- function(TSAM_Object,
                         cellPopulation = NULL,
                         continuousFormula = NULL,
