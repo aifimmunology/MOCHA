@@ -1,6 +1,6 @@
-#' @title 
+#' @title Call tiles by sample
 #'
-#' @description \code{callPeaks} is the main peak-calling function in MOCHA
+#' @description \code{callTilesBySample} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
 #'   files and cell metadata
 #'
@@ -25,11 +25,11 @@
 #'
 #' @noRd
 #'
-
 callTilesBySample <- function(blackList,
                               returnAllTiles = FALSE,
                               totalFrags,
                               fragsList,
+                              cellCol = "RG",
                               verbose = FALSE,
                               StudypreFactor) {
   # Coefficients trained on ~ 3600 frags per cell
@@ -61,6 +61,7 @@ callTilesBySample <- function(blackList,
     fragMat = fragsList,
     candidatePeaks = FinalBins,
     totalFrags = totalFrags,
+    cellCol = cellCol,
     verbose = verbose
   )
   expected_names <- c(
@@ -97,3 +98,35 @@ callTilesBySample <- function(blackList,
 
   return(MOCHA_tiles)
 }
+
+#' @title \code{callTilesBySample}
+#'
+#' @description \code{callTilesBySample} is the main peak-calling function in MOCHA
+#'   that serves as a wrapper function to call peaks provided a set of fragment
+#'   files and cell metadata
+#'
+#' @param x a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..
+#' 
+#' @return scMACs_PeakList an list containing peak calls for each cell
+#'   population passed on in the cell subsets argument. Each peak call is
+#'   returned as as Genomic Ranges object.
+#'
+#'
+#' @noRd
+#'
+#' 
+
+simplifiedTilesBySample <- function(x){
+  
+  callTilesBySample(
+          blackList =  x[[1]],
+          returnAllTiles = TRUE,
+          totalFrags = length(x[[2]]),
+          fragsList = x[[2]],
+          cellCol = x[[3]], 
+          verbose = x[[4]],
+          StudypreFactor = x[[5]]
+        )
+
+}
+

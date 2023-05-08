@@ -1,4 +1,5 @@
-#' @title Annotate peaks falling in transcription start sites
+#' @title Annotate Peaks falling in Transcription Start Sites
+#'   (TSS) and identify alternatively regulated TSSs for each gene.
 #'
 #' @description \code{getAltTSS} Pulls out all peaks that fall in TSSs,
 #'   annotates them with the name of gene, and identifies genes that have
@@ -20,12 +21,21 @@
 #' @param nuancedTSS True/False flag to determine if alternative TSS genes
 #'   should be filtered out if all their differential TSS usage falls within too
 #'   small of a range. Default is TRUE
-#' @param nuancedTSSGAP Minimum distance betweeen TSSs needed for them to
+#' @param nuancedTSSGap Minimum distance betweeen TSSs needed for them to
 #'   considered distinctly regulated TSSs. If two TSSs are too close, it is
 #'   unclear and highly unlikely that ATAC data can distinguish between them.
 #'   Default is 150 bp.
 #' @param threshold FDR Threshold for determining significant vs non-significant
 #'   changes in accessibility. Following MOCHA's standards, default is 0.2.
+#' @param TxDb The TxDb-class transcript annotation 
+#'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
+#'   must be installed. See 
+#'   \href{https://bioconductor.org/packages/release/data/annotation/}{
+#'   Bioconductor AnnotationData Packages}.
+#' @param OrgDb The OrgDb-class genome wide annotation 
+#'   package for your organism (e.g. "org.Hs.eg.db"). This must be installed. 
+#'   See \href{https://bioconductor.org/packages/release/data/annotation/}{
+#'   Bioconductor AnnotationData Packages}
 #'
 #' @return tpeaks A GRanges containing annotated peaks falling in TSS
 #'
@@ -36,8 +46,8 @@ getAltTSS <- function(completeDAPs,
                       nuancedTSS = TRUE,
                       nuancedTSSGap = 150,
                       threshold = 0.2,
-                      TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-                      Org = org.Hs.eg.db) {
+                      TxDb,
+                      OrgDb) {
   . <- exactTSS <- name <- FDR <- Log2FC_C <- strand <- seqnames <- NULL
 
   if (grepl("data.table|data.frame", class(completeDAPs)[1])) {
@@ -66,12 +76,12 @@ getAltTSS <- function(completeDAPs,
 
   tss1 <- suppressWarnings(ensembldb::transcriptsBy(TxDb, by = ("gene")))
 
-  names(tss1) <- AnnotationDbi::mapIds(Org, names(tss1), "SYMBOL", "ENTREZID")
+  names(tss1) <- AnnotationDbi::mapIds(OrgDb, names(tss1), "SYMBOL", "ENTREZID")
 
   allT <- suppressWarnings(IRanges::stack(tss1) %>%
     GenomicRanges::trim(.) %>%
     GenomicRanges::promoters(., upstream = 0, downstream = 0) %>%
-    plyranges::mutate(exactTSS = start(.)) %>%
+    plyranges::mutate(exactTSS = IRanges::start(.)) %>%
     plyranges::filter(!duplicated(exactTSS)) %>%
     plyranges::anchor_3p(.) %>%
     plyranges::stretch(., extend = 125) %>%

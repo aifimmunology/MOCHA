@@ -14,7 +14,7 @@ getDifferentialAccessibleTiles(
   minZeroDiff = 0.5,
   fdrToDisplay = 0.2,
   outputGRanges = TRUE,
-  numCores = 2,
+  numCores = 1,
   verbose = FALSE
 )
 }

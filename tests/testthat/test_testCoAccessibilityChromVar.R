@@ -10,7 +10,6 @@ test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
 
   cellPopulation <- "C2"
   regions <- MOCHA::StringsToGRanges(c(
-    "chr1:102368000-102368499",
     "chr1:101873000-101873499"
   ))
   capture.output(
@@ -53,8 +52,7 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
 
   cellPopulation <- "C2"
   regions <- MOCHA::StringsToGRanges(c(
-    "chr1:101775000-101775499",
-    "chr1:111174000-111174499"
+    "chr1:101775000-101775499"
   ))
   
   capture.output(
@@ -98,8 +96,7 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
 
   cellPopulation <- "C2"
   regions <- MOCHA::StringsToGRanges(c(
-    "chr1:101775000-101775499",
-    "chr1:111174000-111174499"
+    "chr1:101775000-101775499"
   ))
   capture.output(
     links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,

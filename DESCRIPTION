@@ -1,7 +1,7 @@
 Package: MOCHA
 Type: Package
 Title: Modeling for Single-Cell Open Chromatin Analysis
-Version: 0.2.3
+Version: 0.2.5
 Authors@R: 
     c(person(given = "Samir",
            family = "Rachid Zaim",
@@ -43,7 +43,7 @@ Description: A statistical framework and analysis tool for open chromatin
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Depends: R (>= 4.1.0)
 Imports:
     data.table,
@@ -75,7 +75,16 @@ Imports:
     qvalue,
     scales,
     tidyr,
-    ggridges
+    ggridges,
+    lmerTest,
+    pbapply,
+    BSgenome,
+    Matrix,
+    glmmTMB,
+    irlba,
+    tidyselect,
+    uwot,
+    purrr
 Suggests: 
     ArchR,
     RMariaDB,
@@ -87,6 +96,7 @@ Suggests:
     withr,
     knitr,
     rmarkdown,
+    chromVAR,
     testthat (>= 3.0.0)
 Additional_repositories: https://imran-aifi.github.io/drat
 biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization

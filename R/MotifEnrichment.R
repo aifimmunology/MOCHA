@@ -29,7 +29,7 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
   }, cl = 1) # cl = 1 to disable multiprocessing as it is not much faster
   df_final <- do.call("rbind", allEnrichmentList)
 
-  df_final$adjp_val <- p.adjust(df_final$p_value, method = "fdr")
+  df_final$adjp_val <- stats::p.adjust(df_final$p_value, method = "fdr")
   df_final$mlog10Padj <- -log10(df_final$adjp_val)
 
   return(df_final)
@@ -63,7 +63,7 @@ EnrichedRanges <- function(Group1,
                            type = NULL,
                            returnTable = FALSE) {
   
-  if (class(Group1) != "GRanges" || class(Group2) != "GRanges"){
+  if (!methods::is(Group1, "GRanges") || !methods::is(Group2, "GRanges")){
     stop("Input Group1 and/or Group2 are not class 'GRanges'. Group1 and ",
          "Group2 must be GRanges objects.")
   }
@@ -84,7 +84,7 @@ EnrichedRanges <- function(Group1,
       return(t(dt_table))
     }
 
-    pVal <- phyper(
+    pVal <- stats::phyper(
       q = length(Group1Cat),
       m = length(Group1),
       n = length(Group2),
@@ -114,7 +114,7 @@ EnrichedRanges <- function(Group1,
       return(t(dt_table))
     }
 
-    pVal <- phyper(
+    pVal <- stats::phyper(
       q = length(unique(GenomicRanges::mcols(Group1Cat)[, type])),
       m = length(unique(GenomicRanges::mcols(Group1)[, type])),
       n = length(unique(GenomicRanges::mcols(Group2)[, type])),

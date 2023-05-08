@@ -5,7 +5,7 @@
 \title{\code{addMotifSet} Identify motifs within a peakset}
 \usage{
 addMotifSet(
-  SampleTileMatrix,
+  SampleTileObj,
   motifPWMs,
   w = 7,
   returnSTM = TRUE,
@@ -13,7 +13,7 @@ addMotifSet(
 )
 }
 \arguments{
-\item{SampleTileMatrix}{A SummarizedExperiment, specifically the output of
+\item{SampleTileObj}{A SummarizedExperiment, specifically the output of
 getSampleTileMatrix}
 
 \item{motifPWMs}{A pwms object for the motif database. Either PFMatrix,
@@ -22,14 +22,14 @@ PFMatrixList, PWMatrix, or PWMatrixList}
 \item{w}{Parameter for motifmatchr controlling size in basepairs of window for filtration.
 Default is 7.}
 
-\item{returnSTM}{If TRUE, return the modified SampleTileMatrix with motif set
+\item{returnSTM}{If TRUE, return the modified SampleTileObj with motif set
 added to metadata (default). If FALSE, return just the motifs from motifmatchr.}
 
-\item{motifSetName}{Name to give motifList in the SampleTileMatrix's metadata
+\item{motifSetName}{Name to give motifList in the SampleTileObj's metadata
 if `returnSTM=TRUE`. Default is 'Motifs'.}
 }
 \value{
-the modified SampleTileMatrix with motifs added to the metadata
+the modified SampleTileObj with motifs added to the metadata
 }
 \description{
 \code{addMotifSet} Identify motifs within your peakset.
@@ -40,7 +40,7 @@ the modified SampleTileMatrix with motifs added to the metadata
 # included with ArchR installation
 data(human_pwms_v2)
 SE_with_motifs <- addMotifSet(
-  SampleTileMatrix,
+  SampleTileObj,
   motifPWMs = human_pwms_v2,
   returnSTM = TRUE, motifSetName = "Motifs", w = 7
 )

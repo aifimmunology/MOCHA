@@ -8,5 +8,5 @@
       chr2:99954000-99954499 chr2:99954500-99954999
     rowData names(3): C2 C5 bias
     colnames(2): C2__PBMCSmall C5__PBMCSmall
-    colData names(4): Sample PassQC CellType Freq
+    colData names(5): Sample PassQC CellType Freq FragNumber
 

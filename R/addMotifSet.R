@@ -2,18 +2,18 @@
 #'
 #' @description \code{addMotifSet} Identify motifs within your peakset.
 #'
-#' @param SampleTileMatrix A SummarizedExperiment, specifically the output of
+#' @param SampleTileObj A SummarizedExperiment, specifically the output of
 #'   getSampleTileMatrix
 #' @param motifPWMs A pwms object for the motif database. Either PFMatrix,
 #'   PFMatrixList, PWMatrix, or PWMatrixList
 #' @param w Parameter for motifmatchr controlling size in basepairs of window for filtration.
 #'   Default is 7.
-#' @param returnSTM If TRUE, return the modified SampleTileMatrix with motif set
+#' @param returnSTM If TRUE, return the modified SampleTileObj with motif set
 #'   added to metadata (default). If FALSE, return just the motifs from motifmatchr.
-#' @param motifSetName Name to give motifList in the SampleTileMatrix's metadata
+#' @param motifSetName Name to give motifList in the SampleTileObj's metadata
 #'   if `returnSTM=TRUE`. Default is 'Motifs'.
 #'
-#' @return the modified SampleTileMatrix with motifs added to the metadata
+#' @return the modified SampleTileObj with motifs added to the metadata
 #'
 #' @importFrom magrittr %>%
 #'
@@ -23,7 +23,7 @@
 #' # included with ArchR installation
 #' data(human_pwms_v2)
 #' SE_with_motifs <- addMotifSet(
-#'   SampleTileMatrix,
+#'   SampleTileObj,
 #'   motifPWMs = human_pwms_v2,
 #'   returnSTM = TRUE, motifSetName = "Motifs", w = 7
 #' )
@@ -31,7 +31,8 @@
 #'
 #' @export
 #' @keywords utils
-addMotifSet <- function(SampleTileMatrix, 
+#'
+addMotifSet <- function(SampleTileObj, 
                         motifPWMs, 
                         w = 7, 
                         returnSTM = TRUE, 
@@ -42,9 +43,9 @@ addMotifSet <- function(SampleTileMatrix,
       "Please install 'motifmatchr' to proceed."
     )
   }
-  TotalPeakSet <- SummarizedExperiment::rowRanges(SampleTileMatrix)
+  TotalPeakSet <- SummarizedExperiment::rowRanges(SampleTileObj)
   
-  genome <- S4Vectors::metadata(SampleTileMatrix)$Genome
+  genome <- S4Vectors::metadata(SampleTileObj)$Genome
   genome <- BSgenome::getBSgenome(genome)
   
   motif_ix <- motifmatchr::matchMotifs(
@@ -63,10 +64,10 @@ addMotifSet <- function(SampleTileMatrix,
   names(motifList) <- motifSetName
 
   if (returnSTM) {
-    S4Vectors::metadata(SampleTileMatrix) <- append(
-      S4Vectors::metadata(SampleTileMatrix), motifList
+    S4Vectors::metadata(SampleTileObj) <- append(
+      S4Vectors::metadata(SampleTileObj), motifList
     )
-    return(SampleTileMatrix)
+    return(SampleTileObj)
   } else {
     return(motif_ix)
   }

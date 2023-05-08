@@ -5,18 +5,19 @@
 \title{Tests input tile pairs against a ChromVAR background}
 \usage{
 testCoAccessibilityChromVar(
-  SampleTileMatrix,
+  SampleTileObj,
   tile1,
   tile2,
   numCores = 1,
   ZI = TRUE,
   backNumber = 1000,
+  returnBackGround = FALSE,
   highMem = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{SampleTileMatrix}{The SummarizedExperiment object output from
+\item{SampleTileObj}{The SummarizedExperiment object output from
 getSampleTileMatrix containing your sample-tile matrices}
 
 \item{tile1}{vector of indices or tile names (chrX:100-2000) for tile pairs
@@ -34,6 +35,9 @@ the normal Spearman.}
 
 \item{backNumber}{number of ChromVAR-matched background pairs. Default is
 1000.}
+
+\item{returnBackGround}{Boolean, if TRUE return the background correlations
+as well as foreground. Default is FALSE.}
 
 \item{highMem}{Boolean to control memory usage. Default is FALSE. Only set
 highMem to TRUE if you have plenty of memory and want to run this function

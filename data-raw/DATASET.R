@@ -95,7 +95,7 @@ proj <- ArchR::saveArchRProject(ArchRProj = proj)
 
 testTileResultsMultisample <- MOCHA::callOpenTiles(
   ATACFragments = proj,
-  outDir = NULL,
+  outDir = "../HemeTutorial/MOCHA/",
   TxDb = TxDb,
   Org = Org,
   cellPopLabel = "Clusters",

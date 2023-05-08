@@ -5,17 +5,19 @@
 \title{Tests input tile pairs against a random background}
 \usage{
 testCoAccessibilityRandom(
-  SampleTileMatrix,
+  SampleTileObj,
   tile1,
   tile2,
   numCores = 1,
   ZI = TRUE,
   backNumber = 1000,
+  calcPValue = TRUE,
+  returnBackGround = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{SampleTileMatrix}{The SummarizedExperiment object output from
+\item{SampleTileObj}{The SummarizedExperiment object output from
 getSampleTileMatrix containing your sample-tile matrices}
 
 \item{tile1}{vector of indices or tile names (chrX:100-2000) for tile pairs
@@ -32,6 +34,11 @@ to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate
 the normal Spearman.}
 
 \item{backNumber}{number of background pairs. Default is 1000.}
+
+\item{calcPValue}{Boolean, if TRUE calculate p-values. Default is TRUE.}
+
+\item{returnBackGround}{Boolean, if TRUE return the background correlations
+as well as foreground. Default is FALSE.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }

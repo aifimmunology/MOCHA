@@ -18,6 +18,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  cellCol = "RG",
   TxDb,
   OrgDb,
   outDir,
@@ -35,6 +36,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  cellCol = "RG",
   TxDb,
   OrgDb,
   outDir,
@@ -51,6 +53,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  cellCol = "RG",
   TxDb,
   OrgDb,
   outDir,
@@ -74,10 +77,13 @@ callOpenTiles(
 )
 }
 \arguments{
-\item{ATACFragments}{an ArchR Project, or a GRangesList of fragments}
+\item{ATACFragments}{an ArchR Project, or a GRangesList of fragments. Each
+GRanges in the GRanges list must have unique cell IDs in the column given
+by 'cellCol'.}
 
-\item{cellColData}{A DataFrame containing cell-level metadata and a 'Sample' 
-column}
+\item{cellColData}{A DataFrame containing cell-level metadata. This must 
+contain both a column 'Sample' with unique sample IDs and the column 
+specified by 'cellPopLabel'.}
 
 \item{blackList}{A GRanges of blacklisted regions}
 
@@ -101,6 +107,9 @@ Default is 'ALL'.}
 not set, this will be calculated using the input ArchR project but relies 
 on the assumption that the ArchR project encompasses your whole study (i.e. 
 is not a subset).}
+
+\item{cellCol}{The column in cellColData specifying unique cell ids or 
+barcodes. Default is "RG", the unique cell identifier used by ArchR.}
 
 \item{TxDb}{The exact package name of a TxDb-class transcript annotation 
 package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
@@ -152,9 +161,9 @@ tileResults <- MOCHA::callOpenTiles(
 \donttest{
 # Starting from GRangesList
 if (
-  requireNamespace(BSgenome.Hsapiens.UCSC.hg19) &&
-    requireNamespace(TxDb.Hsapiens.UCSC.hg38.refGene) &&
-    requireNamespace(org.Hs.eg.db)
+  requireNamespace("BSgenome.Hsapiens.UCSC.hg19") &&
+    requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
+    requireNamespace("org.Hs.eg.db")
 ) {
   tiles <- MOCHA::callOpenTiles(
     ATACFragments = MOCHA::exampleFragments,

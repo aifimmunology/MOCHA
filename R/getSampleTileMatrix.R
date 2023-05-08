@@ -38,9 +38,9 @@
 #'   ATACFragments = MOCHA::exampleFragments,
 #'   cellColData = MOCHA::exampleCellColData,
 #'   blackList = MOCHA::exampleBlackList,
-#'   genome = BSgenome.Hsapiens.UCSC.hg19,
-#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'   Org = org.Hs.eg.db,
+#'   genome = "BSgenome.Hsapiens.UCSC.hg19",
+#'   TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+#'   Org = "org.Hs.eg.db",
 #'   outDir = tempdir(),
 #'   cellPopLabel = "Clusters",
 #'   cellPopulations = c("C2", "C5"),
@@ -65,6 +65,17 @@ getSampleTileMatrix <- function(tileResults,
                                 verbose = FALSE) {
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
+  }
+  
+  # Validate that tileResults contains called tiles.
+  for (i in seq_along(tileResults)) {
+    peaks <- RaggedExperiment::compactAssay(tileResults[[i]], i = "peak")
+    if (all(is.na(peaks))) {
+      stop(stringr::str_interp(
+        "No peaks identified in cell population '${names(tileResults)[[i]]}'",
+        " in the given TileResults."
+      ))
+    }
   }
 
   # Any column can be used to group samples
@@ -91,31 +102,20 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
 
-
   if (verbose) {
-    message(stringr::str_interp("Extracting consensus tile set for each population:  ${paste(cellPopulations, collapse=', ')} "))
+    message(stringr::str_interp("Extracting consensus tile set for each population"))
   }
 
-  tilesByCellPop <- parallel::mclapply(MultiAssayExperiment::experiments(subTileResults), function(x) {
+  iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
+    list(MultiAssayExperiment::experiments(subTileResults)[[x]], sampleData, threshold, groupColumn, verbose)
+  })
 
-    # Get consensus tiles for this cell population for filtering
-    singlePopulationConsensusTiles(
-      x,
-      sampleData,
-      threshold,
-      groupColumn,
-      verbose = verbose
-    )
-  }, mc.cores = numCores)
-
-  errorMessages <- parallel::mclapply(tilesByCellPop, function(x) {
-    if (any(grepl("Error", x))) {
-      x[grep("Error", x)]
-    } else {
-      NA
-    }
-  }, mc.cores = numCores)
-
+  cl <- parallel::makeCluster(numCores)
+  tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
+  names(tilesByCellPop) <- names(subTileResults)
+  
+  rm(iterList)
+  errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
   names(errorMessages) <- names(subTileResults)
 
   if (any(!is.na(errorMessages))) {
@@ -131,17 +131,19 @@ getSampleTileMatrix <- function(tileResults,
   allTiles <- sort(unique(do.call("c", tilesByCellPop)))
 
   if (verbose) {
-    message(stringr::str_interp("Generating sample-tile matrix across all populations: ${paste(cellPopulations, collapse=', ')} "))
+    message(stringr::str_interp("Generating sample-tile matrix across all populations."))
   }
 
   # consensusTiles is used to  extract rows (tiles) from this matrix
-  sampleTileIntensityMatList <- parallel::mclapply(MultiAssayExperiment::experiments(tileResults), function(x) {
-    singlePopulationSampleTileMatrix(
-      x,
-      allTiles,
-      NAtoZero = FALSE
-    )
-  }, mc.cores = numCores)
+
+  iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
+    list(MultiAssayExperiment::experiments(subTileResults)[[x]], allTiles)
+  })
+
+  sampleTileIntensityMatList <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedSampleTile)
+  names(sampleTileIntensityMatList) <- names(subTileResults)
+
+  parallel::stopCluster(cl)
 
   # Order sampleData rows to match the same order as the columns
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
