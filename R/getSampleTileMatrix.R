@@ -102,7 +102,7 @@ getSampleTileMatrix <- function(tileResults,
 
   cl <- parallel::makeCluster(numCores)
   
-  if(!is.null(tiles)){
+  if(is.null(tiles)){
 
     if (verbose) {
       message(stringr::str_interp("Extracting consensus tile set for each population"))
