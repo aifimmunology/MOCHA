@@ -37,6 +37,12 @@ runLMEM <- function(ExperimentObj,
                     verbose = FALSE,
                     numCores = 1) {
   Sample <- NULL
+  if (!requireNamespace("lmerTest", quietly = TRUE)) {
+    stop(
+      "Package 'lmerTest' is required for runLMEM ",
+      "Please install 'lmerTest' to proceed."
+    )
+  }
   
   modelingData <- as.data.frame(
     SummarizedExperiment::assays(ExperimentObj)[[1]]
@@ -245,6 +251,12 @@ pilotLMEM <- function(ExperimentObj,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
   Sample <- NULL
+  if (!requireNamespace("lmerTest", quietly = TRUE)) {
+    stop(
+      "Package 'lmerTest' is required for pilotLMEM ",
+      "Please install 'lmerTest' to proceed."
+    )
+  }
   if (length(cellPopulation) > 1) {
     stop(
       "More than one cell population was provided. ",

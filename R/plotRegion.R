@@ -14,7 +14,7 @@
 #'   'area', which will plot a separate track for each group with the area
 #'   filled in under the curve. Setting plotType to 'overlaid' will overlay
 #'   count plot histograms across samples, instead of faceting out separately.
-#'   Setting plotType to 'RidgePlot' will generate a ridgeplot across all
+#'   Setting plotType to 'RidgePlot' will generate a RidgePlot across all
 #'   groups.
 #' @param base_size Numeric, default 12. Global plot base text size parameter
 #' @param counts_color Optional color palette. A named vector of color values

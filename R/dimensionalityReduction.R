@@ -23,7 +23,12 @@
 #'
 #' 
 bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 30, method = 'LSI', verbose = FALSE){
-    
+  if (!requireNamespace("irlba", quietly = TRUE)) {
+    stop(
+      "Package 'irlba' is required for bulkDimReduction. ",
+      "Please install 'irlba' to proceed."
+    )
+  }
     allCellTypes = names(SummarizedExperiment::assays(SampleTileObj))
     if(all(tolower(cellType) == 'all')){
 
@@ -44,6 +49,12 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
     countMat[is.na(countMat)] = 0
 
     if(tolower(method) == 'lsi'){
+      if (!requireNamespace("irlba", quietly = TRUE)) {
+        stop(
+          "Package 'Matrix' is required for bulkDimReduction with method = 'lsi'. ",
+          "Please install 'Matrix' to proceed."
+        )
+      }
       #TF-IDF step
       freqs <- t(t(countMat)/Matrix::colSums(countMat))
       idf   <- log(1 + ncol(countMat) / Matrix::rowSums(countMat))
@@ -109,7 +120,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
 #' @param SEObj The SummarizedExperiment object output from bulkDimReduction, or an STM, subsetted down to just one cell type.  
 #' @param assay A string, describing the name of the assay within SEObj to run UMAP ('PCA', 'LSI', or 'counts'). 
 #' @param components A vector of integers. Number of components to include in LSI (1:30 typically).
-#' @param seed an integer. Represents the seed to pass to the umap. 
+#' @param seed an integer. Represents the random seed to pass to the UMAP. Default seed is 1.
 #' @param returnModel A boolean. Default is FALSE. If set to true, it will return a list, where the first is the UMAP coordinates with metadata for plotting, and the second is the full UMAP model so further projection can occur. 
 #' @param nNeighbors See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
 #'           neighboring sample points) used for manifold approximation. Default is 15.
@@ -131,6 +142,12 @@ bulkUMAP <- function(SEObj,
                      seed = 1,
                      ...
                      ){
+  if (!requireNamespace("uwot", quietly = TRUE)) {
+    stop(
+      "Package 'uwot' is required for bulkUMAP. ",
+      "Please install 'uwot' to proceed."
+    )
+  }
 
     set.seed(seed)
     if(!any(names(SummarizedExperiment::assays(SEObj)) == assay)){

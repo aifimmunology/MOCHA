@@ -2,7 +2,7 @@
 #'   data
 #'
 #' @description \code{runZIGLMM} Runs linear mixed-effects modeling for
-#'   continuous, non-zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
+#'   zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only one
@@ -46,6 +46,12 @@ runZIGLMM <- function(TSAM_Object,
                       initialSampling = 5,
                       verbose = FALSE,
                       numCores = 1) {
+  if (!requireNamespace("glmmTMB", quietly = TRUE)) {
+    stop(
+      "Package 'glmmTMB' is required for runZIGLMM. ",
+      "Please install 'glmmTMB' to proceed."
+    )
+  }
   Sample <- NULL
   
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
@@ -257,7 +263,7 @@ individualZIGLMM <- function(iterList) {
 #' @title Execute a pilot run of model on a subset of data
 #'
 #' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
-#'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
+#'   zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix, chromVAR, or other.
@@ -289,7 +295,12 @@ pilotZIGLMM <- function(TSAM_Object,
                         verbose = FALSE,
                         pilotIndices = 1:10) {
   Sample <- NULL
-  
+  if (!requireNamespace("glmmTMB", quietly = TRUE)) {
+    stop(
+      "Package 'glmmTMB' is required for pilotZIGLMM. ",
+      "Please install 'glmmTMB' to proceed."
+    )
+  }
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }
