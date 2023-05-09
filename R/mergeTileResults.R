@@ -87,10 +87,10 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   }
 
 
-  
+  browser()
   allCellTypes <- as.data.frame(table(unlist(lapply(tileResultsList, names))))
 
-  subCellTypes <- unlist(dplyr::filter(allCellTypes, Freq == length(tileResultsList))$Var)
+  subCellTypes <- as.character(unlist(dplyr::filter(allCellTypes, Freq == length(tileResultsList))$Var))
 
   if(length(subCellTypes) == 0){
     stop('No cell types in common across tileResults objects.')
@@ -106,16 +106,17 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
             RaggedExperiment::RaggedExperiment(ragExp)
   })
   names(allRaggedResults) <- subCellTypes
-  
+
   parallel::stopCluster(cl)
 
   #Merged sample and other metadata information. 
   allSampleData <- do.call(eval(parse(text="dplyr::bind_rows")), lapply(tileResultsList, function(x){ as.data.frame(SummarizedExperiment::colData(x))}))
-
+ 
   allCellCounts <- do.call('cbind',pbapply::pblapply(cl = NULL, X = subCellTypes, function(y){
-
-     tmpCell <- data.frame(y = unlist(lapply(tileResultsList, function(x){ x@metadata$CellCounts[,y] })))
-     rownames(tmpCell) <- unlist(lapply(tileResultsList, function(x){ rownames(x@metadata$CellCounts)}))
+     
+     tmpCell <- data.frame(unlist(lapply(tileResultsList, function(z){ z@metadata$CellCounts[,y] })))
+     rownames(tmpCell) <- unlist(lapply(tileResultsList, function(z){ rownames(z@metadata$CellCounts)}))
+     colnames(tmpCell) = y
      tmpCell
   }))
   allFragmentCounts <- do.call('cbind',pbapply::pblapply(cl = NULL, X = subCellTypes, function(y){
@@ -134,8 +135,8 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
       "CellCounts" = allCellCounts,
       "FragmentCounts" = allFragmentCounts,
       "Genome" = GenTest,
-      "TxDb" = list(pkgname = TxDbName, metadata = TxDbTest),
-      "OrgDb" = list(pkgname = OrgDbName, metadata = OrgDbTest),
+      "TxDb" = list(pkgname = tileResultsList[[1]]@metadata$TxDb$pkgname, metadata = TxDbTest),
+      "OrgDb" = list(pkgname = tileResultsList[[1]]@metadata$OrgDb$pkgname, metadata = OrgDbTest),
       "Directory" = NULL
     )
   )
