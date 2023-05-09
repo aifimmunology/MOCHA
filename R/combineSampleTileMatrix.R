@@ -50,12 +50,15 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
   }))
+
+  browser()
   
   cellTypeLabelList <- Var1 <- NULL
   cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts)
   cellCounts <- dplyr::mutate(cellCounts,
       Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__")))
   cellCounts <- dplyr::select(cellCounts, Sample, Freq)
+  cellCounts  <- dplyr::rename(cellCounts, CellCount = Freq)
 
   fragCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$FragmentCounts)
   fragCounts <-  dplyr::select(fragCounts, dplyr::one_of(names(assays))) 

@@ -541,6 +541,12 @@ setMethod(
   
   # Save the cell number per population-sample in the metadata
   allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
+  Var1 <- NULL
+  cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts)
+  cellCounts <- dplyr::mutate(cellCounts,
+      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__")))
+  cellCounts <- dplyr::select(cellCounts, Sample, Freq)
+  cellCounts  <- dplyr::rename(cellCounts, CellCount = Freq)
   
   # Save the fragment number per population-sample
   allFragmentCounts <- as.data.frame(cellColData) %>% 
