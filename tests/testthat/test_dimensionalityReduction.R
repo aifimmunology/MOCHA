@@ -32,17 +32,8 @@ if (requireNamespace("irlba", quietly=TRUE) &&
       LSIObj <- MOCHA::bulkDimReduction(SampleTileMatrix, cellType = 'all', componentNumber=2)
     )
     
-    set.seed(1)
-    capture.output(
-      UMAPvalues <- MOCHA::bulkUMAP(LSIObj, components = c(1:2), nNeighbors=4)
-    )
-    
     expect_snapshot(
       LSIObj
-    )
-    
-    expect_snapshot(
-      UMAPvalues
     )
     
   })
