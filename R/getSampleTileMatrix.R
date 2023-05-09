@@ -145,6 +145,7 @@ getSampleTileMatrix <- function(tileResults,
     tilePresence <-  lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x) (rep(TRUE, length(tileGRanges)))) %>%
       do.call("cbind", .) %>%
       as.data.frame()
+    colnames(tilePresence) <- names(subTileResults)
     GenomicRanges::mcols(allTilesGR) <- tilePresence
   }
 
