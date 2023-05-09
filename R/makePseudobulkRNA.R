@@ -65,6 +65,8 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
     countInfo <- dplyr::summarise(fullMeta, nCount = sum(nCount_RNA), nFeature = sum(nFeature_RNA),
                                       CellCount = dplyr::n())
 
+    sampleList <- unique(SO@meta.data[,sampleColumn])
+    browser()
     if(filterByRowData){
         
         TxDb <- MOCHA:::getAnnotationDbFromInstalledPkgname(dbName=TxDb, type="TxDb")
@@ -86,9 +88,14 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
         cellMatList <- lapply(unique(cellTypes), function(x){
             
             cellMat <- subsetMat[, x == cellTypes]
-            colnames(cellMat) <- gsub(".*__","", colnames(cellMat))
-            cellMat
-            })
+            if(!all(sampleList %in% colnames(cellMat))){
+                    emptyData = rep(0, dim(cellMat)[1])
+                    emptyDF = do.call('cbind',lapply(1:sum(!sampleList %in% colnames(cellMat)), function(x) emptyData))
+                    colnames(emptyDF) = sampleList[!sampleList %in% colnames(cellMat)]
+                    cellMat <- cbind(cellMat, emptyDF)
+            }
+            cellMat[,match(sampleData$Sample, colnames(cellMat))]
+        })
         names(cellMatList) = unique(cellTypes)
 
         rnaSE <- SummarizedExperiment::SummarizedExperiment(cellMatList, colData = sampleData, rowRanges = txList, metadata = countInfo)
@@ -100,9 +107,25 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
     
             cellMat <- subsetMat[, x == cellTypes]
             colnames(cellMat) <- gsub(".*__","", colnames(cellMat))
-            cellMat
+            if(!all(sampleList %in% colnames(cellMat))){
+                    emptyData = rep(0, dim(cellMat)[1])
+                    emptyDF = do.call('cbind',lapply(1:sum(!sampleList %in% colnames(cellMat)), function(x) emptyData))
+                    colnames(emptyDF) = sampleList[!sampleList %in% colnames(cellMat)]
+                    cellMat <- cbind(cellMat, emptyDF)
+            }
+            cellMat[,match(sampleData$Sample, colnames(cellMat))]
         })
         names(cellMatList) = cellTypes
+
+        if(any(unlist(lapply(cellMatList, function(x) dim(x)[2] != length(sampleList))))){
+
+            cellMatList <- lapply(cellMatList, function(x){
+    
+                  
+            })
+            names(cellMatList) = cellTypes
+
+        }
 
         rnaSE <-  SummarizedExperiment::SummarizedExperiment(mat, colData = sampleData, metadata = countInfo)
     }
