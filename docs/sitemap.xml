@@ -16,6 +16,9 @@
     <loc>https://aifimmunology.github.io/MOCHA/articles/Dev-Lessons.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/articles/ImportingFromOtherSources.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/articles/Results-Tips.html</loc>
   </url>
   <url>
@@ -37,6 +40,9 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/MotifEnrichment.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/MotifSetEnrichmentAnalysis.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/StringsToGRanges.html</loc>
   </url>
   <url>
@@ -47,6 +53,12 @@
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/annotateTiles.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/bulkDimReduction.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/bulkUMAP.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/callOpenTiles-methods.html</loc>
@@ -73,6 +85,9 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/exampleFragments.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/extractErrorFromConsensusTiles.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/extractRegion.html</loc>
   </url>
   <url>
@@ -91,6 +106,9 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/getCoAccessibleLinks.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getCoverage.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/getDifferentialAccessibleTiles.html</loc>
   </url>
   <url>
@@ -103,10 +121,28 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/index.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/pilotLMEM.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/pilotZIGLMM.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/plotConsensus.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/plotRegion.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/runLMEM.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/runZIGLMM.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/simplifiedConsensusTiles.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/simplifiedSampleTile.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/singlePopulationConsensusTiles.html</loc>

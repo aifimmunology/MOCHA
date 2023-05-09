@@ -35,3 +35,4 @@ modelList a list of outputs from lmerTest::lmer
 \code{pilotLMEM} Runs linear mixed-effects modeling for
   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 }
+\keyword{downstream}

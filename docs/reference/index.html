@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,10 +24,8 @@
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/COVID-walkthrough.html">COVID-walkthrough</a>
-    <a class="dropdown-item" href="../articles/Comparing-Cell-Populations.html">Comparing-Cell-Populations</a>
-    <a class="dropdown-item" href="../articles/Dev-Lessons.html">Lessons from Development</a>
-    <a class="dropdown-item" href="../articles/Results-Tips.html">Results-Tips</a>
+    <a class="dropdown-item" href="../articles/COVID-walkthrough.html">Walkthrough with COVID Dataset</a>
+    <a class="dropdown-item" href="../articles/ImportingFromOtherSources.html">Importing From Other Sources</a>
   </div>
 </li>
 <li class="nav-item">
@@ -113,9 +111,25 @@
         <dd>Test for enrichment of motifs against a background</dd>
       </dl><dl><dt>
           
+          <code><a href="MotifSetEnrichmentAnalysis.html">MotifSetEnrichmentAnalysis()</a></code> 
+        </dt>
+        <dd>Test the enrichment of a given TF
+  motif set against a motif set downstream of multiple ligands</dd>
+      </dl><dl><dt>
+          
           <code><a href="addAccessibilityShift.html">addAccessibilityShift()</a></code> 
         </dt>
         <dd>Add difference in accessibility between two conditions</dd>
+      </dl><dl><dt>
+          
+          <code><a href="bulkDimReduction.html">bulkDimReduction()</a></code> 
+        </dt>
+        <dd>Run PCA or LSI dimensionality reduction</dd>
+      </dl><dl><dt>
+          
+          <code><a href="bulkUMAP.html">bulkUMAP()</a></code> 
+        </dt>
+        <dd>Generate UMAP from pseudobulk LSI results</dd>
       </dl><dl><dt>
           
           <code><a href="filterCoAccessibleLinks.html">filterCoAccessibleLinks()</a></code> 
@@ -125,7 +139,8 @@
           
           <code><a href="getAltTSS.html">getAltTSS()</a></code> 
         </dt>
-        <dd>Annotate peaks falling in transcription start sites</dd>
+        <dd>Annotate Peaks falling in Transcription Start Sites
+  (TSS) and identify alternatively regulated TSSs for each gene.</dd>
       </dl><dl><dt>
           
           <code><a href="getCoAccessibleLinks.html">getCoAccessibleLinks()</a></code> 
@@ -136,6 +151,28 @@
           <code><a href="getDifferentialAccessibleTiles.html">getDifferentialAccessibleTiles()</a></code> 
         </dt>
         <dd>Conduct a differential test between open regions of two sample groups</dd>
+      </dl><dl><dt>
+          
+          <code><a href="pilotLMEM.html">pilotLMEM()</a></code> 
+        </dt>
+        <dd>Execute a pilot run of single linear model on a subset of data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="pilotZIGLMM.html">pilotZIGLMM()</a></code> 
+        </dt>
+        <dd>Execute a pilot run of model on a subset of data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="runLMEM.html">runLMEM()</a></code> 
+        </dt>
+        <dd>Run Linear Mixed-Effects Modeling for continuous,
+ non-zero inflated data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="runZIGLMM.html">runZIGLMM()</a></code> 
+        </dt>
+        <dd>Run Zero-Inflated Generalized Linear Mixed-Modeling for zero inflated
+  data</dd>
       </dl><dl><dt>
           
           <code><a href="testCoAccessibilityChromVar.html">testCoAccessibilityChromVar()</a></code> 
@@ -171,17 +208,17 @@
           
           <code><a href="addMotifSet.html">addMotifSet()</a></code> 
         </dt>
-        <dd><code>addMotifSet</code> Identify motifs within a peakset</dd>
+        <dd>Identify motifs within a peakset</dd>
       </dl><dl><dt>
           
           <code><a href="annotateTiles.html">annotateTiles()</a></code> 
         </dt>
-        <dd><code>annotateTiles</code> Add gene annotations</dd>
+        <dd>Annotate tiles with gene annotations</dd>
       </dl><dl><dt>
           
           <code><a href="combineSampleTileMatrix.html">combineSampleTileMatrix()</a></code> 
         </dt>
-        <dd>Combine all celltypes in a SampleTileMatrix into a single matrix</dd>
+        <dd>Merge the TSAM from multiple cell populations into a single matrix</dd>
       </dl><dl><dt>
           
           <code><a href="differentialsToGRanges.html">differentialsToGRanges()</a></code> 
@@ -197,6 +234,11 @@
           <code><a href="getCellPopMatrix.html">getCellPopMatrix()</a></code> 
         </dt>
         <dd>Get the SampleTileMatrix of the given cell population</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getCoverage.html">getCoverage()</a></code> 
+        </dt>
+        <dd>Get sample-specific coverage files for each sample-cell population.</dd>
       </dl><dl><dt>
           
           <code><a href="getPopFrags.html">getPopFrags()</a></code> 

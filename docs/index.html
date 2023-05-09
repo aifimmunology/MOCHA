@@ -53,7 +53,7 @@
     
     <a class="navbar-brand me-2" href="index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,10 +68,8 @@
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="articles/COVID-walkthrough.html">COVID-walkthrough</a>
-    <a class="dropdown-item" href="articles/Comparing-Cell-Populations.html">Comparing-Cell-Populations</a>
-    <a class="dropdown-item" href="articles/Dev-Lessons.html">Lessons from Development</a>
-    <a class="dropdown-item" href="articles/Results-Tips.html">Results-Tips</a>
+    <a class="dropdown-item" href="articles/COVID-walkthrough.html">Walkthrough with COVID Dataset</a>
+    <a class="dropdown-item" href="articles/ImportingFromOtherSources.html">Importing From Other Sources</a>
   </div>
 </li>
 <li class="nav-item">
@@ -129,15 +127,121 @@
 </h2>
 <p>Please view the example usage found in the vignette found under <code>vignettes/COVID-walkthrough.html</code>.</p>
 <p>The example usage demonstrates this workflow:</p>
-<p><img src="reference/figures/web_version_workflow_diagram.png"></p>
+<div class="figure">
+<img src="reference/figures/workflow_diagram_v3_website.png" alt=""><p class="caption">Workflow</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="id_-contact">
 <a name="contact"></a> Contact<a class="anchor" aria-label="anchor" href="#id_-contact"></a>
 </h2>
-<p>To contact the developers on issues and feature requests, please contact us via GitHub’s discussions tab for feature requests, or open issues for any bugs.</p>
+<p>While the pipeline can be run function-to-function, you may wish to inspect intermediate results or use end results for your own custom analyses. All MOCHA outputs use common Bioconductor data structures. We also provide some getters for accessing specific results.</p>
+</div>
+<div class="section level2">
+<h2 id="callopentiles-results">callOpenTiles results<a class="anchor" aria-label="anchor" href="#callopentiles-results"></a>
+</h2>
+<p>The output of the first step of the pipeline, <code><a href="reference/callOpenTiles-methods.html">MOCHA::callOpenTiles</a></code> is a <a href="https://www.bioconductor.org/packages/devel/bioc/vignettes/MultiAssayExperiment/inst/doc/MultiAssayExperiment.html#overview-of-the-multiassayexperiment-class" class="external-link">MultiAssayExperiment</a> organizing your open-tiles by cell population. This is the input to the next function, <code>MOCHA::getSampleTileMatrices</code>.</p>
+<p>Sample-level metadata can be accessed using <code>colData(tileResults)</code>.</p>
+<p>A specific cell population’s results are stored as a <a href="https://bioconductor.org/packages/release/bioc/vignettes/RaggedExperiment/inst/doc/RaggedExperiment.html" class="external-link">RaggedExperiment</a>.</p>
+<p>This object stores ranged data alongside the sample-level metadata.</p>
+</div>
+<div class="section level2">
+<h2 id="getsampletilematrix-results">getSampleTileMatrix results<a class="anchor" aria-label="anchor" href="#getsampletilematrix-results"></a>
+</h2>
+<p>The output of getSampleTileMatrix is a <a href="https://bioconductor.org/packages/devel/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html" class="external-link">SummarizedExperiment</a> organizing the TSAM (Tile Sample Accessibility Matrix) by cell population. This is the input to <code><a href="reference/getDifferentialAccessibleTiles.html">MOCHA::getDifferentialAccessibleTiles</a></code> and other downstream analyses.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Subset results for Chr 4</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> SampleTileMatrices[<span class="fu">grep</span>(<span class="st">'chr4'</span>, <span class="fu">rownames</span>(SampleTileMatrices)),]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>class<span class="sc">:</span> RangedSummarizedExperiment </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>dim<span class="sc">:</span> <span class="dv">8112</span> <span class="dv">39</span> </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span>(<span class="dv">6</span>)<span class="sc">:</span> CellCounts FragmentCounts ... OrgDb Directory</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">assays</span>(<span class="dv">1</span>)<span class="sc">:</span> CD16 Mono</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(<span class="dv">8112</span>)<span class="sc">:</span> chr4<span class="sc">:</span><span class="dv">10005500-10005999</span> chr4<span class="sc">:</span><span class="dv">10006000-10006499</span> ...</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  chr4<span class="sc">:</span><span class="dv">99961000-99961499</span> chr4<span class="sc">:</span><span class="dv">99961500-99961999</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>rowData <span class="fu">names</span>(<span class="dv">1</span>)<span class="sc">:</span> CD16 Mono</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(<span class="dv">39</span>)<span class="sc">:</span> B011<span class="sc">-</span>AP0C1W3 B011<span class="sc">-</span>AP0C1W8 ... FSQEAZ0C2D3<span class="dv">-02</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  FSQFAZ0BZJQ<span class="dv">-02</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>colData <span class="fu">names</span>(<span class="dv">186</span>)<span class="sc">:</span> Sample well_id ... ATAC_WellID AIFI.Batch</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span></code></pre></div>
+<p>It also holds metadata related to the genome, transcript database, and annotations: <code>metadata(SampleTileMatrices)</code></p>
+</div>
+<div class="section level2">
+<h2 id="getdifferentialaccessibletiles-results">getDifferentialAccessibleTiles results<a class="anchor" aria-label="anchor" href="#getdifferentialaccessibletiles-results"></a>
+</h2>
+<p>Results of <code><a href="reference/getDifferentialAccessibleTiles.html">MOCHA::getDifferentialAccessibleTiles</a></code> is given either as a <code>data.table</code> or a ‘granges’ and can be filtered accordingly:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">head</span>(plyranges<span class="sc">::</span><span class="fu">filter</span>(differentials, seqnames <span class="sc">==</span><span class="st">'chr4'</span> <span class="sc">&amp;</span> FDR <span class="sc">&lt;</span> <span class="fl">0.2</span>))</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>GRanges object with <span class="dv">6</span> ranges and <span class="dv">13</span> metadata columns<span class="sc">:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      seqnames              ranges strand <span class="sc">|</span>                   Tile</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>         <span class="sc">&lt;</span>Rle<span class="sc">&gt;</span>           <span class="er">&lt;</span>IRanges<span class="sc">&gt;</span>  <span class="er">&lt;</span>Rle<span class="sc">&gt;</span> <span class="er">|</span>            <span class="er">&lt;</span>character<span class="sc">&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">1</span>]     chr4   <span class="dv">10023500-10023999</span>      <span class="sc">*</span> <span class="er">|</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span>]     chr4   <span class="dv">10024000-10024499</span>      <span class="sc">*</span> <span class="er">|</span> chr4<span class="sc">:</span><span class="dv">10024000-10024499</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span>]     chr4   <span class="dv">10063500-10063999</span>      <span class="sc">*</span> <span class="er">|</span> chr4<span class="sc">:</span><span class="dv">10063500-10063999</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span>]     chr4   <span class="dv">10096500-10096999</span>      <span class="sc">*</span> <span class="er">|</span> chr4<span class="sc">:</span><span class="dv">10096500-10096999</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">5</span>]     chr4     <span class="dv">1010500-1010999</span>      <span class="sc">*</span> <span class="er">|</span>   chr4<span class="sc">:</span><span class="dv">1010500-1010999</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">6</span>]     chr4 <span class="dv">101346000-101346499</span>      <span class="sc">*</span> <span class="er">|</span> chr4<span class="sc">:</span><span class="dv">101346000-10134</span>..</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      CellPopulation  Foreground  Background     P_value Test_Statistic</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>         <span class="sc">&lt;</span>character<span class="sc">&gt;</span> <span class="er">&lt;</span>character<span class="sc">&gt;</span> <span class="er">&lt;</span>character<span class="sc">&gt;</span>   <span class="er">&lt;</span>numeric<span class="sc">&gt;</span>      <span class="er">&lt;</span>numeric<span class="sc">&gt;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">1</span>]      CD16 Mono    Positive    Negative <span class="fl">0.002610899</span>       <span class="fl">11.89612</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span>]      CD16 Mono    Positive    Negative <span class="fl">0.023560228</span>        <span class="fl">7.49639</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span>]      CD16 Mono    Positive    Negative <span class="fl">0.000421733</span>       <span class="fl">12.43336</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span>]      CD16 Mono    Positive    Negative <span class="fl">0.006561717</span>       <span class="fl">10.05301</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">5</span>]      CD16 Mono    Positive    Negative <span class="fl">0.016701496</span>        <span class="fl">5.72747</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">6</span>]      CD16 Mono    Positive    Negative <span class="fl">0.006274534</span>        <span class="fl">7.46972</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>            FDR  Log2FC_C   MeanDiff Avg_Intensity_Case Pct0_Case</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="sc">&lt;</span>numeric<span class="sc">&gt;</span> <span class="er">&lt;</span>numeric<span class="sc">&gt;</span>  <span class="er">&lt;</span>numeric<span class="sc">&gt;</span>          <span class="er">&lt;</span>numeric<span class="sc">&gt;</span> <span class="er">&lt;</span>numeric<span class="sc">&gt;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">1</span>] <span class="fl">0.0788621</span>  <span class="fl">1.023296</span>  <span class="fl">2.9715709</span>            <span class="fl">12.3478</span> <span class="fl">0.0000000</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span>] <span class="fl">0.1910923</span>  <span class="fl">0.648633</span> <span class="sc">-</span><span class="fl">0.0879542</span>            <span class="fl">12.2027</span> <span class="fl">0.0588235</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span>] <span class="fl">0.0451423</span>  <span class="fl">0.786501</span>  <span class="fl">0.7773734</span>            <span class="fl">12.8422</span> <span class="fl">0.0000000</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span>] <span class="fl">0.1124369</span>  <span class="fl">0.739042</span>  <span class="fl">1.3575321</span>            <span class="fl">13.0183</span> <span class="fl">0.0000000</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">5</span>] <span class="fl">0.1628641</span> <span class="sc">-</span><span class="fl">0.476150</span> <span class="sc">-</span><span class="fl">0.4293368</span>            <span class="fl">13.6077</span> <span class="fl">0.0000000</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">6</span>] <span class="fl">0.1091473</span> <span class="sc">-</span><span class="fl">0.397274</span> <span class="sc">-</span><span class="fl">0.3913687</span>            <span class="fl">13.1689</span> <span class="fl">0.0000000</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>      Avg_Intensity_Control Pct0_Control</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>                  <span class="sc">&lt;</span>numeric<span class="sc">&gt;</span>    <span class="er">&lt;</span>numeric<span class="sc">&gt;</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">1</span>]               <span class="fl">11.1988</span>    <span class="fl">0.1818182</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">2</span>]               <span class="fl">11.4155</span>    <span class="fl">0.0000000</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">3</span>]               <span class="fl">12.0881</span>    <span class="fl">0.0000000</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">4</span>]               <span class="fl">12.2886</span>    <span class="fl">0.0454545</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">5</span>]               <span class="fl">14.2039</span>    <span class="fl">0.0000000</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  [<span class="dv">6</span>]               <span class="fl">13.5651</span>    <span class="fl">0.0000000</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-------</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  seqinfo<span class="sc">:</span> <span class="dv">24</span> sequences from an unspecified genome; no seqlengths</span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="getcoaccessiblelinks-results">getCoAccessibleLinks results<a class="anchor" aria-label="anchor" href="#getcoaccessiblelinks-results"></a>
+</h2>
+<p>Results of <code><a href="reference/getCoAccessibleLinks.html">MOCHA::getCoAccessibleLinks</a></code> is given as a <code>data.frame</code> and can be filtered further according to correlation using <code><a href="reference/filterCoAccessibleLinks.html">MOCHA::filterCoAccessibleLinks</a></code>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">head</span>(links)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>   Correlation                  Tile1                  Tile2</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span><span class="sc">:</span>  <span class="fl">0.06203363</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10005500-10005999</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span><span class="sc">:</span> <span class="sc">-</span><span class="fl">0.07812306</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10006000-10006499</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span><span class="sc">:</span>  <span class="fl">0.06192133</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10006500-10006999</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="dv">4</span><span class="sc">:</span>  <span class="fl">0.25329153</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10007000-10007499</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dv">5</span><span class="sc">:</span>  <span class="fl">0.09938466</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10013500-10013999</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dv">6</span><span class="sc">:</span>  <span class="fl">0.03643015</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10015000-10015499</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> MOCHA<span class="sc">::</span><span class="fu">filterCoAccessibleLinks</span>(links, <span class="at">threshold =</span> <span class="fl">0.4</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>   Correlation                  Tile1                  Tile2  chr    start      end</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span><span class="sc">:</span>   <span class="fl">0.5035455</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10024000-10024499</span> chr4 <span class="dv">10023500</span> <span class="dv">10024499</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span><span class="sc">:</span>   <span class="fl">0.5121115</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10063500-10063999</span> chr4 <span class="dv">10023500</span> <span class="dv">10063999</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span><span class="sc">:</span>   <span class="fl">0.4059254</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10078000-10078499</span> chr4 <span class="dv">10023500</span> <span class="dv">10078499</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="dv">4</span><span class="sc">:</span>   <span class="fl">0.4003500</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10096500-10096999</span> chr4 <span class="dv">10023500</span> <span class="dv">10096999</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="dv">5</span><span class="sc">:</span>   <span class="fl">0.4367843</span> chr4<span class="sc">:</span><span class="dv">10023500-10023999</span> chr4<span class="sc">:</span><span class="dv">10106500-10106999</span> chr4 <span class="dv">10023500</span> <span class="dv">10106999</span></span></code></pre></div>
 </div>
 </div>
+<div class="section level1">
+<h1 id="id_-contact-1">
+<a name="contact"></a> Contact<a class="anchor" aria-label="anchor" href="#id_-contact-1"></a>
+</h1>
+<p>To contact the developers on issues and feature requests, please contact us via the discussions tab for feature requests, or open issues for any bugs.</p>
+</div>
+<div class="section level1">
+<h1 id="id_-license">
+<a name="license"></a> License<a class="anchor" aria-label="anchor" href="#id_-license"></a>
+</h1>
+<p>MOCHA follows the Allen Institute Software License - full information about the license can be found on the LICENSE file.</p>
+</div>
+
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

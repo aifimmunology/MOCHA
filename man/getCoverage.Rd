@@ -37,3 +37,4 @@ popCounts A GRangesList of coverage for each sample and cell population
 getCoverage takes the output of MOCHA::getPopFrags and returns
  a GRanges of singe-basepair resolution coverage.
 }
+\keyword{utils}
