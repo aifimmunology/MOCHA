@@ -130,8 +130,22 @@ getSampleTileMatrix <- function(tileResults,
     }
 
     allTiles <- sort(unique(do.call("c", tilesByCellPop)))
+
+    
+    . <- NULL
+    tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
+      do.call("cbind", .) %>%
+      as.data.frame()
+    allTilesGR <- MOCHA::StringsToGRanges(allTiles)
+    GenomicRanges::mcols(allTilesGR) <- tilePresence
+
   }else{
     allTiles = tiles
+    allTilesGR <- tileGRanges
+    tilePresence <-  lapply(tileGRanges, function(x) (rep(TRUE, length(tileGRanges)))) %>%
+      do.call("cbind", .) %>%
+      as.data.frame()
+    GenomicRanges::mcols(allTilesGR) <- tilePresence
   }
 
   if (verbose) {
@@ -154,13 +168,6 @@ getSampleTileMatrix <- function(tileResults,
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
   colOrder <- colnames(sampleTileIntensityMatList[[maxMat]])
   sampleData <- sampleData[match(colOrder, rownames(sampleData)), ]
-
-  . <- NULL
-  tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
-    do.call("cbind", .) %>%
-    as.data.frame()
-  allTilesGR <- MOCHA::StringsToGRanges(allTiles)
-  GenomicRanges::mcols(allTilesGR) <- tilePresence
 
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,
