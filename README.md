@@ -38,7 +38,7 @@ Please view the example usage found in the vignette found under
 
 The example usage demonstrates this workflow: 
 
-![Workflow](inst/extData/workflow_diagram_v3_website.png)
+![Workflow](man/figures/workflow_diagram_v3_website.png)
 
 ## <a name="contact"></a> Contact
 

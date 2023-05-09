@@ -2,7 +2,7 @@
 title: "Importing From Other Sources"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Importing-From-Other-Sources}
+  %\VignetteIndexEntry{Importing From Other Sources}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

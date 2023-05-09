@@ -1,8 +1,8 @@
 ---
-title: "COVID-walkthrough"
+title: "Walkthrough with COVID Dataset"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{COVID-walkthrough}
+  %\VignetteIndexEntry{Walkthrough with COVID Dataset}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
