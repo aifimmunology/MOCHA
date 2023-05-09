@@ -31,6 +31,7 @@
 #' }
 #'
 #' @export
+#' @keywords downstream
 runLMEM <- function(ExperimentObj,
                     modelFormula = NULL,
                     initialSampling = 5,
@@ -239,6 +240,7 @@ individualLMEM <- function(iterList) {
 #'
 #'
 #' @export
+#' @keywords downstream
 pilotLMEM <- function(ExperimentObj,
                       cellPopulation = NULL,
                       modelFormula = NULL,

@@ -16,6 +16,7 @@
 #' 
 #' @return popCounts A GRangesList of coverage for each sample and cell population
 #' @export
+#' @keywords utils
 getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {

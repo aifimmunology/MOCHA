@@ -1,4 +1,4 @@
-#' @title \code{addMotifSet} Identify motifs within a peakset
+#' @title Identify motifs within a peakset
 #'
 #' @description \code{addMotifSet} Identify motifs within your peakset.
 #'

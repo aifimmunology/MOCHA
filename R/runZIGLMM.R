@@ -39,6 +39,7 @@
 #' }
 #'
 #' @export
+#' @keywords downstream
 runZIGLMM <- function(TSAM_Object,
                       cellPopulation = NULL,
                       continuousFormula = NULL,
@@ -282,6 +283,7 @@ individualZIGLMM <- function(iterList) {
 #'
 #'
 #' @export
+#' @keywords downstream
 pilotZIGLMM <- function(TSAM_Object,
                         cellPopulation = NULL,
                         continuousFormula = NULL,

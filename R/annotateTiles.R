@@ -1,4 +1,4 @@
-#' @title \code{annotateTiles} Add gene annotations
+#' @title Annotate tiles with gene annotations
 #'
 #' @description \code{annotateTiles} annotates a set of sample-tile matrices
 #'   given with gene annotations. Details on TxDb and Org annotation packages

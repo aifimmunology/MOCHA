@@ -1,5 +1,5 @@
 
-#' @title \code{combineSampleTileMatrix}
+#' @title Merge the TSAM from multiple cell populations into a single matrix
 #'
 #' @description \code{combineSampleTileMatrix} combines all celltypes in a
 #'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
@@ -14,6 +14,7 @@
 #'
 #'
 #' @export
+#' @keywords utils
 combineSampleTileMatrix <- function(SampleTileObj,
                                     NAtoZero = TRUE, 
                                     verbose = FALSE) {
