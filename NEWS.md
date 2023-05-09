@@ -1,6 +1,6 @@
 # MOCHA 1.0.0
 
-* Adopting semantic versioning starting with this version, breaking changes compared to 
+* Adopting semantic versioning starting with this version, versioning reflects breaking changes compared to previous CRAN release.
 * Includes test improvements
 * New functions bulkDimReduction, bulkUMAP, MotifEnrichment, MotifSetEnrichmentAnalysis, pilotLMEM, runLMEM, pilotZIGLMM, runZIGLMM, combineSampleTileMatrix, getCoverage
 * Improvements to metadata carried by output objects
