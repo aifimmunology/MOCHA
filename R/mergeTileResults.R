@@ -60,17 +60,19 @@
 #' @export
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
 
-
+  #Test for duplicate sample names
   sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(colData(x))))
   if (any(duplicated(sampleTest))) {
     stop("Sample names are duplicated in your list of tileResults. Please provide tileResults from different samples, not the same one's duplicated. ")
   }
 
+  #Test whether all the tileResultsList indices are MultiAssayExperiments. 
   classTest <- lapply(tileResultsList, function(x) class(x)[1])
   if (any(unlist(classTest) != "MultiAssayExperiment")) {
     stop("At least one index of the tileResultsList is not MultiAssayExperiment")
   }
 
+  #Test whether all the tileResults objects have the same Transcript, organism, and genome databases involved before merging. 
   TxDbTest <- unique(unlist(lapply(tileResultsList, function(x) x@metadata$TxDb$pkgname)))
   if (length(TxDbTest) > 1) {
     stop("Different TxDb were used to generates these tile results. Please re-run with the same TxDb")
@@ -86,10 +88,10 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
     stop("These tileResults are from different genome assemblies and cannot be merged.")
   }
 
-
-  browser()
+  #Find all celltypes across all tile results objects. 
   allCellTypes <- as.data.frame(table(unlist(lapply(tileResultsList, names))))
 
+  #Find the subset of cell types that are in common across all tileResults objects. Merge those. 
   subCellTypes <- as.character(unlist(dplyr::filter(allCellTypes, Freq == length(tileResultsList))$Var))
 
   if(length(subCellTypes) == 0){
@@ -99,6 +101,8 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
     message(paste0(subCellTypes, sep = ', '), 'are in common between all tileResults objects. These will be merged.')
   }
 
+  #Iterate across each tileResults object, extracting the RaggedExperiments and turning them back into GRangesList. 
+  #These GRangesList can then be concatenated easily, and then turned back into RaggedExperiments, and joined into one final tile results object. 
   cl = parallel::makeCluster(numCores)
   allRaggedResults <- lapply(subCellTypes, function(y){
             ragRes <- lapply(tileResultsList, function(x) x[[as.character(y)]])
@@ -112,6 +116,7 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   #Merged sample and other metadata information. 
   allSampleData <- do.call(eval(parse(text="dplyr::bind_rows")), lapply(tileResultsList, function(x){ as.data.frame(SummarizedExperiment::colData(x))}))
  
+  #This is complicated, but it lets us handle table or data.frame outputs for this info. Merges cell counts and fragment count info across tile results. 
   allCellCounts <- do.call('cbind',pbapply::pblapply(cl = NULL, X = subCellTypes, function(y){
      
      tmpCell <- data.frame(unlist(lapply(tileResultsList, function(z){ z@metadata$CellCounts[,y] })))
@@ -127,7 +132,7 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   }))
   colnames(allCellCounts) <- colnames(allFragmentCounts) <-  subCellTypes
  
-
+  #Construct final tile results object. 
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = allRaggedResults,
     colData = allSampleData,
