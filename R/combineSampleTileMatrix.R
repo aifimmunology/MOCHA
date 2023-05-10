@@ -58,7 +58,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   cellCounts <-  dplyr::select(cellCounts, dplyr::one_of(names(assays))) 
   cellCounts <-  dplyr::mutate(cellCounts, Sample = rownames(cellCounts))
   cellCounts <-  tidyr::pivot_longer(cellCounts, cols = names(assays), names_to = 'CellTypes', values_to = 'CellCount') 
-  cellCounts <-  dplyr::mutate(cellCounts, Sample = gsub(" ", "_", paste(CellTypes, Sample, sep = "__"))
+  cellCounts <-  dplyr::mutate(cellCounts, Sample = gsub(" ", "_", paste(CellTypes, Sample, sep = "__")))
   cellCounts <-  dplyr::select(cellCounts, Sample, CellCount)
 
   fragCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$FragmentCounts)
