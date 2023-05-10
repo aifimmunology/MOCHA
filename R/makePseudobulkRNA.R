@@ -88,6 +88,7 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
         cellMatList <- lapply(unique(cellTypes), function(x){
             
             cellMat <- subsetMat[, x == cellTypes]
+            colnames(cellMat) <- gsub(".*__","", colnames(cellMat))
             if(!all(sampleList %in% colnames(cellMat))){
                     emptyData = rep(0, dim(cellMat)[1])
                     emptyDF = do.call('cbind',lapply(1:sum(!sampleList %in% colnames(cellMat)), function(x) emptyData))
