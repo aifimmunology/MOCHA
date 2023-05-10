@@ -95,7 +95,7 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
                     colnames(emptyDF) = sampleList[!sampleList %in% colnames(cellMat)]
                     cellMat <- cbind(cellMat, emptyDF)
             }
-            cellMat[,match(sampleData$Sample, colnames(cellMat))]
+            cellMat[,match(unlist(sampleData[,sampleColumn]), colnames(cellMat))]
         })
         names(cellMatList) = unique(cellTypes)
 
@@ -114,7 +114,7 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
                     colnames(emptyDF) = sampleList[!sampleList %in% colnames(cellMat)]
                     cellMat <- cbind(cellMat, emptyDF)
             }
-            cellMat[,match(sampleData$Sample, colnames(cellMat))]
+            cellMat[,match(unlist(sampleData[,sampleColumn]), colnames(cellMat))]
         })
         names(cellMatList) = cellTypes
 
