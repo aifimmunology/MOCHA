@@ -26,19 +26,23 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
 
     }
 
+    #Generate sample and cell type column in metadata for pseudobulking.
     SO@meta.data$sample_celltype = paste(SO@meta.data[,cellTypeColumn], SO@meta.data[,sampleColumn], sep = '__')
 
+    #Pseudobulk. This should be looking at the normalized data. 
     mat <- Seurat::AverageExpression(SO, assays = "RNA", slot = dataSlot, group.by = 'sample_celltype', return.seurat = FALSE)
     mat_df <- as.data.frame(mat$RNA)
     colnames(mat_df) <- gsub(" ","_", colnames(mat_df))
     mat_df$AllGenes <- rownames(mat_df)
-    ## Clean up isoforms, if any. 
+    ## Clean up isoforms, if any (duplicate gene names. More likely an issue with ensembl IDs.)
     mat_df$Genes <- gsub("\\.*","", mat_df$AllGenes) 
 
-
+    #Summarize isoform issues together. 
     summarizeMat <- dplyr::group_by(mat_df, Genes) 
     summarizeMat <- dplyr::select(summarizeMat, !AllGenes)
     summarizeMat <- dplyr::summarise_all(summarizeMat, mean)
+
+    #Multiply by 1000 to get the average gene counts (normalized, presumably) per 1000 cells. 
     newSumMat <- as.data.frame(summarizeMat[,-1])*1000
     rownames(newSumMat) <- summarizeMat$Genes 
 
@@ -60,30 +64,38 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
     # Set sampleIDs as rownames
     rownames(sampleData) <- sampleData[[sampleColumn]]
 
+    #Process the meta data and extract the total counts and features for each population, as well as cell counts. 
     fullMeta <- dplyr::group_by_at(as.data.frame(SO@meta.data), c(sampleColumn, cellTypeColumn))
 
-    countInfo <- dplyr::summarise(fullMeta, nCount = sum(nCount_RNA), nFeature = sum(nFeature_RNA),
+    countInfo <- dplyr::summarise(fullMeta, nCount =  mean(nCount_RNA, na.rm = TRUE), nFeature = mean(nFeature_RNA, na.rm = TRUE),
                                       CellCount = dplyr::n())
 
     sampleList <- unique(SO@meta.data[,sampleColumn])
-    browser()
-    if(filterByRowData){
+
+    #Decide if you are interweaving this data with genomic databases/locations. 
+    if(addGenomicLocations){
         
+        #Pull in Transcript and Organism databases. 
         TxDb <- MOCHA:::getAnnotationDbFromInstalledPkgname(dbName=TxDb, type="TxDb")
         OrgDb <- MOCHA:::getAnnotationDbFromInstalledPkgname(dbName=OrgDb, type="OrgDb")
 
+        #Extact the GenomicRanges for all genes, while filtering out non-standard chromosomes that mess things up. 
         txList <-suppressWarnings(GenomicFeatures::genes(TxDb, single.strand.genes.only = TRUE))
         txList <- GenomeInfoDb::keepStandardChromosomes(sort(txList), species='Homo_sapiens',
                                       pruning.mode = 'coarse')
+        #Reduce ranges merges transcripts for the same gene into one, so that we can one ball-park stop and end. 
         txList <- plyranges::reduce_ranges(plyranges::group_by(txList, gene_id))
         txList$GeneSymbol <- suppressWarnings(AnnotationDbi::mapIds(OrgDb, as.character(txList$gene_id), Seurat_format, "ENTREZID"))
         txList <- plyranges::filter(txList, !is.na(GeneSymbol) & GeneSymbol %in% rownames(newSumMat))
         txList <- plyranges::reduce_ranges(plyranges::group_by(txList, GeneSymbol))
         names(txList) <- txList$GeneSymbol
 
+        #Subset down the read count matrix to just the transcripts we ahve in this database.
         subsetMat <- newSumMat[rownames(newSumMat) %in% txList$GeneSymbol, ]
         subsetMat <- subsetMat[match(txList$GeneSymbol,rownames(subsetMat)), ]
 
+        #now iterate over each cell type, and generate a sample-gene matrix (while adding in empty columns for samples that didn't have any of a given cell type detected.)
+        #Failing to add in empty samples will break the SummarizedExperiment object at the end. 
         cellTypes <- gsub("__.*", "", colnames(subsetMat))
         cellMatList <- lapply(unique(cellTypes), function(x){
             
@@ -99,9 +111,13 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
         })
         names(cellMatList) = unique(cellTypes)
 
+        # Repackage the gene-sample matrices, the sampleData, transcript Genomic Ranges, and associated metadata (countInfo) into one SummarizedExperiment object. 
         rnaSE <- SummarizedExperiment::SummarizedExperiment(cellMatList, colData = sampleData, rowRanges = txList, metadata = countInfo)
 
     }else{
+
+        #now iterate over each cell type, and generate a sample-gene matrix (while adding in empty columns for samples that didn't have any of a given cell type detected.)
+        #Failing to add in empty samples will break the SummarizedExperiment object at the end. 
 
         cellTypes <- gsub("__.*", "", colnames(newSumMat))
         cellMatList <- lapply(unique(cellTypes), function(x){
@@ -118,16 +134,7 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
         })
         names(cellMatList) = cellTypes
 
-        if(any(unlist(lapply(cellMatList, function(x) dim(x)[2] != length(sampleList))))){
-
-            cellMatList <- lapply(cellMatList, function(x){
-    
-                  
-            })
-            names(cellMatList) = cellTypes
-
-        }
-
+        # Repackage the gene-sample matrices, the sampleData,  and associated metadata (countInfo) into one SummarizedExperiment object. 
         rnaSE <-  SummarizedExperiment::SummarizedExperiment(mat, colData = sampleData, metadata = countInfo)
     }
     
