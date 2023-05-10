@@ -15,7 +15,7 @@
 #' @export
 makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample", 
                                  dataSlot = 'data',
-                                 filterByRowData = TRUE,
+                                 addGenomicLocations = TRUE,
                                  Seurat_format = 'SYMBOL',
                                  TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene", 
                                  OrgDb = "org.Hs.eg.db"){
