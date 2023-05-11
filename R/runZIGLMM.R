@@ -230,14 +230,25 @@ individualZIGLMM <- function(x) {
 
   output_vector <- tryCatch(
     {
-      if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
+     
+      if(sum(df$exp == 0)/length(df$exp) == 0){
         modelRes <- glmmTMB::glmmTMB(continuousFormula,
           ziformula = ~ 0,
           data = df,
           family = stats::gaussian(),
           REML = TRUE
         )
-      }else{
+       
+      }else if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
+        df$exp[df$exp == 0] = NA
+        modelRes <- glmmTMB::glmmTMB(continuousFormula,
+          ziformula = ~ 0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+       
+      }else {
         modelRes <- glmmTMB::glmmTMB(continuousFormula,
           ziformula = ziformula,
           data = df,
@@ -345,7 +356,7 @@ pilotZIGLMM <- function(TSAM_Object,
       MetaDF, stringsAsFactors = FALSE
     )
 
-    if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
+    if(sum(df$exp == 0)/length(df$exp) == 0){
         modelRes <- glmmTMB::glmmTMB(continuousFormula,
           ziformula = ~ 0,
           data = df,
@@ -353,7 +364,16 @@ pilotZIGLMM <- function(TSAM_Object,
           REML = TRUE
         )
        
-      }else{
+      }else if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
+        df$exp[df$exp == 0] = NA
+        modelRes <- glmmTMB::glmmTMB(continuousFormula,
+          ziformula = ~ 0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+       
+      }else {
         modelRes <- glmmTMB::glmmTMB(continuousFormula,
           ziformula = ziformula,
           data = df,
