@@ -351,7 +351,7 @@ pilotZIGLMM <- function(TSAM_Object,
 
   # Make your clusters for efficient parallelization
   modelList <- pbapply::pblapply(X = pilotNames, function(x) {
-    browser()
+  
     df <- data.frame(
       exp = as.numeric(modelingData[x, ]),
       MetaDF, stringsAsFactors = FALSE
@@ -384,6 +384,7 @@ pilotZIGLMM <- function(TSAM_Object,
       }
 
   }, cl = NULL)
+  names(modelList) <- pilotNames
 
   return(modelList)
 }
