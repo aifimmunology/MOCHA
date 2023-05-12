@@ -50,8 +50,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
   }))
-
-  browser()
   
   cellTypeLabelList <- Var1 <- NULL
   cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts)
