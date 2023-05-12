@@ -339,7 +339,8 @@ pilotZIGLMM <- function(TSAM_Object,
   variableList <- c(all.vars(continuousFormula)[all.vars(continuousFormula) != "exp"], all.vars(ziformula))
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
-  modelingData <- modelingData[pilotIndices, match(colnames(modelingData), MetaDF$Sample)]
+  pilotNames <- rownames(modelingData)[pilotIndices]
+  modelingData <- modelingData[pilotNames, match(colnames(modelingData), MetaDF$Sample)]
 
   # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
@@ -349,8 +350,8 @@ pilotZIGLMM <- function(TSAM_Object,
   }
 
   # Make your clusters for efficient parallelization
-
-  modelList <- pbapply::pblapply(X = pilotIndices, function(x) {
+  modelList <- pbapply::pblapply(X = pilotNames, function(x) {
+    browser()
     df <- data.frame(
       exp = as.numeric(modelingData[x, ]),
       MetaDF, stringsAsFactors = FALSE
