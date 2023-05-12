@@ -198,3 +198,57 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
     stop(dbName, " doesn't look like a valid ", type, " data package")
   db
 }
+
+
+#' @title \code{getCellTypes} Extract cell type names from a Tile Results or Sample Tile object.
+#'
+#' @description \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
+#'
+#' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
+#' @return a vector of cell type names. 
+#'
+#' @export
+getCellTypes <- function(object) {
+  if(class(object)[1] == 'MultiAssayExperiment'){
+    return(names(object))
+  }else if(class(object)[1] == 'RangedSummarizedExperiment'){
+    return(names(SummarizedExperiment::assays(object)))
+  }else{
+    stop('Object not recognized. Please provide an object from callOpenTiles or getSampleTileMatrix.')
+  }
+}
+
+#' @title \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata
+#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and 
+#'
+#' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
+#' @return a SummarizedExperiment where each assay is a different type of metadata.  
+#'
+#' @export
+getSampleCellTypeMetadata <- function(object) {
+  #Check if the object has Sample-CellType-level metadata stored in the metadata slot.
+  if(all(c('FragmentCounts','CellCounts') %in% names(object@metadata))){
+
+    sampleData <- SummarizedExperiment::colData(object)
+
+    fragCounts <- object@metadata$FragmentCounts
+    fragMat <- as.matrix(t(fragCounts[match(rownames(sampleData), rownames(fragCounts)),]))
+    rownames(fragMat) <- colnames(fragCounts)
+
+    cellCounts <- object@metadata$CellCounts
+    cellMat <- as.matrix(t(cellCounts[match(rownames(sampleData), rownames(cellCounts)),]))
+    rownames(cellMat) <- colnames(cellMat)
+
+    if(any(!dim(cellMat) %in% dim(cellCounts))){
+      stop('Error in processing Sample-Cell type metadata. Some Samples may be missing. Please correct Sample-Cell type metadata manually or regenerate the object.')
+    }
+
+    metaList <- list(fragMat, cellMat)
+    names(metaList) <- c('FragmentCounts','CellCounts')
+
+    SE <- SummarizedExperiment::SummarizedExperiment(metaList, colData = sampleData)
+    return(SE)
+  }else{
+    stop('Object does not appear to have Sample-Celltype metadata.')
+  }
+}
