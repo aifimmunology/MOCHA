@@ -408,9 +408,6 @@ pilotZIGLMM <- function(TSAM_Object,
 #' @export
 #' 
 
-
-
-
 getModelValues <- function(object, specificVariable){
     
     slopes = SummarizedExperiment::assays(object)[['Slopes']]
@@ -426,3 +423,76 @@ getModelValues <- function(object, specificVariable){
 }
 
 
+
+
+
+#' @title plotZIModels
+#'
+#' @description \code{plotZIModels} plots the data and the generalized slope from the output of pilotZIGLMM
+#' @param modelList a list of models, output from pilotZIModels
+#' @param x The variable that you want to plot the x-axis over. 
+#' @param group the group column name, for ggplot line plots.
+#' @param colour the colour parameter for ggplot
+#' @param returnMatrix Returns the data.frame of values and predictions, without plotting. 
+#' 
+#' @return list of gpplots, or a list of data.frames. 
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#'   predictedDF <- plotZIModels(modelList,returnMatrix = TRUE)
+#' }
+#'
+#' @export
+#' 
+
+plotZIModels <- function(modelList, x = 'days_since_symptoms', group ='PTID',  colour ='PTID', returnMatrix = FALSE){
+    
+    pList <- lapply(seq_along(modelList), function(i){
+        
+        #Extract the original values
+        df <- as.data.frame(modelList[[i]]$frame)
+        tile <- names(modelList)[i]
+        #Extract the model fit
+        tryCatch({
+            sum_fit = summary(modelList[[i]])
+            coefs = sum_fit$coefficients$cond[,1]
+            numericCoefs <- names(coefs)[names(coefs) %in% colnames(df) & names(coefs) != x]
+
+            df$Prediction = coefs[1] + sum(unlist(lapply(numericCoefs, function(z) { coefs[z]* mean(df[,z])}))) + coefs[x]*df[,x]
+
+            if(returnMatrix){
+                
+                df
+                
+            }else{
+                ggplot(df, aes_string(x=x,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                    geom_line(data=df[df$exp>0,],aes_string(x=x, y='exp',alpha=0.3), linewidth=0.5)+
+                    ggtitle(tile)+ 
+                    geom_line(data=df,aes_string(x=x,y='Prediction'),linewidth=1, col='black') + theme_minimal() + 
+                    theme(legend.position = 'none')
+                    
+            }
+        },error=function(e){
+            df <- as.data.frame(modelList[[i]]$frame)
+            tile <- names(modelList)[i]
+            if(returnMatrix){
+                
+                df
+                
+            }else{
+                ggplot(df, aes_string(x=x,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                    geom_line(data=df[df$exp>0,],aes_string(x=x, y='exp',alpha=0.3), linewidth=0.5)+
+                    ggtitle(paste(tile,"Model Failed",sep = ' '))+ 
+                    theme_minimal() + 
+                    theme(legend.position = 'none')
+                    
+            }
+        })
+    })
+                     
+    return(pList)
+}
+    
+    
