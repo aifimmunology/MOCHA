@@ -43,6 +43,9 @@ combineSampleTileMatrix <- function(SampleTileObj,
     newAssays[[1]][is.na(newAssays[[1]])] <- 0
   }
 
+  # Combine Sample and Cell type for the new columns. 
+  # This takes the colData and repeats it across cell types for a given sample
+  # Rows are now CellType__Sample. So for example 'CD16 Mono' and 'Sample1' becomes "CD16_Mono__Sample1"
   allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
     tmp_meta <- coldata
     tmp_meta$Sample <- gsub(" ", "_", paste(x, tmp_meta$Sample, sep = "__"))
@@ -51,6 +54,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     tmp_meta
   }))
   
+  ### This is where cell counts and fragments counts are pivoted into a long format and merged (left-Joined) into the new allSampleData
   cellTypeLabelList <- Var1 <- NULL
   cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts)
   cellCounts <- dplyr::mutate(cellCounts,
@@ -64,6 +68,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   fragCounts <-  dplyr::mutate(fragCounts, Sample = gsub(" ", "_", paste(CellTypes, Sample, sep = "__")))
   fragCounts <-  dplyr::select(fragCounts, Sample, FragNumber)
 
+  #the sample column now is actually CellType_Sample, unlike before
   allSampleData <- dplyr::left_join(
     as.data.frame(allSampleData), cellCounts, by = "Sample")
 
@@ -71,6 +76,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     allSampleData,  fragCounts, by = 'Sample'
   )
 
+  #Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting. 
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
   for (i in names(assays)) {
     GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
