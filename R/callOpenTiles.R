@@ -537,10 +537,15 @@ setMethod(
   sampleData <- suppressWarnings(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
+''' R
+additionalCellData = list('TssEnrichment' = df1, 'Other '= df2))
+  additionalCellData   <- additionalCellData[names(additionalCellData) %in% colnames(sampleData)]
+'''
 
   ## Finish processing the fragment number metadata for each sample-cell type combination.
   allFragmentCounts[is.na(allFragmentCounts)] = 0
 
+  ## Get Sample-Celltype level metadata 
   sampleCellTypeMetaData = SummarizedExperiment::SummarizedExperiment(
     append(
       list("CellCounts" = as.data.frame(allCellCounts)),
