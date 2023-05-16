@@ -30,31 +30,6 @@
 #'
 #' @examples
 #' \donttest{
-#' # Starting from GRangesList
-#' if (
-#'   require(BSgenome.Hsapiens.UCSC.hg19) && 
-#'   require(TxDb.Hsapiens.UCSC.hg38.refGene) && 
-#'   require(org.Hs.eg.db)
-#' ) {
-#' tiles <- MOCHA::callOpenTiles(
-#'   ATACFragments = MOCHA::exampleFragments,
-#'   cellColData = MOCHA::exampleCellColData,
-#'   blackList = MOCHA::exampleBlackList,
-#'   genome = BSgenome.Hsapiens.UCSC.hg19,
-#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'   Org = org.Hs.eg.db,
-#'   outDir = tempdir(),
-#'   cellPopLabel = "Clusters",
-#'   cellPopulations = c("C2", "C5"),
-#'   numCores = 1
-#' )
-#' 
-#' SampleTileMatrices <- MOCHA::getSampleTileMatrix(
-#'   tiles,a
-#'   cellPopulations = c('C2', 'C5'),
-#'   threshold = 0 # Take union of all samples' open tiles
-#' )
-#' }
 #' }
 #'
 #' @export

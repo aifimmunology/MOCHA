@@ -19,8 +19,6 @@
 #'   in to be retained. If set to 0, retain the union of all samples' peaks
 #'   (this is equivalent to a threshold of 1/numSamples). It is recommended to
 #'   tune this parameter to omit potentially spurious peaks.
-#' @param tiles Optional, the number of cores to use with multiprocessing.
-#'   Default is 1.
 #' @param numCores Optional, the number of cores to use with multiprocessing.
 #'   Default is 1.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -62,19 +60,11 @@ getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
                                 groupColumn = NULL,
                                 threshold = 0.2,
-                                tiles = NULL,
                                 numCores = 1,
                                 verbose = FALSE) {
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
   }
-
-  if (class(tiles)[1] != "character" & !is.null(tiles)) {
-    stop("tiles have not been provided as a string.")
-  }else if(!is.null(tiles)){
-    tileGRanges <- StringsToGRanges(tiles)
-  }
-
 
   # Any column can be used to group samples
   # Note that these are case-sensitive
@@ -100,54 +90,34 @@ getSampleTileMatrix <- function(tileResults,
     }
   }
 
-  cl <- parallel::makeCluster(numCores)
-  
-  if(is.null(tiles)){
 
-    if (verbose) {
-      message(stringr::str_interp("Extracting consensus tile set for each population"))
-    }
-
-    iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
-      list(MultiAssayExperiment::experiments(subTileResults)[[x]], sampleData, threshold, groupColumn, verbose)
-    })
-
-    tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
-    names(tilesByCellPop) <- names(subTileResults)
-
-    rm(iterList)
-    errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
-    names(errorMessages) <- names(subTileResults)
-
-    if (any(!is.na(errorMessages))) {
-      stop(
-        "Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again",
-        "If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types, ",
-        "Or, you can lower the threshold. ",
-        "The following cell types were impacted:",
-        paste(names(errorMessages)[!is.na(errorMessages)], collapse = ", ")
-      )
-    }
-
-    allTiles <- sort(unique(do.call("c", tilesByCellPop)))
-
-    
-    . <- NULL
-    tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
-      do.call("cbind", .) %>%
-      as.data.frame()
-    allTilesGR <- MOCHA::StringsToGRanges(allTiles)
-    GenomicRanges::mcols(allTilesGR) <- tilePresence
-
-  }else{
-    allTiles = tiles
-    allTilesGR <- tileGRanges
-    tilePresence <-  lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x) (rep(TRUE, length(tileGRanges)))) %>%
-      do.call("cbind", .) %>%
-      as.data.frame()
-    colnames(tilePresence) <- names(subTileResults)
-    GenomicRanges::mcols(allTilesGR) <- tilePresence
+  if (verbose) {
+    message(stringr::str_interp("Extracting consensus tile set for each population"))
   }
+
+  iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
+    list(MultiAssayExperiment::experiments(subTileResults)[[x]], sampleData, threshold, groupColumn, verbose)
+  })
+
+  cl <- parallel::makeCluster(numCores)
+  tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
+  names(tilesByCellPop) <- names(subTileResults)
+  
+  rm(iterList)
+  errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
+  names(errorMessages) <- names(subTileResults)
+
+  if (any(!is.na(errorMessages))) {
+    stop(
+      "Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again",
+      "If there are too few valid samples for a given cell type, use the variable cellPopulations to run this function on a subset of cell types, ",
+      "Or, you can lower the threshold. ",
+      "The following cell types were impacted:",
+      paste(names(errorMessages)[!is.na(errorMessages)], collapse = ", ")
+    )
+  }
+
+  allTiles <- sort(unique(do.call("c", tilesByCellPop)))
 
   if (verbose) {
     message(stringr::str_interp("Generating sample-tile matrix across all populations."))
@@ -169,6 +139,13 @@ getSampleTileMatrix <- function(tileResults,
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
   colOrder <- colnames(sampleTileIntensityMatList[[maxMat]])
   sampleData <- sampleData[match(colOrder, rownames(sampleData)), ]
+
+  . <- NULL
+  tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
+    do.call("cbind", .) %>%
+    as.data.frame()
+  allTilesGR <- MOCHA::StringsToGRanges(allTiles)
+  GenomicRanges::mcols(allTilesGR) <- tilePresence
 
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,
