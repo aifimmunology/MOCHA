@@ -258,7 +258,7 @@ individualZIGLMM <- function(x) {
 
 #' @title Run a test case for Zero-inflated Generalized Linear Mixed Modeling on pseudobulked scATAC data
 #'
-#' @description \code{pilotZIGLMM} ode for testing out formulas on the data. Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. \code{\link[glmmTMB]{glmmTMB}}. 
+#' @description \code{pilotZIGLMM} ode for testing out formulas on the data. Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. TryCatch will catch errors, and return the error and dataframe for troubleshooting. \code{\link[glmmTMB]{glmmTMB}}. 
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix. 
@@ -305,23 +305,33 @@ pilotZIGLMM <- function(TSAM_Object,
     stop("zi_threshold must be between 0 and 1.")
   }
 
-  if (is.null(cellTypeName)) {
+   if (is.null(cellTypeName)) {
     stop("No cell type name was provided.")
-  } else if (length(cellTypeName) > 1) {
-    stop("Please provide only one string within cellTypeName. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellTypeName = 'counts'")
-  } else if (!cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object))) {
-    stop("Cell type name not found within TSAM_Object.")
-  }
+  } else if (all(tolower(cellTypeName) == 'all')) {
 
-  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+    #Merge all together. 
+    newObj <- combineSampleTileMatrix(TSAM_Object)
+
+  } else if (all(cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object)))) {
+
+    #Subset down to just those
+    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+
+  } else {
+  
+    stop("Error around cell type name. Some or all were not found within TSAM_Object.")
+
+  }
+   
+    
   modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
-  if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
+  if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF),  'FragNumber', 'CellCount', 'CellType'))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
   }
 
-  if (!all(all.vars(ziformula) %in% c(colnames(MetaDF))) & length(all.vars(ziformula)) > 0) {
+  if (!all(all.vars(ziformula) %in% c(colnames(MetaDF), 'FragNumber', 'CellCount', 'CellType')) & length(all.vars(ziformula)) > 0) {
     stop("factors from the ziformula were not found in the metadata.")
   }
 
@@ -344,23 +354,28 @@ pilotZIGLMM <- function(TSAM_Object,
       exp = as.numeric(modelingData[x, ]),
       MetaDF, stringsAsFactors = FALSE
     )
+  
+    # tryCatch to catch error, return dataframe for troubleshooting 
+    tryCatch({  
+        if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
+            modelRes <- glmmTMB::glmmTMB(continuousFormula,
+              ziformula = ~ 0,
+              data = df,
+              family = stats::gaussian(),
+              REML = TRUE
+            )
 
-    if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
-        modelRes <- glmmTMB::glmmTMB(continuousFormula,
-          ziformula = ~ 0,
-          data = df,
-          family = stats::gaussian(),
-          REML = TRUE
-        )
-       
-      }else{
-        modelRes <- glmmTMB::glmmTMB(continuousFormula,
-          ziformula = ziformula,
-          data = df,
-          family = stats::gaussian(),
-          REML = TRUE
-        )
-      }
+          }else{
+            modelRes <- glmmTMB::glmmTMB(continuousFormula,
+              ziformula = ziformula,
+              data = df,
+              family = stats::gaussian(),
+              REML = TRUE
+            )
+        }
+      }, error=function(e){
+        warning('Hit modeling error.')
+        list(e, rownames(modelingData)[x], df)})
 
   }, cl = NULL)
 
@@ -404,3 +419,50 @@ getModelValues <- function(object, specificVariable){
 }
 
 
+plotZIModels <- function(modelList, x = 'days_since_symptoms', group ='PTID',  colour ='PTID', returnMatrix = FALSE){
+    
+    pList <- lapply(seq_along(modelList), function(i){
+        
+        #Extract the original values
+        df <- as.data.frame(modelList[[i]]$frame)
+        tile <- names(modelList)[i]
+        #Extract the model fit
+        tryCatch({
+            sum_fit = summary(modelList[[i]])
+            coefs = sum_fit$coefficients$cond[,1]
+            numericCoefs <- names(coefs)[names(coefs) %in% colnames(df) & names(coefs) != x]
+
+            df$Prediction = coefs[1] + sum(unlist(lapply(numericCoefs, function(z) { coefs[z]* mean(df[,z])}))) + coefs[x]*df[,x]
+
+            if(returnMatrix){
+                
+                df
+                
+            }else{
+                ggplot(df, aes_string(x=x,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                    geom_line(data=df[df$exp>0,],aes_string(x=x, y='exp',alpha=0.3), linewidth=0.5)+
+                    ggtitle(tile)+ 
+                    geom_line(data=df,aes_string(x=x,y='Prediction'),linewidth=1, col='black') + theme_minimal() + 
+                    theme(legend.position = 'none')
+                    
+            }
+        },error=function(e){
+            df <- as.data.frame(modelList[[i]]$frame)
+            tile <- names(modelList)[i]
+            if(returnMatrix){
+                
+                df
+                
+            }else{
+                ggplot(df, aes_string(x=x,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                    geom_line(data=df[df$exp>0,],aes_string(x=x, y='exp',alpha=0.3), linewidth=0.5)+
+                    ggtitle(paste(tile,"Model Failed",sep = ' '))+ 
+                    theme_minimal() + 
+                    theme(legend.position = 'none')
+                    
+            }
+        })
+    })
+                     
+    return(pList)
+}
