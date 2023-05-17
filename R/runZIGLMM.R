@@ -263,7 +263,7 @@ individualZIGLMM <- function(iterList) {
 #' @title Execute a pilot run of model on a subset of data
 #'
 #' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
-#'   zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
+#'   zero inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch errors, and return the error and dataframe for troubleshooting.
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix, chromVAR, or other.
@@ -344,13 +344,29 @@ pilotZIGLMM <- function(TSAM_Object,
       exp = as.numeric(modelingData[x, ]),
       MetaDF, stringsAsFactors = FALSE
     )
+      
+    # tryCatch to catch error, return dataframe for troubleshooting 
+     tryCatch({  
+        if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
+            modelRes <- glmmTMB::glmmTMB(continuousFormula,
+              ziformula = ~ 0,
+              data = df,
+              family = stats::gaussian(),
+              REML = TRUE
+            )
 
-    glmmTMB::glmmTMB(continuousFormula,
-      ziformula = ziformula,
-      data = df,
-      family = stats::gaussian(),
-      REML = TRUE
-    )
+          }else{
+            modelRes <- glmmTMB::glmmTMB(continuousFormula,
+              ziformula = ziformula,
+              data = df,
+              family = stats::gaussian(),
+              REML = TRUE
+            )
+        }
+      }, error=function(e){
+        warning('Hit modeling error.')
+        list(e, rownames(modelingData)[x], df)})
+
   }, cl = NULL)
 
   return(modelList)
