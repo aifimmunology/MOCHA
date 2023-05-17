@@ -263,7 +263,8 @@ individualZIGLMM <- function(iterList) {
 #' @title Execute a pilot run of model on a subset of data
 #'
 #' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
-#'   zero inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch errors, and return the error and dataframe for troubleshooting.
+#'   zero inflated data using \code{\link[glmmTMB]{glmmTMB}}. 
+#' TryCatch will catch errors, and return the error and dataframe for troubleshooting.
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix, chromVAR, or other.
@@ -280,6 +281,7 @@ individualZIGLMM <- function(iterList) {
 #'   the zero-inflation formula in models where the conditional effects formula
 #'   contains an offset term, the offset term will automatically be dropped. The
 #'   zero-inflation model uses a logit link.
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param pilotIndices A vector of integers defining the subset of
 #'   the ExperimentObj matrix. Default is 1:10.
@@ -289,39 +291,47 @@ individualZIGLMM <- function(iterList) {
 #'
 #' @export
 pilotZIGLMM <- function(TSAM_Object,
-                        cellPopulation = NULL,
+                        cellTypeName = NULL,
                         continuousFormula = NULL,
                         ziformula = NULL,
+                        zi_threshold = 0,
                         verbose = FALSE,
                         pilotIndices = 1:10) {
-  Sample <- NULL
-  if (!requireNamespace("glmmTMB", quietly = TRUE)) {
-    stop(
-      "Package 'glmmTMB' is required for pilotZIGLMM. ",
-      "Please install 'glmmTMB' to proceed."
-    )
-  }
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }
 
-  if (is.null(cellPopulation)) {
-    stop("No cell type name was provided.")
-  } else if (length(cellPopulation) > 1) {
-    stop("Please provide only one string within cellPopulation. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellPopulation = 'counts'")
-  } else if (!cellPopulation %in% names(SummarizedExperiment::assays(TSAM_Object))) {
-    stop("Cell type name not found within TSAM_Object.")
+  if (zi_threshold < 0 | zi_threshold > 1 | ! is.numeric(zi_threshold)) {
+    stop("zi_threshold must be between 0 and 1.")
   }
 
-  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE))
+   if (is.null(cellTypeName)) {
+    stop("No cell type name was provided.")
+  } else if (all(tolower(cellTypeName) == 'all')) {
+
+    #Merge all together. 
+    newObj <- combineSampleTileMatrix(TSAM_Object)
+
+  } else if (all(cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object)))) {
+
+    #Subset down to just those
+    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+
+  } else {
+  
+    stop("Error around cell type name. Some or all were not found within TSAM_Object.")
+
+  }
+   
+    
   modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
-  if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
+  if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF),  'FragNumber', 'CellCount', 'CellType'))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
   }
 
-  if (!all(all.vars(ziformula) %in% c(colnames(MetaDF))) & length(all.vars(ziformula)) > 0) {
+  if (!all(all.vars(ziformula) %in% c(colnames(MetaDF), 'FragNumber', 'CellCount', 'CellType')) & length(all.vars(ziformula)) > 0) {
     stop("factors from the ziformula were not found in the metadata.")
   }
 
@@ -344,9 +354,9 @@ pilotZIGLMM <- function(TSAM_Object,
       exp = as.numeric(modelingData[x, ]),
       MetaDF, stringsAsFactors = FALSE
     )
-      
+  
     # tryCatch to catch error, return dataframe for troubleshooting 
-     tryCatch({  
+    tryCatch({  
         if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
             modelRes <- glmmTMB::glmmTMB(continuousFormula,
               ziformula = ~ 0,
