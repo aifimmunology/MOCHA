@@ -34,7 +34,7 @@ make_prediction <- function(X, finalModelObject) {
   } else {
 
     ### Apply model fit based on the
-    ### cell abundance. First Part is a loess
+    ### cell abundance. First Part is a LOESS
     ### Fit, final part is a linear fit,
     ### Middle part is an average between
     ### Loess & Linear fits.

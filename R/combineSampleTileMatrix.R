@@ -18,7 +18,10 @@ combineSampleTileMatrix <- function(SampleTileObj,
                                     NAtoZero = TRUE, 
                                     verbose = FALSE) {
   if (!requireNamespace("chromVAR", quietly = TRUE)) {
-    stop("The chromVAR package must be installed to use this functionality")
+    stop(
+      "Package 'chromVAR' is required for combineSampleTileMatrix. ",
+      "Please install 'chromVAR' to proceed."
+    )
   }
   CellTypes <- FragNumber <- NULL
   

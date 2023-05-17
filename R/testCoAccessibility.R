@@ -41,7 +41,10 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
   . <- NULL
   
   if (!requireNamespace("chromVAR", quietly = TRUE)) {
-    stop("The chromVAR package must be installed to use this functionality")
+    stop(
+      "Package 'chromVAR' is required for combineSampleTileMatrix. ",
+      "Please install 'chromVAR' to proceed."
+    )
   }
 
   if (length(tile1) != length(tile2)) {

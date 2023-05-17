@@ -5,7 +5,7 @@
 #'   and available annotations can be found at Bioconductor:
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
-#' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix,
+#' @param Obj A RangedSummarizedExperiment generated from getSampleTileMatrix,
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
 #' @param TxDb The annotation package for TxDb object for your genome.
 #'   Optional, only required if Obj is a GRanges.

@@ -63,7 +63,7 @@ EnrichedRanges <- function(Group1,
                            type = NULL,
                            returnTable = FALSE) {
   
-  if (class(Group1) != "GRanges" || class(Group2) != "GRanges"){
+  if (!methods::is(Group1, "GRanges") || !methods::is(Group2, "GRanges")){
     stop("Input Group1 and/or Group2 are not class 'GRanges'. Group1 and ",
          "Group2 must be GRanges objects.")
   }
