@@ -281,7 +281,8 @@ individualZIGLMM <- function(iterList) {
 #'   the zero-inflation formula in models where the conditional effects formula
 #'   contains an offset term, the offset term will automatically be dropped. The
 #'   zero-inflation model uses a logit link.
-#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the 
+#' fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param pilotIndices A vector of integers defining the subset of
 #'   the ExperimentObj matrix. Default is 1:10.
