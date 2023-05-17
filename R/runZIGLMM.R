@@ -14,7 +14,8 @@
 #' @param ziformula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
 #'   format ( ~ factors). All factors must be found in column names
 #'   of the TSAM_Object colData metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
-#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold, samples with zeroes are dropped and only the continous formula is used.
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold, 
+#'      samples with zeroes are dropped and only the continous formula is used. Use this parameter at your own risk. Default is 0. 
 #' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
@@ -289,8 +290,8 @@ individualZIGLMM <- function(x) {
 #'   the zero-inflation formula in models where the conditional effects formula
 #'   contains an offset term, the offset term will automatically be dropped. The
 #'   zero-inflation model uses a logit link.
-#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the 
-#' fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold, 
+#'      samples with zeroes are dropped and only the continous formula is used. Use this parameter at your own risk. Default is 0. 
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param pilotIndices A vector of integers defining the subset of
 #'   the ExperimentObj matrix. Default is 1:10.
