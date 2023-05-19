@@ -37,23 +37,32 @@ varZIGLMM <- function(TSAM_Object,
                       numCores = 1) {
 
 
-  if (is.null(cellTypeName)) {
+   if (is.null(cellTypeName)) {
     stop("No cell type name was provided.")
-  } else if (length(cellTypeName) > 1) {
-    stop("Please provide only one string within cellTypeName. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellTypeName = 'counts'")
-  } else if (!cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object))) {
-    stop("No cell type name not found within TSAM_Object.")
+  } else if (all(tolower(cellTypeName) == 'all')) {
+
+    #Merge all together. 
+    newObj <- combineSampleTileMatrix(TSAM_Object)
+
+  } else if (all(cellTypeName %in% names(SummarizedExperiment::assays(TSAM_Object)))) {
+
+    #Subset down to just those
+    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellTypeName, subsetPeaks = TRUE))
+
+  } else {
+  
+    stop("Error around cell type name. Some or all were not found within TSAM_Object.")
+
   }
- 
-  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', na.rm = TRUE, groupList = cellTypeName, subsetPeaks = TRUE))
+  
   modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
-
+  
   if (!all(continuousRandom %in% c("exp", colnames(MetaDF)))) {
     stop("Random continuous effects are not found in metadata.")
   }
 
-  if (!all(ziRandom %in% c(colnames(MetaDF), 'FragNumber', 'CellCounts') | all(ziRandom == 0))) {
+  if (!all(ziRandom %in% c(colnames(MetaDF)) | all(ziRandom == 0))) {
     stop("Random Zero-inflated effects are not found in metadata.")
   }
 
