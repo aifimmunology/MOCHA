@@ -76,7 +76,7 @@ varZIGLMM <- function(TSAM_Object,
     zi_form = ziRandom
     variableList <- continuousRandom
   }
-  ziformula = as.formula(paste("~ ", zi_form))
+  ziformula = paste("~ ", zi_form)
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[, match(colnames(modelingData), MetaDF$Sample)]
