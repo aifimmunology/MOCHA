@@ -218,6 +218,40 @@ getCellTypes <- function(object) {
   }
 }
 
+
+#' @title \code{getCellTypeTiles} Extract the GRanges for a particular cell type
+#'
+#' @description \code{getCellTypeTiles} Returns a GRanges object of all tiles called for a certain cell type
+#'
+#' @param object A SampleTileObject. 
+#' @param cellType A string describing one cell type.
+#' @return a vector of cell type names. 
+#'
+#' @export
+getCellTypeTiles <- function(object, cellType) {
+  if(class(object)[1] == 'MultiAssayExperiment'){
+    stop('This is a MultiAssayExperiment, and thus like a tileResults object. Please provide a SampleTileMatrix object.')
+  }else if(class(object)[1] == 'RangedSummarizedExperiment'){
+
+    all_ranges <- SummarizedExperiment::rowRanges(object)
+
+    if(sum(cellType == names(SummarizedExperiment::assays(object))) != 1){
+
+      stop('Please provide a single cell type, which must be present in the SampleTileObject. cellType is either not found, or is a list of multiple cell types.')
+
+    }else{
+
+      subRange <- all_ranges[unlist(GenomicRanges::mcols(all_ranges)[,cellType])]
+
+    }
+
+    return(subRange)
+  }else{
+    stop('Object not recognized. Please provide a SampleTileMatrix object (SummarizedExperiment).')
+  }
+}
+
+
 #' @title \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata
 #' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and 
 #'
