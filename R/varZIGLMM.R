@@ -61,7 +61,7 @@ varZIGLMM <- function(TSAM_Object,
     stop("Random continuous effects are not found in metadata.")
   }
 
-  if (!all(ziRandom %in% c(colnames(MetaDF), 'FragNumber', 'CellCounts') | all(ziRandom == 0))) {
+  if (!all(ziRandom %in% colnames(MetaDF) | all(ziRandom == 0))) {
     stop("Random Zero-inflated effects are not found in metadata.")
   }
 
@@ -75,6 +75,7 @@ varZIGLMM <- function(TSAM_Object,
     zi_form = ziRandom
     variableList <- continuousRandom
   }
+  ziformula = paste("~ ", zi_form)
   ziformula = paste("~ ", zi_form)
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
