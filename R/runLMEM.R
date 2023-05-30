@@ -176,7 +176,7 @@ runLMEM <- function(ExperimentObj,
     message("Reorganizing coefficients.")
   }
 
-  processedOuts <- processModelOutputs(processModelOutputs = coeffList, 
+  processedOuts <- processModelOutputs(modelOutputList = coeffList, 
                                         nullDFList = nullDFList, 
                                         rownamesList = rownames(modelingData),
                                         SummarizedExperimentObj = ExperimentObj
@@ -236,13 +236,13 @@ individualLMEM <- function(x) {
 #'        statistics for the fixed effect and measurements (Estimate, Error, p-value, etc..). Residuals and Variance will be saved in the object's metadata.
 #'
 #' @noRd
-processModelOutputs <- function(processModelOutputs, nullDFList, rownamesList,
-                                  SummarizedExperimentObj) {
+processModelOutputs <- function(modelOutputList, nullDFList, rownamesList,
+                                  SummarizedExperimentObj, returnList = FALSE) {
 
     coeffNames <- rownames(nullDFList$Coeff)
     newColumnNames <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',colnames(nullDFList$Coeff)))
     output_list <- lapply(coeffNames, function(z){
-      tmpCoef <- do.call("rbind", pbapply::pblapply(X = processModelOutputs, function(x) {
+      tmpCoef <- do.call("rbind", pbapply::pblapply(X = modelOutputList, function(x) {
             tmpDf <- x[['Coeff']][z,]
             colnames(tmpDf) <- newColumnNames
             tmpDf$FDR <- p.adjust(tmpDf$p_value, 'fdr')
@@ -254,18 +254,22 @@ processModelOutputs <- function(processModelOutputs, nullDFList, rownamesList,
     names(output_list) <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',coeffNames))
 
     residual_tmp <- do.call(
-      "rbind", pbapply::pblapply(X = processModelOutputs, function(x) {
+      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
         x[['Resid']]
       }, cl = NULL)
     )
     vcov_tmp <- do.call(
-      "rbind", pbapply::pblapply(X = processModelOutputs, function(x) {
+      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
         x[['VCov']]
     }, cl = NULL)
     )
     rownames(residual_tmp) <- rownames(vcov_tmp) <- rownamesList
 
     residual_tmp <- residual_tmp[,match(rownames(SummarizedExperiment::colData(SummarizedExperimentObj)), colnames(residual_tmp))]
+
+    if(returnList){
+      return(list('output' = output_list , 'Resid' = residual_tmp , 'Variance' = vcov_tmp))
+    }
     #Repackage Residuals into a SummarizedExperiment
     ResidualSE <- SummarizedExperiment::SummarizedExperiment(
                       list('Residual' =  residual_tmp),

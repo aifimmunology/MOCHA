@@ -338,7 +338,7 @@ individualZIGLMM <- function(x) {
 
 #' @title Run a test case for Zero-inflated Generalized Linear Mixed Modeling on pseudobulked scATAC data
 #'
-#' @description \code{pilotZIGLMM} ode for testing out formulas on the data. Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. \code{\link[glmmTMB]{glmmTMB}}. 
+#' @description \code{pilotZIGLMM} Model for testing out formulas on the data. Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. \code{\link[glmmTMB]{glmmTMB}}. 
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix. 
@@ -486,44 +486,41 @@ pilotZIGLMM <- function(TSAM_Object,
 
 #' @title getModelValues from runZIGLMM or runLMEM output. 
 #'
-#' @description \code{getModelValues} Pull out a data.frame of model values (slope, significance, and std.error) for a given factor from the SummarizedExperiment output of runZIGLMM.
+#' @description \code{getModelValues} Pull out a data.frame of model values for a particular row.
 #' @param object A SummarizedExperiment object generated from runZIGLMM. 
-#' @param specificVariable A string, describing the factor of influence. 
+#' @param rowName A string, describing the row you want to analyze. 
 #'
-#' @return A data.frame of slopes, significance, and standard error for one factor. 
+#' @return A data.frame coefficient info by factor. 
 #'
 #'
 #'
 #' @examples
 #' \dontrun{
-#'   age_df <- getModelValues(runZIGLMM_output, 'Age')
+#'   age_df <- getModelValues(runZIGLMM_output, 'Chr1:500-999')
 #' }
 #'
 #' @export
 #' 
 
-getModelValues <- function(object, specificVariable){
+getModelValues <- function(object, rowName){
     
-    slopes = SummarizedExperiment::assays(object)[['Slopes']]
-    significance = SummarizedExperiment::assays(object)[['Significance']]
-    if(length(specificVariable) > 1){
-        stop('Cannot provide more than one value to specificVariable.')
+    if(length(rowName) != 1){
+      stop('Please provide just one string for rowName, not a list or vector.')
     }
-
-    df <- data.frame('Element' = rownames(slopes),
-                'Estimate' = slopes[,specificVariable],
-                'PValue' = significance[,specificVariable])
-    return(df)
+    if(!rowName %in% rownames(object)){
+      stop('rowName not found within the SummarizedObject provided.')
+    }
+    newDF <- do.call('rbind', lapply(as.list(SummarizedExperiment::assays(object)), function(x){
+      x[rowName,, drop = FALSE]
+    }))
+    rownames(newDF) <- names(SummarizedExperiment::assays(object))
+    return(newDF)
 }
-
-
-
-
 
 #' @title plotZIModels
 #'
 #' @description \code{plotZIModels} plots the data and the generalized slope from the output of pilotZIGLMM
-#' @param modelList a list of models, output from pilotZIModels
+#' @param modelList a list of models, output from pilotZIGLMM or pilotLMEM
 #' @param x The variable that you want to plot the x-axis over. 
 #' @param group the group column name, for ggplot line plots.
 #' @param colour the colour parameter for ggplot
@@ -541,71 +538,145 @@ getModelValues <- function(object, specificVariable){
 #' @export
 #' 
 
-plotZIModels <- function(modelList, x = 'days_since_symptoms', group ='PTID',  colour ='PTID', returnMatrix = FALSE){
-    
-    pList <- lapply(seq_along(modelList), function(i){
-        
-        if(class(modelList[[i]]) == 'glmmTMB'){
-          #Extract the original values
-          df <- as.data.frame(modelList[[i]]$frame)
-          tile <- names(modelList)[i]
-          tryCatch({
-            #Extract model coefficients
-            sum_fit = summary(modelList[[i]])
-            coefs = sum_fit$coefficients$cond[,1]
-            numericCoefs <- names(coefs)[names(coefs) %in% colnames(df) & names(coefs) != x]
+plotZIModels <- function(modelList, x_var = 'days_since_symptoms', group ='PTID',  colour ='PTID', returnMatrix = FALSE, rowNames = NULL){
 
-            df$Prediction = coefs[1] + sum(unlist(lapply(numericCoefs, function(z) { coefs[z]* mean(df[,z])}))) + coefs[x]*df[,x]
 
-            if(returnMatrix){
-                
-                df
-                
-            }else{
-                ggplot(df, aes_string(x=x,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
-                    geom_line(data=df[df$exp>0,],aes_string(x=x, y='exp',alpha=0.3), linewidth=0.5)+
-                    ggtitle(paste(tile, 'Suceeded',sep = ' '))+ 
-                    geom_line(data=df,aes_string(x=x,y='Prediction'),linewidth=1, col='black') + theme_minimal() + 
-                    theme(legend.position = 'none')
-                    
-              }
-          },error=function(e){
-              df <- as.data.frame(modelList[[i]]$frame)
-              tile <- names(modelList)[i]
+    if(any(grepl('list|List',class(modelList)[1]))){
+
+      pList <- lapply(seq_along(modelList), function(i){
+          
+          if(class(modelList[[i]]) == 'glmmTMB'){
+            #Extract the original values
+            df <- as.data.frame(modelList[[i]]$frame)
+            tile <- names(modelList)[i]
+            tryCatch({
+              #Extract model coefficients
+              sum_fit = summary(modelList[[i]])
+              coefs = sum_fit$coefficients$cond[,1]
+              numericCoefs <- names(coefs)[names(coefs) %in% colnames(df) & names(coefs) != x_var]
+
+              df$Prediction = coefs[1] + sum(unlist(lapply(numericCoefs, function(z) { coefs[z]* mean(df[,z])}))) + coefs[x_var]*df[,x_var]
+
               if(returnMatrix){
                   
                   df
                   
               }else{
-                  ggplot(df, aes_string(x=x,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
-                      geom_line(data=df[df$exp>0,],aes_string(x=x, y='exp',alpha=0.3), linewidth=0.5)+
-                      ggtitle(paste(tile,e,sep = ' '))+ 
-                      theme_minimal() + 
+                  ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                      geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
+                      ggtitle(paste(tile, 'Suceeded',sep = ' '))+ 
+                      geom_line(data=df,aes_string(x=x_var,y='Prediction'),linewidth=1, col='black') + theme_minimal() + 
                       theme(legend.position = 'none')
                       
-              }
-          })
+                }
+            },error=function(e){
+                df <- as.data.frame(modelList[[i]]$frame)
+                tile <- names(modelList)[i]
+                if(returnMatrix){
+                    
+                    df
+                    
+                }else{
+                    ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                        geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
+                        ggtitle(paste(tile,e,sep = ' '))+ 
+                        theme_minimal() + 
+                        theme(legend.position = 'none')
+                        
+                }
+            })
 
-        }else{
-          df <- as.data.frame(modelList[[i]][[3]])
-          tile = modelList[[i]][[2]]
-           if(returnMatrix){
-                  
-                  df
-                  
           }else{
-            ggplot(df, aes_string(x=x,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
-                      geom_line(data=df[df$exp>0,],aes_string(x=x, y='exp',alpha=0.3), linewidth=0.5)+
-                      ggtitle(paste(tile, modelList[[i]][[1]],sep = ' '))+ 
-                      theme_minimal() + 
-                      theme(legend.position = 'none')
+            df <- as.data.frame(modelList[[i]][[3]])
+            tile = modelList[[i]][[2]]
+            if(returnMatrix){
+                    
+                    df
+                    
+            }else{
+
+              ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                        geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
+                        ggtitle(paste(tile, modelList[[i]][[1]],sep = ' '))+ 
+                        theme_minimal() + 
+                        theme(legend.position = 'none')
+            }
           }
-        }
-        
-    })
-                     
-    return(pList)
-}
+          
+      })
+      return(pList)
+    }else{
+      stop('modelList type not recognized.')
+    }
+  }
+
+  
+#' @title plotModelPredictions
+#'
+#' @description \code{plotModelPredictions} Uses the raw data object and the model prediction from runZIGLMM or runLMEM to generate a data.frame for each row for plotting.
+#' @param modelObject a SummarizedOutput object from runZIGLMM or runLMEM. 
+#' @param dataObject The SummarizedExperiment object
+#' @param specVariable The variable of interest. If other fixed effects are present, they will be adjusted for.
+#' @param rowNames rownames of the specific 
+#' @return a list of data.frames, including the original data, the adjusted data, and the predicted group trend. 
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#'   predictedDF <- plotZIModels(modelList,returnMatrix = TRUE)
+#' }
+#'
+#' @export
+#' 
+#' 
+plotModelPredictions <- function(modelObject, dataObject, specVariable = 'days_since_symptoms', rowNames = NULL){
+
+  if(grepl('SummarizedExperiment', class(modelObject)[1]) & grepl('SummarizedExperiment', class(dataObject)[1])){
+      if(is.null(rowNames)){
+        stop('Please provide the rownames that you want to plot via rowNames.')
+      }else if(!all(rowNames %in% rownames(modelObject))){
+        stop('Some rowNames not found within modelObject.')
+      }else if(!all(rowNames %in% rownames(dataObject))){
+        stop('Some rowNames not found within dataObject.')
+      }else if(! specVariable %in% names(SummarizedExperiment::assays(modelObject))){
+        stop('specVariable does not appear to be a fixed effect within the modelObject.',
+                ' Please doublecheck the specVariable. It should be the name of an assay within the modelObject, which comes from runLMEM or runZIGLMM.')
+      }else if(! specVariable %in% names(SummarizedExperiment::assays(modelObject))){
+        stop('specVariable does not appear to be a fixed effect within the modelObject.',
+                ' Please doublecheck the specVariable. It should be the name of an assay within the modelObject, which comes from runLMEM or runZIGLMM.')
+      }
+
+      allModels <- do.call('rbind', lapply(rowNames, function(x){
+        tmpValues <- getModelValues(modelObject, x)
+        t(tmpValues[,'Estimate', drop= FALSE])
+      }))
+      rownames(allModels) <- rowNames
+
+      metaData
+      
+      adjustedDFs <- lapply(allModels, function(x){
+           if(all(is.na(x))){
+              return(NA)
+            }else{
+              df <- x
+              
+              numericCoefs <- names(coefs)[names(coefs) %in% colnames(df) & names(coefs) != x_var]
+
+              df$Prediction = coefs[1] + sum(unlist(lapply(numericCoefs, function(z) { coefs[z]* mean(df[,z])}))) + coefs[x_var]*df[,x_var]
+
+              p1 <- ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
+                  geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
+                  ggtitle(paste(tile, 'Suceeded',sep = ' '))+ 
+                  geom_line(data=df,aes_string(x=x_var,y='Prediction'),linewidth=1, col='black') + theme_minimal() + 
+                  theme(legend.position = 'none')
+              return(p1)
+            }
+
+        }) 
+
+}              
+
 
 
 
@@ -624,7 +695,7 @@ getPilotCoefficients <- function(pilotModelList){
 
    coeffList <-  lapply(pilotModelList, function(x) {
                     tryCatch({
-                        summary(x)
+                        summary(x)$coefficients
                       },
                       error=function(e){
                         list(e, x$frame)
