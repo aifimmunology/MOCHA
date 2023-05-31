@@ -236,7 +236,7 @@ individualLMEM <- function(x) {
 #'        statistics for the fixed effect and measurements (Estimate, Error, p-value, etc..). Residuals and Variance will be saved in the object's metadata.
 #'
 #' @noRd
-processModelOutputs <- function(modelOutputList, nullDFList, rownamesList,
+processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, ranged = FALSE,
                                   SummarizedExperimentObj, returnList = FALSE) {
 
     coeffNames <- rownames(nullDFList$Coeff)
@@ -271,12 +271,22 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList,
       return(list('output' = output_list , 'Resid' = residual_tmp , 'Variance' = vcov_tmp))
     }
     #Repackage Residuals into a SummarizedExperiment
-    ResidualSE <- SummarizedExperiment::SummarizedExperiment(
+    if(ranged){
+      ResidualSE <- SummarizedExperiment::SummarizedExperiment(
                       list('Residual' =  residual_tmp),
                       colData = SummarizedExperiment::colData(SummarizedExperimentObj),
-                      rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
+                      rowRanges = SummarizedExperiment::rowRanges(SummarizedExperimentObj),
                       metadata = S4Vectors::metadata(SummarizedExperimentObj)
               )
+    }else{
+      ResidualSE <- SummarizedExperiment::SummarizedExperiment(
+                  list('Residual' =  residual_tmp),
+                  colData = SummarizedExperiment::colData(SummarizedExperimentObj),
+                  rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
+                  metadata = S4Vectors::metadata(SummarizedExperimentObj)
+          )
+    }
+
               
     #Package up the metadata list. 
     metaDataList <- list('Residuals' = ResidualSE,

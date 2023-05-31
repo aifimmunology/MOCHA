@@ -221,9 +221,10 @@ runZIGLMM <- function(TSAM_Object,
   }
 
 
-  processedOuts <- processModelOutputs(processModelOutputs = coeffList, 
+  processedOuts <- processModelOutputs(modelOutputList = coeffList, 
                                         nullDFList = nullDFList, 
                                         rownamesList = rownames(modelingData),
+                                        ranged = TRUE,
                                         SummarizedExperimentObj = newObj
                                         )
 
@@ -675,6 +676,7 @@ plotModelPredictions <- function(modelObject, dataObject, specVariable = 'days_s
 
         }) 
 
+  }
 }              
 
 
