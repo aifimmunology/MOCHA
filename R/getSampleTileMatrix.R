@@ -41,6 +41,9 @@
 #'   genome = BSgenome.Hsapiens.UCSC.hg19,
 #'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
 #'   Org = org.Hs.eg.db,
+#'   genome = "BSgenome.Hsapiens.UCSC.hg19",
+#'   TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+#'   Org = "org.Hs.eg.db",
 #'   outDir = tempdir(),
 #'   cellPopLabel = "Clusters",
 #'   cellPopulations = c("C2", "C5"),
@@ -65,7 +68,6 @@ getSampleTileMatrix <- function(tileResults,
   if (class(tileResults)[1] != "MultiAssayExperiment") {
     stop("tileResults is not a MultiAssayExperiment")
   }
-
   # Any column can be used to group samples
   # Note that these are case-sensitive
   sampleData <- MultiAssayExperiment::colData(tileResults)
@@ -75,7 +77,6 @@ getSampleTileMatrix <- function(tileResults,
       stop("`groupColumn` not found in the column data of tileResults.")
     }
   }
-
   if (length(cellPopulations) == 1 & any(tolower(cellPopulations) == "all")) {
     subTileResults <- tileResults
     cellPopulations <- names(tileResults)
@@ -89,16 +90,12 @@ getSampleTileMatrix <- function(tileResults,
       ))
     }
   }
-
-
   if (verbose) {
     message(stringr::str_interp("Extracting consensus tile set for each population"))
   }
-
   iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
     list(MultiAssayExperiment::experiments(subTileResults)[[x]], sampleData, threshold, groupColumn, verbose)
   })
-
   cl <- parallel::makeCluster(numCores)
   tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
   names(tilesByCellPop) <- names(subTileResults)
@@ -106,7 +103,6 @@ getSampleTileMatrix <- function(tileResults,
   rm(iterList)
   errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
   names(errorMessages) <- names(subTileResults)
-
   if (any(!is.na(errorMessages))) {
     stop(
       "Issues around thresholding and/or sample metadata. Please check user inputs, and attempt again",
@@ -116,37 +112,27 @@ getSampleTileMatrix <- function(tileResults,
       paste(names(errorMessages)[!is.na(errorMessages)], collapse = ", ")
     )
   }
-
   allTiles <- sort(unique(do.call("c", tilesByCellPop)))
-
   if (verbose) {
     message(stringr::str_interp("Generating sample-tile matrix across all populations."))
   }
-
   # consensusTiles is used to  extract rows (tiles) from this matrix
-
   iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
     list(MultiAssayExperiment::experiments(subTileResults)[[x]], allTiles)
   })
-
-
   sampleTileIntensityMatList <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedSampleTile)
   names(sampleTileIntensityMatList) <- names(subTileResults)
-
   parallel::stopCluster(cl)
-
   # Order sampleData rows to match the same order as the columns
   maxMat <- which.max(lapply(sampleTileIntensityMatList, ncol))
   colOrder <- colnames(sampleTileIntensityMatList[[maxMat]])
   sampleData <- sampleData[match(colOrder, rownames(sampleData)), ]
-
   . <- NULL
   tilePresence <- lapply(tilesByCellPop, function(x) (allTiles %in% x)) %>%
     do.call("cbind", .) %>%
     as.data.frame()
   allTilesGR <- MOCHA::StringsToGRanges(allTiles)
   GenomicRanges::mcols(allTilesGR) <- tilePresence
-
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,
     rowRanges = allTilesGR,

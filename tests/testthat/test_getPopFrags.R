@@ -10,6 +10,7 @@ test_that(
   }
 )
 
+skip_on_cran()
 # Working dir during tests is under structure:
 # parent_dir/MOCHA/tests/testthat/. Assumes PBMCSmall is under 'parent_dir'
 ArchRProjDir <- "../../../PBMCSmall"
@@ -29,7 +30,7 @@ if (dir.exists(ArchRProjDir)) {
     {
       testthat::local_edition(3)
       capture.output(
-        popFrags <- getPopFrags(testProj, cellPopLabel = cellPopLabel, numCores = 1),
+        popFrags <- MOCHA::getPopFrags(testProj, cellPopLabel = cellPopLabel, numCores = 1),
         type = "message"
       )
 
@@ -65,7 +66,7 @@ if (dir.exists(ArchRProjDir)) {
 #     "getPopFrags works with a specific region when NormMethod='Raw'",
 #     {
 #       capture.output(
-#         popFrags <- getPopFrags(
+#         popFrags <- MOCHA::getPopFrags(
 #           testProj,
 #           cellPopLabel = cellPopLabel,
 #           numCores = 1,
@@ -89,7 +90,7 @@ if (dir.exists(ArchRProjDir)) {
   #     stringr::str_interp("getPopFrags throws an error if the wrong NormMethod (${NormMethod}) is set when asking for a specific region"),
   #     {
   #       expect_error(
-  #         capture.output(popFrags <- getPopFrags(
+  #         capture.output(popFrags <- MOCHA::getPopFrags(
   #           testProj,
   #           cellPopLabel = cellPopLabel,
   #           numCores = 1,
@@ -109,7 +110,7 @@ if (dir.exists(ArchRProjDir)) {
   #   {
   #     expect_error(
   #       capture.output(
-  #         popFrags <- getPopFrags(
+  #         popFrags <- MOCHA::getPopFrags(
   #           testProj,
   #           cellPopLabel = cellPopLabel,
   #           numCores = 1,
@@ -122,7 +123,7 @@ if (dir.exists(ArchRProjDir)) {
   #     # A character vector or region strings will work, but a list will not.
   #     expect_error(
   #       capture.output(
-  #         popFrags <- getPopFrags(
+  #         popFrags <- MOCHA::getPopFrags(
   #           testProj,
   #           cellPopLabel = cellPopLabel,
   #           numCores = 1,
@@ -142,7 +143,7 @@ if (dir.exists(ArchRProjDir)) {
     {
       expect_error(
         capture.output(
-          popFrags <- getPopFrags(
+          popFrags <- MOCHA::getPopFrags(
             testProj,
             cellPopLabel = "IDoNotExist",
             numCores = 1
@@ -160,7 +161,7 @@ if (dir.exists(ArchRProjDir)) {
     {
       expect_error(
         capture.output(
-          popFrags <- getPopFrags(
+          popFrags <- MOCHA::getPopFrags(
             testProj,
             cellPopLabel = "Clusters",
             cellSubsets = c("C1", "IDoNotExist", "C3", "C5"),
@@ -187,7 +188,7 @@ if (dir.exists(ArchRProjDir)) {
       
       expect_warning(
         capture.output(
-          popFrags <- getPopFrags(
+          popFrags <- MOCHA::getPopFrags(
             testProj,
             cellPopLabel = "newClusters",
             cellSubsets = "all",
@@ -204,7 +205,7 @@ if (dir.exists(ArchRProjDir)) {
     "getPopFrags pools samples by cell population with poolSamples=TRUE",
     {
       capture.output(
-        popFrags <- getPopFrags(
+        popFrags <- MOCHA::getPopFrags(
           testProj,
           cellPopLabel = "Clusters",
           cellSubsets = "all",
@@ -223,7 +224,7 @@ if (dir.exists(ArchRProjDir)) {
     "getPopFrags pools samples by a single cellSubset with poolSamples=TRUE",
     {
       capture.output(
-        popFrags <- getPopFrags(
+        popFrags <- MOCHA::getPopFrags(
           testProj,
           cellPopLabel = "Clusters",
           cellSubsets = "C5",
@@ -242,7 +243,7 @@ if (dir.exists(ArchRProjDir)) {
     "getPopFrags pools samples by a single cellSubset with poolSamples=FALSE",
     {
       capture.output(
-        popFrags <- getPopFrags(
+        popFrags <- MOCHA::getPopFrags(
           testProj,
           cellPopLabel = "Clusters",
           cellSubsets = "C5",

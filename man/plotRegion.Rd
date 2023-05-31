@@ -110,7 +110,7 @@ should be plotted.}
 
 \item{whichGene}{Name of gene for plotting this specific gene in region.}
 
-\item{db_id_col}{Character value. Column in `orgdb` containing the output id
+\item{db_id_col}{Character value. Column in `OrgDb` containing the output id
 for `whichGene` plotting. Default "REFSEQ".}
 
 \item{collapseGenes}{Options include 'collapseAll', 'longestTx', or 'None'

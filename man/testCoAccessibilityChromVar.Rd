@@ -36,6 +36,9 @@ the normal Spearman.}
 \item{backNumber}{number of ChromVAR-matched background pairs. Default is
 1000.}
 
+\item{returnBackGround}{Boolean, if TRUE return the background correlations
+as well as foreground. Default is FALSE.}
+
 \item{highMem}{Boolean to control memory usage. Default is FALSE. Only set
 highMem to TRUE if you have plenty of memory and want to run this function
 faster.s}

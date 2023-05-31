@@ -8,7 +8,7 @@
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
-#' @param NAToZero Set NA values in the sample-tile matrix to zero
+#' @param NAtoZero Set NA values in the sample-tile matrix to zero
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @return TileCorr A data.table correlation matrix
 #'
@@ -17,6 +17,13 @@
 combineSampleTileMatrix <- function(SampleTileObj,
                                     NAtoZero = TRUE, 
                                     verbose = FALSE) {
+  if (!requireNamespace("chromVAR", quietly = TRUE)) {
+    stop(
+      "Package 'chromVAR' is required for combineSampleTileMatrix. ",
+      "Please install 'chromVAR' to proceed."
+    )
+  }
+  CellTypes <- FragNumber <- NULL
   
   genome <- S4Vectors::metadata(SampleTileObj)$Genome
   genome <- BSgenome::getBSgenome(genome)
@@ -31,7 +38,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   # the intensity for a given cell, as well as the
   # median intensity per sample-tile for all other cell types (i.e. the background)
 
-  newAssays <- list(do.call("cbind", as(assays, "list")))
+  newAssays <- list(do.call("cbind", methods::as(assays, "list")))
   newSamplesNames <- unlist(lapply(names(assays), function(x) {
     gsub(" ", "_", paste(x, colnames(SampleTileObj), sep = "__"))
   }))
@@ -98,7 +105,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
       warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
     }
     
-    SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(rowData(newObj)$bias, na.rm = TRUE)
+    SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(SummarizedExperiment::rowData(newObj)$bias, na.rm = TRUE)
   }
 
   return(newObj)

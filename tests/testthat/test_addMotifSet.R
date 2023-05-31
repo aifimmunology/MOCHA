@@ -1,3 +1,4 @@
+skip_on_cran() # Motif annotations take a long time
 if (requireNamespace("chromVAR", quietly = TRUE) &&
     requireNamespace("chromVARmotifs", quietly = TRUE) &&
     requireNamespace("motifmatchr", quietly = TRUE) &&

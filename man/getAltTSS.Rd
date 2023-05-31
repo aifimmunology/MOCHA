@@ -2,7 +2,7 @@
 % Please edit documentation in R/getAltTSS.R
 \name{getAltTSS}
 \alias{getAltTSS}
-\title{\code{getAltTSS} Annotate Peaks falling in Transcription Start Sites
+\title{Annotate Peaks falling in Transcription Start Sites
   (TSS) and identify alternatively regulated TSSs for each gene.}
 \usage{
 getAltTSS(
@@ -11,8 +11,8 @@ getAltTSS(
   nuancedTSS = TRUE,
   nuancedTSSGap = 150,
   threshold = 0.2,
-  TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-  Org = org.Hs.eg.db
+  TxDb,
+  OrgDb
 )
 }
 \arguments{
@@ -30,13 +30,24 @@ the same tile, then that tile will be repeated for each TSS.}
 should be filtered out if all their differential TSS usage falls within too
 small of a range. Default is TRUE}
 
-\item{threshold}{FDR Threshold for determining significant vs non-significant
-changes in accessibility. Following MOCHA's standards, default is 0.2.}
-
-\item{nuancedTSSGAP}{Minimum distance betweeen TSSs needed for them to
+\item{nuancedTSSGap}{Minimum distance betweeen TSSs needed for them to
 considered distinctly regulated TSSs. If two TSSs are too close, it is
 unclear and highly unlikely that ATAC data can distinguish between them.
 Default is 150 bp.}
+
+\item{threshold}{FDR Threshold for determining significant vs non-significant
+changes in accessibility. Following MOCHA's standards, default is 0.2.}
+
+\item{TxDb}{The TxDb-class transcript annotation 
+package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
+must be installed. See 
+\href{https://bioconductor.org/packages/release/data/annotation/}{
+Bioconductor AnnotationData Packages}.}
+
+\item{OrgDb}{The OrgDb-class genome wide annotation 
+package for your organism (e.g. "org.Hs.eg.db"). This must be installed. 
+See \href{https://bioconductor.org/packages/release/data/annotation/}{
+Bioconductor AnnotationData Packages}}
 }
 \value{
 tpeaks A GRanges containing annotated peaks falling in TSS
