@@ -10,6 +10,7 @@ test_that(
   }
 )
 
+skip_on_cran()
 # Working dir during tests is under structure:
 # parent_dir/MOCHA/tests/testthat/. Assumes PBMCSmall is under 'parent_dir'
 ArchRProjDir <- "../../../PBMCSmall"

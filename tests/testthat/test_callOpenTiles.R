@@ -1,5 +1,6 @@
 # This test should only be used for local testing
 # with TxDb.Hsapiens.UCSC.hg38.refGene and org.Hs.eg.db installed/
+skip_on_cran()
 if (
   require("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
     require("org.Hs.eg.db", quietly = TRUE) &&

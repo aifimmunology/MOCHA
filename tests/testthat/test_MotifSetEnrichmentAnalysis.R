@@ -1,3 +1,4 @@
+skip_on_cran()
 motifEnrichmentTestDataFP <- "/home/jupyter/MOCHA/input_motifenrichment.csv"
 expectedResultsFP <- "/home/jupyter/MOCHA/results_MSEA.csv"
 if (file.exists(motifEnrichmentTestDataFP) &&
