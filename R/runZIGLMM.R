@@ -227,7 +227,7 @@ runZIGLMM <- function(TSAM_Object,
                                         ranged = TRUE,
                                         SummarizedExperimentObj = newObj
                                         )
-
+  processedOuts@metadata = append(processedOuts@metadata, list('Type' = 'scATAC'))
   return(processedOuts)
 }
 
