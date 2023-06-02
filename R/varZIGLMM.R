@@ -33,6 +33,7 @@ varZIGLMM <- function(TSAM_Object,
                       cellPopulation = NULL,
                       continuousRandom = NULL,
                       ziRandom = NULL,
+                      zi_threshold = 0.1,
                       verbose = FALSE,
                       numCores = 1) {
 
@@ -75,7 +76,6 @@ varZIGLMM <- function(TSAM_Object,
     zi_form = ziRandom
     variableList <- continuousRandom
   }
-  ziformula = paste("~ ", zi_form)
   ziformula = paste("~ ", zi_form)
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
@@ -127,7 +127,7 @@ varZIGLMM <- function(TSAM_Object,
         })
   
     parallel::clusterExport(
-    cl = cl, varlist = c("continuousFormula", "ziformula", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
+    cl = cl, varlist = c("continuousFormula", "ziformula","zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
     envir = environment()
     )
 
@@ -178,6 +178,14 @@ individualVarZIGLMM <- function(x) {
       if(all(df$exp !=0)){
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
           ziformula = ~ 0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      }else if(sum(df$exp ==0)/length(df$exp) < zi_threshold){
+        df$exp[df$exp ==0] = NA
+        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
+          ziformula = ~0,
           data = df,
           family = stats::gaussian(),
           REML = TRUE
