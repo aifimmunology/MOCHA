@@ -30,7 +30,7 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
   df_final <- do.call("rbind", allEnrichmentList)
 
   df_final$adjp_val <- stats::p.adjust(df_final$p_value, method = "fdr")
-  df_final$mlog10Padj <- -log10(df_final$adjp_val+1)
+  df_final$mlog10Padj <- -log10(df_final$adjp_val)
 
   return(df_final)
 }
