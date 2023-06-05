@@ -169,12 +169,12 @@ modelInterPredictions <- function(SE1, SE2, assay1, assay2, sampleColumn, interM
      stop('Pair of interacting features not found within interModel. This pair of features was not actually modeled.')
     }
 
-    if(length(pair) == 1){
-        
-        pair = list(pair)
-        firstPair = list(firstPair)
-        secondPair = list(secondPair)
-    }
+   # if(length(pair) == 1){
+   #     
+   #     pair = list(pair)
+   #    firstPair = list(firstPair)
+    #    secondPair = list(secondPair)
+   # }
 
     if(any(c(colnames(SummarizedExperiment::colData(SE1)), 
       colnames(SummarizedExperiment::colData(SE2))) %in% c('exp2'))){
