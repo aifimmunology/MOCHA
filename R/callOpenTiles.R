@@ -128,7 +128,7 @@ setGeneric(
                                    verbose = FALSE,
                                    force = FALSE) {
   Sample <- seqnames <- NULL
-  # Load Genome
+
   genome <- BSgenome::getBSgenome(genome)
   
   validGRanges <- sapply(ATACFragments, function(obj) {
@@ -187,7 +187,6 @@ setGeneric(
               paste(names(ATACFragments)[lengths(ATACFragments) == 0], collapse = ", "))
   }
 
-  # Save the fragment number per population-sample
   cellPopList <- sapply(names(ATACFragments), function(x) {
     unlist(stringr::str_split(x, "#"))[1]
   })
@@ -206,45 +205,6 @@ setGeneric(
     stop("Sample names in names of ATACFragments do not match those in cellPopData.", 
          " Names of ATACFragments must be in format `CellPopulation#Sample`")
   }
-  
-  nFragsList <- sapply(ATACFragments, function(x) {
-    length(x)
-  })
-  allFragmentCounts <- data.frame(cellPopList, sampleList, nFragsList)
-  colnames(allFragmentCounts) <- c(cellPopLabel, "Sample", "nFrags")
-  
-  # TODO: Dynamically create columns additionalCellData as numeric columns that 
-  # can be aggregated in cellColData.
-
-  # Test that these additional columns are numeric data and save them
-  test <- all(unlist(lapply(additionalCellData, function(x) is.numeric(cellColData[,x]))))
-  if(!is.null(additionalCellData) & test){
-    
-      additionalMetaData <- lapply(additionalCellData, function(x){
-
-        cellData_Summary <- as.data.frame(cellColData) %>%
-          dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
-          dplyr::summarize(tmp_value = mean({{x}}), .groups = "drop")
-      
-        tidyr::pivot_wider(
-          cellData_Summary,
-          names_from = tidyselect::all_of({{cellPopLabel}}),
-          values_from = tmp_value
-        )
-      })
-      names(additionalMetaData) <- additionalCellData
-      
-  }else if(is.null(additionalCellData)){
-    
-    additionalMetaData <- NULL
-    
-  }else if(!test){
-    stop(
-      stringr::str_interp("additionalCellData {additionalCellData} from "),
-      "cellColData is not all numeric and cannot be summarized. ",
-      "All columns for additionalCellData must be numeric."
-    )
-  }
 
   .callOpenTiles(
     ATACFragments,
@@ -253,7 +213,6 @@ setGeneric(
     genome,
     cellPopLabel,
     cellPopulations,
-    additionalMetaData,
     studySignal,
     cellCol,
     TxDb,
@@ -286,7 +245,6 @@ setMethod(
 .callOpenTiles_ArchR <- function(ATACFragments,
                                  cellPopLabel,
                                  cellPopulations = "ALL",
-                                 additionalCellData = NULL,
                                  studySignal = NULL,
                                  TxDb,
                                  OrgDb,
@@ -324,59 +282,9 @@ setMethod(
     )
   }
 
-######### HEAD
-  if (!is.null(additionalCellData) & !all(additionalCellData %in% colnames(cellColData))) {
-    stop(
-      stringr::str_interp("additionalCellData {additionalCellData} not found in "),
-      "cellColData. cellColData must contain columns for additionalCellData."
-    )
-  }
-
-  # Save additional cell metrics. 
-  test <- all(unlist(lapply(additionalCellData, function(x) is.numeric(cellColData[,x]))))
-  if(!is.null(additionalCellData) & test){
-      additionalMetaData <- lapply(additionalCellData, function(x){
-
-        cellData_Summary <- as.data.frame(cellColData) %>%
-          dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
-          dplyr::summarize(tmp_value = mean({{x}}), .groups = "drop")
-      
-        tidyr::pivot_wider(
-          cellData_Summary,
-          names_from = tidyselect::all_of({{cellPopLabel}}),
-          values_from = tmp_value
-        )
-      })
-      names(additionalMetaData) = additionalCellData
-  }else if(is.null(additionalCellData)){
-    additionalMetaData = NULL
-  }else if(!test){
-     stop(
-      stringr::str_interp("additionalCellData {additionalCellData} from "),
-      "cellColData is not all numeric and so cannot be summarized. ",
-      "All columns for additionalCellData must be numeric."
-    )
-  }
-####### END HEAD START DEVELOPMENT
-  # Save the fragment number per population-sample
-  allFragmentCounts <- as.data.frame(cellColData) %>%
-    dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
-    dplyr::summarize(nFrags = sum(nFrags), .groups = "drop")
-  
-  allFragmentCounts <- tidyr::pivot_wider(
-    allFragmentCounts,
-    names_from = tidyselect::all_of({{cellPopLabel}}),
-    values_from = "nFrags"
-  )
-  allFragmentCounts <- as.data.frame(allFragmentCounts)
-  rownames(allFragmentCounts) <- allFragmentCounts$Sample
-  allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
-######## END DEVELOPMENT
-
   .callOpenTiles(
     ATACFragments,
     cellColData,
-    additionalCellData = additionalMetaData,
     blackList,
     genome,
     cellPopLabel,
@@ -407,7 +315,6 @@ setMethod(
     genome,
     cellPopLabel,
     cellPopulations,
-    additionalMetaData,
     studySignal,
     cellCol,
     TxDb,
@@ -427,24 +334,80 @@ setMethod(
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
 
-  # Save the cell number per population-sample in the metadata
+  #################
+  # Begin constructing the additional metadata SummarizedExperiment
+  # Done prior to the expensive computation so there's no heartbreak if this 
+  # step fails.
+  
   cellCounts <- as.data.frame(table(cellColData[, "Sample"], cellTypeLabelList))
-  names(cellCounts) <- c('Sample', 'CellType', 'CellCount')
-  cellCounts <-  tidyr::pivot_wider(cellCounts, id_cols = 'CellType', names_from= 'Sample', values_from = 'CellCount') 
+  names(cellCounts) <- c('Sample', 'CellPop', 'CellCount')
+  cellCounts <-  tidyr::pivot_wider(
+    cellCounts, 
+    id_cols = 'CellPop', 
+    names_from= 'Sample', 
+    values_from = 'CellCount'
+  )
   allCellCounts <- as.data.frame(cellCounts[,-1])
-  rownames(allCellCounts) <- cellCounts$CellType
+  rownames(allCellCounts) <- cellCounts$CellPop
 
-  ## Create a dummy data.frame for storing fragment information with each iteration. 
+  # Create a dummy data.frame for storing fragment information
+  # as it is calculated later (when iterating over cell populations)
   allFragmentCounts <- allCellCounts
   allFragmentCounts[!is.na(allFragmentCounts)] <- NA
 
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else {
-    allCellCounts <- allCellCounts[rownames(allCellCounts) %in% cellPopulations,]
-    allFragmentCounts <- allFragmentCounts[rownames(allCellCounts) %in% cellPopulations,]
+    allCellCounts <- allCellCounts[rownames(allCellCounts) %in% cellPopulations, , drop=FALSE]
+    allFragmentCounts <- allFragmentCounts[rownames(allFragmentCounts) %in% cellPopulations, , drop=FALSE]
   }
-
+  
+  # For additional metadata:
+  # Some numeric columns may be stored as character - convert these to numeric
+  cellColData[] <- lapply(cellColData, function(x){
+    type.convert(as.character(x), as.is = TRUE)
+  })
+  
+  # Assume all numeric columns are to be saved as additionalCellData
+  isNumericCol <- unlist(lapply(cellColData, function(x) is.numeric(x)))
+  additionalCellData <- colnames(cellColData)[isNumericCol]
+  
+  # Group by Sample (rows) and cellPop (columns) 
+  if(!is.null(additionalCellData)){
+    if(verbose){message(
+      "Summarizing additional metadata: ",
+      paste(additionalCellData, collapse=", ")
+    )}
+    additionalMetaData <- lapply(additionalCellData, function(x){
+      
+      suppressMessages(
+        summarizedData <- as.data.frame(cellColData) %>%
+          dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
+          dplyr::summarize(meanValues = mean(!!as.name(x), .groups = "drop")) %>%
+          tidyr::pivot_wider(
+            id_cols = all_of(cellPopLabel),
+            names_from = Sample,
+            values_from = meanValues
+          )
+      )
+      
+      summarizedData <- as.data.frame(summarizedData)
+      rownames(summarizedData) <- summarizedData[[cellPopLabel]]
+      summarizedData <- summarizedData[,-1, drop=FALSE]
+      
+      # Filter to specific cellPopulations
+      summarizedData <- summarizedData[
+        rownames(summarizedData) %in% cellPopulations, , drop=FALSE
+      ]
+      
+      summarizedData
+    })
+    names(additionalMetaData) <- additionalCellData
+  }else if(is.null(additionalCellData)){
+    additionalMetaData <- NULL
+  }
+  ################# End metadata construction
+  
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
     if (verbose) {
@@ -514,11 +477,11 @@ setMethod(
     names(frags) <- sampleNames
 
     # Calculate normalization factors as the number of fragments for
-    # each celltype_samples. Then save it in metadata. 
+    # each celltype_sample
     normalization_factors <- as.integer(lengths(frags))
 
-    # Save the number of fragments into the fragment count. 
-    allFragmentCounts[cellPop,sampleNames] = normalization_factors
+    # Assign the number of fragments into the fragment count
+    allFragmentCounts[cellPop, sampleNames] <- normalization_factors
 
     cl <- parallel::makeCluster(numCores)
     # save coverage files to folder.
@@ -607,6 +570,9 @@ setMethod(
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
+
+  allFragmentCounts[is.na(allFragmentCounts)] <- 0
+
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
   # sample IDs which correspond to the arrow files.
@@ -616,20 +582,16 @@ setMethod(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
   
-  additionalCellData = list('TssEnrichment' = df1, 'Other '= df2))
-  additionalCellData   <- additionalCellData[names(additionalCellData) %in% colnames(sampleData)]
-
-  # Finish processing the fragment number metadata for each sample-cell type combination.
-  allFragmentCounts[is.na(allFragmentCounts)] <- 0
-
-  # Get Sample-Celltype level metadata 
-  sampleCellTypeMetaData = SummarizedExperiment::SummarizedExperiment(
+  summarizedData <- SummarizedExperiment::SummarizedExperiment(
     append(
-      list("CellCounts" = as.data.frame(allCellCounts)),
-      list("FragmentCounts" = allFragmentCounts),
-      additionalMetaData
+      list(
+        "CellCounts" = allCellCounts, 
+        "FragmentCounts" = allFragmentCounts
       ),
-      colData = sampleData)
+      additionalMetaData
+    ),
+    colData = sampleData
+  )
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
@@ -637,12 +599,10 @@ setMethod(
     experiments = experimentList,
     colData = sampleData,
     metadata = list(
-      "CellCounts" = allCellCounts,
-      "FragmentCounts" = allFragmentCounts,
+      "summarizedData" = summarizedData,
       "Genome" = S4Vectors::metadata(genome)$genome,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
-      "SampleCellTypeData" = sampleCellTypeMetaData,
       "Directory" = outDir
     )
   )
