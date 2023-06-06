@@ -9,17 +9,25 @@
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix. 
 #' @param cellPopulation Name of a cell type within the TSAM_Object
+#' @param donor Metadata name that holds donor-level (or sample-level) information in the TSAM's colData (sample metadata).
 #' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. 
 #'         This function will only test for technical dropout if the function is above this threshold. 
+#' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
 #' @return results a SummarizedExperiment containing ZI-GLMM results
-                                       
-identifyDropOut <- function(TSAM_Object, cellPopulation, zi_threshold = 0.1, verbose = FALSE, numCores = 2){
+
+identifyDropOut(STM, 'CD16 Mono', 'PTID', zi_threshold = 0.5, initialSampling = 10, verbose = FALSE, numCores = 20)
+
+identifyDropOut <- function(TSAM_Object, cellPopulation, donor, zi_threshold = 0.1, initialSampling = 10, verbose = FALSE, numCores = 2){
 
     mat1 <- getCellPopMatrix(TSAM_Object, cellPopulation)
     trueRows <- rownames(mat1)[rowSums(mat1 == 0)/dim(mat1)[2] >= zi_threshold]
+
+    if (length(donor) > 1 | !donor %in% colnames(SummarizedExperiment::colData(TSAM_Object))) {
+        stop("Please check donor variable. It should be one string, which matches a column name from colData(TSAM_Object).")
+    }
 
     if(length(trueRows) == 0){
 
@@ -27,18 +35,21 @@ identifyDropOut <- function(TSAM_Object, cellPopulation, zi_threshold = 0.1, ver
 
     }
 
-    output <- runZIGLMM(TSAM_Object[trueRows,], cellPopulation, 
-                       continuousFormula = exp ~ (1|Sample),
+    output <- model_scATAC(TSAM_Object[trueRows,], cellPopulation, 
+                       continuousFormula = paste('exp ~ (1|', donor, ')',sep =''),
                        ziformula = ~ 0 + FragNumber,
+                       initialSampling = initialSampling,
                        verbose = verbose,
                        numCores = numCores)
-    annotatedRanges = rowRanges(output) 
+    annotatedRanges = SummarizedExperiment::rowRanges(output) 
     browser()
-    rowValues <- getModelValues(output, 'ZI_FragNumber')    
+    rowValues <- SummarizedExperiment::assays(output)[['ZI_FragNumber']]
+    annotatedRanges <- MOCHA::StringsToGRanges(rownames(rowValues))
+    annotatedRanges$DropOutPValue = rowValues$p_value
+    annotatedRanges$DropOutFDR = rowValues$FDR
 
-    annotateRanges$DropOutFDR = rowValues$FDR
-    annotateRanges$DropOutPValue = rowValues$p_value
-    fullRange = join_by_overlap(rowRanges(STM), annotatedRanges)
+    fullRange = plyranges::join_overlap_intersect(SummarizedExperiment::rowRanges(STM),
+                                annotateRanges, minoverlap = 250)
 
     return(fullRange)                
 }
@@ -65,7 +76,7 @@ modelPredictions <- function(SE1, assay1, measurement, variable, sampleColumn, m
     numericVariables <- names(assayList)[names(assayList) %in% colnames(metaData)]
 
     remainingVariables <- allVariables[!allVariables %in% numericVariables]
-
+    browser()
     #Create a metadata column for each categorical variable, one-hot encoding them. 
     if(length(remainingVariables) > 1){
 
@@ -75,6 +86,9 @@ modelPredictions <- function(SE1, assay1, measurement, variable, sampleColumn, m
 
     }else if(length(remainingVariables) > 0){
         newMetaData <- data.frame(newVar = matchCategorical(metaData, remainingVariables))
+    }else{
+        newMetaData <- NULL
+
     }
 
     colnames(newMetaData) <- remainingVariables
@@ -157,8 +171,8 @@ modelPredictions <- function(SE1, assay1, measurement, variable, sampleColumn, m
 #'                  Must be the same from SE1 and SE2. This is used for aligning SE1 and SE2
 #' @param sig1 A list of rows from SE1 to test. 
 #' @param sig2 a list of rows from SE2 to test. 
-#' @param object A SummarizedExperiment object generated from runZIGLMM. 
-#' @param rowName A string, describing the row you want to analyze. 
+#' @param object A SummarizedExperiment object generated from runZIGLMM.
+#' @param rowName A string, describing the row you want to analyze.
 #'
 #' @return A data.frame coefficient info by factor. 
 #'
@@ -222,7 +236,7 @@ modelInterPredictions <- function(SE1, SE2, assay1, assay2, sampleColumn, interM
 
     assayList <- SummarizedExperiment::assays(interModel)
     metaData <-  SummarizedExperiment::colData(SE1)
-    allVariables <- names(assayList)[! names(assayList) %in% c('exp2', 'Intercept')]
+    allVariables <- names(assayList)[! (names(assayList) %in% c('exp2') | grepl('Intercept', names(assayList)))]
     numericVariables <- names(assayList)[names(assayList) %in% colnames(metaData)]
 
     remainingVariables <- allVariables[!allVariables %in% numericVariables]
@@ -232,16 +246,17 @@ modelInterPredictions <- function(SE1, SE2, assay1, assay2, sampleColumn, interM
 
         nextVariables <- lapply(remainingVariables, function(x) matchCategorical(metaData, x))
         newMetaData = do.call('cbind', nextVariables)
-
+        colnames(newMetaData) <- remainingVariables
+        metaData = cbind(metaData, newMetaData)
 
     }else if(length(remainingVariables) > 0){
         newMetaData <- data.frame(newVar = matchCategorical(metaData, remainingVariables))
+        colnames(newMetaData) <- remainingVariables
+        metaData = cbind(metaData, newMetaData)
     }
-   
-    colnames(newMetaData) <- remainingVariables
-    metaData = cbind(metaData, newMetaData)
 
-    subMeta <- metaData[, colnames(metaData) %in% allVariables]
+
+    subMeta <- metaData[, colnames(metaData) %in% allVariables, drop = FALSE]
                          
     allPredictions <- pbapply::pblapply(cl = NULL, seq_along(pair), function(x){
         
@@ -260,7 +275,7 @@ modelInterPredictions <- function(SE1, SE2, assay1, assay2, sampleColumn, interM
                             }))
 
             bothData$exp1 = bothData$exp1 - rowSums(allAdjusts)
-            bothData$Prediction = modelVals['Intercept',] + modelVals['exp2',]*bothData$exp2
+            bothData$Prediction = modelVals[grepl('Intercept',rownames(modelVals)),] + modelVals['exp2',]*bothData$exp2
         
         }else{
     
@@ -402,194 +417,4 @@ getModelValues <- function(object, rowName){
     rownames(newDF) <- names(SummarizedExperiment::assays(object))
     return(newDF)
 }
-
-#' @title plotZIModels
-#'
-#' @description \code{plotZIModels} plots the data and the generalized slope from the output of pilotZIGLMM
-#' @param modelList a list of models, output from pilotZIGLMM or pilotLMEM
-#' @param x The variable that you want to plot the x-axis over. 
-#' @param group the group column name, for ggplot line plots.
-#' @param colour the colour parameter for ggplot
-#' @param returnMatrix Returns the data.frame of values and predictions, without plotting. 
-#' 
-#' @return list of gpplots, or a list of data.frames. 
-#'
-#'
-#'
-#' @examples
-#' \dontrun{
-#'   predictedDF <- plotZIModels(modelList,returnMatrix = TRUE)
-#' }
-#'
-#' @export
-#' 
-
-plotZIModels <- function(modelList, x_var = 'days_since_symptoms', group ='PTID',  colour ='PTID', returnMatrix = FALSE, rowNames = NULL){
-
-
-    if(any(grepl('list|List',class(modelList)[1]))){
-
-      pList <- lapply(seq_along(modelList), function(i){
-          
-          if(class(modelList[[i]]) == 'glmmTMB'){
-            #Extract the original values
-            df <- as.data.frame(modelList[[i]]$frame)
-            tile <- names(modelList)[i]
-            tryCatch({
-              #Extract model coefficients
-              sum_fit = summary(modelList[[i]])
-              coefs = sum_fit$coefficients$cond[,1]
-              numericCoefs <- names(coefs)[names(coefs) %in% colnames(df) & names(coefs) != x_var]
-
-              df$Prediction = coefs[1] + sum(unlist(lapply(numericCoefs, function(z) { coefs[z]* mean(df[,z])}))) + coefs[x_var]*df[,x_var]
-
-              if(returnMatrix){
-                  
-                  df
-                  
-              }else{
-                  ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
-                      geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
-                      ggtitle(paste(tile, 'Suceeded',sep = ' '))+ 
-                      geom_line(data=df,aes_string(x=x_var,y='Prediction'),linewidth=1, col='black') + theme_minimal() + 
-                      theme(legend.position = 'none')
-                      
-                }
-            },error=function(e){
-                df <- as.data.frame(modelList[[i]]$frame)
-                tile <- names(modelList)[i]
-                if(returnMatrix){
-                    
-                    df
-                    
-                }else{
-                    ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
-                        geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
-                        ggtitle(paste(tile,e,sep = ' '))+ 
-                        theme_minimal() + 
-                        theme(legend.position = 'none')
-                        
-                }
-            })
-
-          }else{
-            df <- as.data.frame(modelList[[i]][[3]])
-            tile = modelList[[i]][[2]]
-            if(returnMatrix){
-                    
-                    df
-                    
-            }else{
-
-              ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
-                        geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
-                        ggtitle(paste(tile, modelList[[i]][[1]],sep = ' '))+ 
-                        theme_minimal() + 
-                        theme(legend.position = 'none')
-            }
-          }
-          
-      })
-      return(pList)
-    }else{
-      stop('modelList type not recognized.')
-    }
-  }
-
-  
-#' @title plotModelPredictions
-#'
-#' @description \code{plotModelPredictions} Uses the raw data object and the model prediction from runZIGLMM or runLMEM to generate a data.frame for each row for plotting.
-#' @param modelObject a SummarizedOutput object from runZIGLMM or runLMEM. 
-#' @param dataObject The SummarizedExperiment object
-#' @param specVariable The variable of interest. If other fixed effects are present, they will be adjusted for.
-#' @param rowNames rownames of the specific 
-#' @return a list of data.frames, including the original data, the adjusted data, and the predicted group trend. 
-#'
-#'
-#'
-#' @examples
-#' \dontrun{
-#'   predictedDF <- plotZIModels(modelList,returnMatrix = TRUE)
-#' }
-#'
-#' @export
-#' 
-#' 
-plotModelPredictions <- function(modelObject, dataObject, specVariable = 'days_since_symptoms', rowNames = NULL){
-
-  if(grepl('SummarizedExperiment', class(modelObject)[1]) & grepl('SummarizedExperiment', class(dataObject)[1])){
-      if(is.null(rowNames)){
-        stop('Please provide the rownames that you want to plot via rowNames.')
-      }else if(!all(rowNames %in% rownames(modelObject))){
-        stop('Some rowNames not found within modelObject.')
-      }else if(!all(rowNames %in% rownames(dataObject))){
-        stop('Some rowNames not found within dataObject.')
-      }else if(! specVariable %in% names(SummarizedExperiment::assays(modelObject))){
-        stop('specVariable does not appear to be a fixed effect within the modelObject.',
-                ' Please doublecheck the specVariable. It should be the name of an assay within the modelObject, which comes from runLMEM or runZIGLMM.')
-      }else if(! specVariable %in% names(SummarizedExperiment::assays(modelObject))){
-        stop('specVariable does not appear to be a fixed effect within the modelObject.',
-                ' Please doublecheck the specVariable. It should be the name of an assay within the modelObject, which comes from runLMEM or runZIGLMM.')
-      }
-
-      allModels <- do.call('rbind', lapply(rowNames, function(x){
-        tmpValues <- getModelValues(modelObject, x)
-        t(tmpValues[,'Estimate', drop= FALSE])
-      }))
-      rownames(allModels) <- rowNames
-
-      metaData
-      
-      adjustedDFs <- lapply(allModels, function(x){
-           if(all(is.na(x))){
-              return(NA)
-            }else{
-              df <- x
-              
-              numericCoefs <- names(coefs)[names(coefs) %in% colnames(df) & names(coefs) != x_var]
-
-              df$Prediction = coefs[1] + sum(unlist(lapply(numericCoefs, function(z) { coefs[z]* mean(df[,z])}))) + coefs[x_var]*df[,x_var]
-
-              p1 <- ggplot(df, aes_string(x=x_var,y='exp', colour=colour, group = group)) + geom_point(size=0.8, alpha=0.4)+
-                  geom_line(data=df[df$exp>0,],aes_string(x=x_var, y='exp',alpha=0.3), linewidth=0.5)+
-                  ggtitle(paste(tile, 'Suceeded',sep = ' '))+ 
-                  geom_line(data=df,aes_string(x=x_var,y='Prediction'),linewidth=1, col='black') + theme_minimal() + 
-                  theme(legend.position = 'none')
-              return(p1)
-            }
-
-        }) 
-
-  }
-}              
-
-
-
-
-#' @title getPilotCoefficients
-#'
-#' @description \code{getPilotCoefficients} Attempts to pull coefficients from a list of models from pilotZIGLMM or pilotLMEM. 
-#'    Returns a list of either the coefficients for each
-#'    model, or the error generated when attempting to get coefficients. 
-#' @param  pilotModelList 
-#' @return modelList a list of outputs from lmerTest::lmer
-#'
-#'
-#' @export
-
-getPilotCoefficients <- function(pilotModelList){
-
-   coeffList <-  lapply(pilotModelList, function(x) {
-                    tryCatch({
-                        summary(x)$coefficients
-                      },
-                      error=function(e){
-                        list(e, x$frame)
-                      })
-                  })
-   return(coeffList)
-}
-
-
 
