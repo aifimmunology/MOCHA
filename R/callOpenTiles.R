@@ -171,14 +171,13 @@ setGeneric(
   allnames <- names(ATACFragments)  
   beforeLengths <- lengths(ATACFragments)
   ATACFragments <- lapply(ATACFragments, function(x){
-        
-            plyranges::filter(x, seqnames %in% GenomeInfoDb::seqnames(genome))
-        
+    plyranges::filter(x, seqnames %in% GenomeInfoDb::seqnames(genome))
   })
   names(ATACFragments) <- allnames
 
-  if(verbose){
-      warning('Some fragments are not aligned to BS.Genome provided.', sum(beforeLengths) - sum(lengths(ATACFragments)), 
+  if(verbose &  sum(beforeLengths) - sum(lengths(ATACFragments)) > 0){
+      warning('Some fragments are not aligned to BS.Genome provided. ', 
+              sum(beforeLengths) - sum(lengths(ATACFragments)), 
               ' fragments were removed.')
   }
     
@@ -483,7 +482,6 @@ setMethod(
     # Assign the number of fragments into the fragment count
     allFragmentCounts[cellPop, sampleNames] <- normalization_factors
 
-    cl <- parallel::makeCluster(numCores)
     # save coverage files to folder.
     # This doesn't include empty samples and might break. We may need to
     # reconsider how getCoverage works and add empty samples before this step.
@@ -507,12 +505,14 @@ setMethod(
       )
       rm(covFiles)
     }
+    
     # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     iterList <- lapply(seq_along(frags), function(x) {
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
+    cl <- parallel::makeCluster(numCores)
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
@@ -522,9 +522,9 @@ setMethod(
     names(tilesGRangesList) <- names(frags)
 
     # Where samples have no cells, add an empty GRanges placeholder
-    if (!all(rownames(allCellCounts) %in% names(tilesGRangesList))) {
-      emptySamples <- rownames(allCellCounts)[
-        !rownames(allCellCounts) %in% names(tilesGRangesList)
+    if (!all(colnames(allCellCounts) %in% names(tilesGRangesList))) {
+      emptySamples <- colnames(allCellCounts)[
+        !colnames(allCellCounts) %in% names(tilesGRangesList)
       ]
       emptyGRanges <- lapply(emptySamples, function(x) {
         NULL
@@ -540,13 +540,13 @@ setMethod(
     # dummy data so that we preserve the existence of the sample, while
     # also not including any information from it.
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
+
     if (length(emptyGroups) > 0) {
       if (verbose) {
         warning(
-          paste(
-            "The following celltype#sample groupings have too few cells (<5)",
-            "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
-          )
+            "The following samples have too few cells (<5) of this celltype (",
+            cellPop,
+            ") and will be ignored: ", names(tilesGRangesList)[emptyGroups]
         )
       }
     }
