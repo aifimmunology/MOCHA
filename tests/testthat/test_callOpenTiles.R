@@ -18,12 +18,12 @@ if (
       )
 
       TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
-      Org <- "org.Hs.eg.db"
+      OrgDb <- "org.Hs.eg.db"
       capture.output(
         tiles <- MOCHA::callOpenTiles(
           ATACFragments = testProj,
           TxDb = TxDb,
-          Org = Org,
+          OrgDb = OrgDb,
           cellPopLabel = "Clusters",
           cellPopulations = c("C2", "C5"),
           numCores = 1,
@@ -47,7 +47,7 @@ if (
 
   test_that("We can call peaks independent of ArchR", {
     TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
-    Org <- "org.Hs.eg.db"
+    OrgDb <- "org.Hs.eg.db"
     capture.output(
       tiles <- MOCHA::callOpenTiles(
         ATACFragments = MOCHA::exampleFragments,
@@ -55,7 +55,7 @@ if (
         blackList = MOCHA::exampleBlackList,
         genome = "hg19",
         TxDb = TxDb,
-        Org = Org,
+        OrgDb = OrgDb,
         outDir = tempdir(),
         cellPopLabel = "Clusters",
         cellPopulations = c("C2", "C5"),
@@ -108,7 +108,7 @@ if (
       blackList = MOCHA::exampleBlackList,
       genome = genome,
       TxDb = TxDb,
-      Org = Org,
+      OrgDb = OrgDb,
       outDir = tempdir(),
       cellPopLabel = "cellPop",
       cellPopulations = c("t_cd8_temra"),
@@ -145,7 +145,7 @@ if (
       blackList = MOCHA::exampleBlackList,
       genome = genome,
       TxDb = TxDb,
-      Org = Org,
+      OrgDb = OrgDb,
       outDir = tempdir(),
       cellPopLabel = "cellPop",
       cellPopulations = c("t_cd8_temra"),
@@ -182,7 +182,7 @@ if (
       blackList = MOCHA::exampleBlackList,
       genome = genome,
       TxDb = TxDb,
-      Org = Org,
+      OrgDb = OrgDb,
       outDir = tempdir(),
       cellPopLabel = "cellPop",
       cellPopulations = c("t_cd8_temra"),
@@ -193,7 +193,7 @@ if (
   
   test_that("We error informatively when cellPopLabel is not in the metadata", {
     TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
-    Org <- "org.Hs.eg.db"
+    OrgDb <- "org.Hs.eg.db"
     expect_error(
       tiles <- MOCHA::callOpenTiles(
         ATACFragments = MOCHA::exampleFragments,
@@ -201,7 +201,7 @@ if (
         blackList = MOCHA::exampleBlackList,
         genome = "hg19",
         TxDb = TxDb,
-        Org = Org,
+        OrgDb = OrgDb,
         outDir = tempdir(),
         cellPopLabel = "INCORRECTCELLPOPLABEL",
         cellPopulations = c("C2", "C5"),
@@ -212,3 +212,5 @@ if (
   })
   
 }
+
+
