@@ -2,10 +2,13 @@
 #'
 #' @description \code{multiModalModeling} allows for generalized linear mixed effect modeling across multiple modalities,
 #'  as long as samples are aligned. This is only designed for integrating datatypes with normal distributions.
-#' @param SE1 SummarizedExperiment object for measure-type 1. 
-#' @param SE2 SummarizedExperiment object for measure-type 2. 
+#' @param SE1 SummarizedExperiment object for measurement-type 1. 
+#' @param SE2 SummarizedExperiment object for measurement-type 2. 
 #' @param assay1 - name of the assay to extract and use from SE1
 #' @param assay2 - name of the assay to extract and use from SE2
+#' @param sampleColumn - A string: the name of the column with Sample names from the metadata. 
+#'                  Must be the same from SE1 and SE2. This is used for aligning SE1 and SE2
+#' @param formula : Formula used for modeling. Must be in the form exp1 ~ exp2 + other factors + (1|RandomEffect)
 #' @param sig1 A list of rows from SE1 to test. 
 #' @param sig2 a list of rows from SE2 to test. 
 #' @param pilot a boolean to test just 10 combinations and return full models for diagnosis, or

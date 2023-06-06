@@ -706,3 +706,83 @@ getPilotCoefficients <- function(pilotModelList){
    return(coeffList)
 }
 
+
+
+
+
+#' @title Internal function to processing model outputs
+#'
+#' @description \code{processModelOutputs} 
+#' @param modelOutputList. A list of modeloutputs, processed by either individualLMEM or individualZIGLMM. 
+#'        The first output is the coefficient data.frame, then the residuals, and the Variance. 
+#' @param nullDFList A null templates for the model outputs
+#' @param rownamesList a name of all the rows that were interate over. 
+#' @param SummarizedExperiment SummarizedExperiment object used for modeling. From this, rowData and colData will be preserved with the residuals.
+#' @return A SummarizedExperiment object, that captures the models performance. Each fixed effect will be one assay, columns will be the 
+#'        statistics for the fixed effect and measurements (Estimate, Error, p-value, etc..). Residuals and Variance will be saved in the object's metadata.
+#'
+#' @noRd
+processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, ranged = FALSE,
+                                  SummarizedExperimentObj, returnList = FALSE) {
+
+    coeffNames <- rownames(nullDFList$Coeff)
+    newColumnNames <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',colnames(nullDFList$Coeff)))
+    output_list <- lapply(coeffNames, function(z){
+      tmpCoef <- do.call("rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+            tmpDf <- x[['Coeff']][z,]
+            colnames(tmpDf) <- newColumnNames
+            tmpDf$FDR <- p.adjust(tmpDf$p_value, 'fdr')
+            tmpDf
+          }, cl = NULL))
+      rownames(tmpCoef) <- rownamesList
+      tmpCoef
+    })
+    names(output_list) <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',coeffNames))
+
+    residual_tmp <- do.call(
+      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+        x[['Resid']]
+      }, cl = NULL)
+    )
+    vcov_tmp <- do.call(
+      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+        x[['VCov']]
+    }, cl = NULL)
+    )
+    rownames(residual_tmp) <- rownames(vcov_tmp) <- rownamesList
+
+    residual_tmp <- residual_tmp[,match(rownames(SummarizedExperiment::colData(SummarizedExperimentObj)), colnames(residual_tmp))]
+
+    if(returnList){
+      return(list('output' = output_list , 'Resid' = residual_tmp , 'Variance' = vcov_tmp))
+    }
+    #Repackage Residuals into a SummarizedExperiment
+    if(ranged){
+      ResidualSE <- SummarizedExperiment::SummarizedExperiment(
+                      list('Residual' =  residual_tmp),
+                      colData = SummarizedExperiment::colData(SummarizedExperimentObj),
+                      rowRanges = SummarizedExperiment::rowRanges(SummarizedExperimentObj),
+                      metadata = S4Vectors::metadata(SummarizedExperimentObj)
+              )
+    }else{
+      ResidualSE <- SummarizedExperiment::SummarizedExperiment(
+                  list('Residual' =  residual_tmp),
+                  colData = SummarizedExperiment::colData(SummarizedExperimentObj),
+                  rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
+                  metadata = S4Vectors::metadata(SummarizedExperimentObj)
+          )
+    }
+
+              
+    #Package up the metadata list. 
+    metaDataList <- list('Residuals' = ResidualSE,
+                        'RandomEffectVariance' = vcov_tmp)
+
+    results <- SummarizedExperiment::SummarizedExperiment(
+      output_list,
+      rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
+      metadata = metaDataList
+    )
+    
+    return(results)
+}
