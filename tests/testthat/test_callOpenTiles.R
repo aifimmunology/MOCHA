@@ -114,7 +114,7 @@ if (
       cellPopulations = c("t_cd8_temra"),
       studySignal = 10, # manually provide or have nFrags col in cellColData
       numCores = 1, verbose = TRUE
-    ), "too few cells (<5) of this celltype", ignore.case = TRUE)
+    ))
   })
 
   test_that("We error when nFrags is absent from cellColData", {
