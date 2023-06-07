@@ -363,13 +363,15 @@ setMethod(
   
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
-  cellColData[] <- lapply(cellColData, function(x){
+  # Make a copy to preserve original columns.
+  cellColDataCopy <- data.frame(cellColData) 
+  cellColDataCopy[] <- lapply(cellColDataCopy, function(x){
     type.convert(as.character(x), as.is = TRUE)
   })
   
   # Assume all numeric columns are to be saved as additionalCellData
-  isNumericCol <- unlist(lapply(cellColData, function(x) is.numeric(x)))
-  additionalCellData <- colnames(cellColData)[isNumericCol]
+  isNumericCol <- unlist(lapply(cellColDataCopy, function(x) is.numeric(x)))
+  additionalCellData <- colnames(cellColDataCopy)[isNumericCol]
   
   # Group by Sample (rows) and cellPop (columns) 
   if(!is.null(additionalCellData)){
@@ -380,7 +382,7 @@ setMethod(
     additionalMetaData <- lapply(additionalCellData, function(x){
       
       suppressMessages(
-        summarizedData <- as.data.frame(cellColData) %>%
+        summarizedData <- as.data.frame(cellColDataCopy) %>%
           dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
           dplyr::summarize(meanValues = mean(!!as.name(x), .groups = "drop")) %>%
           tidyr::pivot_wider(
@@ -405,6 +407,7 @@ setMethod(
   }else if(is.null(additionalCellData)){
     additionalMetaData <- NULL
   }
+  remove(cellColDataCopy)
   ################# End metadata construction
   
   # Add prefactor multiplier across datasets
