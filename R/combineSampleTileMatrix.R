@@ -84,18 +84,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rowRanges = allRanges,
     metadata = S4Vectors::metadata(SampleTileObj)
   )
-  
-  newObj <- chromVAR::addGCBias(newObj, genome = genome)
-  
-  if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
-    naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
-    
-    if (verbose) {
-      warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
-    }
-    
-    SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(rowData(newObj)$bias, na.rm = TRUE)
-  }
 
   return(newObj)
 }
