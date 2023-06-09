@@ -53,37 +53,57 @@ combineSampleTileMatrix <- function(SampleTileObj,
   # Combine Sample and Cell type for the new columns. 
   # This takes the colData and repeats it across cell types for a given sample
   # Rows are now CellType__Sample. So for example 'CD16 Mono' and 'Sample1' becomes "CD16_Mono__Sample1"
-  allSampleData <- do.call("rbind", lapply(names(assays), function(x) {
+  allSampleData <- as.data.frame(do.call("rbind", lapply(names(assays), function(x) {
     tmp_meta <- coldata
     tmp_meta$Sample <- gsub(" ", "_", paste(x, tmp_meta$Sample, sep = "__"))
     tmp_meta$CellType <- rep(x, dim(tmp_meta)[1])
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
-  }))
+  })))
   
-  ### This is where cell counts and fragments counts are pivoted into a long format and merged (left-Joined) into the new allSampleData
+  # This is where cell counts and fragments counts are pivoted into a long format and merged (left-Joined) into the new allSampleData
   cellTypeLabelList <- Var1 <- NULL
-  cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts)
-  cellCounts <- dplyr::mutate(cellCounts,
-      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__")))
-  cellCounts <- dplyr::select(cellCounts, Sample, Freq)
+  summarizedData <- S4Vectors::metadata(SampleTileObj)$summarizedData
+  cellCounts <- as.data.frame(
+    SummarizedExperiment::assays(summarizedData)[["CellCounts"]]
+  )
+  cellTypes <- rownames(cellCounts)
+  cellCounts <- tidyr::pivot_longer(
+    cellCounts, 
+    cols=colnames(cellCounts), 
+    names_to="Sample", 
+    values_to = "Freq"
+  )
+  cellCounts <- dplyr::mutate(
+    cellCounts,
+    Sample = rownames(allSampleData)
+  )
 
-  fragCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$FragmentCounts)
-  fragCounts <-  dplyr::select(fragCounts, dplyr::one_of(names(assays))) 
-  fragCounts <-  dplyr::mutate(fragCounts, Sample = rownames(fragCounts))
-  fragCounts <-  tidyr::pivot_longer(fragCounts, cols = names(assays), names_to = 'CellTypes', values_to = 'FragNumber') 
-  fragCounts <-  dplyr::mutate(fragCounts, Sample = gsub(" ", "_", paste(CellTypes, Sample, sep = "__")))
-  fragCounts <-  dplyr::select(fragCounts, Sample, FragNumber)
+  fragCounts <- as.data.frame(
+    SummarizedExperiment::assays(summarizedData)[["FragmentCounts"]]
+  )
+  cellTypes <- rownames(fragCounts)
+  fragCounts <- tidyr::pivot_longer(
+    fragCounts, 
+    cols=colnames(fragCounts), 
+    names_to="Sample", 
+    values_to = "FragNumber"
+  )
+  fragCounts <- dplyr::mutate(
+    fragCounts,
+    Sample = rownames(allSampleData)
+  )
 
-  #the sample column now is actually CellType_Sample, unlike before
+  # The sample column now is actually CellType_Sample, unlike before
   allSampleData <- dplyr::left_join(
-    as.data.frame(allSampleData), cellCounts, by = "Sample")
+    allSampleData, cellCounts, by = "Sample"
+  )
 
   allSampleData <- dplyr::left_join(
     allSampleData,  fragCounts, by = 'Sample'
   )
 
-  #Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting. 
+  # Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting. 
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
   for (i in names(assays)) {
     GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
