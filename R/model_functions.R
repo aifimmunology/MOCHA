@@ -147,7 +147,7 @@ runLMEM <- function(ExperimentObj,
     stop("modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
         "(exp ~ factors)")   
   }else if(is(modelFormula, "formula")) {
-    modelFormula = as.character(modelFormula)
+    modelFormula = paste(as.character(modelFormula), collapse = ' ')
   }
   
   if (!"exp" %in% all.vars(as.formula(modelFormula))) {
@@ -317,7 +317,7 @@ runLMEM <- function(ExperimentObj,
 model_General <- function(ExperimentObj,
                     assayName = NULL,
                     modelFormula = NULL,
-                    family = stats::gaussian()
+                    family = stats::gaussian(),
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 2) {
@@ -330,7 +330,7 @@ model_General <- function(ExperimentObj,
   names(SummarizedExperiment::assays(ExperimentObj))[names(SummarizedExperiment::assays(ExperimentObj)) == assayName] = 'counts'
 
   exp <- .model_pseudobulk_default(SE_Object = ExperimentObj,
-                      continuousFormula = continuousFormula,
+                      continuousFormula = as.formula(modelFormula),
                       ziformula = ~0,
                       zi_threshold = 0,
                       family = family,
@@ -375,10 +375,13 @@ model_General <- function(ExperimentObj,
                       verbose = FALSE,
                       numCores = 2) {
 
-  if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
-    stop("continuousFormula and/or ziformula was not provided as a formula.")
+  if (c(class(continuousFormula)) != "formula") {
+    stop("continuousFormula was not provided as a formula.")
   }
-  
+  if (c(class(ziformula)) != "formula" & !is.null(ziformula) ) {
+    stop("ziformula was not provided as a formula.")
+  }
+
   modelingData <- log2(SummarizedExperiment::assays(SE_Object)[['counts']]+1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(SE_Object))
 
@@ -397,6 +400,10 @@ model_General <- function(ExperimentObj,
 
   # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
+
+  #Transform in character strings for multithreading. 
+  continuousFormula <- paste(as.character(continuousFormula), collapse = ' ')
+  ziformula <- paste(as.character(ziformula), collapse = ' ')
 
     ## Log transform the FragmentNumbers so as to stabilize the model. But only if FragNumber is in the model. Same for CellCounts.
   if(any(colnames(MetaDF) %in% c('FragNumber'))){
@@ -461,11 +468,16 @@ model_General <- function(ExperimentObj,
       !is.null(ziDF) | sum(dim(ziDF)) != 0
 
     }))
-    if(all(!bothZI_Cont)){
+    if(all(!bothZI_Cont) & !paste(as.character(ziformula), collapse = ' ') == '~ 0'){
       warning('No working models using the zero-inflated formula. Do you need to modify the zero-inflated formula?')
+      modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
+    }else if(all(!bothZI_Cont) & paste(as.character(ziformula), collapse = ' ') == '~ 0'){
+      modelRes <- modelList[[idx[1]]]
+    }else{
+      modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
     }
+
     #Extract the first representative model. And use it to create a null template. 
-    modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
     coeff2 <- summary(modelRes)$coefficients
     coeff <- lapply(coeff2, as.data.frame)
     coeff$cond[!is.na(coeff$cond)] <- NA
@@ -518,8 +530,7 @@ model_General <- function(ExperimentObj,
   parallel::clusterEvalQ(cl, {
     library(glmmTMB)
   })
-  continuousFormula <- as.character(continuousFormula)
-  ziformula <- as.character(ziformula)
+
   parallel::clusterExport(
     cl = cl, varlist = c("continuousFormula", "ziformula", "modelingData", "MetaDF", "individualZIGLMM",
                              "nullDFList","zi_threshold",'family'),

@@ -1,6 +1,7 @@
 
 
-
+#### Doesn't work currently. Will need to change to build actual model.
+#### Match accessibility 
 
 #' @title Identify regions that are strongly related to the sequencing depth of a given pseudobulked cell type.
 #'
@@ -18,7 +19,8 @@
 #'
 #' @return results a SummarizedExperiment containing ZI-GLMM results
 
-identifyDropOut(STM, 'CD16 Mono', 'PTID', zi_threshold = 0.5, initialSampling = 10, verbose = FALSE, numCores = 20)
+
+identifyDropOut(, 'CD16 Mono', 'PTID', zi_threshold = 0.1, initialSampling = 10, verbose = FALSE, numCores = 20)
 
 identifyDropOut <- function(TSAM_Object, cellPopulation, donor, zi_threshold = 0.1, initialSampling = 10, verbose = FALSE, numCores = 2){
 
@@ -39,6 +41,7 @@ identifyDropOut <- function(TSAM_Object, cellPopulation, donor, zi_threshold = 0
                        continuousFormula = paste('exp ~ (1|', donor, ')',sep =''),
                        ziformula = ~ 0 + FragNumber,
                        initialSampling = initialSampling,
+                       zi_threshold = 0,
                        verbose = verbose,
                        numCores = numCores)
     annotatedRanges = SummarizedExperiment::rowRanges(output) 
@@ -54,29 +57,49 @@ identifyDropOut <- function(TSAM_Object, cellPopulation, donor, zi_threshold = 0
     return(fullRange)                
 }
 
-modelPredictions <- function(SE1, assay1, measurement, variable, sampleColumn, modelObject, adjust = TRUE){
+#' @title modelPredictions
+#'
+#' @description \code{plotModelPredictions} Uses the raw data object and the model prediction from runZIGLMM or runLMEM to generate a data.frame for each row for plotting.
+#' @param dataObject The SummarizedExperiment object with real data. 
+#' @param modelObject a SummarizedOutput object from modelPredict  
+#' @param specVariable The variable of interest. If other fixed effects are present, they will be adjusted for.
+#' @param rowNames rownames of the specific 
+#' @return a list of data.frames, including the original data, the adjusted data, and the predicted group trend. 
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#'   predictedDF <- plotZIModels(modelList,returnMatrix = TRUE)
+#' }
+#'
+#' @export
+#'
+#'
+
+modelPredictions <- function(dataObject, assay1, measurement, variable, sampleColumn, modelObject, adjust = TRUE){
 
      #Check whether sampleColumn is present in both SE objects. 
-    if(!(sampleColumn %in% colnames(SE1@colData))){
-        stop('sampleColumn not found in SE1.')
+    if(!(sampleColumn %in% colnames(dataObject@colData))){
+        stop('sampleColumn not found in dataObject.')
     }
 
     #Test whether the measurement is found within their assays
-    if(!all(measurement %in% rownames(SE1))){
-     stop('measurement not found within SE1. Please read documentation.')
+    if(!all(measurement %in% rownames(dataObject))){
+     stop('measurement not found within dataObject. Please read documentation.')
     }
 
-    mat1 <- SummarizedExperiment::assays(SE1[measurement,])[[assay1]]
+    mat1 <- SummarizedExperiment::assays(dataObject[measurement,])[[assay1]]
     mat1[is.na(mat1)] = 0
     assayList <- SummarizedExperiment::assays(modelObject)
-    metaData <-  SummarizedExperiment::colData(SE1)
+    metaData <-  SummarizedExperiment::colData(dataObject)
 
 
     allVariables <- names(assayList)[! names(assayList) %in% c('Intercept') & !grepl('ZI_',names(assayList))]
     numericVariables <- names(assayList)[names(assayList) %in% colnames(metaData)]
 
     remainingVariables <- allVariables[!allVariables %in% numericVariables]
-    browser()
+
     #Create a metadata column for each categorical variable, one-hot encoding them. 
     if(length(remainingVariables) > 1){
 
@@ -97,7 +120,7 @@ modelPredictions <- function(SE1, assay1, measurement, variable, sampleColumn, m
     subMeta <- metaData[, colnames(metaData) %in% allVariables]
     if(any(is.na(subMeta))){
 
-        stop('Metadata in SE1 is NA. SE1 is likely not the object used for modeling. Please provide the object used for modeling.')
+        stop('Metadata in dataObject is NA. dataObject is likely not the object used for modeling. Please provide the object used for modeling.')
 
     }
 
@@ -149,7 +172,7 @@ modelPredictions <- function(SE1, assay1, measurement, variable, sampleColumn, m
         
     names(allPredictions) = measurement
                                 
-    exp = SummarizedExperiment::SummarizedExperiment(allPredictions, metadata = SummarizedExperiment::rowData(SE1[measurement,]))
+    exp = SummarizedExperiment::SummarizedExperiment(allPredictions, metadata = SummarizedExperiment::rowData(dataObject[measurement,]))
    
     return(exp)
 }
