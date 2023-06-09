@@ -109,11 +109,14 @@ combineSampleTileMatrix <- function(SampleTileObj,
     GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
   }
 
+  newMetadata <- S4Vectors::metadata(SampleTileObj)
+  newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", packageVersion("MOCHA")))
+  
   newObj <- SummarizedExperiment::SummarizedExperiment(
     assays = newAssays,
     colData = allSampleData,
     rowRanges = allRanges,
-    metadata = S4Vectors::metadata(SampleTileObj)
+    metadata = newMetadata
   )
   
   newObj <- chromVAR::addGCBias(newObj, genome = genome)

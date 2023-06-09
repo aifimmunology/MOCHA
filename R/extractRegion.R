@@ -190,9 +190,12 @@ extractRegion <- function(SampleTileObj,
   parallel::stopCluster(cl)
 
   names(allGroupsDF) <- names(allGroups)
+  
+  newMetadata <- SampleTileObj@metadata
+  newMetadata$History <- append(newMetadata$History, paste("extractRegion", packageVersion("MOCHA")))
 
   countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
-    metadata = SampleTileObj@metadata
+    metadata = newMetadata
   )
 
   return(countSE)
