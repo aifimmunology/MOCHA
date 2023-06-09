@@ -72,6 +72,10 @@ if (
       assays(metadata(tiles)$summarizedData)[["CellCounts"]],
       variant = "CellCounts"
     )
+    expect_snapshot(
+      assays(metadata(tiles)$summarizedData)[["FragmentCounts"]],
+      variant = "FragmentCounts"
+    )
     
     tiles@metadata$Directory <- NULL # Directory uses tempdir()
     expect_snapshot(
