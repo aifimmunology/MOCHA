@@ -49,7 +49,7 @@ makeChromVAR <- function(TSAM_Object,
 
         chromVAROut <- lapply(cellPopulation, function(XX){
             if(verbose){ message('Analyzing ', XX)}
-            newObj[[XX]] <- addGCBias_ChAI(newObj[[XX]], genome)
+            newObj[[XX]] <- addGCBias_ChAI(newObj[[XX]], genome, verbose)
             anno_ix <- chromVAR::getAnnotations(newObj[[XX]]@metadata[[motifName]], 
                         rowRanges = SummarizedExperiment::rowRanges(newObj[[XX]]))
             chromVAR::computeDeviations(object =newObj[[XX]], 
@@ -59,7 +59,7 @@ makeChromVAR <- function(TSAM_Object,
     }else{
 
         if(verbose){ message('Analyzing ', cellPopulation)}
-        newObj[[XX]] <- addGCBias_ChAI(newObj[[XX]], genome)
+        newObj <- addGCBias_ChAI(newObj, genome, verbose)
         anno_ix <- chromVAR::getAnnotations(newObj@metadata[[motifName]], 
                         rowRanges = SummarizedExperiment::rowRanges(newObj))
         chromVAROut <- list(chromVAR::computeDeviations(object = newObj, 
@@ -80,7 +80,7 @@ makeChromVAR <- function(TSAM_Object,
 
 }
 
-addGCBias_ChAI <- function(obj1, genome){
+addGCBias_ChAI <- function(obj1, genome, verbose){
 
     obj1 <- addGCBias(obj1, genome = genome)
     if (any(is.na(SummarizedExperiment::rowData(obj1)$bias))) {
