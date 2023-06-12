@@ -26,7 +26,7 @@ neighboring sample points) used for manifold approximation. Default is 15.}
 
 \item{returnModel}{A boolean. Default is FALSE. If set to true, it will return a list, where the first is the UMAP coordinates with metadata for plotting, and the second is the full UMAP model so further projection can occur.}
 
-\item{seed}{an integer. Represents the seed to pass to the umap.}
+\item{seed}{an integer. Represents the random seed to pass to the UMAP. Default seed is 1.}
 
 \item{...}{Additional arguments to be passed to \link[uwot]{umap}.}
 }

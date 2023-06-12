@@ -9,6 +9,7 @@ pilotZIGLMM(
   cellPopulation = NULL,
   continuousFormula = NULL,
   ziformula = NULL,
+  zi_threshold = 0,
   verbose = FALSE,
   pilotIndices = 1:10
 )
@@ -17,7 +18,7 @@ pilotZIGLMM(
 \item{TSAM_Object}{A SummarizedExperiment object generated from
 getSampleTileMatrix, chromVAR, or other.}
 
-\item{cellPopulation}{A single cell population on which to run this pilot 
+\item{cellPopulation}{A single cell population on which to run this pilot
 model}
 
 \item{continuousFormula}{The formula, see \code{\link[glmmTMB]{glmmTMB}}.
@@ -33,6 +34,9 @@ the zero-inflation formula in models where the conditional effects formula
 contains an offset term, the offset term will automatically be dropped. The
 zero-inflation model uses a logit link.}
 
+\item{zi_threshold}{Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold,
+samples with zeroes are dropped and only the continous formula is used. Use this parameter at your own risk. Default is 0.}
+
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 
 \item{pilotIndices}{A vector of integers defining the subset of
@@ -43,5 +47,6 @@ modelList a list of outputs from glmmTMB::glmmTMB
 }
 \description{
 \code{pilotLMEM} Runs linear mixed-effects modeling for
-  continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
+  zero inflated data using \code{\link[glmmTMB]{glmmTMB}}.
+TryCatch will catch errors, and return the error and dataframe for troubleshooting.
 }

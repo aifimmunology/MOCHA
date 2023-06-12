@@ -39,12 +39,12 @@ results a SummarizedExperiment containing LMEM results
 }
 \examples{
 \dontrun{
-  modelList <- runLMEM(ExperimentObj,
-    modelFormula = NULL,
-    initialSampling = 5,
-    verbose = FALSE,
-    numCores = 1
- )
+modelList <- runLMEM(ExperimentObj,
+  modelFormula = NULL,
+  initialSampling = 5,
+  verbose = FALSE,
+  numCores = 1
+)
 }
 
 }

@@ -38,14 +38,14 @@ Default is 150 bp.}
 \item{threshold}{FDR Threshold for determining significant vs non-significant
 changes in accessibility. Following MOCHA's standards, default is 0.2.}
 
-\item{TxDb}{The TxDb-class transcript annotation 
-package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
-must be installed. See 
+\item{TxDb}{The TxDb-class transcript annotation
+package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This
+must be installed. See
 \href{https://bioconductor.org/packages/release/data/annotation/}{
 Bioconductor AnnotationData Packages}.}
 
-\item{OrgDb}{The OrgDb-class genome wide annotation 
-package for your organism (e.g. "org.Hs.eg.db"). This must be installed. 
+\item{OrgDb}{The OrgDb-class genome wide annotation
+package for your organism (e.g. "org.Hs.eg.db"). This must be installed.
 See \href{https://bioconductor.org/packages/release/data/annotation/}{
 Bioconductor AnnotationData Packages}}
 }

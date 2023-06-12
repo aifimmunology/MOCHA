@@ -2,14 +2,14 @@
 % Please edit documentation in R/runZIGLMM.R
 \name{runZIGLMM}
 \alias{runZIGLMM}
-\title{Run Zero-Inflated Generalized Linear Mixed-Modeling for zero inflated
-  data}
+\title{Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked scATAC data}
 \usage{
 runZIGLMM(
   TSAM_Object,
-  cellPopulation = NULL,
+  cellPopulation = "all",
   continuousFormula = NULL,
   ziformula = NULL,
+  zi_threshold = 0,
   initialSampling = 5,
   verbose = FALSE,
   numCores = 1
@@ -17,24 +17,22 @@ runZIGLMM(
 }
 \arguments{
 \item{TSAM_Object}{A SummarizedExperiment object generated from
-getSampleTileMatrix, chromVAR, or other. It is expected to contain only one
-assay, or only the first assay will be used for the model. Data should not
-be zero-inflated.}
+getSampleTileMatrix.}
 
-\item{cellPopulation}{A single cell population on which to run this model}
+\item{cellPopulation}{Name of a cell type(s), or 'all'. The function will combine the cell types mentioned into one matrix before running the model.}
 
-\item{continuousFormula}{The formula, see \code{\link[glmmTMB]{glmmTMB}}.
-Combined fixed and random effects formula, following lme4 syntax.}
+\item{continuousFormula}{The formula for the continuous data that should be used within glmmTMB. It should be in the
+format (exp ~ factors). All factors must be found in column names
+of the TSAM_Object metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
+modelFormula must start with 'exp' as the response.
+See \link[glmmTMB]{glmmTMB}.}
 
-\item{ziformula}{The zero-inflated formula, see
-\code{\link[glmmTMB]{glmmTMB}}. a one-sided (i.e., no response variable)
-formula for zero-inflation combining fixed and random effects: the default
-~0 specifies no zero-inflation. Specifying ~. sets the zero-inflation
-formula identical to the right-hand side of formula (i.e., the conditional
-effects formula); terms can also be added or subtracted. When using ~. as
-the zero-inflation formula in models where the conditional effects formula
-contains an offset term, the offset term will automatically be dropped. The
-zero-inflation model uses a logit link.}
+\item{ziformula}{The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
+format ( ~ factors). All factors must be found in column names
+of the TSAM_Object colData metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.}
+
+\item{zi_threshold}{Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold,
+samples with zeroes are dropped and only the continous formula is used. Use this parameter at your own risk. Default is 0.}
 
 \item{initialSampling}{Size of data to use for pilot}
 
@@ -47,16 +45,17 @@ results a SummarizedExperiment containing LMEM results
 }
 \description{
 \code{runZIGLMM} Runs linear mixed-effects modeling for
-  continuous, non-zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
+  zero-inflated data using \code{\link[glmmTMB]{glmmTMB}}.
 }
 \examples{
 \dontrun{
-  modelList <- runLMEM(ExperimentObj,
-    modelFormula = NULL,
-    initialSampling = 5,
-    verbose = FALSE,
-    numCores = 1
- )
+modelList <- runZIGLMM(STM[c(1:1000), ],
+  cellPopulation = "CD16 Mono",
+  continuousFormula = exp ~ Age + Sex + days_since_symptoms + (1 | PTID),
+  ziformula = ~ FragNumber + Age,
+  verbose = TRUE,
+  numCores = 35
+)
 }
 
 }
