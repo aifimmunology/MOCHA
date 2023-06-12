@@ -31,7 +31,7 @@ test_that("We can subset a tileResults object by Sample grouping", {
       verbose = FALSE
     )
   )
-  
+
   expect_snapshot_output(
     obj,
     variant = "tileResults"
@@ -80,7 +80,7 @@ test_that("We can subset a sampleTileMatrix object by Sample", {
       threshold = 0
     )
   )
-  
+
   capture.output(
     obj <- subsetMOCHAObject(
       SampleTileMatrix,
@@ -91,7 +91,7 @@ test_that("We can subset a sampleTileMatrix object by Sample", {
       verbose = FALSE
     )
   )
-  
+
   expect_snapshot_output(
     obj,
     variant = "sampleTileMatrix"

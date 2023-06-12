@@ -1,4 +1,4 @@
-if (requireNamespace("chromVAR", quietly=TRUE)) {
+if (requireNamespace("chromVAR", quietly = TRUE)) {
   test_that("combineSampleTileMatrix works on a 3-sample dataset", {
     cellPopulations <- c("C2", "C3")
     capture.output(
@@ -8,15 +8,15 @@ if (requireNamespace("chromVAR", quietly=TRUE)) {
         threshold = 0
       )
     )
-  
+
     combinedObj <- MOCHA::combineSampleTileMatrix(STObj)
-    
+
     expect_snapshot_output(
       combinedObj,
       variant = "3sample"
     )
   })
-  
+
   test_that("combineSampleTileMatrix works on a 1-sample dataset", {
     cellPopulations <- c("C2", "C5")
     capture.output(
@@ -26,9 +26,9 @@ if (requireNamespace("chromVAR", quietly=TRUE)) {
         threshold = 0
       )
     )
-  
+
     combinedObj <- MOCHA::combineSampleTileMatrix(STObj)
-  
+
     expect_snapshot_output(
       combinedObj,
       variant = "1sample"

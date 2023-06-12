@@ -62,17 +62,18 @@ EnrichedRanges <- function(Group1,
                            Category,
                            type = NULL,
                            returnTable = FALSE) {
-  
-  if (!methods::is(Group1, "GRanges") || !methods::is(Group2, "GRanges")){
-    stop("Input Group1 and/or Group2 are not class 'GRanges'. Group1 and ",
-         "Group2 must be GRanges objects.")
+  if (!methods::is(Group1, "GRanges") || !methods::is(Group2, "GRanges")) {
+    stop(
+      "Input Group1 and/or Group2 are not class 'GRanges'. Group1 and ",
+      "Group2 must be GRanges objects."
+    )
   }
   Group1Cat <- plyranges::filter_by_overlaps(Group1, Category)
   Group2Cat <- plyranges::filter_by_overlaps(Group2, Category)
 
   OnlyGroup1 <- plyranges::filter_by_non_overlaps(Group1, Category)
   OnlyGroup2 <- plyranges::filter_by_non_overlaps(Group2, Category)
-  
+
   # Conduct hypergeometric test and return p-value+enrichment score
   if (is.null(type)) {
     if (returnTable) {

@@ -1,6 +1,5 @@
 if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
-    requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
-  
+  requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
   test_that("annotateTiles works on a 1 sample test dataset", {
     cellPopulations <- c("C2", "C5")
     capture.output(
@@ -11,20 +10,20 @@ if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
       ),
       type = "message"
     )
-  
+
     capture.output(
       STM <- MOCHA::annotateTiles(SampleTileMatrix,
         promoterRegion = c(2000, 100)
       ),
       type = "message"
     )
-  
+
     expect_snapshot(
       SummarizedExperiment::rowRanges(STM),
       variant = "1sample"
     )
   })
-  
+
   test_that("annotateTiles works on a 3 sample test dataset", {
     cellPopulations <- c("C2", "C3")
     capture.output(
@@ -35,19 +34,19 @@ if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
       ),
       type = "message"
     )
-  
+
     capture.output(
       STM <- MOCHA::annotateTiles(SampleTileMatrix,
         promoterRegion = c(2000, 100)
       )
     )
-  
+
     expect_snapshot(
       SummarizedExperiment::rowRanges(STM),
       variant = "3sample"
     )
   })
-  
+
 
   test_that("annotateTiles works on a GRanges", {
     cellPopulations <- c("C2", "C3")

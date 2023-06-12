@@ -10,7 +10,6 @@ if (
   # PBMCSmall is under 'projects'
   ArchRProjDir <- "../../../PBMCSmall"
   if (require("ArchR", quietly = TRUE) & dir.exists(ArchRProjDir)) {
-
     test_that("We can call peaks by sample from an ArchR project", {
       capture.output(
         testProj <- ArchR::loadArchRProject(ArchRProjDir),
@@ -36,7 +35,7 @@ if (
         tiles,
         variant = "ArchR"
       )
-      
+
       tiles@metadata$Directory <- NULL # Directory uses tempdir()
       expect_snapshot(
         tiles@metadata,
@@ -76,7 +75,7 @@ if (
       assays(metadata(tiles)$summarizedData)[["FragmentCounts"]],
       variant = "FragmentCounts"
     )
-    
+
     tiles@metadata$Directory <- NULL # Directory uses tempdir()
     expect_snapshot(
       tiles@metadata,
@@ -196,7 +195,7 @@ if (
       numCores = 1, verbose = TRUE
     ))
   })
-  
+
   test_that("We error informatively when cellPopLabel is not in the metadata", {
     TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
     OrgDb <- "org.Hs.eg.db"
@@ -216,7 +215,4 @@ if (
       regexp = "cellColData must contain column 'cellPopLabel'"
     )
   })
-  
 }
-
-

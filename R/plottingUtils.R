@@ -668,18 +668,18 @@ get_gene_body_model <- function(whichGene,
     newModel <- rbind(newGRangesf, beginexon, endexon) %>%
       plyranges::mutate(nameList = paste(whichGene, tx_name, sep = ": ")) %>%
       GenomicRanges::makeGRangesListFromDataFrame(., split.field = "nameList", keep.extra.columns = TRUE)
-      
+
     # check for transcripts that are identical within the window. If only one transcript, then just rename it to the gene name.
-    if(length(newModel) > 1){
-        uniqueTranscripts <- IRanges::stack(newModel)[!duplicated(GenomicRanges::ranges(IRanges::stack(newModel)))] %>%
-          plyranges::filter(model != "utr") %>%
-          as.data.frame() %>%
-          dplyr::select(tx_name) %>%
-          unique(.)
-        newModel <- newModel[grepl(paste(unlist(uniqueTranscripts), collapse = "|"), names(newModel))]
-        names(newModel) <- rep(whichGene, length(newModel))
-    }else{
-        names(newModel) <- whichGene
+    if (length(newModel) > 1) {
+      uniqueTranscripts <- IRanges::stack(newModel)[!duplicated(GenomicRanges::ranges(IRanges::stack(newModel)))] %>%
+        plyranges::filter(model != "utr") %>%
+        as.data.frame() %>%
+        dplyr::select(tx_name) %>%
+        unique(.)
+      newModel <- newModel[grepl(paste(unlist(uniqueTranscripts), collapse = "|"), names(newModel))]
+      names(newModel) <- rep(whichGene, length(newModel))
+    } else {
+      names(newModel) <- whichGene
     }
     return(newModel)
   } else {

@@ -30,31 +30,28 @@
 #' \donttest{
 #' # Starting from GRangesList
 #' if (
-#'   require(BSgenome.Hsapiens.UCSC.hg19) && 
-#'   require(TxDb.Hsapiens.UCSC.hg38.refGene) && 
-#'   require(org.Hs.eg.db)
+#'   require(BSgenome.Hsapiens.UCSC.hg19) &&
+#'     require(TxDb.Hsapiens.UCSC.hg38.refGene) &&
+#'     require(org.Hs.eg.db)
 #' ) {
-#' tiles <- MOCHA::callOpenTiles(
-#'   ATACFragments = MOCHA::exampleFragments,
-#'   cellColData = MOCHA::exampleCellColData,
-#'   blackList = MOCHA::exampleBlackList,
-#'   genome = BSgenome.Hsapiens.UCSC.hg19,
-#'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
-#'   Org = org.Hs.eg.db,
-#'   genome = "BSgenome.Hsapiens.UCSC.hg19",
-#'   TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
-#'   Org = "org.Hs.eg.db",
-#'   outDir = tempdir(),
-#'   cellPopLabel = "Clusters",
-#'   cellPopulations = c("C2", "C5"),
-#'   numCores = 1
-#' )
-#' 
-#' SampleTileMatrices <- MOCHA::getSampleTileMatrix(
-#'   tiles,
-#'   cellPopulations = c('C2', 'C5'),
-#'   threshold = 0 # Take union of all samples' open tiles
-#' )
+#'   tiles <- MOCHA::callOpenTiles(
+#'     ATACFragments = MOCHA::exampleFragments,
+#'     cellColData = MOCHA::exampleCellColData,
+#'     blackList = MOCHA::exampleBlackList,
+#'     genome = "BSgenome.Hsapiens.UCSC.hg19",
+#'     TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene",
+#'     Org = "org.Hs.eg.db",
+#'     outDir = tempdir(),
+#'     cellPopLabel = "Clusters",
+#'     cellPopulations = c("C2", "C5"),
+#'     numCores = 1
+#'   )
+#'
+#'   SampleTileMatrices <- MOCHA::getSampleTileMatrix(
+#'     tiles,
+#'     cellPopulations = c("C2", "C5"),
+#'     threshold = 0 # Take union of all samples' open tiles
+#'   )
 #' }
 #' }
 #'
@@ -93,13 +90,13 @@ getSampleTileMatrix <- function(tileResults,
   if (verbose) {
     message(stringr::str_interp("Extracting consensus tile set for each population"))
   }
-  iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
+  iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x) {
     list(MultiAssayExperiment::experiments(subTileResults)[[x]], sampleData, threshold, groupColumn, verbose)
   })
   cl <- parallel::makeCluster(numCores)
   tilesByCellPop <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedConsensusTiles)
   names(tilesByCellPop) <- names(subTileResults)
-  
+
   rm(iterList)
   errorMessages <- pbapply::pblapply(cl = cl, X = tilesByCellPop, FUN = extractErrorFromConsensusTiles)
   names(errorMessages) <- names(subTileResults)
@@ -117,7 +114,7 @@ getSampleTileMatrix <- function(tileResults,
     message(stringr::str_interp("Generating sample-tile matrix across all populations."))
   }
   # consensusTiles is used to  extract rows (tiles) from this matrix
-  iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x){
+  iterList <- lapply(seq_along(MultiAssayExperiment::experiments(subTileResults)), function(x) {
     list(MultiAssayExperiment::experiments(subTileResults)[[x]], allTiles)
   })
   sampleTileIntensityMatList <- pbapply::pblapply(cl = cl, X = iterList, FUN = simplifiedSampleTile)
@@ -133,11 +130,11 @@ getSampleTileMatrix <- function(tileResults,
     as.data.frame()
   allTilesGR <- MOCHA::StringsToGRanges(allTiles)
   GenomicRanges::mcols(allTilesGR) <- tilePresence
-  
+
   # Append function call history
   newMetadata <- MultiAssayExperiment::metadata(tileResults)
   newMetadata$History <- append(newMetadata$History, paste("getSampleTileMatrix", packageVersion("MOCHA")))
-  
+
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,
     rowRanges = allTilesGR,

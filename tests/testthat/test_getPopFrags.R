@@ -62,27 +62,27 @@ if (dir.exists(ArchRProjDir)) {
 
 
   # Test getPopFrags with specific region
-#   test_that(
-#     "getPopFrags works with a specific region when NormMethod='Raw'",
-#     {
-#       capture.output(
-#         popFrags <- MOCHA::getPopFrags(
-#           testProj,
-#           cellPopLabel = cellPopLabel,
-#           numCores = 1,
-#           region = "chr2:1-187350807",
-#           NormMethod = "Raw",
-#           sampleSpecific = FALSE
-#         ),
-#         type = "message"
-#       )
+  #   test_that(
+  #     "getPopFrags works with a specific region when NormMethod='Raw'",
+  #     {
+  #       capture.output(
+  #         popFrags <- MOCHA::getPopFrags(
+  #           testProj,
+  #           cellPopLabel = cellPopLabel,
+  #           numCores = 1,
+  #           region = "chr2:1-187350807",
+  #           NormMethod = "Raw",
+  #           sampleSpecific = FALSE
+  #         ),
+  #         type = "message"
+  #       )
 
-#       # Test population names are as expected
-#       actual_names <- sort(gsub("__.*", "", names(popFrags)))
-#       expected_names <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
-#       expect_equal(actual_names, expected_names)
-#     }
-#   )
+  #       # Test population names are as expected
+  #       actual_names <- sort(gsub("__.*", "", names(popFrags)))
+  #       expected_names <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
+  #       expect_equal(actual_names, expected_names)
+  #     }
+  #   )
 
   # # Test getPopFrags with the wrong NormMethod when specifying a region
   # for (NormMethod in c("nFrags", "nCells", "Median", NULL)) {
@@ -173,19 +173,19 @@ if (dir.exists(ArchRProjDir)) {
       )
     }
   )
-  
+
   test_that(
     "getPopFrags warns when cellPopLabels have protected delimiter characters",
     {
       newClusters <- c("01__HSC", "06_CLP.1", "10#cDC", "12__CD14.Mono.2", "13_CD16.Mono")
       clustersCol <- testProj$Clusters
       oldClusters <- unique(clustersCol)
-      
+
       for (i in seq_along(newClusters)) {
         clustersCol[clustersCol == oldClusters[i]] <- newClusters[i]
       }
       testProj$newClusters <- clustersCol
-      
+
       expect_warning(
         capture.output(
           popFrags <- MOCHA::getPopFrags(
@@ -200,8 +200,8 @@ if (dir.exists(ArchRProjDir)) {
       )
     }
   )
-  
-    test_that(
+
+  test_that(
     "getPopFrags pools samples by cell population with poolSamples=TRUE",
     {
       capture.output(
@@ -219,7 +219,7 @@ if (dir.exists(ArchRProjDir)) {
       )
     }
   )
-  
+
   test_that(
     "getPopFrags pools samples by a single cellSubset with poolSamples=TRUE",
     {
@@ -238,7 +238,7 @@ if (dir.exists(ArchRProjDir)) {
       )
     }
   )
-  
+
   test_that(
     "getPopFrags pools samples by a single cellSubset with poolSamples=FALSE",
     {

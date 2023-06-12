@@ -161,40 +161,46 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   substr(x, 1L, nchar(.ORGDB_PREFIX)) == .ORGDB_PREFIX
 }
 
-#' @title \code{getAnnotationDbFromInstalledPkgname} Loads and attaches an installed TxDb or 
+#' @title \code{getAnnotationDbFromInstalledPkgname} Loads and attaches an installed TxDb or
 #'   OrgDb-class Annotation database package.
 #'
 #' @description See \link[BSgenome]{getBSgenome}
-#' 
+#'
 #' @param dbName Exact name of installed annotation data package.
-#' @param type Expected class of the annotation data package, must be 
+#' @param type Expected class of the annotation data package, must be
 #'   either "OrgDb" or "TxDb".
 #' @return the loaded Annotation database object.
 #' @noRd
 getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
-  
-  if (!methods::is(dbName, "character")){
-    stop("dbName must be a character string. ",
-         "Please provide TxDb or OrgDb as a string.")
+  if (!methods::is(dbName, "character")) {
+    stop(
+      "dbName must be a character string. ",
+      "Please provide TxDb or OrgDb as a string."
+    )
   }
-  
-  if (!type %in% c("OrgDb", "TxDb")){
-      stop('Invalid type. Type must be either "OrgDb" or "TxDb".')
+
+  if (!type %in% c("OrgDb", "TxDb")) {
+    stop('Invalid type. Type must be either "OrgDb" or "TxDb".')
   }
-  
-  ok <- suppressWarnings(require(dbName, quietly=TRUE,
-                                 character.only=TRUE))
-  
+
+  ok <- suppressWarnings(require(dbName,
+    quietly = TRUE,
+    character.only = TRUE
+  ))
+
   if (!ok) {
-    stop("Package ", dbName, " is not available. Please install and provide ",
-    "the name of a Bioconductor AnnotationData Package for your organism.")
+    stop(
+      "Package ", dbName, " is not available. Please install and provide ",
+      "the name of a Bioconductor AnnotationData Package for your organism."
+    )
   }
-  
-  pkgenvir <- as.environment(paste("package", dbName, sep=":"))
-  
-  db <- try(get(dbName, envir=pkgenvir, inherits=FALSE), silent=TRUE)
-  
-  if (!methods::is(db, type))
+
+  pkgenvir <- as.environment(paste("package", dbName, sep = ":"))
+
+  db <- try(get(dbName, envir = pkgenvir, inherits = FALSE), silent = TRUE)
+
+  if (!methods::is(db, type)) {
     stop(dbName, " doesn't look like a valid ", type, " data package")
+  }
   db
 }

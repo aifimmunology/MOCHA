@@ -15,7 +15,7 @@
 #'
 #' @export
 combineSampleTileMatrix <- function(SampleTileObj,
-                                    NAtoZero = TRUE, 
+                                    NAtoZero = TRUE,
                                     verbose = FALSE) {
   if (!requireNamespace("chromVAR", quietly = TRUE)) {
     stop(
@@ -24,7 +24,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     )
   }
   CellTypes <- FragNumber <- NULL
-  
+
   genome <- S4Vectors::metadata(SampleTileObj)$Genome
   genome <- BSgenome::getBSgenome(genome)
 
@@ -33,7 +33,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   assays <- SummarizedExperiment::assays(SampleTileObj)
 
   coldata <- SummarizedExperiment::colData(SampleTileObj)
-  
+
   # Let's generate a new assay, that will contain the
   # the intensity for a given cell, as well as the
   # median intensity per sample-tile for all other cell types (i.e. the background)
@@ -50,7 +50,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     newAssays[[1]][is.na(newAssays[[1]])] <- 0
   }
 
-  # Combine Sample and Cell type for the new columns. 
+  # Combine Sample and Cell type for the new columns.
   # This takes the colData and repeats it across cell types for a given sample
   # Rows are now CellType__Sample. So for example 'CD16 Mono' and 'Sample1' becomes "CD16_Mono__Sample1"
   allSampleData <- as.data.frame(do.call("rbind", lapply(names(assays), function(x) {
@@ -60,7 +60,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rownames(tmp_meta) <- tmp_meta$Sample
     tmp_meta
   })))
-  
+
   # This is where cell counts and fragments counts are pivoted into a long format and merged (left-Joined) into the new allSampleData
   cellTypeLabelList <- Var1 <- NULL
   summarizedData <- S4Vectors::metadata(SampleTileObj)$summarizedData
@@ -69,9 +69,9 @@ combineSampleTileMatrix <- function(SampleTileObj,
   )
   cellTypes <- rownames(cellCounts)
   cellCounts <- tidyr::pivot_longer(
-    cellCounts, 
-    cols=colnames(cellCounts), 
-    names_to="Sample", 
+    cellCounts,
+    cols = colnames(cellCounts),
+    names_to = "Sample",
     values_to = "Freq"
   )
   cellCounts <- dplyr::mutate(
@@ -84,9 +84,9 @@ combineSampleTileMatrix <- function(SampleTileObj,
   )
   cellTypes <- rownames(fragCounts)
   fragCounts <- tidyr::pivot_longer(
-    fragCounts, 
-    cols=colnames(fragCounts), 
-    names_to="Sample", 
+    fragCounts,
+    cols = colnames(fragCounts),
+    names_to = "Sample",
     values_to = "FragNumber"
   )
   fragCounts <- dplyr::mutate(
@@ -96,14 +96,16 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   # The sample column now is actually CellType_Sample, unlike before
   allSampleData <- dplyr::left_join(
-    allSampleData, cellCounts, by = "Sample"
+    allSampleData, cellCounts,
+    by = "Sample"
   )
 
   allSampleData <- dplyr::left_join(
-    allSampleData,  fragCounts, by = 'Sample'
+    allSampleData, fragCounts,
+    by = "Sample"
   )
 
-  # Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting. 
+  # Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting.
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
   for (i in names(assays)) {
     GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
@@ -111,23 +113,23 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   newMetadata <- S4Vectors::metadata(SampleTileObj)
   newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", packageVersion("MOCHA")))
-  
+
   newObj <- SummarizedExperiment::SummarizedExperiment(
     assays = newAssays,
     colData = allSampleData,
     rowRanges = allRanges,
     metadata = newMetadata
   )
-  
+
   newObj <- chromVAR::addGCBias(newObj, genome = genome)
-  
+
   if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
     naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
-    
+
     if (verbose) {
       warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
     }
-    
+
     SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(SummarizedExperiment::rowData(newObj)$bias, na.rm = TRUE)
   }
 

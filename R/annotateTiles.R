@@ -23,7 +23,7 @@
 #' @examples
 #' \dontrun{
 #' library(TxDb.Hsapiens.UCSC.hg38.refGene)
-#' library(org.Hs.eg.db) 
+#' library(org.Hs.eg.db)
 #' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
 #'   SampleTileMatrices,
 #'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
