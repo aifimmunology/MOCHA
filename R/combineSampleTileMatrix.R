@@ -112,7 +112,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   }
 
   newMetadata <- S4Vectors::metadata(SampleTileObj)
-  newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", packageVersion("MOCHA")))
+  newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", utils::packageVersion("MOCHA")))
 
   newObj <- SummarizedExperiment::SummarizedExperiment(
     assays = newAssays,

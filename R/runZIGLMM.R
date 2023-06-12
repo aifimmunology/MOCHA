@@ -1,21 +1,29 @@
-#' @title Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked scATAC data
+#' @title Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked
+#'   scATAC data
 #'
 #' @description \code{runZIGLMM} Runs linear mixed-effects modeling for
 #'   zero-inflated data using \code{\link[glmmTMB]{glmmTMB}}.
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix.
-#' @param cellPopulation Name of a cell type(s), or 'all'. The function will combine the cell types mentioned into one matrix before running the model.
-#' @param continuousFormula The formula for the continuous data that should be used within glmmTMB. It should be in the
-#'   format (exp ~ factors). All factors must be found in column names
-#'   of the TSAM_Object metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
-#'   modelFormula must start with 'exp' as the response.
-#'   See \link[glmmTMB]{glmmTMB}.
-#' @param ziformula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
-#'   format ( ~ factors). All factors must be found in column names
-#'   of the TSAM_Object colData metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
-#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold,
-#'      samples with zeroes are dropped and only the continous formula is used. Use this parameter at your own risk. Default is 0.
+#' @param cellPopulation Name of a cell type(s), or 'all'. The function will
+#'   combine the cell types mentioned into one matrix before running the model.
+#' @param continuousFormula The formula for the continuous data that should be
+#'   used within glmmTMB. It should be in the format (exp ~ factors). All
+#'   factors must be found in column names of the TSAM_Object metadata, except
+#'   for CellType, FragNumber and CellCount, which will be extracted from the
+#'   TSAM_Object. modelFormula must start with 'exp' as the response. See
+#'   \link[glmmTMB]{glmmTMB}.
+#' @param ziformula The formula for the zero-inflated data that should be used
+#'   within glmmTMB. It should be in the format ( ~ factors). All factors must
+#'   be found in column names of the TSAM_Object colData metadata, except for
+#'   CellType, FragNumber and CellCount, which will be extracted from the
+#'   TSAM_Object.
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the
+#'   fraction of samples with zeros. When the percentage of zeros in the tile is
+#'   between 0 and zi_threshold, samples with zeroes are dropped and only the
+#'   continous formula is used. Use this parameter at your own risk. Default is
+#'   0.
 #' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
@@ -36,7 +44,7 @@
 #' }
 #'
 #' @export
-#'
+#' 
 runZIGLMM <- function(TSAM_Object,
                       cellPopulation = "all",
                       continuousFormula = NULL,
@@ -45,6 +53,7 @@ runZIGLMM <- function(TSAM_Object,
                       initialSampling = 5,
                       verbose = FALSE,
                       numCores = 1) {
+  Sample <- NULL
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }
@@ -147,14 +156,23 @@ runZIGLMM <- function(TSAM_Object,
 
   # Make your clusters for efficient parallelization
   cl <- parallel::makeCluster(numCores)
+  iterList <- lapply(rownames(modelingData), function(x) {
+    list(x, continuousFormula, modelingData, MetaDF, nullDF, 
+         zi_threshold, ziformula)
+  })
+  parallel::clusterExport(
+    cl = cl, varlist = c(iterList),
+    envir = environment()
+  )
   parallel::clusterEvalQ(cl, {
     library(glmmTMB)
   })
-  parallel::clusterExport(
-    cl = cl, varlist = c("continuousFormula", "ziformula", "modelingData", "MetaDF", "individualZIGLMM", "nullDF", "zi_threshold"),
-    envir = environment()
+
+  coeffList <- pbapply::pblapply(
+    cl = cl,
+    X = iterList,
+    individualZIGLMM
   )
-  coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
   parallel::stopCluster(cl)
 
   output_list <- lapply(list("cond", "zi"), function(varType) {
@@ -190,7 +208,7 @@ runZIGLMM <- function(TSAM_Object,
   names(combinedList) <- c("Slopes", "Significance", "StdError")
 
   newMetadata <- newObj@metadata
-  newMetadata$History <- append(newMetadata$History, paste("runZIGLMM", packageVersion("MOCHA")))
+  newMetadata$History <- append(newMetadata$History, paste("runZIGLMM", utils::packageVersion("MOCHA")))
 
   results <- SummarizedExperiment::SummarizedExperiment(
     combinedList,
@@ -218,14 +236,24 @@ extractVariable <- function(varList, varType, variable, nullDF) {
 
 #' @title \code{IndividualZIGLMM}
 #'
-#' @description \code{IndividualZIGLMM} Runs zero-inflated linear modeling on data provided. Written for efficient parallelization.
+#' @description \code{IndividualZIGLMM} Runs zero-inflated linear modeling on
+#'   data provided. Written for efficient parallelization.
 #'
-#' @param x A list where the first index is a data.frame to use for modeling, and the second is the formula for modeling.
+#' @param iterList A list where the first index is a data.frame to use for
+#'   modeling, and the second is the formula for modeling.
 #'
 #' @return A linear model
 #' @noRd
-#'
-individualZIGLMM <- function(x) {
+#' 
+individualZIGLMM <- function(iterList) {
+  x <- iterList[[1]]
+  continuousFormula <- iterList[[2]]
+  modelingData <- iterList[[3]]
+  MetaDF <- iterList[[4]]
+  nullDF <- iterList[[5]]
+  zi_threshold <- iterList[[6]]
+  ziformula <- iterList[[7]]
+  
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
     MetaDF, stringsAsFactors = FALSE
@@ -270,9 +298,9 @@ individualZIGLMM <- function(x) {
 
 #' @title Execute a pilot run of model on a subset of data
 #'
-#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
-#'   zero inflated data using \code{\link[glmmTMB]{glmmTMB}}.
-#' TryCatch will catch errors, and return the error and dataframe for troubleshooting.
+#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for zero
+#'   inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch
+#'   errors, and return the error and dataframe for troubleshooting.
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix, chromVAR, or other.
@@ -289,11 +317,14 @@ individualZIGLMM <- function(x) {
 #'   the zero-inflation formula in models where the conditional effects formula
 #'   contains an offset term, the offset term will automatically be dropped. The
 #'   zero-inflation model uses a logit link.
-#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold,
-#'      samples with zeroes are dropped and only the continous formula is used. Use this parameter at your own risk. Default is 0.
+#' @param zi_threshold Zero-inflated threshold (range = 0-1), representing the
+#'   fraction of samples with zeros. When the percentage of zeros in the tile is
+#'   between 0 and zi_threshold, samples with zeroes are dropped and only the
+#'   continous formula is used. Use this parameter at your own risk. Default is
+#'   0.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param pilotIndices A vector of integers defining the subset of
-#'   the ExperimentObj matrix. Default is 1:10.
+#' @param pilotIndices A vector of integers defining the subset of the
+#'   ExperimentObj matrix. Default is 1:10.
 #'
 #' @return modelList a list of outputs from glmmTMB::glmmTMB
 #'
@@ -306,6 +337,7 @@ pilotZIGLMM <- function(TSAM_Object,
                         zi_threshold = 0,
                         verbose = FALSE,
                         pilotIndices = 1:10) {
+  Sample <- NULL
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }

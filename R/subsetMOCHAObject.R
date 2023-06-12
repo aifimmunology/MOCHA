@@ -92,7 +92,7 @@ subsetMOCHAObject <- function(Object,
   if (subsetBy %in% colnames(sampleData)) {
     if (!all(groupList %in% unique(sampleData[[subsetBy]]))) {
       stop(
-        str_interp(
+        stringr::str_interp(
           "groupList includes names not found within the column '${subsetBy}'"
         ),
         " in the sample metadata. (see `colData(Object)`). "
@@ -106,6 +106,7 @@ subsetMOCHAObject <- function(Object,
         sampleData[[subsetBy]] %in% groupList | is.na(sampleData[[subsetBy]])
       )]
     }
+
     Object <- Object[, keepSamples]
     Object@metadata$summarizedData <- summarizedData[, keepSamples]
     return(Object)

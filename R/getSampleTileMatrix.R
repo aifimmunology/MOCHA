@@ -133,7 +133,7 @@ getSampleTileMatrix <- function(tileResults,
 
   # Append function call history
   newMetadata <- MultiAssayExperiment::metadata(tileResults)
-  newMetadata$History <- append(newMetadata$History, paste("getSampleTileMatrix", packageVersion("MOCHA")))
+  newMetadata$History <- append(newMetadata$History, paste("getSampleTileMatrix", utils::packageVersion("MOCHA")))
 
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,

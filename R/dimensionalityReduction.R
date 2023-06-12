@@ -79,7 +79,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     names(assayList1) <- "LSI"
 
     newMetadata <- fullObj@metadata
-    newMetadata$History <- append(newMetadata$History, paste("bulkDimReduction", packageVersion("MOCHA")))
+    newMetadata$History <- append(newMetadata$History, paste("bulkDimReduction", utils::packageVersion("MOCHA")))
 
     DimReducObj <- SummarizedExperiment::SummarizedExperiment(
       assayList1,
@@ -105,7 +105,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     rownames(loadings) <- rownames(countMat)
 
     newMetadata <- fullObj@metadata
-    newMetadata$History <- append(newMetadata$History, paste("bulkDimReduction", packageVersion("MOCHA")))
+    newMetadata$History <- append(newMetadata$History, paste("bulkDimReduction", utils::packageVersion("MOCHA")))
     newMetadata <- append(pca[c("scale", "totalvar", "sdev", "center")], newMetadata)
 
     assayList1 <- list(t(pc_rotation))

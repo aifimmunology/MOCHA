@@ -330,7 +330,7 @@ setMethod(
                            verbose,
                            force,
                            useArchR) {
-
+  Sample <- meanValues <- NULL
   # Load databases and save names for use in metadata
   TxDbName <- TxDb
   OrgDbName <- OrgDb
@@ -373,7 +373,7 @@ setMethod(
   # Make a copy to preserve original columns.
   cellColDataCopy <- data.frame(cellColData)
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
-    type.convert(as.character(x), as.is = TRUE)
+    utils::type.convert(as.character(x), as.is = TRUE)
   })
 
   # Assume all numeric columns are to be saved as additionalCellData
@@ -394,7 +394,7 @@ setMethod(
           dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
           dplyr::summarize(meanValues = mean(!!as.name(x), .groups = "drop")) %>%
           tidyr::pivot_wider(
-            id_cols = all_of(cellPopLabel),
+            id_cols = tidyselect::all_of(cellPopLabel),
             names_from = Sample,
             values_from = meanValues
           )
@@ -616,7 +616,7 @@ setMethod(
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
       "Directory" = outDir,
-      "History" = list(paste("callOpenTiles", packageVersion("MOCHA")))
+      "History" = list(paste("callOpenTiles", utils::packageVersion("MOCHA")))
     )
   )
   return(tileResults)

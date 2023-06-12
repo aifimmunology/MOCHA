@@ -187,7 +187,7 @@ extractRegion <- function(SampleTileObj,
   names(allGroupsDF) <- names(allGroups)
 
   newMetadata <- SampleTileObj@metadata
-  newMetadata$History <- append(newMetadata$History, paste("extractRegion", packageVersion("MOCHA")))
+  newMetadata$History <- append(newMetadata$History, paste("extractRegion", utils::packageVersion("MOCHA")))
 
   countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
     metadata = newMetadata

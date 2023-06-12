@@ -184,7 +184,7 @@ runLMEM <- function(ExperimentObj,
   )
 
   newMetadata <- S4Vectors::metadata(ExperimentObj)
-  newMetadata$History <- append(newMetadata$History, paste("runLMEM", packageVersion("MOCHA")))
+  newMetadata$History <- append(newMetadata$History, paste("runLMEM", utils::packageVersion("MOCHA")))
 
   results <- SummarizedExperiment::SummarizedExperiment(
     output_list,
