@@ -27,6 +27,9 @@ subsetMOCHAObject <- function(Object,
                               subsetPeaks = TRUE,
                               verbose = FALSE) {
   
+  summarizedData <- S4Vectors::metadata(Object)$summarizedData
+  sampleData <- SummarizedExperiment::colData(Object)
+  
   if (!(subsetBy %in% colnames(sampleData)) & !grepl('celltype', tolower(subsetBy))) {
     stop(
       "Variable given in subsetBy is not in the colData of the input Object.",
@@ -39,8 +42,6 @@ subsetMOCHAObject <- function(Object,
     
     if (class(Object)[1] == "MultiAssayExperiment") {
       # Input is tileResults, output of callOpenTiles
-      
-      sampleData <- MultiAssayExperiment::colData(Object)
     
       if ((subsetBy %in% colnames(sampleData)) & grepl('celltype', tolower(subsetBy))) {
         if (verbose) {
@@ -56,16 +57,13 @@ subsetMOCHAObject <- function(Object,
           stop("groupList includes celltypes not found within Object.")
         }
     
-        keep <- MultiAssayExperiment::subsetByAssay(Object, groupList)
-        
-        # TODO SUBSET SUMMARIZEDDATA
-        return(keep)
+        newObject <- MultiAssayExperiment::subsetByAssay(Object, groupList)
+        newObject@metadata$summarizedData <- summarizedData[groupList,]
+        return(newObject)
       }
     
     } else if (class(Object)[1] == "RangedSummarizedExperiment") {
       # Input is a TSAM, output of getSampleTileMatrix
-      
-      sampleData <- SummarizedExperiment::colData(Object)
       
       # To subset by cell type, first we have to verify that all cell type 
       # names were found within the  object.
@@ -74,8 +72,9 @@ subsetMOCHAObject <- function(Object,
         stop("groupList includes celltypes not found within Object.")
       }
       
-      keep <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
-      SummarizedExperiment::assays(Object) <- SummarizedExperiment::assays(Object)[keep]
+      keepIdx <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
+      SummarizedExperiment::assays(Object) <- SummarizedExperiment::assays(Object)[keepIdx]
+      Object@metadata$summarizedData <- summarizedData[keepIdx,]
       
       # Subset peaks
       if(subsetPeaks){
@@ -90,7 +89,6 @@ subsetMOCHAObject <- function(Object,
         Object <- Object[rowMeta,]
       }
       
-      # TODO SUBSET SUMMARIZEDDATA
       return(Object)
     }
   }
@@ -105,16 +103,15 @@ subsetMOCHAObject <- function(Object,
     }
     
     if (removeNA) {
-      keep <- rownames(sampleData)[which(sampleData[[subsetBy]] %in% groupList)]
+      keepSamples <- rownames(sampleData)[which(sampleData[[subsetBy]] %in% groupList)]
     } else {
-      keep <- rownames(sampleData)[which(
+      keepSamples <- rownames(sampleData)[which(
         sampleData[[subsetBy]] %in% groupList | is.na(sampleData[[subsetBy]])
       )]
     }
-    
-    # TODO SUBSET SUMMARIZEDDATA
-    return(Object[, keep])
+    Object <- Object[, keepSamples]
+    Object@metadata$summarizedData <- summarizedData[, keepSamples]
+    return(Object)
   }
 
-  
 }

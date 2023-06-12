@@ -4,7 +4,7 @@ test_that("We can subset a tileResults object by celltypes", {
       MOCHA:::testTileResultsMultisample,
       subsetBy = "celltypes",
       groupList = c("C3"),
-      na.rm = TRUE,
+      removeNA = TRUE,
       subsetPeaks = FALSE,
       verbose = FALSE
     )
@@ -12,6 +12,32 @@ test_that("We can subset a tileResults object by celltypes", {
 
   expect_snapshot_output(
     obj,
+    variant = "tileResults"
+  )
+  expect_snapshot_output(
+    obj@metadata$summarizedData,
+    variant = "tileResults"
+  )
+})
+
+test_that("We can subset a tileResults object by Sample grouping", {
+  capture.output(
+    obj <- subsetMOCHAObject(
+      MOCHA:::testTileResultsMultisample,
+      subsetBy = "Sample",
+      groupList = c("scATAC_CD34_BMMC_R1"),
+      removeNA = TRUE,
+      subsetPeaks = FALSE,
+      verbose = FALSE
+    )
+  )
+  
+  expect_snapshot_output(
+    obj,
+    variant = "tileResults"
+  )
+  expect_snapshot_output(
+    obj@metadata$summarizedData,
     variant = "tileResults"
   )
 })
@@ -30,7 +56,7 @@ test_that("We can subset a sampleTileMatrix object by celltypes", {
       SampleTileMatrix,
       subsetBy = "celltypes",
       groupList = c("C3"),
-      na.rm = TRUE,
+      removeNA = TRUE,
       subsetPeaks = FALSE,
       verbose = FALSE
     )
@@ -40,8 +66,41 @@ test_that("We can subset a sampleTileMatrix object by celltypes", {
     obj,
     variant = "sampleTileMatrix"
   )
+  expect_snapshot_output(
+    obj@metadata$summarizedData,
+    variant = "sampleTileMatrix"
+  )
 })
 
+test_that("We can subset a sampleTileMatrix object by Sample", {
+  capture.output(
+    SampleTileMatrix <- MOCHA::getSampleTileMatrix(
+      MOCHA:::testTileResultsMultisample,
+      cellPopulations = "all",
+      threshold = 0
+    )
+  )
+  
+  capture.output(
+    obj <- subsetMOCHAObject(
+      SampleTileMatrix,
+      subsetBy = "Sample",
+      groupList = c("scATAC_CD34_BMMC_R1"),
+      removeNA = TRUE,
+      subsetPeaks = FALSE,
+      verbose = FALSE
+    )
+  )
+  
+  expect_snapshot_output(
+    obj,
+    variant = "sampleTileMatrix"
+  )
+  expect_snapshot_output(
+    obj@metadata$summarizedData,
+    variant = "sampleTileMatrix"
+  )
+})
 
 test_that("We can subset a sampleTileMatrix object - and peaks - by celltypes", {
   capture.output(
@@ -57,7 +116,7 @@ test_that("We can subset a sampleTileMatrix object - and peaks - by celltypes", 
       SampleTileMatrix,
       subsetBy = "celltypes",
       groupList = c("C3"),
-      na.rm = TRUE,
+      removeNA = TRUE,
       subsetPeaks = TRUE,
       verbose = FALSE
     )
@@ -65,6 +124,10 @@ test_that("We can subset a sampleTileMatrix object - and peaks - by celltypes", 
 
   expect_snapshot_output(
     obj,
+    variant = "sampleTileMatrix_peaks"
+  )
+  expect_snapshot_output(
+    obj@metadata$summarizedData,
     variant = "sampleTileMatrix_peaks"
   )
 })
