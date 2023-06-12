@@ -85,6 +85,8 @@ if (
   })
 
   test_that("We throw a warning when a sample has less than 5 cells", {
+    TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
+    OrgDb <- "org.Hs.eg.db"
     sample1frags <- GenomicRanges::GRanges(
       seqnames = Rle(c("chr1"), c(1)),
       ranges = IRanges(c(760101:760110), end = c(760111:760120), names = head(letters, 10)),
