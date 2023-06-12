@@ -154,7 +154,7 @@ SampleTileMatrices <- MOCHA::getSampleTileMatrix(
 
 ...and motifs to our SampleTileMatrices.
 
-This info will aid further downstream analyses but is not required for differential accessibility nor coaccessibility.
+This info will aid further downstream analyses but is not required for differential accessibility nor co-accessibility.
 
 #################################################### 
 

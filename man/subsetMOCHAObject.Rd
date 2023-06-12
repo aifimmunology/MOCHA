@@ -8,7 +8,7 @@ subsetMOCHAObject(
   Object,
   subsetBy,
   groupList,
-  na.rm = TRUE,
+  removeNA = TRUE,
   subsetPeaks = TRUE,
   verbose = FALSE
 )
@@ -16,17 +16,17 @@ subsetMOCHAObject(
 \arguments{
 \item{Object}{A MultiAssayExperiment or RangedSummarizedExperiment,}
 
-\item{subsetBy}{the variable to subset by. Can either be 'celltype', or a
-column from the sample metadata (see colData(Object))}
+\item{subsetBy}{The variable to subset by. Can either be 'celltype', or a
+column from the sample metadata (see `colData(Object)`).}
 
 \item{groupList}{the list of cell type names or sample-associated data that
 should be used to subset the Object}
 
-\item{na.rm}{removes groups that are NA if set to true. If set to false, then
-you filter for everything in the groupList and also NA values.}
+\item{removeNA}{If TRUE, removes groups in groupList that are NA. If FALSE,
+keep groups that are NA.}
 
-\item{subsetPeaks}{If subsetting by cell types, then you need to decide if you want to subset the tile set down to tiles 
-only called in those cell types. The default is TRUE.}
+\item{subsetPeaks}{If `subsetBy` = 'celltype', subset the tile
+set to tiles only called in those cell types. Default is TRUE.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }

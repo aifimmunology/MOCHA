@@ -1,7 +1,7 @@
 # annotateTiles works on a 1 sample test dataset
 
     Code
-      rowRanges(STM)
+      SummarizedExperiment::rowRanges(STM)
     Output
       GRanges object with 25112 ranges and 4 metadata columns:
                                  seqnames              ranges strand |        C2
