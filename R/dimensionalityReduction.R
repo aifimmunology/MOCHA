@@ -76,9 +76,13 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
 
       assayList1 <- list(t(matSVD))
       names(assayList1) = 'LSI'
+      
+      newMetadata <- fullObj@metadata
+      newMetadata$History <- append(newMetadata$History, paste("bulkDimReduction", packageVersion("MOCHA")))
+      
       DimReducObj <- SummarizedExperiment::SummarizedExperiment(
             assayList1,
-            metadata = fullObj@metadata,
+            metadata = newMetadata,
             colData = SummarizedExperiment::colData(fullObj)
       )
 
@@ -97,7 +101,10 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
       rownames(pc_rotation) <- colnames(countMat)
       loadings <- pca$x
       rownames(loadings) <- rownames(countMat)
-      metadata1 <- append(pca[c('scale', 'totalvar', 'sdev', 'center')], fullObj@metadata)
+      
+      newMetadata <- fullObj@metadata
+      newMetadata$History <- append(newMetadata$History, paste("bulkDimReduction", packageVersion("MOCHA")))
+      newMetadata <- append(pca[c('scale', 'totalvar', 'sdev', 'center')], newMetadata)
 
       assayList1 <- list(t(pc_rotation))
       names(assayList1) = c('PCA')
@@ -105,7 +112,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = 'All', componentNumber = 
       DimReducObj <- SummarizedExperiment::SummarizedExperiment(
           assayList1,
           rowData = t(loadings),
-          metadata = metadata1,
+          metadata = newMetadata,
           colData = SummarizedExperiment::colData(fullObj)
       )
     }else {stop('Method not recognized. Must be LSI or PCA.')}   

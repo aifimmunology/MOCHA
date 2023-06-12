@@ -45,8 +45,6 @@
 #'   Must be a complete directory string. With ArchR input, set outDir to NULL 
 #'   to create a directory within the input ArchR project directory named MOCHA
 #'   for saving files.
-#' @param fast Optional, set to TRUE to use a faster but more memory-intensive
-#   algorithm. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations.
 #' @param force Optional, whether to force creation of coverage files if they
@@ -106,7 +104,6 @@ setGeneric(
            TxDb,
            OrgDb,
            outDir,
-           fast = FALSE,
            numCores = 30,
            verbose = FALSE,
            force = FALSE) {
@@ -131,7 +128,7 @@ setGeneric(
                                    verbose = FALSE,
                                    force = FALSE) {
   Sample <- seqnames <- NULL
-  # Load Genome
+
   genome <- BSgenome::getBSgenome(genome)
   
   validGRanges <- sapply(ATACFragments, function(obj) {
@@ -174,14 +171,13 @@ setGeneric(
   allnames <- names(ATACFragments)  
   beforeLengths <- lengths(ATACFragments)
   ATACFragments <- lapply(ATACFragments, function(x){
-        
-            plyranges::filter(x, seqnames %in% GenomeInfoDb::seqnames(genome))
-        
+    plyranges::filter(x, seqnames %in% GenomeInfoDb::seqnames(genome))
   })
   names(ATACFragments) <- allnames
 
-  if(verbose){
-      warning('Some fragments are not aligned to BS.Genome provided.', sum(beforeLengths) - sum(lengths(ATACFragments)), 
+  if(verbose &  sum(beforeLengths) - sum(lengths(ATACFragments)) > 0){
+      warning('Some fragments are not aligned to BS.Genome provided. ', 
+              sum(beforeLengths) - sum(lengths(ATACFragments)), 
               ' fragments were removed.')
   }
     
@@ -190,7 +186,6 @@ setGeneric(
               paste(names(ATACFragments)[lengths(ATACFragments) == 0], collapse = ", "))
   }
 
-  # Save the fragment number per population-sample
   cellPopList <- sapply(names(ATACFragments), function(x) {
     unlist(stringr::str_split(x, "#"))[1]
   })
@@ -198,6 +193,7 @@ setGeneric(
     sample <- unlist(stringr::str_split(x, "#"))[2]
     unlist(stringr::str_split(sample, "__"))[1]
   })
+
   # Verify that cell populations and samples in ATACFragments names match those
   # in cellPopData
   if (!all(cellPopList %in% cellColData[[cellPopLabel]])){
@@ -208,26 +204,9 @@ setGeneric(
     stop("Sample names in names of ATACFragments do not match those in cellPopData.", 
          " Names of ATACFragments must be in format `CellPopulation#Sample`")
   }
-  
-  nFragsList <- sapply(ATACFragments, function(x) {
-    length(x)
-  })
-  allFragmentCounts <- data.frame(cellPopList, sampleList, nFragsList)
-  colnames(allFragmentCounts) <- c(cellPopLabel, "Sample", "nFrags")
-
-  allFragmentCounts <- tidyr::pivot_wider(
-    allFragmentCounts,
-    names_from = tidyselect::all_of({{cellPopLabel}}),
-    values_from = "nFrags"
-  )
-  
-  allFragmentCounts <- as.data.frame(allFragmentCounts)
-  rownames(allFragmentCounts) <- allFragmentCounts$Sample
-  allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
 
   .callOpenTiles(
     ATACFragments,
-    allFragmentCounts,
     cellColData,
     blackList,
     genome,
@@ -269,7 +248,6 @@ setMethod(
                                  TxDb,
                                  OrgDb,
                                  outDir = NULL,
-                                 fast = FALSE,
                                  numCores = 30,
                                  verbose = FALSE,
                                  force = FALSE) {
@@ -303,23 +281,8 @@ setMethod(
     )
   }
 
-  # Save the fragment number per population-sample
-  allFragmentCounts <- as.data.frame(cellColData) %>%
-    dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
-    dplyr::summarize(nFrags = sum(nFrags), .groups = "drop")
-  
-  allFragmentCounts <- tidyr::pivot_wider(
-    allFragmentCounts,
-    names_from = tidyselect::all_of({{cellPopLabel}}),
-    values_from = "nFrags"
-  )
-  allFragmentCounts <- as.data.frame(allFragmentCounts)
-  rownames(allFragmentCounts) <- allFragmentCounts$Sample
-  allFragmentCounts <- subset(allFragmentCounts, select = -Sample)
-
   .callOpenTiles(
     ATACFragments,
-    allFragmentCounts,
     cellColData,
     blackList,
     genome,
@@ -346,7 +309,6 @@ setMethod(
 
 .callOpenTiles <- function(
     ATACFragments,
-    allFragmentCounts,
     cellColData,
     blackList,
     genome,
@@ -371,16 +333,83 @@ setMethod(
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
 
-  # Save the cell number per population-sample in the metadata
-  allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
+  #################
+  # Begin constructing the additional metadata SummarizedExperiment
+  # Done prior to the expensive computation so there's no heartbreak if this 
+  # step fails.
+  
+  cellCounts <- as.data.frame(table(cellColData[, "Sample"], cellTypeLabelList))
+  names(cellCounts) <- c('Sample', 'CellPop', 'CellCount')
+  cellCounts <-  tidyr::pivot_wider(
+    cellCounts, 
+    id_cols = 'CellPop', 
+    names_from= 'Sample', 
+    values_from = 'CellCount'
+  )
+  allCellCounts <- as.data.frame(cellCounts[,-1])
+  rownames(allCellCounts) <- cellCounts$CellPop
+
+  # Create a dummy data.frame for storing fragment information
+  # as it is calculated later (when iterating over cell populations)
+  allFragmentCounts <- allCellCounts
+  allFragmentCounts[!is.na(allFragmentCounts)] <- NA
 
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else {
-    allCellCounts <- allCellCounts[, cellPopulations, drop = FALSE]
-    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop = FALSE]
+    allCellCounts <- allCellCounts[rownames(allCellCounts) %in% cellPopulations, , drop=FALSE]
+    allFragmentCounts <- allFragmentCounts[rownames(allFragmentCounts) %in% cellPopulations, , drop=FALSE]
   }
-
+  
+  # For additional metadata:
+  # Some numeric columns may be stored as character - convert these to numeric
+  # Make a copy to preserve original columns.
+  cellColDataCopy <- data.frame(cellColData) 
+  cellColDataCopy[] <- lapply(cellColDataCopy, function(x){
+    type.convert(as.character(x), as.is = TRUE)
+  })
+  
+  # Assume all numeric columns are to be saved as additionalCellData
+  isNumericCol <- unlist(lapply(cellColDataCopy, function(x) is.numeric(x)))
+  additionalCellData <- colnames(cellColDataCopy)[isNumericCol]
+  
+  # Group by Sample (rows) and cellPop (columns) 
+  if(!is.null(additionalCellData)){
+    if(verbose){message(
+      "Summarizing additional metadata: ",
+      paste(additionalCellData, collapse=", ")
+    )}
+    additionalMetaData <- lapply(additionalCellData, function(x){
+      
+      suppressMessages(
+        summarizedData <- as.data.frame(cellColDataCopy) %>%
+          dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
+          dplyr::summarize(meanValues = mean(!!as.name(x), .groups = "drop")) %>%
+          tidyr::pivot_wider(
+            id_cols = all_of(cellPopLabel),
+            names_from = Sample,
+            values_from = meanValues
+          )
+      )
+      
+      summarizedData <- as.data.frame(summarizedData)
+      rownames(summarizedData) <- summarizedData[[cellPopLabel]]
+      summarizedData <- summarizedData[,-1, drop=FALSE]
+      
+      # Filter to specific cellPopulations
+      summarizedData <- summarizedData[
+        rownames(summarizedData) %in% cellPopulations, , drop=FALSE
+      ]
+      
+      summarizedData
+    })
+    names(additionalMetaData) <- additionalCellData
+  }else if(is.null(additionalCellData)){
+    additionalMetaData <- NULL
+  }
+  remove(cellColDataCopy)
+  ################# End metadata construction
+  
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
     if (verbose) {
@@ -448,11 +477,14 @@ setMethod(
     # E.g. C1#PBMCSmall__0.527239 becomes PBMCSmall
     sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
     names(frags) <- sampleNames
+
     # Calculate normalization factors as the number of fragments for
-    # each celltype_samples
+    # each celltype_sample
     normalization_factors <- as.integer(lengths(frags))
-      
-    cl <- parallel::makeCluster(numCores)
+
+    # Assign the number of fragments into the fragment count
+    allFragmentCounts[cellPop, sampleNames] <- normalization_factors
+
     # save coverage files to folder.
     # This doesn't include empty samples and might break. We may need to
     # reconsider how getCoverage works and add empty samples before this step.
@@ -476,12 +508,14 @@ setMethod(
       )
       rm(covFiles)
     }
+    
     # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     iterList <- lapply(seq_along(frags), function(x) {
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
+    cl <- parallel::makeCluster(numCores)
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
@@ -491,9 +525,9 @@ setMethod(
     names(tilesGRangesList) <- names(frags)
 
     # Where samples have no cells, add an empty GRanges placeholder
-    if (!all(rownames(allCellCounts) %in% names(tilesGRangesList))) {
-      emptySamples <- rownames(allCellCounts)[
-        !rownames(allCellCounts) %in% names(tilesGRangesList)
+    if (!all(colnames(allCellCounts) %in% names(tilesGRangesList))) {
+      emptySamples <- colnames(allCellCounts)[
+        !colnames(allCellCounts) %in% names(tilesGRangesList)
       ]
       emptyGRanges <- lapply(emptySamples, function(x) {
         NULL
@@ -509,13 +543,13 @@ setMethod(
     # dummy data so that we preserve the existence of the sample, while
     # also not including any information from it.
     emptyGroups <- which(unlist(lapply(tilesGRangesList, is.null)))
+
     if (length(emptyGroups) > 0) {
       if (verbose) {
         warning(
-          paste(
-            "The following celltype#sample groupings have too few cells (<5)",
-            "and will be ignored: ", names(tilesGRangesList)[emptyGroups]
-          )
+            "The following samples have too few cells (<5) of this celltype (",
+            cellPop,
+            ") and will be ignored: ", names(tilesGRangesList)[emptyGroups]
         )
       }
     }
@@ -539,6 +573,9 @@ setMethod(
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
+
+  allFragmentCounts[is.na(allFragmentCounts)] <- 0
+
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
   # sample IDs which correspond to the arrow files.
@@ -547,18 +584,30 @@ setMethod(
   sampleData <- suppressWarnings(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
+  
+  summarizedData <- SummarizedExperiment::SummarizedExperiment(
+    append(
+      list(
+        "CellCounts" = allCellCounts, 
+        "FragmentCounts" = allFragmentCounts
+      ),
+      additionalMetaData
+    ),
+    colData = sampleData
+  )
+
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = experimentList,
     colData = sampleData,
     metadata = list(
-      "CellCounts" = allCellCounts,
-      "FragmentCounts" = allFragmentCounts,
+      "summarizedData" = summarizedData,
       "Genome" = S4Vectors::metadata(genome)$genome,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
-      "Directory" = outDir
+      "Directory" = outDir,
+      "History" = list(paste("callOpenTiles", packageVersion("MOCHA")))
     )
   )
   return(tileResults)

@@ -133,11 +133,16 @@ getSampleTileMatrix <- function(tileResults,
     as.data.frame()
   allTilesGR <- MOCHA::StringsToGRanges(allTiles)
   GenomicRanges::mcols(allTilesGR) <- tilePresence
+  
+  # Append function call history
+  newMetadata <- MultiAssayExperiment::metadata(tileResults)
+  newMetadata$History <- append(newMetadata$History, paste("getSampleTileMatrix", packageVersion("MOCHA")))
+  
   results <- SummarizedExperiment::SummarizedExperiment(
     sampleTileIntensityMatList,
     rowRanges = allTilesGR,
     colData = sampleData,
-    metadata = MultiAssayExperiment::metadata(tileResults)
+    metadata = newMetadata
   )
   return(results)
 }

@@ -187,11 +187,14 @@ runZIGLMM <- function(TSAM_Object,
   })
 
   names(combinedList) <- c("Slopes", "Significance", "StdError")
+  
+  newMetadata <- newObj@metadata
+  newMetadata$History <- append(newMetadata$History, paste("runZIGLMM", packageVersion("MOCHA")))
 
   results <- SummarizedExperiment::SummarizedExperiment(
     combinedList,
     rowRanges = SummarizedExperiment::rowRanges(newObj),
-    metadata = newObj@metadata
+    metadata = newMetadata
   )
 
   return(results)

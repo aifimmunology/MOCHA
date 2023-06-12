@@ -5,7 +5,7 @@
     Output
       class: SummarizedExperiment 
       dim: 2 6 
-      metadata(6): CellCounts FragmentCounts ... OrgDb Directory
+      metadata(6): summarizedData Genome ... Directory History
       assays(1): LSI
       rownames(2): LSI1 LSI2
       rowData names(0):

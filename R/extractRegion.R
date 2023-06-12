@@ -68,6 +68,10 @@ extractRegion <- function(SampleTileObj,
     stop("Wrong region input type. Input must either be a string, or a GRanges location.")
   }
 
+  if (all(toupper(cellNames) == "COUNTS")) {
+    stop("The only assay in the SummarizedExperiment is Counts. The names of assays must reflect cell types,",
+          " such as those in the Summarized Experiment output of getSampleTileMatrix.")
+  }
 
   if (all(toupper(cellPopulations) == "ALL")) {
     cellPopulations <- cellNames
@@ -186,9 +190,12 @@ extractRegion <- function(SampleTileObj,
   parallel::stopCluster(cl)
 
   names(allGroupsDF) <- names(allGroups)
+  
+  newMetadata <- SampleTileObj@metadata
+  newMetadata$History <- append(newMetadata$History, paste("extractRegion", packageVersion("MOCHA")))
 
   countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
-    metadata = SampleTileObj@metadata
+    metadata = newMetadata
   )
 
   return(countSE)
