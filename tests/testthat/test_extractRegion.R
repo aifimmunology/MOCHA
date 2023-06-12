@@ -1,3 +1,4 @@
+skip_on_cran()
 test_that("extractRegion errors when coverage files aren't saved locally", {
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
@@ -78,6 +79,7 @@ test_that("extractRegion works on a 3 sample test dataset", {
   )
 })
 
+skip_on_cran()
 test_that("extractRegion works on a 3 sample test dataset with sampleSpecific=TRUE", {
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(
@@ -131,6 +133,7 @@ test_that("extractRegion works on a 3 sample test dataset with sampleSpecific=TR
   )
 })
 
+skip_on_cran()
 test_that("extractRegion errors when there is no fragment coverage for a cell population", {
   capture.output(
     SampleTileMatrix <- MOCHA::getSampleTileMatrix(

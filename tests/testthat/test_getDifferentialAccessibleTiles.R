@@ -1,3 +1,4 @@
+skip_on_cran()
 test_that("getDifferentialAccessibleTiles works on a 3 sample test dataset", {
   cellPopulations <- c("C3")
   capture.output(

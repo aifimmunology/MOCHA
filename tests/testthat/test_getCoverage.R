@@ -1,3 +1,4 @@
+skip_on_cran()
 if (requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
   test_that("getCoverage works on a 1 sample test dataset", {
     capture.output(

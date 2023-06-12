@@ -1,3 +1,4 @@
+skip_on_cran()
 test_that("MotifEnrichment works with mock data", {
   testPeaks <- MOCHA::differentialsToGRanges(
     MOCHA:::testPeaks,
@@ -20,6 +21,7 @@ test_that("MotifEnrichment works with mock data", {
   expect_equal(nrow(enrichDAP_df), length(MOCHA:::testPosList))
 })
 
+skip_on_cran()
 test_that("MotifEnrichment catches non-GRanges input", {
   Group1 <- dplyr::filter(MOCHA:::testPeaks, FDR < 0.1)
   Group2 <- dplyr::filter(MOCHA:::testPeaks, FDR >= 0.1)
