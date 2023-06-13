@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{differentialsToGRanges}
 \alias{differentialsToGRanges}
-\title{Converts a data.frame matrix to a GRanges}
+\title{Convert a data.frame or matrix to a GRanges}
 \usage{
 differentialsToGRanges(differentials, tileColumn = "Tile")
 }
@@ -16,6 +16,6 @@ region strings in the format "chr:start-end"}
 a GRanges containing all original information
 }
 \description{
-Converts a data.frame matrix to a GRanges
+Convert a data.frame or matrix to a GRanges
 }
 \keyword{utils}

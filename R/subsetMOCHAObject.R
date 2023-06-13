@@ -1,4 +1,4 @@
-#' @title Subsets a tileResults-type object by metadata
+#' @title Subset a tileResults object by metadata
 #'
 #' @description \code{subsetObject} subsets a tileResults-type object (from
 #'   callOpenTiles), or a SummarizedExperiment-type object (from

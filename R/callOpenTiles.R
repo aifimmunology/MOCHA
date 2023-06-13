@@ -67,11 +67,11 @@
 #' )
 #' }
 #' \donttest{
-#' # Starting from GRangesList
+#' # Starting from GRangesList:
 #' if (
 #'   requireNamespace("BSgenome.Hsapiens.UCSC.hg19") &&
-#'     requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
-#'     requireNamespace("org.Hs.eg.db")
+#'   requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
+#'   requireNamespace("org.Hs.eg.db")
 #' ) {
 #'   tiles <- MOCHA::callOpenTiles(
 #'     ATACFragments = MOCHA::exampleFragments,
@@ -113,7 +113,8 @@ setGeneric(
   signature = "ATACFragments"
 )
 
-
+#' @rdname callOpenTiles-methods
+#' @aliases callOpenTiles, GRangesList-method
 .callOpenTiles_default <- function(ATACFragments,
                                    cellColData,
                                    blackList,
@@ -308,7 +309,6 @@ setMethod(
     useArchR = TRUE
   )
 }
-
 setMethod(
   "callOpenTiles",
   signature(ATACFragments = "ArchRProject"),

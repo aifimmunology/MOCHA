@@ -2,7 +2,7 @@
 % Please edit documentation in R/getCoverage.R
 \name{getCoverage}
 \alias{getCoverage}
-\title{Get sample-specific coverage files for each sample-cell population.}
+\title{Get sample-specific coverage files for each sample-cell population}
 \usage{
 getCoverage(
   popFrags,

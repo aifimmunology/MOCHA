@@ -89,10 +89,10 @@ validRegionString <- function(regionString) {
   return(TRUE)
 }
 
-#' @title Turns a list of strings in the format chr1:100-200 into a GRanges object
+#' @title Convert a list of strings in the format "chr1:100-200" into a GRanges
 #'
-#' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
-#'   into a GRanges object
+#' @description \code{StringsToGRanges} Turns a list of strings defining genomic 
+#'  regions in the format chr1:100-200 into a GRanges object
 #'
 #' @param regionString A string or list of strings each in the format chr1:100-200
 #' @return a GRanges object with ranges representing the input string(s)
@@ -122,7 +122,7 @@ StringsToGRanges <- function(regionString) {
   return(regionGRanges)
 }
 
-#' @title Converts a GRanges object to a string in the format 'chr1:100-200'
+#' @title Convert a GRanges object to a string in the format 'chr1:100-200'
 #'
 #' @description \code{GRangesToString} Turns a GRanges Object into
 #'  a list of strings in the format chr1:100-200
@@ -137,7 +137,7 @@ GRangesToString <- function(GR_obj) {
   paste(GenomicRanges::seqnames(GR_obj), ":", GenomicRanges::start(GR_obj), "-", GenomicRanges::end(GR_obj), sep = "")
 }
 
-#' @title Converts a data.frame matrix to a GRanges
+#' @title Convert a data.frame or matrix to a GRanges
 #'   
 #' @param differentials a matrix/data.frame with a column tileColumn containing
 #'   region strings in the format "chr:start-end"

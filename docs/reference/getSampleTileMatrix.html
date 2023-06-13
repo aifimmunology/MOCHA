@@ -14,7 +14,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,28 +125,28 @@ Default is 1.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Starting from GRangesList</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">BSgenome.Hsapiens.UCSC.hg19</span><span class="op">)</span> <span class="op">&amp;&amp;</span> </span></span>
-<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg38.refGene</span><span class="op">)</span> <span class="op">&amp;&amp;</span> </span></span>
-<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">org.Hs.eg.db</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">BSgenome.Hsapiens.UCSC.hg19</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg38.refGene</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">org.Hs.eg.db</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">tiles</span> <span class="op">&lt;-</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="fu"><a href="callOpenTiles-methods.html">callOpenTiles</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  ATACFragments <span class="op">=</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="va"><a href="exampleFragments.html">exampleFragments</a></span>,</span></span>
-<span class="r-in"><span>  cellColData <span class="op">=</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="va"><a href="exampleCellColData.html">exampleCellColData</a></span>,</span></span>
-<span class="r-in"><span>  blackList <span class="op">=</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="va"><a href="exampleBlackList.html">exampleBlackList</a></span>,</span></span>
-<span class="r-in"><span>  genome <span class="op">=</span> <span class="st">"BSgenome.Hsapiens.UCSC.hg19"</span>,</span></span>
-<span class="r-in"><span>  TxDb <span class="op">=</span> <span class="st">"TxDb.Hsapiens.UCSC.hg38.refGene"</span>,</span></span>
-<span class="r-in"><span>  Org <span class="op">=</span> <span class="st">"org.Hs.eg.db"</span>,</span></span>
-<span class="r-in"><span>  outDir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  cellPopLabel <span class="op">=</span> <span class="st">"Clusters"</span>,</span></span>
-<span class="r-in"><span>  cellPopulations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C2"</span>, <span class="st">"C5"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  numCores <span class="op">=</span> <span class="fl">1</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">tiles</span> <span class="op">&lt;-</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="fu"><a href="callOpenTiles-methods.html">callOpenTiles</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    ATACFragments <span class="op">=</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="va"><a href="exampleFragments.html">exampleFragments</a></span>,</span></span>
+<span class="r-in"><span>    cellColData <span class="op">=</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="va"><a href="exampleCellColData.html">exampleCellColData</a></span>,</span></span>
+<span class="r-in"><span>    blackList <span class="op">=</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="va"><a href="exampleBlackList.html">exampleBlackList</a></span>,</span></span>
+<span class="r-in"><span>    genome <span class="op">=</span> <span class="st">"BSgenome.Hsapiens.UCSC.hg19"</span>,</span></span>
+<span class="r-in"><span>    TxDb <span class="op">=</span> <span class="st">"TxDb.Hsapiens.UCSC.hg38.refGene"</span>,</span></span>
+<span class="r-in"><span>    Org <span class="op">=</span> <span class="st">"org.Hs.eg.db"</span>,</span></span>
+<span class="r-in"><span>    outDir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    cellPopLabel <span class="op">=</span> <span class="st">"Clusters"</span>,</span></span>
+<span class="r-in"><span>    cellPopulations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C2"</span>, <span class="st">"C5"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    numCores <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">SampleTileMatrices</span> <span class="op">&lt;-</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="fu">getSampleTileMatrix</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">tiles</span>,</span></span>
-<span class="r-in"><span>  cellPopulations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'C2'</span>, <span class="st">'C5'</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  threshold <span class="op">=</span> <span class="fl">0</span> <span class="co"># Take union of all samples' open tiles</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">SampleTileMatrices</span> <span class="op">&lt;-</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="fu">getSampleTileMatrix</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">tiles</span>,</span></span>
+<span class="r-in"><span>    cellPopulations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C2"</span>, <span class="st">"C5"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    threshold <span class="op">=</span> <span class="fl">0</span> <span class="co"># Take union of all samples' open tiles</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

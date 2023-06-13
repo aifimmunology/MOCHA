@@ -431,15 +431,16 @@ pilotZIGLMM <- function(TSAM_Object,
 }
 
 
-#' @title getModelValues from runZIGLMM output.
+#' @title Get a data.frame of model values from the output of linear modeling
 #'
-#' @description \code{getModelValues} Pull out a data.frame of model values (slope, significance, and std.error) for a given factor from the SummarizedExperiment output of runZIGLMM.
+#' @description \code{getModelValues} extracts a data.frame of model values
+#'   (slope, significance, and std.error) for a given factor from the
+#'   SummarizedExperiment output of runZIGLMM.
 #' @param object A SummarizedExperiment object generated from runZIGLMM.
 #' @param specificVariable A string, describing the factor of influence.
 #'
-#' @return A data.frame of slopes, significance, and standard error for one factor.
-#'
-#'
+#' @return A data.frame of slopes, significance, and standard error for one
+#'   factor.
 #'
 #' @examples
 #' \dontrun{

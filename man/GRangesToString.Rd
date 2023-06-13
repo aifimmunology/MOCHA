@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{GRangesToString}
 \alias{GRangesToString}
-\title{Converts a GRanges object to a string in the format 'chr1:100-200'}
+\title{Convert a GRanges object to a string in the format 'chr1:100-200'}
 \usage{
 GRangesToString(GR_obj)
 }

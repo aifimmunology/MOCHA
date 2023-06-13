@@ -2,7 +2,7 @@
 % Please edit documentation in R/testCoAccessibility.R
 \name{testCoAccessibilityRandom}
 \alias{testCoAccessibilityRandom}
-\title{Tests input tile pairs against a random background}
+\title{Test input tile pairs against a random background}
 \usage{
 testCoAccessibilityRandom(
   SampleTileObj,

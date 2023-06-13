@@ -3,6 +3,9 @@
 \docType{methods}
 \name{callOpenTiles}
 \alias{callOpenTiles}
+\alias{.callOpenTiles_default}
+\alias{callOpenTiles,}
+\alias{GRangesList-method}
 \alias{callOpenTiles,GRangesList-method}
 \alias{callOpenTiles,list-method}
 \alias{.callOpenTiles_ArchR}
@@ -11,6 +14,23 @@
   ArchR Project}
 \usage{
 callOpenTiles(
+  ATACFragments,
+  cellColData,
+  blackList,
+  genome,
+  cellPopLabel,
+  cellPopulations = "ALL",
+  studySignal = NULL,
+  cellCol = "RG",
+  TxDb,
+  OrgDb,
+  outDir,
+  numCores = 30,
+  verbose = FALSE,
+  force = FALSE
+)
+
+.callOpenTiles_default(
   ATACFragments,
   cellColData,
   blackList,
@@ -155,11 +175,11 @@ tileResults <- MOCHA::callOpenTiles(
 )
 }
 \donttest{
-# Starting from GRangesList
+# Starting from GRangesList:
 if (
   requireNamespace("BSgenome.Hsapiens.UCSC.hg19") &&
-    requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
-    requireNamespace("org.Hs.eg.db")
+  requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
+  requireNamespace("org.Hs.eg.db")
 ) {
   tiles <- MOCHA::callOpenTiles(
     ATACFragments = MOCHA::exampleFragments,

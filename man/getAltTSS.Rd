@@ -2,8 +2,8 @@
 % Please edit documentation in R/getAltTSS.R
 \name{getAltTSS}
 \alias{getAltTSS}
-\title{Annotate Peaks falling in Transcription Start Sites
-  (TSS) and identify alternatively regulated TSSs for each gene.}
+\title{Annotate peaks falling in Transcription Start Sites
+  (TSSs) and identify alternatively regulated TSSs for each gene}
 \usage{
 getAltTSS(
   completeDAPs,

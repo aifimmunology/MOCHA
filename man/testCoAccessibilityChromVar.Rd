@@ -2,7 +2,7 @@
 % Please edit documentation in R/testCoAccessibility.R
 \name{testCoAccessibilityChromVar}
 \alias{testCoAccessibilityChromVar}
-\title{Tests input tile pairs against a ChromVAR background}
+\title{Test input tile pairs against a ChromVAR background}
 \usage{
 testCoAccessibilityChromVar(
   SampleTileObj,

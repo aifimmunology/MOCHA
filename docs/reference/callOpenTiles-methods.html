@@ -16,7 +16,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,23 @@
 <span>  <span class="va">TxDb</span>,</span>
 <span>  <span class="va">OrgDb</span>,</span>
 <span>  <span class="va">outDir</span>,</span>
-<span>  fast <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  numCores <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  force <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">.callOpenTiles_default</span><span class="op">(</span></span>
+<span>  <span class="va">ATACFragments</span>,</span>
+<span>  <span class="va">cellColData</span>,</span>
+<span>  <span class="va">blackList</span>,</span>
+<span>  <span class="va">genome</span>,</span>
+<span>  <span class="va">cellPopLabel</span>,</span>
+<span>  cellPopulations <span class="op">=</span> <span class="st">"ALL"</span>,</span>
+<span>  studySignal <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cellCol <span class="op">=</span> <span class="st">"RG"</span>,</span>
+<span>  <span class="va">TxDb</span>,</span>
+<span>  <span class="va">OrgDb</span>,</span>
+<span>  <span class="va">outDir</span>,</span>
 <span>  numCores <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  force <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -129,7 +145,6 @@
 <span>  <span class="va">TxDb</span>,</span>
 <span>  <span class="va">OrgDb</span>,</span>
 <span>  outDir <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fast <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  numCores <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  force <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -145,8 +160,8 @@ by 'cellCol'.</p></dd>
 
 
 <dt>cellColData</dt>
-<dd><p>A DataFrame containing cell-level metadata. This must 
-contain both a column 'Sample' with unique sample IDs and the column 
+<dd><p>A DataFrame containing cell-level metadata. This must
+contain both a column 'Sample' with unique sample IDs and the column
 specified by 'cellPopLabel'.</p></dd>
 
 
@@ -155,11 +170,11 @@ specified by 'cellPopLabel'.</p></dd>
 
 
 <dt>genome</dt>
-<dd><p>A BSgenome object, or the full name of an installed 
-BSgenome data package, or a short string specifying the name of an NCBI 
-assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38", 
+<dd><p>A BSgenome object, or the full name of an installed
+BSgenome data package, or a short string specifying the name of an NCBI
+assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38",
 "bosTau9", "galGal6", "ce11", etc...). The supplied short string must refer
-unambiguously to an installed BSgenome data package. See 
+unambiguously to an installed BSgenome data package. See
 <a href="https://rdrr.io/pkg/BSgenome/man/available.genomes.html" class="external-link">getBSgenome</a>.</p></dd>
 
 
@@ -177,41 +192,37 @@ Default is 'ALL'.</p></dd>
 
 
 <dt>studySignal</dt>
-<dd><p>The median signal (number of fragments) in your study. If 
-not set, this will be calculated using the input ArchR project but relies 
-on the assumption that the ArchR project encompasses your whole study (i.e. 
+<dd><p>The median signal (number of fragments) in your study. If
+not set, this will be calculated using the input ArchR project but relies
+on the assumption that the ArchR project encompasses your whole study (i.e.
 is not a subset).</p></dd>
 
 
 <dt>cellCol</dt>
-<dd><p>The column in cellColData specifying unique cell ids or 
+<dd><p>The column in cellColData specifying unique cell ids or
 barcodes. Default is "RG", the unique cell identifier used by ArchR.</p></dd>
 
 
 <dt>TxDb</dt>
-<dd><p>The exact package name of a TxDb-class transcript annotation 
-package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
-must be installed. See 
+<dd><p>The exact package name of a TxDb-class transcript annotation
+package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This
+must be installed. See
 <a href="https://bioconductor.org/packages/release/data/annotation/" class="external-link">
 Bioconductor AnnotationData Packages</a>.</p></dd>
 
 
 <dt>OrgDb</dt>
-<dd><p>The exact package name of a OrgDb-class genome wide annotation 
-package for your organism (e.g. "org.Hs.eg.db"). This must be installed. 
+<dd><p>The exact package name of a OrgDb-class genome wide annotation
+package for your organism (e.g. "org.Hs.eg.db"). This must be installed.
 See <a href="https://bioconductor.org/packages/release/data/annotation/" class="external-link">
 Bioconductor AnnotationData Packages</a></p></dd>
 
 
 <dt>outDir</dt>
 <dd><p>is a string describing the output directory for coverage files.
-Must be a complete directory string. With ArchR input, set outDir to NULL 
+Must be a complete directory string. With ArchR input, set outDir to NULL
 to create a directory within the input ArchR project directory named MOCHA
 for saving files.</p></dd>
-
-
-<dt>fast</dt>
-<dd><p>Optional, set to TRUE to use a faster but more memory-intensive</p></dd>
 
 
 <dt>numCores</dt>
@@ -250,11 +261,11 @@ already exist. Default is FALSE.</p></dd>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Starting from GRangesList</span></span></span>
+<span class="r-in"><span><span class="co"># Starting from GRangesList:</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BSgenome.Hsapiens.UCSC.hg19"</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"TxDb.Hsapiens.UCSC.hg38.refGene"</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"org.Hs.eg.db"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"TxDb.Hsapiens.UCSC.hg38.refGene"</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"org.Hs.eg.db"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">tiles</span> <span class="op">&lt;-</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="fu">callOpenTiles</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    ATACFragments <span class="op">=</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="va"><a href="exampleFragments.html">exampleFragments</a></span>,</span></span>
@@ -270,12 +281,15 @@ already exist. Default is FALSE.</p></dd>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required namespace: BSgenome.Hsapiens.UCSC.hg19</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required namespace: TxDb.Hsapiens.UCSC.hg38.refGene</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required namespace: org.Hs.eg.db</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘BiocGenerics’</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:stats’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: 'BiocGenerics'</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from 'package:stats':</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     IQR, mad, sd, var, xtabs</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from 'package:base':</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     Filter, Find, Map, Position, Reduce, anyDuplicated, append,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     as.data.frame, basename, cbind, colnames, dirname, do.call,</span>
@@ -284,13 +298,13 @@ already exist. Default is FALSE.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     pmin.int, rank, rbind, rownames, sapply, setdiff, sort, table,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     tapply, union, unique, unsplit, which.max, which.min</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘S4Vectors’</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: 'S4Vectors'</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from 'package:base':</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     I, expand.grid, unname</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘Biostrings’</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following object is masked from ‘package:base’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: 'Biostrings'</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following object is masked from 'package:base':</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     strsplit</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Welcome to Bioconductor</span>
@@ -298,18 +312,22 @@ already exist. Default is FALSE.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     Vignettes contain introductory material; view with</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     'browseVignettes()'. To cite Bioconductor, see</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     'citation("Biobase")', and for packages 'citation("pkgname")'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                  | 0 % ~calculating    |++++++++++++++++++++++++++++++++++++++++++++++++++| 100% elapsed=00s  </span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>GRanges object contains 1538 out-of-bound ranges located on sequences</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   chr1 and chr2. Note that ranges located on a sequence whose length is</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   unknown (NA) or on a circular sequence are not considered out-of-bound</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   (use seqlengths() and isCircular() to get the lengths and circularity</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   flags of the underlying sequences). You can use trim() to trim these</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   ranges. See ?`trim,GenomicRanges-method` for more information.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                  | 0 % ~calculating    |++++++++++++++++++++++++++++++++++++++++++++++++++| 100% elapsed=03s  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                  | 0 % ~calculating    |++++++++++++++++++++++++++++++++++++++++++++++++++| 100% elapsed=00s  </span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>GRanges object contains 2682 out-of-bound ranges located on sequences</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   chr1 and chr2. Note that ranges located on a sequence whose length is</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   unknown (NA) or on a circular sequence are not considered out-of-bound</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   (use seqlengths() and isCircular() to get the lengths and circularity</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   flags of the underlying sequences). You can use trim() to trim these</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span>   ranges. See ?`trim,GenomicRanges-method` for more information.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |                                                  | 0 % ~calculating    |++++++++++++++++++++++++++++++++++++++++++++++++++| 100% elapsed=02s  </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

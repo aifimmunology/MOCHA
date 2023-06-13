@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsetMOCHAObject.R
 \name{subsetMOCHAObject}
 \alias{subsetMOCHAObject}
-\title{Subsets a tileResults-type object by metadata}
+\title{Subset a tileResults object by metadata}
 \usage{
 subsetMOCHAObject(
   Object,

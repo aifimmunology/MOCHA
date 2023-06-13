@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@
 
       <dl><dt>
           
-          <code><a href="callOpenTiles-methods.html">callOpenTiles()</a></code> <code><a href="callOpenTiles-methods.html">.callOpenTiles_ArchR()</a></code> 
+          <code><a href="callOpenTiles-methods.html">callOpenTiles()</a></code> <code><a href="callOpenTiles-methods.html">.callOpenTiles_default()</a></code> <code><a href="callOpenTiles-methods.html">.callOpenTiles_ArchR()</a></code> 
         </dt>
         <dd>Perform peak-calling on a set of fragments or an 
   ArchR Project</dd>
@@ -124,7 +124,7 @@
           
           <code><a href="bulkDimReduction.html">bulkDimReduction()</a></code> 
         </dt>
-        <dd>Run PCA or LSI dimensionality reduction</dd>
+        <dd>Run PCA or LSI dimensionality reduction on tiles</dd>
       </dl><dl><dt>
           
           <code><a href="bulkUMAP.html">bulkUMAP()</a></code> 
@@ -139,8 +139,8 @@
           
           <code><a href="getAltTSS.html">getAltTSS()</a></code> 
         </dt>
-        <dd>Annotate Peaks falling in Transcription Start Sites
-  (TSS) and identify alternatively regulated TSSs for each gene.</dd>
+        <dd>Annotate peaks falling in Transcription Start Sites
+  (TSSs) and identify alternatively regulated TSSs for each gene</dd>
       </dl><dl><dt>
           
           <code><a href="getCoAccessibleLinks.html">getCoAccessibleLinks()</a></code> 
@@ -171,18 +171,18 @@
           
           <code><a href="runZIGLMM.html">runZIGLMM()</a></code> 
         </dt>
-        <dd>Run Zero-Inflated Generalized Linear Mixed-Modeling for zero inflated
-  data</dd>
+        <dd>Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked
+  scATAC data</dd>
       </dl><dl><dt>
           
           <code><a href="testCoAccessibilityChromVar.html">testCoAccessibilityChromVar()</a></code> 
         </dt>
-        <dd>Tests input tile pairs against a ChromVAR background</dd>
+        <dd>Test input tile pairs against a ChromVAR background</dd>
       </dl><dl><dt>
           
           <code><a href="testCoAccessibilityRandom.html">testCoAccessibilityRandom()</a></code> 
         </dt>
-        <dd>Tests input tile pairs against a random background</dd>
+        <dd>Test input tile pairs against a random background</dd>
       </dl></div><div class="section level2">
       <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
       
@@ -198,12 +198,12 @@
           
           <code><a href="GRangesToString.html">GRangesToString()</a></code> 
         </dt>
-        <dd>Converts a GRanges object to a string in the format 'chr1:100-200'</dd>
+        <dd>Convert a GRanges object to a string in the format 'chr1:100-200'</dd>
       </dl><dl><dt>
           
           <code><a href="StringsToGRanges.html">StringsToGRanges()</a></code> 
         </dt>
-        <dd>Turns a list of strings in the format chr1:100-200 into a GRanges object</dd>
+        <dd>Convert a list of strings in the format "chr1:100-200" into a GRanges</dd>
       </dl><dl><dt>
           
           <code><a href="addMotifSet.html">addMotifSet()</a></code> 
@@ -223,7 +223,7 @@
           
           <code><a href="differentialsToGRanges.html">differentialsToGRanges()</a></code> 
         </dt>
-        <dd>Converts a data.frame matrix to a GRanges</dd>
+        <dd>Convert a data.frame or matrix to a GRanges</dd>
       </dl><dl><dt>
           
           <code><a href="extractRegion.html">extractRegion()</a></code> 
@@ -238,7 +238,12 @@
           
           <code><a href="getCoverage.html">getCoverage()</a></code> 
         </dt>
-        <dd>Get sample-specific coverage files for each sample-cell population.</dd>
+        <dd>Get sample-specific coverage files for each sample-cell population</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getModelValues.html">getModelValues()</a></code> 
+        </dt>
+        <dd>Get a data.frame of model values from the output of linear modeling</dd>
       </dl><dl><dt>
           
           <code><a href="getPopFrags.html">getPopFrags()</a></code> 
@@ -248,7 +253,7 @@
           
           <code><a href="subsetMOCHAObject.html">subsetMOCHAObject()</a></code> 
         </dt>
-        <dd>Subsets a tileResults-type object by metadata</dd>
+        <dd>Subset a tileResults object by metadata</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>

@@ -1,4 +1,4 @@
-#' @title Tests input tile pairs against a ChromVAR background
+#' @title Test input tile pairs against a ChromVAR background
 #'
 #' @description \code{testCoAccessibilityChromVar} takes an input set of tile
 #'   pairs and tests whether they are significantly different compared to a
@@ -218,7 +218,7 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
   }
 }
 
-#' @title Tests input tile pairs against a random background
+#' @title Test input tile pairs against a random background
 #'
 #' @description \code{testCoAccessibilityRandom} takes an input set of tile
 #'   pairs and tests whether they are significantly different compared to

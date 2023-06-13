@@ -1,5 +1,5 @@
-#' @title Annotate Peaks falling in Transcription Start Sites
-#'   (TSS) and identify alternatively regulated TSSs for each gene.
+#' @title Annotate peaks falling in Transcription Start Sites
+#'   (TSSs) and identify alternatively regulated TSSs for each gene
 #'
 #' @description \code{getAltTSS} Pulls out all peaks that fall in TSSs,
 #'   annotates them with the name of gene, and identifies genes that have
