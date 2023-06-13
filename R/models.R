@@ -56,4 +56,3 @@
 #' @format A GRanges object with 210 ranges and 2 metadata columns
 #' @keywords internal
 "exampleBlackList"
-

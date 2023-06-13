@@ -106,7 +106,7 @@ callTilesBySample <- function(blackList,
 #'   files and cell metadata
 #'
 #' @param x a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..
-#' 
+#'
 #' @return scMACs_PeakList an list containing peak calls for each cell
 #'   population passed on in the cell subsets argument. Each peak call is
 #'   returned as as Genomic Ranges object.
@@ -114,19 +114,16 @@ callTilesBySample <- function(blackList,
 #'
 #' @noRd
 #'
-#' 
+#'
 
-simplifiedTilesBySample <- function(x){
-  
+simplifiedTilesBySample <- function(x) {
   callTilesBySample(
-          blackList =  x[[1]],
-          returnAllTiles = TRUE,
-          totalFrags = length(x[[2]]),
-          fragsList = x[[2]],
-          cellCol = x[[3]], 
-          verbose = x[[4]],
-          StudypreFactor = x[[5]]
-        )
-
+    blackList = x[[1]],
+    returnAllTiles = TRUE,
+    totalFrags = length(x[[2]]),
+    fragsList = x[[2]],
+    cellCol = x[[3]],
+    verbose = x[[4]],
+    StudypreFactor = x[[5]]
+  )
 }
-

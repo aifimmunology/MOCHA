@@ -1,9 +1,9 @@
 # We can call peaks independent of ArchR
 
     Code
-      metadata(tiles)$CellCounts
+      assays(metadata(tiles)$summarizedData)[["CellCounts"]]
     Output
-                 cellTypeLabelList
-                   C2  C5
-        PBMCSmall 152 201
+         PBMCSmall
+      C2       152
+      C5       201
 

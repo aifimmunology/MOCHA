@@ -1,25 +1,29 @@
-#' @title Run Zero-Inflated Generalized Linear Mixed-Modeling for zero inflated
-#'   data
+#' @title Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked
+#'   scATAC data
 #'
 #' @description \code{runZIGLMM} Runs linear mixed-effects modeling for
-#'   continuous, non-zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
+#'   zero-inflated data using \code{\link[glmmTMB]{glmmTMB}}.
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
-#'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only one
-#'   assay, or only the first assay will be used for the model. Data should not
-#'   be zero-inflated.
-#' @param cellPopulation A single cell population on which to run this model
-#' @param continuousFormula The formula, see \code{\link[glmmTMB]{glmmTMB}}.
-#'   Combined fixed and random effects formula, following lme4 syntax.
-#' @param ziformula The zero-inflated formula, see
-#'   \code{\link[glmmTMB]{glmmTMB}}. a one-sided (i.e., no response variable)
-#'   formula for zero-inflation combining fixed and random effects: the default
-#'   ~0 specifies no zero-inflation. Specifying ~. sets the zero-inflation
-#'   formula identical to the right-hand side of formula (i.e., the conditional
-#'   effects formula); terms can also be added or subtracted. When using ~. as
-#'   the zero-inflation formula in models where the conditional effects formula
-#'   contains an offset term, the offset term will automatically be dropped. The
-#'   zero-inflation model uses a logit link.
+#'   getSampleTileMatrix.
+#' @param cellPopulation Name of a cell type(s), or 'all'. The function will
+#'   combine the cell types mentioned into one matrix before running the model.
+#' @param continuousFormula The formula for the continuous data that should be
+#'   used within glmmTMB. It should be in the format (exp ~ factors). All
+#'   factors must be found in column names of the TSAM_Object metadata, except
+#'   for CellType, FragNumber and CellCount, which will be extracted from the
+#'   TSAM_Object. modelFormula must start with 'exp' as the response. See
+#'   \link[glmmTMB]{glmmTMB}.
+#' @param ziformula The formula for the zero-inflated data that should be used
+#'   within glmmTMB. It should be in the format ( ~ factors). All factors must
+#'   be found in column names of the TSAM_Object colData metadata, except for
+#'   CellType, FragNumber and CellCount, which will be extracted from the
+#'   TSAM_Object.
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the
+#'   fraction of samples with zeros. When the percentage of zeros in the tile is
+#'   between 0 and zi_threshold, samples with zeroes are dropped and only the
+#'   continous formula is used. Use this parameter at your own risk. Default is
+#'   0.
 #' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
@@ -30,39 +34,49 @@
 #'
 #' @examples
 #' \dontrun{
-#'   modelList <- runLMEM(ExperimentObj,
-#'     modelFormula = NULL,
-#'     initialSampling = 5,
-#'     verbose = FALSE,
-#'     numCores = 1
-#'  )
+#' modelList <- runZIGLMM(STM[c(1:1000), ],
+#'   cellPopulation = "CD16 Mono",
+#'   continuousFormula = exp ~ Age + Sex + days_since_symptoms + (1 | PTID),
+#'   ziformula = ~ FragNumber + Age,
+#'   verbose = TRUE,
+#'   numCores = 35
+#' )
 #' }
 #'
 #' @export
 #' @keywords downstream
 runZIGLMM <- function(TSAM_Object,
-                      cellPopulation = NULL,
+                      cellPopulation = "all",
                       continuousFormula = NULL,
                       ziformula = NULL,
+                      zi_threshold = 0,
                       initialSampling = 5,
                       verbose = FALSE,
                       numCores = 1) {
   Sample <- NULL
-  
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }
 
-  if (is.null(cellPopulation)) {
-    stop("No cell type name was provided.")
-  } else if (length(cellPopulation) > 1) {
-    stop("Please provide only one string within cellPopulation. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellPopulation = 'counts'")
-  } else if (!cellPopulation %in% names(SummarizedExperiment::assays(TSAM_Object))) {
-    stop("No cell type name not found within TSAM_Object.")
+  if (zi_threshold < 0 | zi_threshold > 1 | !is.numeric(zi_threshold)) {
+    stop("zi_threshold must be between 0 and 1.")
   }
 
-  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE))
-  modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
+  if (is.null(cellPopulation)) {
+    stop("No cell type name was provided.")
+  } else if (all(tolower(cellPopulation) == "all")) {
+
+    # Merge all together.
+    newObj <- combineSampleTileMatrix(TSAM_Object)
+  } else if (all(cellPopulation %in% names(SummarizedExperiment::assays(TSAM_Object)))) {
+
+    # Subset down to just those
+    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = "celltype", groupList = cellPopulation, subsetPeaks = TRUE))
+  } else {
+    stop("Error around cell type name. Some or all were not found within TSAM_Object.")
+  }
+
+  modelingData <- log2(SummarizedExperiment::assays(newObj)[["counts"]] + 1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
   if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
@@ -115,11 +129,15 @@ runZIGLMM <- function(TSAM_Object,
     stop("For the initial sampling, every test model failed. Reconsider modelFormula or increase initial sampling size.")
   } else {
     idx <- which(!is.na(unlist(modelList)))
-    coeffList <- lapply(1:length(idx), function(x){
+    coeffList <- lapply(1:length(idx), function(x) {
       tryCatch(
-      {
-         summary(modelList[[x]])$coefficients
-      }, error = function(e){ NA})
+        {
+          summary(modelList[[x]])$coefficients
+        },
+        error = function(e) {
+          NA
+        }
+      )
     })
     if (all(is.na(unlist(coeffList)))) {
       stop("For the initial sampling, every test model failed. Reconsider modelFormula or increase initial sampling size.")
@@ -138,25 +156,21 @@ runZIGLMM <- function(TSAM_Object,
 
   # Make your clusters for efficient parallelization
   cl <- parallel::makeCluster(numCores)
-  iterList <- lapply(rownames(modelingData), function(x){
-    list(x, continuousFormula, ziformula, modelingData, MetaDF, nullDF)
+  iterList <- lapply(rownames(modelingData), function(x) {
+    list(x, continuousFormula, modelingData, MetaDF, nullDF, 
+         zi_threshold, ziformula)
   })
+  parallel::clusterExport(
+    cl = cl, varlist = c(iterList),
+    envir = environment()
+  )
   parallel::clusterEvalQ(cl, {
     library(glmmTMB)
   })
-  parallel::clusterExport(
-    cl = cl, varlist = c(
-      iterList
-      # "continuousFormula", 
-      # "ziformula", 
-      # "modelingData", 
-      # "MetaDF", "individualZIGLMM", "nullDF"
-    ),
-    envir = environment()
-  )
+
   coeffList <- pbapply::pblapply(
-    cl = cl, 
-    X = iterList, 
+    cl = cl,
+    X = iterList,
     individualZIGLMM
   )
   parallel::stopCluster(cl)
@@ -165,12 +179,11 @@ runZIGLMM <- function(TSAM_Object,
     if (verbose) {
       message(stringr::str_interp("Extracting coefficients for the ${varType} component"))
     }
-
     valuesToExtract <- c("Estimate", "Pr(>|z|)", "Std. Error")
 
     dfList <- lapply(valuesToExtract, function(valType) {
       tmpDF <- do.call("rbind", pbapply::pblapply(X = coeffList, function(x) {
-        extractVariable(x[[varType]], valType)
+        extractVariable(x, varType, valType, nullDF)
       }, cl = NULL))
       if (!is.null(tmpDF)) {
         rownames(tmpDF) <- rownames(modelingData)
@@ -194,43 +207,52 @@ runZIGLMM <- function(TSAM_Object,
 
   names(combinedList) <- c("Slopes", "Significance", "StdError")
 
+  newMetadata <- newObj@metadata
+  newMetadata$History <- append(newMetadata$History, paste("runZIGLMM", utils::packageVersion("MOCHA")))
+
   results <- SummarizedExperiment::SummarizedExperiment(
     combinedList,
     rowRanges = SummarizedExperiment::rowRanges(newObj),
-    metadata = newObj@metadata
+    metadata = newMetadata
   )
 
   return(results)
 }
 
-extractVariable <- function(varDF, variable) {
+
+extractVariable <- function(varList, varType, variable, nullDF) {
+  varDF <- varList[[varType]]
   if (dim(varDF)[2] > 0) {
     val_tmp <- unlist(varDF[, variable])
     names(val_tmp) <- rownames(varDF)
     val_tmp
   } else {
-    NULL
+    varDF <- nullDF[[varType]]
+    val_tmp <- unlist(varDF[, variable])
+    names(val_tmp) <- rownames(varDF)
+    val_tmp
   }
 }
 
-#' @title Internal function to run linear modeling
+#' @title \code{IndividualZIGLMM}
 #'
-#' @description \code{IndividualLMEM} Runs linear modeling
-#'   with glmmTMB::glmmTMB
-#' @param iterList A list where the first index is a data.frame
-#'   to use for modeling, and the second is the formula for modeling.
-#'   list(x, continuousFormula, ziformula, modelingData, MetaDF, nullDF)
-#' 
-#' @return output_vector A linear model
+#' @description \code{IndividualZIGLMM} Runs zero-inflated linear modeling on
+#'   data provided. Written for efficient parallelization.
 #'
+#' @param iterList A list where the first index is a data.frame to use for
+#'   modeling, and the second is the formula for modeling.
+#'
+#' @return A linear model
 #' @noRd
+#' 
 individualZIGLMM <- function(iterList) {
   x <- iterList[[1]]
   continuousFormula <- iterList[[2]]
-  ziformula <- iterList[[3]]
-  modelingData <- iterList[[4]]
-  MetaDF <- iterList[[5]]
-  nullDF <- iterList[[6]]
+  modelingData <- iterList[[3]]
+  MetaDF <- iterList[[4]]
+  nullDF <- iterList[[5]]
+  zi_threshold <- iterList[[6]]
+  ziformula <- iterList[[7]]
   
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
@@ -239,12 +261,30 @@ individualZIGLMM <- function(iterList) {
 
   output_vector <- tryCatch(
     {
-      modelRes <- glmmTMB::glmmTMB(continuousFormula,
-        ziformula = ziformula,
-        data = df,
-        family = stats::gaussian(),
-        REML = TRUE
-      )
+      if (sum(df$exp == 0) / length(df$exp) == 0) {
+        modelRes <- glmmTMB::glmmTMB(continuousFormula,
+          ziformula = ~0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      } else if (sum(df$exp == 0) / length(df$exp) <= zi_threshold) {
+        df <- df[df$exp != 0, ]
+        modelRes <- glmmTMB::glmmTMB(continuousFormula,
+          ziformula = ~0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      } else {
+        modelRes <- glmmTMB::glmmTMB(continuousFormula,
+          ziformula = ziformula,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      }
+
       lapply(summary(modelRes)$coefficients, as.data.frame)
     },
     error = function(e) {
@@ -255,14 +295,16 @@ individualZIGLMM <- function(iterList) {
 }
 
 
+
 #' @title Execute a pilot run of model on a subset of data
 #'
-#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
-#'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
+#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for zero
+#'   inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch
+#'   errors, and return the error and dataframe for troubleshooting.
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix, chromVAR, or other.
-#' @param cellPopulation A single cell population on which to run this pilot 
+#' @param cellPopulation A single cell population on which to run this pilot
 #'   model
 #' @param continuousFormula The formula, see \code{\link[glmmTMB]{glmmTMB}}.
 #'   Combined fixed and random effects formula, following lme4 syntax.
@@ -275,9 +317,14 @@ individualZIGLMM <- function(iterList) {
 #'   the zero-inflation formula in models where the conditional effects formula
 #'   contains an offset term, the offset term will automatically be dropped. The
 #'   zero-inflation model uses a logit link.
+#' @param zi_threshold Zero-inflated threshold (range = 0-1), representing the
+#'   fraction of samples with zeros. When the percentage of zeros in the tile is
+#'   between 0 and zi_threshold, samples with zeroes are dropped and only the
+#'   continous formula is used. Use this parameter at your own risk. Default is
+#'   0.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @param pilotIndices A vector of integers defining the subset of
-#'   the ExperimentObj matrix. Default is 1:10.
+#' @param pilotIndices A vector of integers defining the subset of the
+#'   ExperimentObj matrix. Default is 1:10.
 #'
 #' @return modelList a list of outputs from glmmTMB::glmmTMB
 #'
@@ -288,31 +335,41 @@ pilotZIGLMM <- function(TSAM_Object,
                         cellPopulation = NULL,
                         continuousFormula = NULL,
                         ziformula = NULL,
+                        zi_threshold = 0,
                         verbose = FALSE,
                         pilotIndices = 1:10) {
   Sample <- NULL
-  
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
   }
 
-  if (is.null(cellPopulation)) {
-    stop("No cell type name was provided.")
-  } else if (length(cellPopulation) > 1) {
-    stop("Please provide only one string within cellPopulation. If you want to run over multiple cell types, please use combineSampleTileMatrix() to generate a new object, and use that object instead, with cellPopulation = 'counts'")
-  } else if (!cellPopulation %in% names(SummarizedExperiment::assays(TSAM_Object))) {
-    stop("Cell type name not found within TSAM_Object.")
+  if (zi_threshold < 0 | zi_threshold > 1 | !is.numeric(zi_threshold)) {
+    stop("zi_threshold must be between 0 and 1.")
   }
 
-  newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE))
-  modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
+  if (is.null(cellPopulation)) {
+    stop("No cell type name was provided.")
+  } else if (all(tolower(cellPopulation) == "all")) {
+
+    # Merge all together.
+    newObj <- combineSampleTileMatrix(TSAM_Object)
+  } else if (all(cellPopulation %in% names(SummarizedExperiment::assays(TSAM_Object)))) {
+
+    # Subset down to just those
+    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = "celltype", groupList = cellPopulation, subsetPeaks = TRUE))
+  } else {
+    stop("Error around cell type name. Some or all were not found within TSAM_Object.")
+  }
+
+
+  modelingData <- log2(SummarizedExperiment::assays(newObj)[["counts"]] + 1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
-  if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
+  if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF), "FragNumber", "CellCount", "CellType"))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
   }
 
-  if (!all(all.vars(ziformula) %in% c(colnames(MetaDF))) & length(all.vars(ziformula)) > 0) {
+  if (!all(all.vars(ziformula) %in% c(colnames(MetaDF), "FragNumber", "CellCount", "CellType")) & length(all.vars(ziformula)) > 0) {
     stop("factors from the ziformula were not found in the metadata.")
   }
 
@@ -336,13 +393,72 @@ pilotZIGLMM <- function(TSAM_Object,
       MetaDF, stringsAsFactors = FALSE
     )
 
-    glmmTMB::glmmTMB(continuousFormula,
-      ziformula = ziformula,
-      data = df,
-      family = stats::gaussian(),
-      REML = TRUE
+    # tryCatch to catch error, return dataframe for troubleshooting
+    tryCatch(
+      {
+        if (sum(df$exp == 0) / length(df$exp) == 0) {
+          modelRes <- glmmTMB::glmmTMB(continuousFormula,
+            ziformula = ~0,
+            data = df,
+            family = stats::gaussian(),
+            REML = TRUE
+          )
+        } else if (sum(df$exp == 0) / length(df$exp) <= zi_threshold) {
+          df <- df[df$exp != 0, ]
+          modelRes <- glmmTMB::glmmTMB(continuousFormula,
+            ziformula = ~0,
+            data = df,
+            family = stats::gaussian(),
+            REML = TRUE
+          )
+        } else {
+          modelRes <- glmmTMB::glmmTMB(continuousFormula,
+            ziformula = ziformula,
+            data = df,
+            family = stats::gaussian(),
+            REML = TRUE
+          )
+        }
+      },
+      error = function(e) {
+        warning("Hit modeling error.")
+        list(e, rownames(modelingData)[x], df)
+      }
     )
   }, cl = NULL)
 
   return(modelList)
+}
+
+
+#' @title getModelValues from runZIGLMM output.
+#'
+#' @description \code{getModelValues} Pull out a data.frame of model values (slope, significance, and std.error) for a given factor from the SummarizedExperiment output of runZIGLMM.
+#' @param object A SummarizedExperiment object generated from runZIGLMM.
+#' @param specificVariable A string, describing the factor of influence.
+#'
+#' @return A data.frame of slopes, significance, and standard error for one factor.
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#' age_df <- getModelValues(runZIGLMM_output, "Age")
+#' }
+#'
+#' @export
+#' @keywords utils
+getModelValues <- function(object, specificVariable) {
+  slopes <- SummarizedExperiment::assays(object)[["Slopes"]]
+  significance <- SummarizedExperiment::assays(object)[["Significance"]]
+  if (length(specificVariable) > 1) {
+    stop("Cannot provide more than one value to specificVariable.")
+  }
+
+  df <- data.frame(
+    "Element" = rownames(slopes),
+    "Estimate" = slopes[, specificVariable],
+    "PValue" = significance[, specificVariable]
+  )
+  return(df)
 }

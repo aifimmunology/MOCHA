@@ -59,7 +59,7 @@ calculate_intensities <- function(fragMat,
 
   ### Convert overlap matrix into DT
   fragsPerBin <- data.table::as.data.table(fragsPerBin)
-    
+
   ### Get Cell Counts
   numCells <- length(unique(fragMat_dt[[cellCol]]))
 

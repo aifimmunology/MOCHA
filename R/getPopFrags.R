@@ -86,7 +86,7 @@ getPopFrags <- function(ArchRProj,
 
 
   # Extract fragments from all available regions
-  arrowList <- lapply(seq_along(arrows), function(x){ 
+  arrowList <- lapply(seq_along(arrows), function(x) {
     list(arrows[x], grep(names(arrows)[x], cellNames, value = TRUE))
   })
   if (verbose) {
@@ -104,39 +104,39 @@ getPopFrags <- function(ArchRProj,
   # PROTECTED DELIMITER CHARACTERS: # and . and __
   cleanedCellPopulations <- gsub("[#.]|_{2}", "_", cellPopulations)
   changedLabelsBool <- grepl("[#.]|_{2}", cellPopulations)
-  if (any(changedLabelsBool)){
+  if (any(changedLabelsBool)) {
     warning(
       "The following cell population labels contain protected delimiter ",
       "characters '#.' and have been updated. Please use the updated ",
       "cell population labels in downstream analyses. ",
-      "\nPrevious: \n", paste0(cellPopulations[changedLabelsBool], collapse="  "),
-      "\nUpdated: \n", paste0(cleanedCellPopulations[changedLabelsBool],collapse="  ")
+      "\nPrevious: \n", paste0(cellPopulations[changedLabelsBool], collapse = "  "),
+      "\nUpdated: \n", paste0(cleanedCellPopulations[changedLabelsBool], collapse = "  ")
     )
   }
   names(barcodesByCellPop) <- cleanedCellPopulations
   cellPopulations <- cleanedCellPopulations
-  
+
   # If you are extracting more than one population, then sort the fragments by population.
-  # If you are not, then no sorting is necessary. 
-  if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
+  # If you are not, then no sorting is necessary.
+  if (length(cellPopulations) > 1 | all(tolower(cellPopulations) == "all")) {
     # Set up sets for sorting by fragments for cell types
-    fragIterList <- lapply(seq_along(frags), function(x){
-          list(barcodesByCellPop, frags[[x]])
+    fragIterList <- lapply(seq_along(frags), function(x) {
+      list(barcodesByCellPop, frags[[x]])
     })
     rm(frags)
     names(fragIterList) <- names(arrows)
 
     if (verbose) {
-        message("Sorting fragments by cell type.")
+      message("Sorting fragments by cell type.")
     }
 
-    #Subset fragments by cell type
+    # Subset fragments by cell type
     tmp_fragList <- pbapply::pblapply(fragIterList, subset_Frag, cl = numCores)
     names(tmp_fragList) <- names(arrows)
-    
+
     if (poolSamples) {
-      pooledFrags <- lapply(cellPopulations, function(cellPop){
-        cellPopFrags <- lapply(tmp_fragList, function(x){
+      pooledFrags <- lapply(cellPopulations, function(cellPop) {
+        cellPopFrags <- lapply(tmp_fragList, function(x) {
           x[[cellPop]]
         })
         IRanges::stack(methods::as(cellPopFrags, "GRangesList"))
@@ -144,47 +144,45 @@ getPopFrags <- function(ArchRProj,
       names(pooledFrags) <- cellPopulations
       return(GenomicRanges::GRangesList(pooledFrags))
     }
-    
-    tmp_fragList <- unlist(tmp_fragList, recursive = FALSE)   
+
+    tmp_fragList <- unlist(tmp_fragList, recursive = FALSE)
     # Here we use . and # as protected delimiter characters
     names(tmp_fragList) <- gsub("\\.", "#", names(tmp_fragList))
     sampleName <- gsub("#.*", "", names(tmp_fragList))
-    cellTypeName <-  gsub(".*#", "", names(tmp_fragList))
-    names(tmp_fragList) <- paste(cellTypeName, "#", sampleName, sep ='')
+    cellTypeName <- gsub(".*#", "", names(tmp_fragList))
+    names(tmp_fragList) <- paste(cellTypeName, "#", sampleName, sep = "")
     rm(fragIterList)
-
-  }else{
+  } else {
     # One cell population
     tmp_fragList <- frags
-    
+
     if (poolSamples) {
       pooledFrags <- list(IRanges::stack(methods::as(tmp_fragList, "GRangesList")))
       names(pooledFrags) <- cellPopulations
       return(GenomicRanges::GRangesList(pooledFrags))
     }
-    
-    names(tmp_fragList) <- paste0(cellPopulations, '#', names(arrows))
-    rm(frags)
 
+    names(tmp_fragList) <- paste0(cellPopulations, "#", names(arrows))
+    rm(frags)
   }
 
   # Add normalization factor.
   # Double underscore __ is protected delimeter
   fragLength <- unlist(lapply(tmp_fragList, length))
   names(tmp_fragList) <- paste(
-        names(tmp_fragList),
-        "__",
-        fragLength/ 10^6,
-        sep = ""
+    names(tmp_fragList),
+    "__",
+    fragLength / 10^6,
+    sep = ""
   )
 
-  if(length(cellPopulations) > 1 | all(tolower(cellPopulations) == 'all')){
-    popFrags <- unlist(lapply(names(barcodesByCellPop), function(x){
-        subsetFrags <- tmp_fragList[grepl(x, names(tmp_fragList))]
-        names(subsetFrags) <- grep(x, names(tmp_fragList), value = TRUE)
-        subsetFrags
+  if (length(cellPopulations) > 1 | all(tolower(cellPopulations) == "all")) {
+    popFrags <- unlist(lapply(names(barcodesByCellPop), function(x) {
+      subsetFrags <- tmp_fragList[grepl(x, names(tmp_fragList))]
+      names(subsetFrags) <- grep(x, names(tmp_fragList), value = TRUE)
+      subsetFrags
     }))
-  }else{
+  } else {
     popFrags <- tmp_fragList
   }
 
@@ -199,61 +197,57 @@ getPopFrags <- function(ArchRProj,
 #'
 #' @param ref a list where the first index is the name of the arrow and the second index is a vector of strings describing cell names
 #'
-#' @return A GRanges object for all fragments from a set of cells within a given arrow file. 
+#' @return A GRanges object for all fragments from a set of cells within a given arrow file.
 #'
 #'
 #' @noRd
 
-simplifiedFragments <- function(ref){
-   arrows <- ref[[1]]
-   cellNames <- ref[[2]]
+simplifiedFragments <- function(ref) {
+  arrows <- ref[[1]]
+  cellNames <- ref[[2]]
 
-   if(length(ref) > 2){
-    regionGRanges = ref[[4]]
-    chrom = ref[[3]]
+  if (length(ref) > 2) {
+    regionGRanges <- ref[[4]]
+    chrom <- ref[[3]]
     frags <- ArchR::getFragmentsFromArrow(
-        ArrowFile = arrows,
-        cellNames = cellNames,
-        chr = chrom,
-        verbose = FALSE
-      ) 
+      ArrowFile = arrows,
+      cellNames = cellNames,
+      chr = chrom,
+      verbose = FALSE
+    )
     frags <- plyranges::filter_by_overlaps(frags, regionGRanges)
-
-   }else{
-
+  } else {
     frags <- ArchR::getFragmentsFromArrow(
-        ArrowFile = arrows,
-        cellNames = cellNames,
-        verbose = FALSE
-      )
-    
-   }
-   return(frags)
-
+      ArrowFile = arrows,
+      cellNames = cellNames,
+      verbose = FALSE
+    )
+  }
+  return(frags)
 }
 
-#' subsets fragments out by cellnames. 
+#' subsets fragments out by cellnames.
 #'
 #' \code{subset_Frag} returns a sorted set of fragments by populations based on cell barcode lists
 #'
 #' @param ref a list where the first index is the cellnames for that population, and the second index is a GRanges of fragments
 #'
-#' @return A Granges object for all fragments from a set of cells within a given arrow file. 
+#' @return A Granges object for all fragments from a set of cells within a given arrow file.
 #'
 #'
 #' @noRd
 
 # From MOCHA - Function to sort fragments by populations based on cell barcode lists
 subset_Frag <- function(ref) {
-  barcodesByCellPop = ref[[1]]
-  fragsGRanges = ref[[2]]
+  barcodesByCellPop <- ref[[1]]
+  fragsGRanges <- ref[[2]]
 
   fragsTable <- data.table::as.data.table(fragsGRanges)
-  sortedFrags <- lapply(barcodesByCellPop, function(y){
-        idx <- which(fragsTable$RG %in% y)
-        fragsGRanges[idx]
+  sortedFrags <- lapply(barcodesByCellPop, function(y) {
+    idx <- which(fragsTable$RG %in% y)
+    fragsGRanges[idx]
   })
 
-  names(sortedFrags) = names(barcodesByCellPop)   
+  names(sortedFrags) <- names(barcodesByCellPop)
   return(sortedFrags)
 }

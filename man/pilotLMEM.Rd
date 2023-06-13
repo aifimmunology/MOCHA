@@ -16,7 +16,7 @@ pilotLMEM(
 \item{ExperimentObj}{A SummarizedExperiment object generated from
 getSampleTileMatrix, chromVAR, or other.}
 
-\item{cellPopulation}{A single cell population on which to run this pilot 
+\item{cellPopulation}{A single cell population on which to run this pilot
 model}
 
 \item{modelFormula}{The formula to use with lmerTest::lmer, in the

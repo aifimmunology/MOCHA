@@ -37,7 +37,6 @@ test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
     results,
     variant = "1sample"
   )
-
 })
 
 test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
@@ -54,7 +53,7 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
   regions <- MOCHA::StringsToGRanges(c(
     "chr1:101775000-101775499"
   ))
-  
+
   capture.output(
     links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
       cellPopulation,
@@ -64,7 +63,7 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
   )
 
   capture.output(
-    results <- MOCHA::testCoAccessibilityChromVar( 
+    results <- MOCHA::testCoAccessibilityChromVar(
       SampleTileMatrix,
       tile1 = links$Tile1,
       tile2 = links$Tile2,
@@ -75,12 +74,11 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset", {
       verbose = FALSE
     )
   )
-  
+
   expect_snapshot(
     results,
     variant = "3sample"
   )
-
 })
 
 
@@ -105,9 +103,9 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
       verbose = FALSE
     )
   )
-  
+
   capture.output(
-    results <- MOCHA::testCoAccessibilityChromVar( 
+    results <- MOCHA::testCoAccessibilityChromVar(
       SampleTileMatrix,
       tile1 = links$Tile1,
       tile2 = links$Tile2,
@@ -123,6 +121,4 @@ test_that("testCoAccessibleLinks works on a 3 sample test dataset with highMem=T
     results,
     variant = "3sample"
   )
-
-
 })

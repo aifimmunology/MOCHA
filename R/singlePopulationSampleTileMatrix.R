@@ -18,8 +18,7 @@
 
 singlePopulationSampleTileMatrix <- function(peaksExperiment,
                                              consensusTiles,
-                                             NAtoZero = FALSE
-                                            ) {
+                                             NAtoZero = FALSE) {
 
   # Extract matrices of samples by peak tileIDs with TotalIntensity
   sampleTileIntensityMat <- RaggedExperiment::compactAssay(
@@ -63,7 +62,7 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
 #'   a set of tile intensities into peak X sample matrix for a custom set of tiles
 #'
 #'
-#' @param x ref a list of data on one specific cell type (RaggedExperiment) and all tiles that were called across that given population. 
+#' @param x ref a list of data on one specific cell type (RaggedExperiment) and all tiles that were called across that given population.
 
 #' @return sampleTileIntensityMat a sample X peak matrix containing observed
 #'   measurements for each sample at each peak.
@@ -73,15 +72,14 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
 #' @references XX
 #'
 #' @keywords internal
-#' 
+#'
 
-simplifiedSampleTile <- function(ref){
-	experiments = ref[[1]]
-	allTiles = ref[[2]]
+simplifiedSampleTile <- function(ref) {
+  experiments <- ref[[1]]
+  allTiles <- ref[[2]]
   singlePopulationSampleTileMatrix(
-      experiments,
-      allTiles,
-      NAtoZero = FALSE
-    )
-
+    experiments,
+    allTiles,
+    NAtoZero = FALSE
+  )
 }

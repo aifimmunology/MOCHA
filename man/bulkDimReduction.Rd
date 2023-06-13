@@ -2,7 +2,7 @@
 % Please edit documentation in R/dimensionalityReduction.R
 \name{bulkDimReduction}
 \alias{bulkDimReduction}
-\title{Run PCA or LSI dimensionality reduction}
+\title{Run PCA or LSI dimensionality reduction on tiles}
 \usage{
 bulkDimReduction(
   SampleTileObj,
@@ -34,7 +34,7 @@ SEObj a SummarizedExperiment containing PC components from dimensionality reduct
 }
 \examples{
 \dontrun{
-LSIObj <- MOCHA::bulkDimReduction(SampleTileObj, cellType = 'CD16_Mono')
+LSIObj <- MOCHA::bulkDimReduction(SampleTileObj, cellType = "CD16_Mono")
 }
 }
 \references{

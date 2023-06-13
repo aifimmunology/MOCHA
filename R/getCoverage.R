@@ -1,19 +1,19 @@
 #' @title Get sample-specific coverage files for each sample-cell population.
-#' 
+#'
 #' @description getCoverage takes the output of MOCHA::getPopFrags and returns
 #'  a GRanges of singe-basepair resolution coverage.
-#' 
+#'
 #' @param popFrags GRangesList of fragments for all sample/cell populations
 #' @param normFactor Normalization factor. Can be either be one, in which case all coverage files will be normalized by the same value, or the same length as the GRangesList
-#' @param TxDb The TxDb-class transcript annotation 
-#'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This 
-#'   must be installed. See 
+#' @param TxDb The TxDb-class transcript annotation
+#'   package for your organism (e.g. "TxDb.Hsapiens.UCSC.hg38.refGene"). This
+#'   must be installed. See
 #'   \href{https://bioconductor.org/packages/release/data/annotation/}{
 #'   Bioconductor AnnotationData Packages}.
 #' @param cl cl argument to \code{\link[pbapply]{pblapply}}
 #' @param filterEmpty True/False flag on whether or not to carry forward regions without coverage.
 #' @param verbose Boolean variable to determine verbosity of output.
-#' 
+#'
 #' @return popCounts A GRangesList of coverage for each sample and cell population
 #' @export
 #' @keywords utils
@@ -26,23 +26,21 @@ getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, ver
   }
 
   if (verbose) {
-      message(paste("Counting", paste0(names(popFrags), collapse = ", "), sep = " "))
+    message(paste("Counting", paste0(names(popFrags), collapse = ", "), sep = " "))
   }
 
-  popFragList <- lapply(seq_along(popFrags), function(x){
-
+  popFragList <- lapply(seq_along(popFrags), function(x) {
     list(popFrags[[x]], normFactor[[x]], filterEmpty)
-
   })
-  
+
   # Summarize the coverage over the region window at a single basepair resolution
   popCounts <- pbapply::pblapply(popFragList, calculateCoverage, cl = cl)
 
-  popCounts <- lapply(popCounts, function(x){
-          GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
-          x
+  popCounts <- lapply(popCounts, function(x) {
+    GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
+    x
   })
-    
+
   names(popCounts) <- names(popFrags)
 
   return(popCounts)
@@ -51,7 +49,7 @@ getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, ver
 #' @title Take in a GRanges object and generates coverage GRanges.
 #' @param ref GRanges object
 #' @noRd
-calculateCoverage <- function(ref){
+calculateCoverage <- function(ref) {
   score <- NULL
   popFrags <- ref[[1]]
   Num <- ref[[2]]
@@ -64,14 +62,13 @@ calculateCoverage <- function(ref){
   } else {
     counts_gr
   }
-
 }
 
 #' @title Compute the average coverage intensity for specific regions.
 #' @param covFiles GRangesList of coverage for each sample
 #' @param regions Regions to count intensities over, must be non-overlapping and non-adjacent ( > 1 bp apart).
 #' @param numCores number of cores to parallelize over.
-#' 
+#'
 #' @noRd
 getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
   score <- NewScore <- WeightedScore <- . <- NULL

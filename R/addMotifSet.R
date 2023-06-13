@@ -32,10 +32,10 @@
 #' @export
 #' @keywords utils
 #'
-addMotifSet <- function(SampleTileObj, 
-                        motifPWMs, 
-                        w = 7, 
-                        returnSTM = TRUE, 
+addMotifSet <- function(SampleTileObj,
+                        motifPWMs,
+                        w = 7,
+                        returnSTM = TRUE,
                         motifSetName = "Motifs") {
   if (!requireNamespace("motifmatchr", quietly = TRUE)) {
     stop(
@@ -44,15 +44,16 @@ addMotifSet <- function(SampleTileObj,
     )
   }
   TotalPeakSet <- SummarizedExperiment::rowRanges(SampleTileObj)
-  
+
   genome <- S4Vectors::metadata(SampleTileObj)$Genome
   genome <- BSgenome::getBSgenome(genome)
-  
+
   motif_ix <- motifmatchr::matchMotifs(
     pwms = motifPWMs,
     subject = TotalPeakSet,
     genome = genome,
-    out = "positions", w = w)
+    out = "positions", w = w
+  )
 
   . <- NULL
   names(motif_ix) <- sub("_D_.*|_I_.*", "", names(motif_ix)) %>%
