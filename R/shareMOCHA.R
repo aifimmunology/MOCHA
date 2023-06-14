@@ -15,11 +15,17 @@
 
 shareMOCHA <- function(MOCHA_Obj, zipName = 'ZippedMOCHA.zip'){
 
+    if(class(zipName) != 'character'){
+        stop('Please provide a character string ending in .zip for the variable zipName.')
+    }else if(!grepl('\\.zip$',zipName)){
+        stop('zipName does not include .zip. Please provide a character string ending in .zip for the variable zipName.')
+    }
+
     saveRDS(MOCHA_Obj, paste(MOCHA_Obj@metadata$Directory, '/MOCHA_Object.RDS',sep=''))
 
-    zip::zip(zipName, MOCHA_Obj@metadata$Directory)
+    zip::zipr(zipName, MOCHA_Obj@metadata$Directory)
 
-    return(paste(getwd(), zipName, sep ="/"))
+    return(paste('Object & Coverage files saved: ', getwd(), zipName, sep ="/"))
 }
 
 
@@ -37,13 +43,27 @@ shareMOCHA <- function(MOCHA_Obj, zipName = 'ZippedMOCHA.zip'){
 #' 
 #' 
 
-shareMOCHA <- function(packedObject = 'ZippedMOCHA.zip', exdir = getwd()){
+unpackMOCHA <- function(packedObject = NULL, exdir = getwd()){
+
+    if(is.null(packedObject)){
+        stop('Please provide the name of the zipped MOCHA object. Should be in the format Name.zip')
+    }else if(!grepl('\\.zip$',packedObject)){
+        stop('File name does not include .zip. Please provide the name of the zipped MOCHA object. Should be in the format Name.zip')
+    }
 
     zip::unzip(zipfile = packedObject, exdir = exdir)
 
-    MOCHA_Obj = readRDS(paste(exdir, '/MOCHA/MOCHA_Object.RDS',sep=''))
+    #Extract directory name
+    newDirectory <- sub('\\/$','',zip::zip_list(packedObject)[1,1], )
 
-    MOCHA_Obj@metadata$Directory = paste(exdir, '/MOCHA',sep='')
+    #load MOCHA Object into memory
+    MOCHA_Obj = readRDS(paste(exdir, newDirectory, 'MOCHA_Object.RDS',sep='/'))
+
+    #Change directory path for the MOCHA object to the new directory
+    MOCHA_Obj@metadata$Directory = paste(exdir, newDirectory, sep='/')
+
+    #Over-write object so that it has the correct directory paths saved.
+    saveRDS(MOCHA_Obj, paste(exdir, newDirectory, 'MOCHA_Object.RDS',sep='/'))
 
     return(MOCHA_Obj)
 }
