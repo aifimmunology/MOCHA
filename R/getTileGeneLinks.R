@@ -5,7 +5,7 @@
 #'
 #' @param SampleGeneObj The SummarizedExperiment object output from getSampleGemeMatrix containing pseudobulked scRNA by cell type. 
 #' @param cellPopulation A string denoting the cell population of interest, which must be present in SampleTileObj
-#' @param DEGList A list of gene names to test. Must aligned with gene names from the SampleGeneObj. Should be differential.
+#' @param gene_names A list of gene names to test. Must aligned with gene names from the SampleGeneObj. Should be differential.
 #' @param windowSize the size of the window, in basepairs, around each input region to search for co-accessible links
 #' @param backgroundSize Integer. the size of background tileset to use. If NULL, the background tileset will be sized matched to the foreground set.
 #' @param returnBackground Boolean. Set TRUE to return a list of both foreground and background correlations. 
@@ -31,7 +31,7 @@
 getTileGeneLinks <- function(SampleTileObj,
                           SampleGeneObj,
                           cellPopulation = "All",
-                          DEGList = NULL,
+                          gene_names = NULL,
                           windowSize = 1*10^6,
                           backgroundSize = NULL,
                           returnBackground = FALSE,
@@ -41,7 +41,7 @@ getTileGeneLinks <- function(SampleTileObj,
     
     . <- NULL
 
-    if(!all(DEGList %in% rownames(SampleGeneObj))){
+    if(!all(gene_names %in% rownames(SampleGeneObj))){
         stop('Gene names are not all found in the Sample Gene Object.')
     }
 
@@ -76,7 +76,7 @@ getTileGeneLinks <- function(SampleTileObj,
         stop('Tiles within the SampleTileObj are not annotated. Please run annotateTiles() and try again.')
     }
 
-    promotersOfInterest <- getDEGPromoters(allTiles, DEGList)
+    promotersOfInterest <- getDEGPromoters(allTiles, gene_names)
 
     ## Now take the promoters of interest, and expand it by the windowSize either direction.
     ## Reduce those ranges by gene so that promoters and TSS related to the same gene are compressed into one GRanges. 
@@ -107,7 +107,7 @@ getTileGeneLinks <- function(SampleTileObj,
     parallel::stopCluster(cl)
 
     ## Generate a background set of tiles and genes (non-DEGs) by finding a background set of tile-gene pairs.
-    backGenes <- sample(rownames(exprMat)[! rownames(exprMat) %in% DEGList], length(DEGList), replace = FALSE)
+    backGenes <- sample(rownames(exprMat)[! rownames(exprMat) %in% gene_names], length(gene_names), replace = FALSE)
     
     if(length(backGenes) == 0){
         stop('No background geneset could be found.')
@@ -200,14 +200,14 @@ tileGeneCorrelations <- function(iterList){
 }
 
 
-getDEGPromoters <- function(tileGR, DEGList = NULL){
+getDEGPromoters <- function(tileGR, gene_names = NULL){
     
     if(!all(c('Gene', 'tileType') %in% colnames(GenomicRanges::mcols(tileGR)))){
         stop('Tiles within the SampleTileObj are not annotated. Please run annotateTiles() and try again.')
     }
 
-    if(is.null(DEGList)){
-        stop('No DEGList provided.')
+    if(is.null(gene_names)){
+        stop('No gene_names provided.')
     }
 
     ## Identify all promoter tiles related to the genes within the DEG List
@@ -216,11 +216,11 @@ getDEGPromoters <- function(tileGR, DEGList = NULL){
             geneList <- unlist(stringr::str_split(.,", "))
             data.frame(index = x, genes = geneList)
             }))
-    percentOpen <- sum(DEGList %in% geneDF$genes)/length(DEGList)*100
+    percentOpen <- sum(gene_names %in% geneDF$genes)/length(gene_names)*100
 
-    messages(stringr::str_interp("{percentOpen}% of the DEGList have an accessible promoter region."))
+    messages(stringr::str_interp("{percentOpen}% of the gene_names have an accessible promoter region."))
 
-    subGeneDF <- dplyr::filter(geneDF, genes %in% DEGList) %>% distinct()
+    subGeneDF <- dplyr::filter(geneDF, genes %in% gene_names) %>% distinct()
     promotersOfInterest <- promoterTiles[subGeneDF$index]
     mcols(promotersOfInterest) <- NULL
     promotersOfInterest$Genes = subGeneDF$genes
