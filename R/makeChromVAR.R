@@ -19,6 +19,7 @@ makeChromVAR <- function(TSAM_Object,
                       cellPopulation,
                       motifName,
                       exportList = TRUE,
+                      numCores =2,
                       verbose = TRUE) {
 
     if (
@@ -43,7 +44,12 @@ makeChromVAR <- function(TSAM_Object,
     genome <- S4Vectors::metadata(TSAM_Object)$Genome
     genome <- BSgenome::getBSgenome(genome)
 
-    BiocParallel::register(BiocParallel::SerialParam())
+    if(numCores > 1){
+        BiocParallel::register(BiocParallel::SnowParam(workers = numCores))
+    }else{
+        BiocParallel::register(BiocParallel::SerialParam())
+    }
+    
     #Either iterate ovewr a list of newObj, or just directly on newObj to generate ChromVAR
     if(any(tolower(class(newObj)) %in% 'list')){
 
@@ -76,6 +82,7 @@ makeChromVAR <- function(TSAM_Object,
     newOut_Z <- reformatChromVARList(chromVAROut, selectDev =FALSE)
 
     newOut <- list('Z_Score' = newOut_Z, 'Deviations' = newOut_Dev)
+    BiocParallel::register(BiocParallel::SerialParam())
     return( newOut)
 
 }
