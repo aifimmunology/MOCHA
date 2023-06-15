@@ -14,7 +14,6 @@
 #'
 #' @export
 makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample", 
-                                 dataSlot = 'data',
                                  addGenomicLocations = TRUE,
                                  Seurat_format = 'SYMBOL',
                                  TxDb = "TxDb.Hsapiens.UCSC.hg38.refGene", 
@@ -27,20 +26,52 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
     }
 
     #Generate sample and cell type column in metadata for pseudobulking.
-    SO@meta.data$sample_celltype = paste(SO@meta.data[,cellTypeColumn], SO@meta.data[,sampleColumn], sep = '__')
+    counts <- SO@assays$RNA@counts
+    metadata <- seurat@meta.data
+    metadata$CellTypeColumn = factor(unlist(metadata[,cellTypeColumn]))
+    sce <- SingleCellExperiment(assays = list(counts = counts), 
+                        colData = metadata)
+    groups <- colData(sce)[, c('cellTypeColumn', sampleColumn)]
+    aggr_counts <- aggregate.Matrix(t(counts(sce)), 
+                            groupings = groups, fun = "sum") 
+    cellTypeList <- unique(metadata$CellTypeColumn)
+    counts_ls <- lapply(1:length(cellTypeList), function(i) {
+        ## Extract indexes of columns in the global matrix that match a given cluster
+        column_idx <- which(tstrsplit(colnames(aggr_counts), "_")[[1]] == cellTypeList[i])
+        ## Store corresponding sub-matrix as one element of a list
+        aggr_counts[, column_idx]
+    })
+    names(counts_ls) <- cellTypeList
 
-    #Pseudobulk. This should be looking at the normalized data. 
-    mat <- Seurat::AverageExpression(SO, assays = "RNA", slot = dataSlot, group.by = 'sample_celltype', return.seurat = FALSE)
+    metadata_ls <- lapply(1:length(counts_ls), function(i) {
+        ## Initiate a data frame for cluster i with one row per sample (matching column names in the counts matrix)
+        df <- data.frame(cluster_sample_id = colnames(counts_ls[[i]]))
+        ## Use tstrsplit() to separate cluster (cell type) and sample IDs
+        df$cluster_id <- tstrsplit(df$cluster_sample_id, "_")[[1]]
+        df$sample_id  <- tstrsplit(df$cluster_sample_id, "_")[[2]]
+        ## Retrieve cell count information for this cluster from global cell count table
+        idx <- which(colnames(t) == unique(df$cluster_id))
+        cell_counts <- t[, idx]
+        ## Match order of cell_counts and sample_ids
+        sample_order <- match(df$sample_id, names(cell_counts))
+        cell_counts <- cell_counts[sample_order]
+        ## Append cell_counts to data frame
+        df$cell_count <- cell_counts
+        ## Join data frame (capturing metadata specific to cluster) to generic metadata
+        df <- plyr::join(df, metadata, 
+                        by = intersect(names(df), names(metadata)))
+        ## Update rownames of metadata to match colnames of count matrix, as needed later for DE
+        rownames(df) <- df$cluster_sample_id
+        df
+    })
+
+    names(metadata_ls) <- cellTypeList
+
     mat_df <- as.data.frame(mat$RNA)
     colnames(mat_df) <- gsub(" ","_", colnames(mat_df))
     mat_df$AllGenes <- rownames(mat_df)
     ## Clean up isoforms, if any (duplicate gene names. More likely an issue with ensembl IDs.)
     mat_df$Genes <- gsub("\\.*","", mat_df$AllGenes) 
-
-    #Summarize isoform issues together. 
-    summarizeMat <- dplyr::group_by(mat_df, Genes) 
-    summarizeMat <- dplyr::select(summarizeMat, !AllGenes)
-    summarizeMat <- dplyr::summarise_all(summarizeMat, mean)
 
     #Multiply by 1000 to get the average gene counts (normalized, presumably) per 1000 cells. 
     newSumMat <- as.data.frame(summarizeMat[,-1])*1000
