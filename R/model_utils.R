@@ -45,7 +45,7 @@ identifyDropOut <- function(TSAM_Object, cellPopulation, donor, zi_threshold = 0
                        verbose = verbose,
                        numCores = numCores)
     annotatedRanges = SummarizedExperiment::rowRanges(output) 
-    browser()
+
     rowValues <- SummarizedExperiment::assays(output)[['ZI_FragNumber']]
     annotatedRanges <- MOCHA::StringsToGRanges(rownames(rowValues))
     annotatedRanges$DropOutPValue = rowValues$p_value
