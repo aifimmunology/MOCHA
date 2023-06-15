@@ -11,7 +11,7 @@
 #'   of the TSAM_Object metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
 #'   modelFormula must start with 'exp' as the response.
 #'   See \link[glmmTMB]{glmmTMB}.
-#' @param ziformula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
+#' @param ziFormula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
 #'   format ( ~ factors). All factors must be found in column names
 #'   of the TSAM_Object colData metadata, except for CellType, FragNumber and CellCount, which will be extracted from the TSAM_Object.
 #' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
@@ -28,7 +28,7 @@
 #'   modelList <- model_scATAC(STM[c(1:1000),], 
 #'                  cellPopulation = 'CD16 Mono',
 #'                  continuousFormula = exp~ Age + Sex + days_since_symptoms + (1|PTID), 
-#'                  ziformula = ~ FragNumber + Age, 
+#'                  ziFormula = ~ FragNumber + Age, 
 #'                  verbose = TRUE, 
 #'                  numCores = 35 )
 #' }
@@ -38,7 +38,7 @@
 model_scATAC <- function(TSAM_Object,
                       cellPopulation,
                       continuousFormula = NULL,
-                      ziformula = NULL,
+                      ziFormula = NULL,
                       zi_threshold = 0,
                       initialSampling = 5,
                       verbose = FALSE,
@@ -49,8 +49,8 @@ model_scATAC <- function(TSAM_Object,
   }
 
   
-  if (class(ziformula) == 'character') {
-    ziformula <- as.formula(ziformula)
+  if (class(ziFormula) == 'character') {
+    ziFormula <- as.formula(ziFormula)
   }
 
   if (zi_threshold < 0 | zi_threshold > 1 | ! is.numeric(zi_threshold)) {
@@ -76,7 +76,7 @@ model_scATAC <- function(TSAM_Object,
 
   exp <- .model_pseudobulk_default(SE_Object = newObj,
                       continuousFormula = continuousFormula,
-                      ziformula = ziformula,
+                      ziFormula = ziFormula,
                       zi_threshold = zi_threshold,
                       initialSampling = initialSampling,
                       family = stats::gaussian(),
@@ -132,133 +132,7 @@ runLMEM <- function(ExperimentObj,
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 2) {
-  Sample <- NULL
-  
-  if(!any(names(SummarizedExperiment::assays(ExperimentObj)) %in% assayName)){
-    stop('ExperimentObj does not contain an assay that matches the assayName input variable.')
-  }
 
-  modelingData <- as.data.frame(
-    SummarizedExperiment::assays(ExperimentObj)[[assayName]]
-  )
-  MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
-  
-  if (!is(modelFormula, "formula") & !is(modelFormula, "character")){
-    stop("modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
-        "(exp ~ factors)")   
-  }else if(is(modelFormula, "formula")) {
-    modelFormula = paste(as.character(modelFormula), collapse = ' ')
-  }
-  
-  if (!"exp" %in% all.vars(as.formula(modelFormula))) {
-    stop(
-      "modelFormula is not in the format (exp ~ factors). ",
-      "modelFormula must start with 'exp' as the response."
-    )
-  }
-
-  if (
-    !all(all.vars(as.formula(modelFormula)) %in% c("~", "exp", colnames(MetaDF)))
-  ) {
-    stop(
-      "Model factors are not found ",
-      "in the 'colData' of the ExperimentObj, or ",
-      "modelFormula is not in the format ",
-      "(exp ~ factors)."
-    )
-    }
-  variableList <- all.vars(as.formula(modelFormula))[all.vars(as.formula(modelFormula)) != "exp"]
-
-  MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
-  modelingData <- modelingData[
-    , match(colnames(modelingData), MetaDF$Sample), drop=FALSE
-  ]
-
-  # Subset metadata to just the variables in modelFormula
-  MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
-
-  if (verbose) {
-    message("Running an initial model on sample of data.")
-  }
-
-  # Generate pilot data for the null data.frame
-  pilotIndices <- sample(
-    x = seq_len(dim(modelingData)[1]),
-    size = initialSampling,
-    replace = FALSE
-  )
-  modelList <- pbapply::pblapply(X = pilotIndices, function(x) {
-    df <- data.frame(
-      exp = as.numeric(modelingData[x, ]),
-      MetaDF, stringsAsFactors = FALSE
-    )
-
-    tryCatch(
-      {
-        lmerTest::lmer(formula = as.formula(modelFormula), data = df)
-      },
-      error = function(e) {
-        NA
-      }
-    )
-  }, cl = NULL)
-  # Initial sampling: When the model fails to converge, we
-  # return a data.frame with NAs that is the same size.
-  if (all(is.na(unlist(modelList)))) {
-    stop(
-      "For the initial sampling, every test model failed to converge. ",
-      "Reconsider modelFormula or increase 'initialSampling'."
-    )
-  } else {
-    idx <- which(!is.na(unlist(modelList)))
-    nullDF <- as.data.frame(summary(modelList[[idx[1]]])$coefficients)
-    nullDF[!is.na(nullDF)] <- NA 
-    nullResidual <- stats::resid(modelList[[idx[1]]])  
-    nullResidual[!is.na(nullResidual)] <- NA 
-
-    #Add in missing residuals 
-    if(!all(MetaDF$Sample %in% names(nullResidual))){
-      NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(nullResidual)))
-      names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(nullResidual)]
-      nullResidual <- c(nullResidual, NA_samples)
-    }
-    nullResidual <- nullResidual[match(names(nullResidual),MetaDF$Sample)]
-    nullVcov <- as.data.frame(lme4::VarCorr(modelList[[idx[1]]]))$vcov
-    names(nullVcov) <- as.data.frame(lme4::VarCorr(modelList[[idx[1]]]))$grp
-    nullVcov[!is.na(nullVcov)] <- NA 
-
-    nullDFList <- list('Coeff' = nullDF, 'Resid' = nullResidual, 'VCov'= nullVcov)
-
-    rm(modelList)
-    # Why do we make and then export to cluster this nullDFList if it is not used?
-    # It's used as a dummy variable in cases where the model fails. NAs are returned from individualLMEM instead of the function breaking. 
-  }
-  if(numCores > 1){
-    cl <- parallel::makeCluster(numCores)
-    parallel::clusterExport(
-      cl = cl, varlist = c(
-        "modelFormula", "modelingData",
-        "MetaDF", "individualLMEM", "nullDFList" 
-      ),
-      envir = environment()
-    )
-    parallel::clusterEvalQ(cl, {
-      library(lmerTest)
-    })
-    coeffList <- pbapply::pblapply(
-      cl = cl,
-      X = rownames(modelingData),
-      individualLMEM
-    )
-    parallel::stopCluster(cl)
-  }else {
-    coeffList <- pbapply::pblapply(
-      cl = NULL,
-      X = rownames(modelingData),
-      individualLMEM
-    )
-
-  }
   
 
   if (verbose) {
@@ -321,17 +195,15 @@ model_General <- function(ExperimentObj,
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 2) {
-  Sample <- NULL
   
   if(!any(names(SummarizedExperiment::assays(ExperimentObj)) %in% assayName)){
     stop('ExperimentObj does not contain an assay that matches the assayName input variable.')
   }
-
-  names(SummarizedExperiment::assays(ExperimentObj))[names(SummarizedExperiment::assays(ExperimentObj)) == assayName] = 'counts'
+  SummarizedExperiment::assays(ExperimentObj) = SummarizedExperiment::assays(ExperimentObj)[assayName]
 
   exp <- .model_pseudobulk_default(SE_Object = ExperimentObj,
                       continuousFormula = as.formula(modelFormula),
-                      ziformula = ~0,
+                      ziFormula = ~0,
                       zi_threshold = 0,
                       family = family,
                       initialSampling = initialSampling,
@@ -352,7 +224,7 @@ model_General <- function(ExperimentObj,
 #' @param continuousFormula The formula for the continuous data that should be used within glmmTMB. It should be in the
 #'   format (exp ~ factors). All factors must be found in column names of the SE_Object colData (i.e. sample metadata).
 #'   See \link[glmmTMB]{glmmTMB}.
-#' @param ziformula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
+#' @param ziFormula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
 #'   format ( ~ factors). All factors must be found in column names
 #'   of SE_Object colData (i.e. sample metadata).
 #' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros.
@@ -367,7 +239,7 @@ model_General <- function(ExperimentObj,
 #' 
 .model_pseudobulk_default <- function(SE_Object,
                       continuousFormula = NULL,
-                      ziformula = NULL,
+                      ziFormula = NULL,
                       zi_threshold = 0,
                       initialSampling = 5,
                       family = stats::gaussian(),
@@ -378,22 +250,26 @@ model_General <- function(ExperimentObj,
   if (c(class(continuousFormula)) != "formula") {
     stop("continuousFormula was not provided as a formula.")
   }
-  if (c(class(ziformula)) != "formula" & !is.null(ziformula) ) {
-    stop("ziformula was not provided as a formula.")
+  if (c(class(ziFormula)) != "formula" & !is.null(ziFormula) ) {
+    stop("ziFormula was not provided as a formula.")
   }
 
-  modelingData <- log2(SummarizedExperiment::assays(SE_Object)[['counts']]+1)
-  MetaDF <- as.data.frame(SummarizedExperiment::colData(SE_Object))
+  if(modality == 'scATAC'){
+    modelingData <- log2(SummarizedExperiment::assays(SE_Object)[[1]]+1)
+  }else{
+    modelingData <- SummarizedExperiment::assays(SE_Object)[[1]]
+  }
 
+  MetaDF <- as.data.frame(SummarizedExperiment::colData(SE_Object))
   if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata.")
   }
 
-  if (!all(all.vars(ziformula) %in% colnames(MetaDF))) {
-    stop("factors from the ziformula were not found in the metadata.")
+  if (!all(all.vars(ziFormula) %in% colnames(MetaDF))) {
+    stop("factors from the ziFormula were not found in the metadata.")
   }
 
-  variableList <- c(all.vars(continuousFormula)[all.vars(continuousFormula) != "exp"], all.vars(ziformula))
+  variableList <- c(all.vars(continuousFormula)[all.vars(continuousFormula) != "exp"], all.vars(ziFormula))
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[, match(colnames(modelingData), MetaDF$Sample)]
@@ -402,8 +278,8 @@ model_General <- function(ExperimentObj,
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
 
   #Transform in character strings for multithreading. 
-  continuousFormula <- paste(as.character(continuousFormula), collapse = ' ')
-  ziformula <- paste(as.character(ziformula), collapse = ' ')
+  continuousFormula <- deparse(continuousFormula)
+  ziFormula <- deparse(ziFormula)
 
     ## Log transform the FragmentNumbers so as to stabilize the model. But only if FragNumber is in the model. Same for CellCounts.
   if(any(colnames(MetaDF) %in% c('FragNumber'))){
@@ -415,13 +291,68 @@ model_General <- function(ExperimentObj,
     MetaDF$CellCounts <- log10(MetaDF$CellCounts)
   }
 
-
   if (verbose) {
     message("Running a quick test.")
   }
 
 
   # Generate pilot data for the null data.frame
+  nullDFList <- generateNULL(modelingData, MetaDF,continuousFormula, ziFormula, family, modality, initialSampling)
+  if (verbose) {
+    message("Modeling results.")
+  }
+
+  if(numCores <= 1){
+    stop('numCores must be greater than 1. This method is meant to be parallelized.')
+  }
+  # Make your clusters for efficient parallelization
+
+  cl <- parallel::makeCluster(numCores)
+  parallel::clusterExport(
+      cl = cl, varlist = c("continuousFormula", "ziFormula", "modelingData", "MetaDF",
+                              "nullDFList","zi_threshold",'family'),
+      envir = environment()
+    )
+  ## If it's scATAC, use glmmTMB. If it's general, use lmerTest instead.
+  if(modality == 'scATAC'){
+    parallel::clusterEvalQ(cl, {
+        library('glmmTMB')
+      })
+    
+    coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
+    parallel::stopCluster(cl)
+
+  }else if(modality == 'General'){
+    parallel::clusterEvalQ(cl, {
+        library('lmerTest')
+      })
+
+    coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualLMEM)
+    parallel::stopCluster(cl)
+  }
+
+  if (verbose) {
+      message("Reorganizing residuals and random effect variance.")
+  }
+
+  if(modality %in% c('scATAC','scRNA')){
+    ranged = TRUE
+  }else{
+    ranged= FALSE
+  }
+  processedOuts <- processModelOutputs(modelOutputList = coeffList, 
+                                        nullDFList = nullDFList, 
+                                        rownamesList = rownames(modelingData),
+                                        ranged = ranged,
+                                        SummarizedExperimentObj = SE_Object
+                                        )
+  processedOuts@metadata = append(processedOuts@metadata, list('Type' = modality))
+  return(processedOuts)
+}
+
+
+generateNULL <- function(modelingData, MetaDF, continuousFormula, ziFormula, family, modality, initialSampling){
+
   pilotIndices <- sample(x = 1:dim(modelingData)[1], size = initialSampling, replace = FALSE)
   modelList <- pbapply::pblapply(X = pilotIndices, function(x) {
     df <- data.frame(
@@ -431,12 +362,19 @@ model_General <- function(ExperimentObj,
 
     tryCatch(
       {
-        glmmTMB::glmmTMB(as.formula(continuousFormula),
-          ziformula = as.formula(ziformula),
-          data = df,
-          family = family,
-          REML = TRUE
-        )
+        if(modality == 'scATAC'){
+           glmmTMB::glmmTMB(as.formula(continuousFormula),
+            ziformula = as.formula(ziFormula),
+            data = df,
+            family = family,
+            REML = TRUE
+          )
+        }else if(modality == 'General'){
+          lmerTest::lmer(formula = as.formula(continuousFormula), data = df)
+        }else{
+          NA
+        }
+       
       },
       error = function(e) {
         NA
@@ -462,99 +400,133 @@ model_General <- function(ExperimentObj,
     stop("For the initial sampling, every test model failed. Reconsider modelFormula or increase initial sampling size.")
   } else {
     idx <- which(NAList)
-    # Did any of the models have both zero-inflated and continous portions?
-    bothZI_Cont <- unlist(lapply(idx, function(x){
-      ziDF <- summary(modelList[[x]])$coefficients$zi
-      !is.null(ziDF) | sum(dim(ziDF)) != 0
+    if(modality == 'scATAC'){
+      # Did any of the models have both zero-inflated and continous portions?
+      bothZI_Cont <- unlist(lapply(idx, function(x){
+        ziDF <- summary(modelList[[x]])$coefficients$zi
+        !is.null(ziDF) | sum(dim(ziDF)) != 0
 
-    }))
-    if(all(!bothZI_Cont) & !paste(as.character(ziformula), collapse = ' ') == '~ 0'){
-      warning('No working models using the zero-inflated formula. Do you need to modify the zero-inflated formula?')
-      modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
-    }else if(all(!bothZI_Cont) & paste(as.character(ziformula), collapse = ' ') == '~ 0'){
+      }))
+
+      if(all(!bothZI_Cont) & !ziFormula %in% c('~ 0', '~0')){
+        warning('No working models using the zero-inflated formula. Do you need to modify the zero-inflated formula?')
+        modelRes <- modelList[[idx[1]]]
+      }else{
+        modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
+      }
+
+      #Extract the first representative model. And use it to create a null template. 
+      coeff2 <- summary(modelRes)$coefficients
+      coeff <- lapply(coeff2, as.data.frame)
+      coeff$cond[!is.na(coeff$cond)] <- NA
+      rownames(coeff$cond)[grepl('(Intercept)',rownames(coeff$cond))] = 'Intercept'
+      if(all(!bothZI_Cont)){
+        combinedCoeff <- coeff$cond
+      }else{
+        coeff$zi[!is.na(coeff$zi)] <- NA
+        rownames(coeff$zi)[grepl('(Intercept)',rownames(coeff$zi))] = 'Intercept'
+        rownames(coeff$zi) <- paste('ZI', rownames(coeff$zi), sep ='_')
+        combinedCoeff <- rbind(coeff$cond, coeff$zi)
+      }
+      
+      Resid <- stats::resid(modelRes)
+      
+      if(!all(MetaDF$Sample %in% names(Resid))){
+        NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
+        names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
+        Resid <- c(Resid, NA_samples)
+      }
+      Resid <- Resid[match(names(Resid),MetaDF$Sample)]
+      Resid[!is.na(Resid)] <- NA
+      varCorrObj <- glmmTMB::VarCorr(modelRes)
+      cond_other = unlist(varCorrObj$cond)
+      names(cond_other) = paste('Cond', names(cond_other), sep = "_")
+      residual = as.vector(attr(varCorrObj$cond, "sc")^2)
+      names(residual) = 'Residual'
+      if(!is.null(varCorrObj$zi)){
+        zi_other = unlist(varCorrObj$zi)
+        names(zi_other) = paste('ZI', names(zi_other), sep = "_")
+        varcor_df <- c(cond_other, zi_other,residual)
+      }else{
+        varcor_df <- c(cond_other, residual)
+      }
+      varcor_df[!is.na(varcor_df)] = NA
+
+
+
+    } else if(modality == 'General'){
+
+
       modelRes <- modelList[[idx[1]]]
-    }else{
-      modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
+
+      combinedCoeff <- as.data.frame(summary(modelRes)$coefficients)
+      combinedCoeff[!is.na(combinedCoeff)] <- NA 
+      Resid <- stats::resid(modelRes)  
+      Resid[!is.na(Resid)] <- NA 
+
+      #Add in missing residuals 
+      if(!all(MetaDF$Sample %in% names(Resid))){
+        NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
+        names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
+        Resid <- c(Resid, NA_samples)
+      }
+      Resid <- Resid[match(names(Resid),MetaDF$Sample)]
+
+      #Get variance
+      varcor_df <- as.data.frame(lme4::VarCorr(modelRes))$vcov
+      names(varcor_df) <- as.data.frame(lme4::VarCorr(modelRes))$grp
+      varcor_df[!is.na(varcor_df)] <- NA 
     }
 
-    #Extract the first representative model. And use it to create a null template. 
-    coeff2 <- summary(modelRes)$coefficients
-    coeff <- lapply(coeff2, as.data.frame)
-    coeff$cond[!is.na(coeff$cond)] <- NA
-    rownames(coeff$cond)[grepl('(Intercept)',rownames(coeff$cond))] = 'Intercept'
-    if(all(!bothZI_Cont)){
-      combinedCoeff <- coeff$cond
-    }else{
-      coeff$zi[!is.na(coeff$zi)] <- NA
-      rownames(coeff$zi)[grepl('(Intercept)',rownames(coeff$zi))] = 'Intercept'
-      rownames(coeff$zi) <- paste('ZI', rownames(coeff$zi), sep ='_')
-      combinedCoeff <- rbind(coeff$cond, coeff$zi)
-    }
-    
-    Resid <- stats::resid(modelRes)
-    
-    if(!all(MetaDF$Sample %in% names(Resid))){
-      NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
-      names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
-      Resid <- c(Resid, NA_samples)
-    }
-    Resid <- Resid[match(names(Resid),MetaDF$Sample)]
-    Resid[!is.na(Resid)] <- NA
-    varCorrObj <- glmmTMB::VarCorr(modelRes)
-    cond_other = unlist(varCorrObj$cond)
-    names(cond_other) = paste('Cond', names(cond_other), sep = "_")
-    residual = as.vector(attr(varCorrObj$cond, "sc")^2)
-    names(residual) = 'Residual'
-    if(!is.null(varCorrObj$zi)){
-      zi_other = unlist(varCorrObj$zi)
-      names(zi_other) = paste('ZI', names(zi_other), sep = "_")
-      varcor_df <- c(cond_other, zi_other,residual)
-    }else{
-      varcor_df <- c(cond_other, residual)
-    }
-    varcor_df[!is.na(varcor_df)] = NA
     nullDFList <- list('Coeff' = combinedCoeff, 'Resid' = Resid, 'VCov'= varcor_df)
 
     rm(modelList)
   }
-
-  if (verbose) {
-    message("Modeling results.")
-  }
-
-  if(numCores <= 1){
-    stop('numCores must be greater than 1. This method is meant to be parallelized.')
-  }
-  # Make your clusters for efficient parallelization
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterEvalQ(cl, {
-    library(glmmTMB)
-  })
-
-  parallel::clusterExport(
-    cl = cl, varlist = c("continuousFormula", "ziformula", "modelingData", "MetaDF", "individualZIGLMM",
-                             "nullDFList","zi_threshold",'family'),
-    envir = environment()
-  )
-  coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
-  parallel::stopCluster(cl)
-
-  
-  if (verbose) {
-      message("Reorganizing residuals and random effect variance.")
-  }
-
-
-  processedOuts <- processModelOutputs(modelOutputList = coeffList, 
-                                        nullDFList = nullDFList, 
-                                        rownamesList = rownames(modelingData),
-                                        ranged = TRUE,
-                                        SummarizedExperimentObj = SE_Object
-                                        )
-  processedOuts@metadata = append(processedOuts@metadata, list('Type' = modality))
-  return(processedOuts)
+  return(nullDFList)
 }
 
+
+#' @title Internal function to run linear modeling
+#'
+#' @description \code{IndividualLMEM} Runs linear modeling
+#'   with lmerTest::lmer
+#' @param iterList A list where the first index is a data.frame
+#'   to use for modeling, and the second is the formula for modeling.
+#'   list(x, modelFormula, modelingData, MetaDF, nullDF)
+#' 
+#' @return output_vector A linear model
+#'
+#' @noRd
+individualLMEM <- function(x) {
+ 
+  
+  df <- data.frame(
+    exp = as.numeric(modelingData[x, ]),
+    MetaDF, stringsAsFactors = FALSE
+  )
+
+   output_vector <- tryCatch(
+    {
+      modelRes <- lmerTest::lmer(formula = as.formula(continuousFormula), data = df)
+      Coeff <- as.data.frame(summary(modelRes)$coefficients)
+      Resid <- stats::resid(modelRes)
+      
+      if(!all(MetaDF$Sample %in% names(Resid))){
+        NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
+        names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
+        Resid <- c(Resid, NA_samples)
+      }
+      Resid <- Resid[match(names(Resid),MetaDF$Sample)]
+      vcov <- as.data.frame(lme4::VarCorr(modelRes))$vcov
+      names(vcov) <- as.data.frame(lme4::VarCorr(modelRes))$grp
+      list('Coeff' = Coeff, 'Resid' = Resid, 'VCov'= vcov)
+    },
+    error = function(e) {
+      nullDFList
+    }
+  )
+  return(output_vector)
+}
 
 #' @title \code{IndividualZIGLMM}
 #'
@@ -577,7 +549,7 @@ individualZIGLMM <- function(x) {
   output_vector <- tryCatch(
     {
      
-      if(sum(df$exp == 0)/length(df$exp) == 0){
+      if(sum(df$exp == 0, na.rm = TRUE)/length(df$exp) == 0){
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
           ziformula = ~ 0,
           data = df,
@@ -586,7 +558,7 @@ individualZIGLMM <- function(x) {
           control = glmmTMB::glmmTMBControl(parallel = 1)
         )
        
-      }else if(sum(df$exp == 0)/length(df$exp) <= zi_threshold){
+      }else if(sum(df$exp == 0, na.rm = TRUE)/length(df$exp) <= zi_threshold){
         df$exp[df$exp == 0] = NA
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
           ziformula = ~ 0,
@@ -598,7 +570,7 @@ individualZIGLMM <- function(x) {
        
       }else {
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
-          ziformula = as.formula(ziformula),
+          ziformula = as.formula(ziFormula),
           data = df,
           family = family,
           REML = TRUE,
@@ -639,7 +611,7 @@ individualZIGLMM <- function(x) {
           zi_other = unlist(varCorrObj$zi)
           names(zi_other) = paste('ZI', names(zi_other), sep = "_")
           varcor_df <- c(cond_other, zi_other,residual)
-        }else if(all(df$exp !=0)){
+        }else if(all(df$exp !=0, na.rm = TRUE)){
           subNull = nullDFList[grepl('ZI_', names(nullDFList))]
           zi_other = rep(0, length(subNull))
           names(zi_other) = names(subNull)
@@ -703,7 +675,6 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
     }, cl = NULL)
     )
     rownames(residual_tmp) <- rownames(vcov_tmp) <- rownamesList
-
     residual_tmp <- residual_tmp[,match(rownames(SummarizedExperiment::colData(SummarizedExperimentObj)), colnames(residual_tmp))]
 
     if(returnList){
