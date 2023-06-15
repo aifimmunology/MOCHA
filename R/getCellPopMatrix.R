@@ -15,29 +15,30 @@
 #'   population.
 #'
 #' @export
-getCellPopMatrix <- function(SampleTileObj, 
-                             cellPopulation, 
+getCellPopMatrix <- function(SampleTileObj,
+                             cellPopulation,
                              dropSamples = TRUE,
                              NAtoZero = TRUE) {
   tilesCalled <- GenomicRanges::mcols(
     SummarizedExperiment::rowRanges(SampleTileObj)
-    )[, cellPopulation]
-  
+  )[, cellPopulation]
+
   sampleTileMatrix <- SummarizedExperiment::assays(
     SampleTileObj
   )[[cellPopulation]][tilesCalled, , drop = FALSE]
-  
+
   # Drop empty samples
-  
+
   if (dropSamples) {
     sampleTileMatrix <- sampleTileMatrix[
-      , colSums(sampleTileMatrix, na.rm = TRUE) > 0, drop = FALSE
+      , colSums(sampleTileMatrix, na.rm = TRUE) > 0,
+      drop = FALSE
     ]
   }
-  
+
   if (NAtoZero) {
     sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
   }
-  
+
   return(sampleTileMatrix)
 }

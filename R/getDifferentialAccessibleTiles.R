@@ -60,7 +60,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
-                                           numCores = 2,
+                                           numCores = 1,
                                            verbose = FALSE) {
   if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
@@ -102,11 +102,11 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
   #############################################################################
   # Prioritize high-signal tiles
-  
-  # Log2 transform the matrix 
+
+  # Log2 transform the matrix
   # (input must not be log2 transformed prior to this)
   sampleTileMatrix <- log2(sampleTileMatrix + 1)
-  
+
   medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1), drop = FALSE], na.rm = T)
   medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0), drop = FALSE], na.rm = T)
 

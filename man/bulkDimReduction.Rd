@@ -34,6 +34,9 @@ SEObj a SummarizedExperiment containing PC components from dimensionality reduct
 }
 \examples{
 \dontrun{
-LSIObj <- MOCHA::bulkDimReduction(SampleTileObj, cellType = 'CD16_Mono')
+LSIObj <- MOCHA::bulkDimReduction(SampleTileObj, cellType = "CD16_Mono")
 }
+}
+\references{
+LSI method adapted from Andrew Hill: http://andrewjohnhill.com/blog/2019/05/06/dimensionality-reduction-for-scatac-data/
 }

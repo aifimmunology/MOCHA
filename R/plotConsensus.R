@@ -42,12 +42,12 @@ plotConsensus <- function(tileObject,
   sampleData <- MultiAssayExperiment::colData(tileObject)
 
 
-  iterList <- lapply(names(subTileResults),function(x) {
+  iterList <- lapply(names(subTileResults), function(x) {
     list(subTileResults[[x]], sampleData, groupColumn, returnPlotList)
   })
 
-  #return(iterList)
-  #cl <- parallel::makeCluster(numCores)
+  # return(iterList)
+  # cl <- parallel::makeCluster(numCores)
 
   alldf <- pbapply::pblapply(cl = numCores, X = iterList, cellTypeDF)
 
@@ -58,7 +58,7 @@ plotConsensus <- function(tileObject,
   }
 
   if (returnPlotList) {
-    if (!is.null(groupColumn)){
+    if (!is.null(groupColumn)) {
       allPlots2 <- lapply(seq_along(alldf), function(x) {
         ggplot2::ggplot(alldf[[x]], ggplot2::aes(x = Reproducibility, y = PeakNumber, group = GroupName, color = GroupName)) +
           ggplot2::geom_point() +
@@ -67,7 +67,7 @@ plotConsensus <- function(tileObject,
           ggplot2::ylab("Peak Number") +
           ggplot2::theme_bw()
       })
-      
+
       return(allPlots2)
     } else {
       allPlots <- lapply(seq_along(alldf), function(x) {
@@ -80,8 +80,6 @@ plotConsensus <- function(tileObject,
       })
       return(allPlots)
     }
-    
-
   } else {
     combinedDF <- do.call("rbind", alldf)
     combinedDF$CellPop <- gsub("\\.", "", gsub("[0-9]{1,3}", "", rownames(combinedDF)))
@@ -104,8 +102,7 @@ plotConsensus <- function(tileObject,
 
 
 cellTypeDF <- function(list1 = NULL, peaksExperiment, sampleData, groupColumn, returnPlotList = FALSE) {
-
-  if(!is.null(list1)){
+  if (!is.null(list1)) {
     peaksExperiment <- list1[[1]]
     sampleData <- list1[[2]]
     groupColumn <- list1[[3]]

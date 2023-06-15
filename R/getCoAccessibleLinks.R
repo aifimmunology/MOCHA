@@ -79,13 +79,13 @@ getCoAccessibleLinks <- function(SampleTileObj,
   }
 
   tileNames <- rownames(tileDF)
-  
+
   regionsStrings <- GRangesToString(regions)
   if (!all(regionsStrings %in% tileNames)) {
     stop(
       "Invalid regions provided. All given regions must be tiles in your SampleTileObj. ",
       "\nThe following regions are not tiles in the SampleTileObj:\n",
-      paste(regionsStrings[which(!regionsStrings %in% tileNames)], collapse=", ")
+      paste(regionsStrings[which(!regionsStrings %in% tileNames)], collapse = ", ")
     )
   }
   start <- as.numeric(gsub("chr.*\\:|\\-.*", "", tileNames))
@@ -100,16 +100,16 @@ getCoAccessibleLinks <- function(SampleTileObj,
 
   cl <- parallel::makeCluster(numCores)
 
-  iterList <- lapply(seq_len(dim(regionDF)[1]), function(x){ 
-    list(regionDF[1,], start, end, chr, windowSize)
+  iterList <- lapply(seq_len(dim(regionDF)[1]), function(x) {
+    list(regionDF[1, ], start, end, chr, windowSize)
   })
-  
+
   allCombinations <- pbapply::pblapply(cl = cl, X = iterList, FUN = findAllCombinations) %>%
     do.call("rbind", .) %>%
     dplyr::distinct()
-  
 
-  
+
+
   # Determine chromosomes to search over, and the number of iterations to run through.
   chrNum <- paste(unique(regionDF$seqnames), ":", sep = "")
   numChunks <- length(chrNum) %/% chrChunks
@@ -119,7 +119,7 @@ getCoAccessibleLinks <- function(SampleTileObj,
     message("Finding subsets of pairs for testing.")
   }
 
-  iterList <- lapply(1:numChunks, function(y){ 
+  iterList <- lapply(1:numChunks, function(y) {
     list(y, chrNum, chrChunks, tileNames, allCombinations$Key)
   })
   # Find all indices for subsetting (indices of allCombinations and indices of the tileDF)
@@ -158,9 +158,9 @@ getCoAccessibleLinks <- function(SampleTileObj,
 }
 
 
-findAllCombinations <- function(iterList){
+findAllCombinations <- function(iterList) {
 
-  #Extract info needed
+  # Extract info needed
   reg <- iterList[[1]]
   start <- iterList[[2]]
   end <- iterList[[3]]
@@ -169,8 +169,8 @@ findAllCombinations <- function(iterList){
   tileNames <- paste0(chr, ":", start, "-", end, paste = "")
 
   keyTile <- which(start == reg$start &
-      end == reg$end &
-      chr == reg$seqnames)
+    end == reg$end &
+    chr == reg$seqnames)
 
   windowIndexBool <- which(start > reg$start - windowSize / 2 &
     end < reg$end + windowSize / 2 &
@@ -191,7 +191,7 @@ findAllCombinations <- function(iterList){
   return(keyNeighborPairs)
 }
 
-splitCombList <- function(iterList){
+splitCombList <- function(iterList) {
   # input is list(y, chrNum, chrChunks, tileNames, allCombinations$key)
   index <- iterList[[1]]
   chrNum <- iterList[[2]]
@@ -199,8 +199,8 @@ splitCombList <- function(iterList){
   tileNames <- iterList[[4]]
   key <- iterList[[5]]
 
-  specChr <- paste0(chrNum[which(c(seq_along(chrNum)) > (index - 1)*chrChunks &
-      c(seq_along(chrNum) <= index * chrChunks))], collapse = "|")
+  specChr <- paste0(chrNum[which(c(seq_along(chrNum)) > (index - 1) * chrChunks &
+    c(seq_along(chrNum) <= index * chrChunks))], collapse = "|")
 
   tileIndices <- grep(specChr, tileNames)
   combIndices <- grep(specChr, key)
@@ -208,5 +208,4 @@ splitCombList <- function(iterList){
   infoList <- list(tileIndices, combIndices, specChr)
 
   return(infoList)
-
 }

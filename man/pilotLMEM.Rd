@@ -16,6 +16,9 @@ pilotLMEM(
 \item{ExperimentObj}{A SummarizedExperiment object generated from
 getSampleTileMatrix, chromVAR, or other.}
 
+\item{cellPopulation}{A single cell population on which to run this pilot
+model}
+
 \item{modelFormula}{The formula to use with lmerTest::lmer, in the
 format (exp ~ factors). All factors must be found in column names
 of the ExperimentObj metadata.}
@@ -24,16 +27,11 @@ of the ExperimentObj metadata.}
 the ExperimentObj matrix. Default is 1:10.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{numCores}{integer. Number of cores to parallelize across.}
 }
-
 \value{
 modelList a list of outputs from lmerTest::lmer
 }
-
 \description{
 \code{pilotLMEM} Runs linear mixed-effects modeling for
   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 }
-
