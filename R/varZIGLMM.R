@@ -175,14 +175,14 @@ individualVarZIGLMM <- function(x) {
     
   output_vector <- tryCatch(
     {
-      if(all(df$exp !=0)){
+      if(all(df$exp !=0, na.rm = T)){
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
           ziformula = ~ 0,
           data = df,
           family = stats::gaussian(),
           REML = TRUE
         )
-      }else if(sum(df$exp ==0)/length(df$exp) < zi_threshold){
+      }else if(sum(df$exp ==0, na.rm = T)/length(df$exp) < zi_threshold){
         df$exp[df$exp ==0] = NA
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
           ziformula = ~0,
@@ -209,7 +209,7 @@ individualVarZIGLMM <- function(x) {
       residual = as.vector(attr(glmmTMB::VarCorr(modelRes)$cond, "sc")^2)
       names(residual) = 'Residual'
 
-     if(all(df$exp !=0)){
+     if(all(df$exp !=0, na.rm = T)){
         subNull = nullDF[grepl('ZI_', names(nullDF))]
         zi_other = rep(0, length(subNull))
         names(zi_other) = names(subNull)
