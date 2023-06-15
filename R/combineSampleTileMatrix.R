@@ -63,6 +63,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   # This is where cell counts and fragments counts are pivoted into a long format and merged (left-Joined) into the new allSampleData
   cellTypeLabelList <- Var1 <- NULL
+
   summarizedData <- S4Vectors::metadata(SampleTileObj)$summarizedData
   cellCounts <- as.data.frame(
     SummarizedExperiment::assays(summarizedData)[["CellCounts"]]
@@ -120,6 +121,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rowRanges = allRanges,
     metadata = newMetadata
   )
+<<<<<<< HEAD
 
   newObj <- chromVAR::addGCBias(newObj, genome = genome)
 
@@ -132,6 +134,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
     SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(SummarizedExperiment::rowData(newObj)$bias, na.rm = TRUE)
   }
+
 
   return(newObj)
 }

@@ -5,7 +5,11 @@
 #'   and available annotations can be found at Bioconductor:
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
+<<<<<<< HEAD
 #' @param Obj A RangedSummarizedExperiment generated from getSampleTileMatrix,
+=======
+#' @param Obj A RangedSummarizedExperment generated from getPromoterGenes,
+>>>>>>> ChAI
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
 #' @param TxDb The annotation package for TxDb object for your genome.
 #'   Optional, only required if Obj is a GRanges.
@@ -101,4 +105,32 @@ annotateTiles <- function(Obj,
   } else {
     return(tileGRanges)
   }
+}
+
+#' @title \code{getPromoterGenes}
+#'
+#' @description \code{getPromoterGenes} Takes a rowRanges from annotateTiles and extracts a unique list of genes.
+#'
+#' @param GRangesObj a GRanges object with a metadata column for tileType and Gene.
+#' @return vector of strings with gene names. 
+#'
+#' @export
+#' 
+
+getPromoterGenes <- function(GRangesObj){
+
+  if(class(GRangesObj)[1] != 'GRanges'){
+    stop('Object provided is not a GRanges object.')
+  }
+
+  if(!all(c('tileType', 'Gene') %in% colnames(GenomicRanges::mcols(GRangesObj)))){
+    stop('GRanges object does not contain tileType or Gene column. Run annotateTiles on this GRanges object and try again.')
+  }
+
+  promoterTiles <- plyranges::filter(GRangesObj, tileType == 'Promoter')
+  geneString <- paste0(unlist(GenomicRanges::mcols(promoterTiles)$Gene), collapse = ", ") 
+  genes <- unique(unlist(stringr::str_split(geneString, pattern = ', '), recursive =TRUE))
+
+  return(genes)
+
 }
