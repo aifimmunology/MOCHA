@@ -1,5 +1,5 @@
+skip_on_cran()
 ArchRProjDir <- "../../../FullCovid"
-
 if (
   require("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
     require("org.Hs.eg.db", quietly = TRUE) &&

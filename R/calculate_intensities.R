@@ -23,6 +23,7 @@
 calculate_intensities <- function(fragMat,
                                   candidatePeaks,
                                   totalFrags,
+                                  cellCol = "RG",
                                   verbose = FALSE) {
   if (!methods::is(fragMat, "GRanges")) {
     stop("Input fragMat must be a Genomic Ranges (GRanges) object")
@@ -60,10 +61,10 @@ calculate_intensities <- function(fragMat,
   fragsPerBin <- data.table::as.data.table(fragsPerBin)
 
   ### Get Cell Counts
-  numCells <- length(unique(fragMat_dt$RG))
+  numCells <- length(unique(fragMat_dt[[cellCol]]))
 
   ### Label Cell Name
-  fragsPerBin$cell <- fragMat_dt$RG[fragsPerBin$queryHits]
+  fragsPerBin$cell <- fragMat_dt[[cellCol]][fragsPerBin$queryHits]
 
   ### Get Window, Chr, Start, End and Strand information
   ### From the Overlaps matrix

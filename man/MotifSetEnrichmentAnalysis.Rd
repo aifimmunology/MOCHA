@@ -7,9 +7,10 @@
 MotifSetEnrichmentAnalysis(
   ligandTFMatrix,
   motifEnrichmentDF,
-  motifColumn = "feature",
+  motifColumn,
   ligands,
-  statThreshold = 2,
+  statColumn,
+  statThreshold,
   annotationName = "CellType",
   annotation = "none",
   numCores = 1,
@@ -23,13 +24,16 @@ MotifSetEnrichmentAnalysis(
 step. Expected to have a column with motif names, and a column with the
 -log10 adjusted p-values.}
 
-\item{motifColumn}{Column name within the MotifEnrichmentDF that has motif
-names. Default is 'feature'.}
+\item{motifColumn}{Column name within the motifEnrichmentDF that has motif
+names.}
 
 \item{ligands}{Vector of ligands to test}
 
+\item{statColumn}{Column name in motifEnrichmentDF containing the statistic
+to test}
+
 \item{statThreshold}{Significance threshold used to select significant motif
-set. Default is 2.}
+set}
 
 \item{annotationName}{Optional column name for the annotation. Default is
 "CellType".}

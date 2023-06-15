@@ -7,7 +7,7 @@
 annotateTiles(Obj, TxDb = NULL, Org = NULL, promoterRegion = c(2000, 100))
 }
 \arguments{
-\item{Obj}{A RangedSummarizedExperment generated from getSampleTileMatrix,
+\item{Obj}{A RangedSummarizedExperiment generated from getSampleTileMatrix,
 containing TxDb and Org in the metadata. This may also be a GRanges object.}
 
 \item{TxDb}{The annotation package for TxDb object for your genome.
@@ -32,7 +32,7 @@ Obj, the input data structure with added gene annotations (whether GRanges or Sa
 \examples{
 \dontrun{
 library(TxDb.Hsapiens.UCSC.hg38.refGene)
-library(org.Hs.eg.db) 
+library(org.Hs.eg.db)
 SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
   SampleTileMatrices,
   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,

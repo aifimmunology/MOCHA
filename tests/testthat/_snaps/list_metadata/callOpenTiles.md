@@ -3,14 +3,15 @@
     Code
       tiles@metadata
     Output
-      $CellCounts
-                 cellTypeLabelList
-                   C2  C5
-        PBMCSmall 152 201
-      
-      $FragmentCounts
-                    C2     C5
-      PBMCSmall 117146 171033
+      $summarizedData
+      class: SummarizedExperiment 
+      dim: 2 1 
+      metadata(0):
+      assays(3): CellCounts FragmentCounts nFrags
+      rownames(2): C2 C5
+      rowData names(0):
+      colnames(1): PBMCSmall
+      colData names(1): Sample
       
       $Genome
       [1] "hg19"
@@ -95,6 +96,11 @@
       27       UPSOURCENAME                                               Uniprot
       28        UPSOURCEURL                               http://www.UniProt.org/
       29       UPSOURCEDATE                              Wed Sep 15 18:21:59 2021
+      
+      
+      $History
+      $History[[1]]
+      [1] "callOpenTiles 1.0.0"
       
       
 

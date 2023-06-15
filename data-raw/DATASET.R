@@ -95,7 +95,7 @@ proj <- ArchR::saveArchRProject(ArchRProj = proj)
 
 testTileResultsMultisample <- MOCHA::callOpenTiles(
   ATACFragments = proj,
-  outDir = NULL,
+  outDir = "../HemeTutorial/MOCHA/",
   TxDb = TxDb,
   Org = Org,
   cellPopLabel = "Clusters",
@@ -103,12 +103,6 @@ testTileResultsMultisample <- MOCHA::callOpenTiles(
   numCores = 4
 )
 experiments <- MultiAssayExperiment::experiments(testTileResultsMultisample)
-
-testSampleTileMatrix <- MOCHA::getSampleTileMatrix(
-  testTileResultsMultisample,
-  cellPopulations = cellPopulations,
-  threshold = 0
-)
 
 for (x in 1:length(experiments)) {
   print(x)
@@ -124,6 +118,12 @@ requireNamespace("chromVARmotifs", quietly = TRUE)
 requireNamespace("motifmatchr", quietly = TRUE)
 requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)
 library(BSgenome.Hsapiens.UCSC.hg19)
+
+testSampleTileMatrix <- MOCHA::getSampleTileMatrix(
+  testTileResultsMultisample,
+  cellPopulations = c("C2", "C3"),
+  threshold = 0
+)
 
 STM <- MOCHA::addMotifSet(
   testSampleTileMatrix,
@@ -151,16 +151,17 @@ testPeaks <- miniSamplePeaks
 testPosList <- smallPosList
 
 # Uncomment to preserve current versions of test data
-# newmeta1 <- testTileResults@metadata
-# testTileResults <- MOCHA:::testTileResults
-# metadata(testTileResults) <- newmeta1
-# 
-# newmeta2 <- testTileResultsMultisample@metadata
-# testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
-# metadata(testTileResultsMultisample) <- newmeta2
-# 
-# testPeaks <- MOCHA:::testPeaks
-# testPosList <- MOCHA:::testPosList
+# while adding new metadata
+newmeta1 <- testTileResults@metadata
+testTileResults <- MOCHA:::testTileResults
+metadata(testTileResults) <- newmeta1
+
+newmeta2 <- testTileResultsMultisample@metadata
+testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
+metadata(testTileResultsMultisample) <- newmeta2
+
+testPeaks <- MOCHA:::testPeaks
+testPosList <- MOCHA:::testPosList
 
 # Save internal data
 usethis::use_data(

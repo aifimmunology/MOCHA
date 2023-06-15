@@ -42,11 +42,11 @@ plotRegion(
 \arguments{
 \item{countSE}{A SummarizedExperiment from MOCHA::getCoverage}
 
-\item{plotType}{Options include 'overlaid','area', or 'RidgePlot'. default is
-'area', which will plot a separate track for each group with the area
-filled in under the curve. Setting plotType to 'overlaid' will overlay
+\item{plotType}{Options include 'overlaid','area', 'line', or 'RidgePlot'.
+default is 'area', which will plot a separate track for each group with the
+area filled in under the curve. Setting plotType to 'overlaid' will overlay
 count plot histograms across samples, instead of faceting out separately.
-Setting plotType to 'RidgePlot' will generate a ridgeplot across all
+Setting plotType to 'RidgePlot' will generate a RidgePlot across all
 groups.}
 
 \item{base_size}{Numeric, default 12. Global plot base text size parameter}
@@ -110,7 +110,7 @@ should be plotted.}
 
 \item{whichGene}{Name of gene for plotting this specific gene in region.}
 
-\item{db_id_col}{Character value. Column in `orgdb` containing the output id
+\item{db_id_col}{Character value. Column in `OrgDb` containing the output id
 for `whichGene` plotting. Default "REFSEQ".}
 
 \item{collapseGenes}{Options include 'collapseAll', 'longestTx', or 'None'
@@ -124,8 +124,8 @@ gene plot. Default NULL will use `.gene_plot_theme`}
 \item{additionalGRangesTrack}{A GRanges object containing additional track
 plot data}
 
-\item{linkdf}{A dataframe with co-accessible links to display as an additional
-track}
+\item{linkdf}{A dataframe with co-accessible links to display as an
+additional track}
 
 \item{showIdeogram}{Logical value, default TRUE. If TRUE plots the chromosome
 ideogram at the top of the multi-track plot}

@@ -8,14 +8,15 @@
 
 ---
 
-    $CellCounts
-               cellTypeLabelList
-                 C2  C5
-      PBMCSmall 152 201
-    
-    $FragmentCounts
-                  C2     C5
-    PBMCSmall 117146 171033
+    $summarizedData
+    class: SummarizedExperiment 
+    dim: 2 1 
+    metadata(0):
+    assays(18): CellCounts FragmentCounts ... ReadsInPeaks FRIP
+    rownames(2): C2 C5
+    rowData names(0):
+    colnames(1): PBMCSmall
+    colData names(2): Sample PassQC
     
     $Genome
     [1] "hg19"
@@ -104,6 +105,14 @@
     
     $Directory
     [1] "/Users/imran.mcgrath/Documents/projects/PBMCSmall/MOCHA"
+    
+    $History
+    $History[[1]]
+    [1] "callOpenTiles 1.0.0"
+    
+    $History[[2]]
+    [1] "getSampleTileMatrix 1.0.0"
+    
     
 
 ---

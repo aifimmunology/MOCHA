@@ -5,7 +5,11 @@
 #'   and available annotations can be found at Bioconductor:
 #'   https://bioconductor.org/packages/3.15/data/annotation/
 #'
+<<<<<<< HEAD
+#' @param Obj A RangedSummarizedExperiment generated from getSampleTileMatrix,
+=======
 #' @param Obj A RangedSummarizedExperment generated from getPromoterGenes,
+>>>>>>> ChAI
 #'   containing TxDb and Org in the metadata. This may also be a GRanges object.
 #' @param TxDb The annotation package for TxDb object for your genome.
 #'   Optional, only required if Obj is a GRanges.
@@ -23,7 +27,7 @@
 #' @examples
 #' \dontrun{
 #' library(TxDb.Hsapiens.UCSC.hg38.refGene)
-#' library(org.Hs.eg.db) 
+#' library(org.Hs.eg.db)
 #' SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
 #'   SampleTileMatrices,
 #'   TxDb = TxDb.Hsapiens.UCSC.hg38.refGene,
