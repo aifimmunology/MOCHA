@@ -484,49 +484,6 @@ generateNULL <- function(modelingData, MetaDF, continuousFormula, ziFormula, fam
   return(nullDFList)
 }
 
-
-#' @title Internal function to run linear modeling
-#'
-#' @description \code{IndividualLMEM} Runs linear modeling
-#'   with lmerTest::lmer
-#' @param iterList A list where the first index is a data.frame
-#'   to use for modeling, and the second is the formula for modeling.
-#'   list(x, modelFormula, modelingData, MetaDF, nullDF)
-#' 
-#' @return output_vector A linear model
-#'
-#' @noRd
-individualLMEM <- function(x) {
- 
-  
-  df <- data.frame(
-    exp = as.numeric(modelingData[x, ]),
-    MetaDF, stringsAsFactors = FALSE
-  )
-
-   output_vector <- tryCatch(
-    {
-      modelRes <- lmerTest::lmer(formula = as.formula(continuousFormula), data = df)
-      Coeff <- as.data.frame(summary(modelRes)$coefficients)
-      Resid <- stats::resid(modelRes)
-      
-      if(!all(MetaDF$Sample %in% names(Resid))){
-        NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
-        names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
-        Resid <- c(Resid, NA_samples)
-      }
-      Resid <- Resid[match(names(Resid),MetaDF$Sample)]
-      vcov <- as.data.frame(lme4::VarCorr(modelRes))$vcov
-      names(vcov) <- as.data.frame(lme4::VarCorr(modelRes))$grp
-      list('Coeff' = Coeff, 'Resid' = Resid, 'VCov'= vcov)
-    },
-    error = function(e) {
-      nullDFList
-    }
-  )
-  return(output_vector)
-}
-
 #' @title \code{IndividualZIGLMM}
 #'
 #' @description \code{IndividualZIGLMM} Runs zero-inflated linear modeling on data provided. Written for efficient parallelization.
@@ -638,7 +595,7 @@ individualZIGLMM <- function(x) {
 #' @title Internal function to processing model outputs
 #'
 #' @description \code{processModelOutputs} 
-#' @param modelOutputList. A list of modeloutputs, processed by either individualLMEM or individualZIGLMM. 
+#' @param modelOutputList. A list of modeloutputs, processed by model_scATAC, model_scRNA, or model_General. 
 #'        The first output is the coefficient data.frame, then the residuals, and the Variance. 
 #' @param nullDFList A null templates for the model outputs
 #' @param rownamesList a name of all the rows that were interate over. 

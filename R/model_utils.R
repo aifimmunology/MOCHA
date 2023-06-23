@@ -62,6 +62,7 @@ identifyDropOut <- function(TSAM_Object, cellPopulation, donor, zi_threshold = 0
 #' @description \code{plotModelPredictions} Uses the raw data object and the model prediction from runZIGLMM or runLMEM to generate a data.frame for each row for plotting.
 #' @param dataObject The SummarizedExperiment object with real data. 
 #' @param modelObject a SummarizedOutput object from modelPredict  
+#' @param measurement The specific measurement (gene, motif, tile, protein, etc...) that you want to look at within dataObject
 #' @param specVariable The variable of interest. If other fixed effects are present, they will be adjusted for.
 #' @param rowNames rownames of the specific 
 #' @return a list of data.frames, including the original data, the adjusted data, and the predicted group trend. 
@@ -77,7 +78,7 @@ identifyDropOut <- function(TSAM_Object, cellPopulation, donor, zi_threshold = 0
 #'
 #'
 
-modelPredictions <- function(dataObject, assay1, measurement, variable, sampleColumn, modelObject, adjust = TRUE){
+modelPredictions <- function(dataObject, assay1, measurement, specVariable, sampleColumn, modelObject, adjust = TRUE){
 
      #Check whether sampleColumn is present in both SE objects. 
     if(!(sampleColumn %in% colnames(dataObject@colData))){
@@ -95,7 +96,7 @@ modelPredictions <- function(dataObject, assay1, measurement, variable, sampleCo
     metaData <-  SummarizedExperiment::colData(dataObject)
 
 
-    allVariables <- names(assayList)[! names(assayList) %in% c('Intercept') & !grepl('ZI_',names(assayList))]
+    allVariables <- names(assayList)[!grepl('ZI_|Intercept',names(assayList))]
     numericVariables <- names(assayList)[names(assayList) %in% colnames(metaData)]
 
     remainingVariables <- allVariables[!allVariables %in% numericVariables]
@@ -140,24 +141,23 @@ modelPredictions <- function(dataObject, assay1, measurement, variable, sampleCo
         }
 
         rownames(newData) = colnames(mat1)
-        
         if(adjust){
             newData$orig_exp1 = newData$exp1
-            allAdjusts = do.call('cbind',lapply(allVariables[allVariables != variable], function(x){
+            allAdjusts = do.call('cbind',lapply(allVariables[allVariables != specVariable], function(x){
 
                             as.data.frame( modelVals[x,]*as.numeric(subMeta[,x]))
 
                             }))
             newData$exp1 = newData$exp1 - rowSums(allAdjusts)
-            newData$Prediction = modelVals['Intercept',] + modelVals[variable,]*subMeta[,variable]
+            newData$Prediction = modelVals['Intercept',] + modelVals[specVariable,]*subMeta[,specVariable]
            
         
         }else{
     
-            numericCalls <- sum(unlist(lapply(numericVariables[numericVariables != variable], function(x) {
+            numericCalls <- sum(unlist(lapply(numericVariables[numericVariables != specVariable], function(x) {
                                 modelVals[x,]*mean(subMeta[,x])
                 })))
-            newData$Prediction = modelVals['Intercept',] + modelVals[variable,]*subMeta[,variable] + numericCalls
+            newData$Prediction = modelVals['Intercept',] + modelVals[specVariable,]*subMeta[,specVariable] + numericCalls
         }
 
         if(modelObject@metadata$Type == 'scATAC'){
@@ -333,7 +333,6 @@ modelInterPredictions <- function(SE1, SE2, assay1, assay2, sampleColumn, interM
 matchCategorical <- function(metaData, variable, spacer = '.'){
 
     whichMatch = which(unlist(lapply(colnames(metaData), function(x) grepl(x, variable))))
-        
     if(length(whichMatch) > 1){
 
        #Iterate over all possible matching columns, and see if any combinations of column name and 
@@ -398,7 +397,7 @@ matchCategorical <- function(metaData, variable, spacer = '.'){
        
    }else{
        
-       stop('Variable not found in metadata. Please ensure all variables for the model are within the metadata of SE1.')
+       stop('Variable not found in metadata. Please ensure all variables for the model are within the metadata of the summarized experiment.')
        
    }
     
