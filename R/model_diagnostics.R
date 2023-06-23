@@ -1,7 +1,7 @@
 
-#' @title pilotModel_scATAC
+#' @title pilot_scATAC
 #'
-#' @description \code{pilotModel_scATAC} Model for testing out ZI-GLMM formulas on the data from MOCHA. Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. \code{\link[glmmTMB]{glmmTMB}}. 
+#' @description \code{pilot_scATAC} Model for testing out ZI-GLMM formulas on the data from MOCHA. Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. \code{\link[glmmTMB]{glmmTMB}}. 
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix. 
@@ -25,7 +25,7 @@
 #'
 #' @examples
 #' \dontrun{
-#'   modelList <- pilotModel_scATAC(STM, 
+#'   modelList <- pilot_scATAC(STM, 
 #'                            'CD16 Mono',
 #'                            exp~ Age + Sex + days_since_symptoms + (1|PTID),
 #'                             ~ FragNumber, verbose = TRUE )
@@ -34,7 +34,7 @@
 #' @export
 #' 
 
-pilotModel_scATAC <- function(TSAM_Object,
+pilot_scATAC <- function(TSAM_Object,
                         cellPopulation = NULL,
                         continuousFormula = NULL,
                         ziformula = NULL,
@@ -79,9 +79,10 @@ pilotModel_scATAC <- function(TSAM_Object,
 }
 
 
-#' @title pilotModel_scRNA
+#' @title pilot_scRNA
 #'
-#' @description \code{pilotModel_scRNA} Model for testing out ZI-GLMM formulas on the data from MOCHA. Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. \code{\link[glmmTMB]{glmmTMB}}. 
+#' @description \code{pilot_scRNA} Model for testing out GLM formulas on the pseudobulked RNA via ChAI.
+#'   Runs a given formula on a subset of the data, and returns the model results. This is meant to help during the model selection process. \code{\link[glmmTMB]{glmmTMB}}. 
 #'
 #' @param scRNA_Object A SummarizedExperiment object generated from
 #'   makePseudobulkRNA. 
@@ -91,10 +92,7 @@ pilotModel_scATAC <- function(TSAM_Object,
 #'   of the scRNA_Object metadata, except for CellType, FragNumber and CellCount, which will be extracted from the scRNA_Object.
 #'   modelFormula must start with 'exp' as the response.
 #'   See \link[glmmTMB]{glmmTMB}.
-#' @param ziformula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
-#'   format ( ~ factors). All factors must be found in column names
-#'   of the scRNA_Object colData metadata, except for CellType, FragNumber and CellCount, which will be extracted from the scRNA_Object.
-#'   FragNumber and CellCounts will be log10 normalized within the function. 
+#' @param family String. Can be 'negativeBinomial1', 'negativeBinomial2', or 'poisson'. Default is 'poisson', which handles the zeros best. 
 #' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param pilotIndices integer. Specific locations to test within the peakset of the cell type chosen. 
@@ -105,7 +103,7 @@ pilotModel_scATAC <- function(TSAM_Object,
 #'
 #' @examples
 #' \dontrun{
-#'   modelList <- pilotModel_scRNA(scRNA_Object, 
+#'   modelList <- pilot_scRNA(scRNA_Object, 
 #'                            'CD16 Mono',
 #'                            exp~ Age + Sex + days_since_symptoms + (1|PTID),
 #'                              verbose = TRUE )
@@ -114,12 +112,11 @@ pilotModel_scATAC <- function(TSAM_Object,
 #' @export
 #' 
 
-pilotModel_scRNA <- function(scRNA_Object,
+pilot_scRNA <- function(scRNA_Object,
                         cellPopulation = NULL,
                         continuousFormula = NULL,
-                        ziformula = NULL,
-                        zi_threshold = 0,
                         verbose = FALSE,
+                        family = 'poisson',
                         numCores = 1,
                         pilotIndices = 1:10) {
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
@@ -144,14 +141,28 @@ pilotModel_scRNA <- function(scRNA_Object,
   } else if(cellPopulation == 'counts'){
     newObj <- scRNA_Object
   }else{
-    newObj <- combinePseudobulkRNA(scRNA_Object)
+    #newObj <- combinePseudobulkRNA(scRNA_Object)
+    #Needs to be generated, analoguous to combineSampleTileMatrix
+    newObj <- scRNA_Object
+    SummarizedExperiment::assays(newObj) <- SummarizedExperiment::assays(scRNA_Object)['CD16_Mono']
+    names(SummarizedExperiment::assays(newObj) ) <- 'counts'
+  }
+
+  if(tolower(family) == 'negativebinomial2'){ 
+    family = glmmTMB::nbinom2()
+  }else if(tolower(family)== 'negativebinomial1'){
+    family = glmmTMB::nbinom1()
+  }else if(tolower(family) == 'poisson'){
+    family = stats::poisson()
+  }else{
+    stop('family not recognized.')
   }
 
   modelList <- .pilotModels_generic(SE_Object = newObj,
                         continuousFormula = continuousFormula,
-                        ziformula = ziformula,
-                        family = stats::gaussian(),
-                        zi_threshold = zi_threshold,
+                        ziformula = ~0,
+                        family = family,
+                        zi_threshold = 0,
                         verbose = verbose,
                         numCores = numCores,
                         pilotIndices = pilotIndices)
@@ -164,9 +175,10 @@ pilotModel_scRNA <- function(scRNA_Object,
 
 
 
+
 #' @title Execute a pilot run of single linear model on a subset of data
 #'
-#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
+#' @description \code{pilot_General} Runs linear mixed-effects modeling for
 #'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 #'
 #' @param ExperimentObj A SummarizedExperiment-type object generated from
@@ -188,7 +200,7 @@ pilotModel_scRNA <- function(scRNA_Object,
 #'
 #'
 #' @export
-pilotModel_General <- function(ExperimentObj,
+pilot_General <- function(ExperimentObj,
                       assayName = NULL,
                       modelFormula = NULL,
                       numCores = 1,
@@ -214,7 +226,7 @@ pilotModel_General <- function(ExperimentObj,
                         continuousFormula = modelFormula,
                         ziformula = ~0,
                         zi_threshold = 0,
-                         family = stats::gaussian(),
+                         family = family,
                         verbose = verbose,
                         numCores = numCores,
                         pilotIndices = pilotIndices)
@@ -300,7 +312,7 @@ pilotModel_General <- function(ExperimentObj,
         modelRes <- glmmTMB::glmmTMB(continuousFormula,
           ziformula = ~ 0,
           data = df,
-          family = stats::gaussian(),
+          family = family,
           REML = TRUE,
           control = glmmTMB::glmmTMBControl(parallel = numCores)
         )
@@ -310,7 +322,7 @@ pilotModel_General <- function(ExperimentObj,
         modelRes <- glmmTMB::glmmTMB(continuousFormula,
           ziformula = ~ 0,
           data = df,
-          family = stats::gaussian(),
+          family = family,
           REML = TRUE,
           control = glmmTMB::glmmTMBControl(parallel = numCores)
         )
@@ -319,7 +331,7 @@ pilotModel_General <- function(ExperimentObj,
         modelRes <- glmmTMB::glmmTMB(continuousFormula,
           ziformula = ziformula,
           data = df,
-          family = stats::gaussian(),
+          family = family,
           REML = TRUE,
           control = glmmTMB::glmmTMBControl(parallel = numCores)
         )
@@ -357,7 +369,7 @@ pilotModel_General <- function(ExperimentObj,
 #' @export
 #' 
 
-plotZIModels <- function(modelList, x_var = 'days_since_symptoms', group ='PTID',  colour ='PTID', returnMatrix = FALSE, rowNames = NULL){
+plotModels <- function(modelList, x_var = 'days_since_symptoms', group ='PTID',  colour ='PTID', returnMatrix = FALSE, rowNames = NULL){
 
 
     if(any(grepl('list|List',class(modelList)[1]))){

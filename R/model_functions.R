@@ -87,21 +87,19 @@ model_scATAC <- function(TSAM_Object,
 
 }
 
-#' @title Run Linear Mixed-Effects Modeling for continuous,
-#'  non-zero inflated data
+
+#' @title Run Linear Mixed-Effects Modeling for pseudobulked scRNA
 #'
-#' @description \code{runLMEM} Runs linear mixed-effects modeling for
-#'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
+#' @description \code{model_scRNA} Runs linear mixed-effects modeling for
+#'   continuous, non-zero inflated data using \code{\link[glmmTMB]{glmmTMB}}
 #'
-#' @param ExperimentObj A SummarizedExperiment object generated from
-#'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only
-#'   one assay, or only the first assay will be used for the model.
-#'   Data should not be zero-inflated.
-#' @param assayName The name of the assay to model within the SummarizedExperiment. 
-#' @param modelFormula The formula to use with lmerTest::lmer, in the
+#' @param ExperimentObj A SummarizedExperiment object generated from normalizePseudobulk
+#' @param cellPopulation Name of a cell type. 
+#' @param modelFormula The formula to use, in the
 #'   format (exp ~ factors). All factors must be found in column names
 #'   of the ExperimentObj metadata. modelFormula must start with 'exp' as the response.
-#'   See \link[lmerTest]{lmer}.
+#'   See \link[glmmTMB]{glmmTMB}.
+#' @param family String. Can be 'negativeBinomial1', 'negativeBinomial2', or 'poisson'. Default is 'poisson', which handles the zeros best. 
 #' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
@@ -116,9 +114,9 @@ model_scATAC <- function(TSAM_Object,
 #'
 #' @examples
 #' \dontrun{
-#'   modelList <- runLMEM(ExperimentObj,
-#'    assayName = 'z'
-#'     modelFormula = NULL,
+#'   modelList <- model_General(rnaSE)
+#'    cellPopulation = 'CD14_Mono'
+#'     modelFormula = 'exp ~ treatment + (1|patientID)',
 #'     initialSampling = 5,
 #'     verbose = FALSE,
 #'     numCores = 1
@@ -126,26 +124,40 @@ model_scATAC <- function(TSAM_Object,
 #' }
 #'
 #' @export
-runLMEM <- function(ExperimentObj,
-                    assayName = NULL,
+model_scRNA <- function(rnaSE,
+                    cellPopulation = NULL,
                     modelFormula = NULL,
+                    family = "poisson",
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 2) {
-
   
-
-  if (verbose) {
-    message("Reorganizing coefficients.")
+  if(!any(names(SummarizedExperiment::assays(ExperimentObj)) %in% assayName)){
+    stop('ExperimentObj does not contain an assay that matches the assayName input variable.')
+  }
+  SummarizedExperiment::assays(ExperimentObj) = SummarizedExperiment::assays(ExperimentObj)[assayName]
+  
+  if(tolower(family) == 'negativebinomial2'){ 
+    family = glmmTMB::nbinom2()
+  }else if(tolower(family)== 'negativebinomial1'){
+    family = glmmTMB::nbinom1()
+  }else if(tolower(family) == 'poisson'){
+    family = stats::poisson()
+  }else{
+    stop('family not recognized.')
   }
 
-  processedOuts <- processModelOutputs(modelOutputList = coeffList, 
-                                        nullDFList = nullDFList, 
-                                        rownamesList = rownames(modelingData),
-                                        SummarizedExperimentObj = ExperimentObj
-                                        )
+  exp <- .model_pseudobulk_default(SE_Object = ExperimentObj,
+                      continuousFormula = as.formula(modelFormula),
+                      ziFormula = ~0,
+                      zi_threshold = 0,
+                      family = family,
+                      initialSampling = initialSampling,
+                      modality = 'scRNA',
+                      verbose = verbose,
+                      numCores = numCores)
+  return(exp)
 
-  return(processedOuts)
 }
 
 
@@ -350,6 +362,24 @@ model_General <- function(ExperimentObj,
   return(processedOuts)
 }
 
+#' @title Internal function to run generating null results, in case of model failure
+#'
+#' @description \code{generateNULL} Runs null results, either for glmmTMB or lmerTest/lme4
+#' @param modelingData the data used for modeling. 
+#' @param MetaDF the metadata associated with the data
+#' @param continuousFormula The formula for the continuous data that should be used within glmmTMB. It should be in the
+#'   format (exp ~ factors). All factors must be found in column names of the SE_Object colData (i.e. sample metadata).
+#'   See \link[glmmTMB]{glmmTMB}.
+#' @param ziFormula The formula for the zero-inflated data that should be used within glmmTMB. It should be in the
+#'   format ( ~ factors). All factors must be found in column names of MetaDF
+#' @param family family for data distribution to be used in the model
+#' @param modality a flag to mark whether the data is from scATAC, scRNA, or General. 
+#' @param initialSampling Size of data to use for pilot
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' 
+#' @return output_vector A linear model
+#'
+#' @noRd
 
 generateNULL <- function(modelingData, MetaDF, continuousFormula, ziFormula, family, modality, initialSampling){
 
@@ -651,6 +681,7 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
                                   SummarizedExperimentObj, returnList = FALSE) {
 
     coeffNames <- rownames(nullDFList$Coeff)
+
     newColumnNames <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',colnames(nullDFList$Coeff)))
     output_list <- lapply(coeffNames, function(z){
       tmpCoef <- do.call("rbind", pbapply::pblapply(X = modelOutputList, function(x) {
@@ -663,6 +694,9 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
       tmpCoef
     })
     names(output_list) <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',coeffNames))
+    if(grepl('Intercept', names(output_list)[1])){
+      names(output_list)[1] = 'Intercept'
+    }
 
     residual_tmp <- do.call(
       "rbind", pbapply::pblapply(X = modelOutputList, function(x) {

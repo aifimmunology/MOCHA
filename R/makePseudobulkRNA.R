@@ -6,6 +6,7 @@
 #' @param SO Seurat Object 
 #' @param cellTypeColumn The column of the Seurat object with cell type information
 #' @param Sample The column of the Seurat object with sample information
+#' @param normalizeCounts Boolean, to determine whether to return normalized (via DESeq2) or raw counts in a SummarizedExperiment-type object. Default is TRUE and returns normalized counts.
 #' @param filterByRowData A boolean flag that determines whether to export a summarizedExperiment with Genomic location for each gene (and thus filter the object to genes that match the database)
 #' @param TxDb Transcript database to be used for identifying gene locations. 
 #' @param OrgDb Organism database to match up gene names and locations.
@@ -168,6 +169,46 @@ makePseudobulkRNA <- function(SO, cellTypeColumn, sampleColumn = "Sample",
         # Repackage the gene-sample matrices, the sampleData,  and associated metadata (countInfo) into one SummarizedExperiment object. 
         rnaSE <-  SummarizedExperiment::SummarizedExperiment(mat, colData = sampleData, metadata = countInfo)
     }
-    
-    return(rnaSE)
+    ddSeq2 <- DESeq2::DESeqDataSet(se = rnaSE, design = as.formula(paste( '~', sampleColumn)))
+    return(ddSeq2)
 }
+
+
+
+#' @title \code{normalizePseudobulk }
+#'
+#' @description \code{normalizePseudobulk} Takes the output of makePseudobulkRNA and normalizes it. 
+
+#'
+#' @param rnaSE  the output of makePseudobulkRNA a
+#' @param sampleColumn The column of the Seurat object with sample information
+#' @return A SummarizedExperiment with normalized average expression
+#'
+#'
+#' @export
+
+normalizePseudobulk <- function(rnaSE, sampleColumn = 'Sample'){
+    
+    allMat <- lapply(names(SummarizedExperiment::assays(rnaSE)), function(x){
+                old_mat <- SummarizedExperiment::assays(rnaSE)[[x]]
+                dds <- DESeqDataSetFromMatrix(countData = old_mat[,colSums(old_mat) > 0],
+                              colData = SummarizedExperiment::colData(rnaSE)[colSums(old_mat) > 0,],
+                                design = as.formula(paste( '~', sampleColumn)))
+
+                dds <- estimateSizeFactors(dds)
+                new_mat <- DESeq2::counts(dds, normalize = TRUE)
+                if(any(colSums(old_mat) == 0)){
+                    filled_data <- do.call('cbind', lapply(which(colSums(old_mat) == 0), function(x){
+                            rep(0, dim(new_mat)[1])
+                    }))
+                    new_mat <- cbind(new_mat, filled_data)
+                }
+                new_mat[,sort(colnames(new_mat))]
+        })
+    names(allMat) <- names(SummarizedExperiment::assays(rnaSE))
+    se <- SummarizedExperiment::SummarizedExperiment(allMat, 
+                        colData = SummarizedExperiment::colData(rnaSE),
+                        rowRanges = SummarizedExperiment::rowRanges(rnaSE))
+    return(se)
+    
+    }
