@@ -93,7 +93,6 @@ pilot_scATAC <- function(TSAM_Object,
 #'   modelFormula must start with 'exp' as the response.
 #'   See \link[glmmTMB]{glmmTMB}.
 #' @param family String. Can be 'negativeBinomial1', 'negativeBinomial2', or 'poisson'. Default is 'poisson', which handles the zeros best. 
-#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param pilotIndices integer. Specific locations to test within the peakset of the cell type chosen. 
 #'
@@ -157,7 +156,7 @@ pilot_scRNA <- function(scRNA_Object,
   }else{
     stop('family not recognized.')
   }
-
+  browser()
   modelList <- .pilotModels_generic(SE_Object = newObj,
                         continuousFormula = continuousFormula,
                         ziformula = ~0,

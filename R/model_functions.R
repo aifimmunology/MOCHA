@@ -132,10 +132,10 @@ model_scRNA <- function(rnaSE,
                     verbose = FALSE,
                     numCores = 2) {
   
-  if(!any(names(SummarizedExperiment::assays(ExperimentObj)) %in% assayName)){
+  if(!any(cellPopulation %in% names(SummarizedExperiment::assays(rnaSE)))){
     stop('ExperimentObj does not contain an assay that matches the assayName input variable.')
   }
-  SummarizedExperiment::assays(ExperimentObj) = SummarizedExperiment::assays(ExperimentObj)[assayName]
+  SummarizedExperiment::assays(rnaSE) = SummarizedExperiment::assays(rnaSE)[cellPopulation]
   
   if(tolower(family) == 'negativebinomial2'){ 
     family = glmmTMB::nbinom2()
@@ -147,7 +147,7 @@ model_scRNA <- function(rnaSE,
     stop('family not recognized.')
   }
 
-  exp <- .model_pseudobulk_default(SE_Object = ExperimentObj,
+  exp <- .model_pseudobulk_default(SE_Object = rnaSE,
                       continuousFormula = as.formula(modelFormula),
                       ziFormula = ~0,
                       zi_threshold = 0,
@@ -258,7 +258,7 @@ model_General <- function(ExperimentObj,
                       modality = 'General',
                       verbose = FALSE,
                       numCores = 2) {
-
+                         
   if (c(class(continuousFormula)) != "formula") {
     stop("continuousFormula was not provided as a formula.")
   }
@@ -325,23 +325,13 @@ model_General <- function(ExperimentObj,
                               "nullDFList","zi_threshold",'family'),
       envir = environment()
     )
-  ## If it's scATAC, use glmmTMB. If it's general, use lmerTest instead.
-  if(modality == 'scATAC'){
-    parallel::clusterEvalQ(cl, {
+
+  parallel::clusterEvalQ(cl, {
         library('glmmTMB')
       })
     
-    coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
-    parallel::stopCluster(cl)
-
-  }else if(modality == 'General'){
-    parallel::clusterEvalQ(cl, {
-        library('lmerTest')
-      })
-
-    coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualLMEM)
-    parallel::stopCluster(cl)
-  }
+  coeffList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualZIGLMM)
+  parallel::stopCluster(cl)
 
   if (verbose) {
       message("Reorganizing residuals and random effect variance.")
@@ -392,18 +382,11 @@ generateNULL <- function(modelingData, MetaDF, continuousFormula, ziFormula, fam
 
     tryCatch(
       {
-        if(modality == 'scATAC'){
-           glmmTMB::glmmTMB(as.formula(continuousFormula),
+        glmmTMB::glmmTMB(as.formula(continuousFormula),
             ziformula = as.formula(ziFormula),
             data = df,
             family = family,
-            REML = TRUE
-          )
-        }else if(modality == 'General'){
-          lmerTest::lmer(formula = as.formula(continuousFormula), data = df)
-        }else{
-          NA
-        }
+            REML = TRUE)
        
       },
       error = function(e) {
@@ -411,6 +394,7 @@ generateNULL <- function(modelingData, MetaDF, continuousFormula, ziFormula, fam
       }
     )
   }, cl = NULL)
+
   NAList <- unlist(lapply(modelList, function(x){
                     ## First identify all the pilot models that ran at all without errors. 
                    tmp1 <- all(is.na(x))
@@ -430,83 +414,68 @@ generateNULL <- function(modelingData, MetaDF, continuousFormula, ziFormula, fam
     stop("For the initial sampling, every test model failed. Reconsider modelFormula or increase initial sampling size.")
   } else {
     idx <- which(NAList)
-    if(modality == 'scATAC'){
-      # Did any of the models have both zero-inflated and continous portions?
-      bothZI_Cont <- unlist(lapply(idx, function(x){
-        ziDF <- summary(modelList[[x]])$coefficients$zi
-        !is.null(ziDF) | sum(dim(ziDF)) != 0
+    # Did any of the models have both zero-inflated and continous portions?
+    bothZI_Cont <- unlist(lapply(idx, function(x){
+      ziDF <- summary(modelList[[x]])$coefficients$zi
+      !is.null(ziDF) | sum(dim(ziDF)) != 0
 
-      }))
+    }))
 
-      if(all(!bothZI_Cont) & !ziFormula %in% c('~ 0', '~0')){
-        warning('No working models using the zero-inflated formula. Do you need to modify the zero-inflated formula?')
-        modelRes <- modelList[[idx[1]]]
-      }else{
-        modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
-      }
+    if(all(!bothZI_Cont) & !ziFormula %in% c('~ 0', '~0')){
+      warning('No working models using the zero-inflated formula. Do you need to modify the zero-inflated formula?')
+      modelRes <- modelList[[idx[1]]]
+    }else if(ziFormula %in% c('~ 0', '~0')){
+      modelRes <- modelList[[idx[1]]]
+    }else {
+      modelRes <- modelList[[idx[which(bothZI_Cont)[1]]]]
+    }
 
-      #Extract the first representative model. And use it to create a null template. 
-      coeff2 <- summary(modelRes)$coefficients
-      coeff <- lapply(coeff2, as.data.frame)
-      coeff$cond[!is.na(coeff$cond)] <- NA
-      rownames(coeff$cond)[grepl('(Intercept)',rownames(coeff$cond))] = 'Intercept'
-      if(all(!bothZI_Cont)){
-        combinedCoeff <- coeff$cond
-      }else{
-        coeff$zi[!is.na(coeff$zi)] <- NA
-        rownames(coeff$zi)[grepl('(Intercept)',rownames(coeff$zi))] = 'Intercept'
-        rownames(coeff$zi) <- paste('ZI', rownames(coeff$zi), sep ='_')
-        combinedCoeff <- rbind(coeff$cond, coeff$zi)
-      }
-      
-      Resid <- stats::resid(modelRes)
-      
-      if(!all(MetaDF$Sample %in% names(Resid))){
-        NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
-        names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
-        Resid <- c(Resid, NA_samples)
-      }
-      Resid <- Resid[match(names(Resid),MetaDF$Sample)]
-      Resid[!is.na(Resid)] <- NA
-      varCorrObj <- glmmTMB::VarCorr(modelRes)
-      cond_other = unlist(varCorrObj$cond)
-      names(cond_other) = paste('Cond', names(cond_other), sep = "_")
+    #Extract the first representative model. And use it to create a null template. 
+    coeff2 <- summary(modelRes)$coefficients
+    coeff <- lapply(coeff2, as.data.frame)
+    coeff$cond[!is.na(coeff$cond)] <- NA
+    rownames(coeff$cond)[grepl('(Intercept)',rownames(coeff$cond))] = 'Intercept'
+    if(all(!bothZI_Cont)){
+      combinedCoeff <- coeff$cond
+    }else{
+      coeff$zi[!is.na(coeff$zi)] <- NA
+      rownames(coeff$zi)[grepl('(Intercept)',rownames(coeff$zi))] = 'Intercept'
+      rownames(coeff$zi) <- paste('ZI', rownames(coeff$zi), sep ='_')
+      combinedCoeff <- rbind(coeff$cond, coeff$zi)
+    }
+    
+    Resid <- stats::resid(modelRes)
+    
+    if(!all(MetaDF$Sample %in% names(Resid))){
+      NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
+      names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
+      Resid <- c(Resid, NA_samples)
+    }
+    Resid <- Resid[match(names(Resid),MetaDF$Sample)]
+    Resid[!is.na(Resid)] <- NA
+    varCorrObj <- glmmTMB::VarCorr(modelRes)
+    if(is.null(varCorrObj$cond) & all(!bothZI_Cont)){
+      varCorrObj <- list('cond' = list('NoRandomEffects'= NA), 'zi' = NULL)
+      residual = c('Residual' = NA)
+    } else if(is.null(varCorrObj$cond)){
+      varCorrObj <- list('cond' = list('NoRandomEffects'= NA), 'zi' = list('None'= NA))
+      residual = c('Residual' = NA)
+    }else{
       residual = as.vector(attr(varCorrObj$cond, "sc")^2)
       names(residual) = 'Residual'
-      if(!is.null(varCorrObj$zi)){
-        zi_other = unlist(varCorrObj$zi)
-        names(zi_other) = paste('ZI', names(zi_other), sep = "_")
-        varcor_df <- c(cond_other, zi_other,residual)
-      }else{
-        varcor_df <- c(cond_other, residual)
-      }
-      varcor_df[!is.na(varcor_df)] = NA
-
-
-
-    } else if(modality == 'General'){
-
-
-      modelRes <- modelList[[idx[1]]]
-
-      combinedCoeff <- as.data.frame(summary(modelRes)$coefficients)
-      combinedCoeff[!is.na(combinedCoeff)] <- NA 
-      Resid <- stats::resid(modelRes)  
-      Resid[!is.na(Resid)] <- NA 
-
-      #Add in missing residuals 
-      if(!all(MetaDF$Sample %in% names(Resid))){
-        NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
-        names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
-        Resid <- c(Resid, NA_samples)
-      }
-      Resid <- Resid[match(names(Resid),MetaDF$Sample)]
-
-      #Get variance
-      varcor_df <- as.data.frame(lme4::VarCorr(modelRes))$vcov
-      names(varcor_df) <- as.data.frame(lme4::VarCorr(modelRes))$grp
-      varcor_df[!is.na(varcor_df)] <- NA 
     }
+    cond_other = unlist(varCorrObj$cond)
+    names(cond_other) = paste('Cond', names(cond_other), sep = "_")
+    
+   
+    if(!is.null(varCorrObj$zi)){
+      zi_other = unlist(varCorrObj$zi)
+      names(zi_other) = paste('ZI', names(zi_other), sep = "_")
+      varcor_df <- c(cond_other, zi_other,residual)
+    }else{
+      varcor_df <- c(cond_other, residual)
+    }
+    varcor_df[!is.na(varcor_df)] = NA
 
     nullDFList <- list('Coeff' = combinedCoeff, 'Resid' = Resid, 'VCov'= varcor_df)
 
@@ -617,6 +586,7 @@ individualZIGLMM <- function(x) {
         Coeff$zi = nullDFList$Coeff[grepl('ZI',rownames(nullDFList$Coeff)),]
       }
       combinedCoeff <- rbind(Coeff$cond, Coeff$zi)
+
 
       Resid <- stats::resid(modelRes)
       
