@@ -45,6 +45,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
 Depends: R (>= 4.1.0)
+biocViews:
 Imports:
     data.table,
     plyranges (>= 1.14.0),
