@@ -85,11 +85,6 @@ multiModalModeling <- function(SE1, SE2, assay1, assay2, sampleColumn, formula, 
       return(pilotModels)
     
     }
-
-  # Generate all combinations of sig1 and sig2 as a list to iterate over.
-  allComboList <- pbapply::pblapply(cl = NULL, X = c(1:dim(allCombo)[1]), function(x){
-                   rev(as.character(unlist(allCombo[x,])))
-      })
     
   individualAssociations <- function(x){
     

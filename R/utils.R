@@ -297,20 +297,25 @@ getSampleCellTypeMetadata <- function(object) {
 #'
 #' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
 #' @param cellPopulation Cell type names (assay name) within the TSAM_object
+#' @param density Boolean to determine whether to plot density or histogram. Default is TRUE (plots density).
 #' @return data.frame or ggplot histogram. 
 #'
 #' @export
 
-plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE){
+plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE){
 
-  mat <- unlist(as.data.frame(log2(getCellPopMatrix(STM, cellPopulation)+1)))
+  mat <- unlist(Biobase::rowMedians(log2(getCellPopMatrix(STM, cellPopulation)+1)))
   plotMat <- data.frame(Values = mat)
 
   if(returnDF){
     return(plotMat)
   }
-
-  p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) + ggplot2::geom_histogram() + ggplot2::theme_bw() 
+  if(density){
+    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) + ggplot2::geom_density() + ggplot2::theme_bw() 
+  }else{
+    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) + ggplot2::geom_histogram() + ggplot2::theme_bw() 
+  }
+  
   return(p1)
 
 }
