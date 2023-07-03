@@ -1,3 +1,4 @@
+skip_if_not_installed("chromVAR")
 if (requireNamespace("chromVAR", quietly = TRUE)) {
   test_that("combineSampleTileMatrix works on a 3-sample dataset", {
     cellPopulations <- c("C2", "C3")

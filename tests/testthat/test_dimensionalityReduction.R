@@ -1,3 +1,4 @@
+skip_if_not_installed("chromVAR")
 if (requireNamespace("irlba", quietly = TRUE) &&
   requireNamespace("Matrix", quietly = TRUE) &&
   requireNamespace("uwot", quietly = TRUE)) {

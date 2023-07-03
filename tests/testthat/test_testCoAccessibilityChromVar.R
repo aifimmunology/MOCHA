@@ -1,3 +1,4 @@
+skip_if_not_installed("chromVAR")
 test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
   cellPopulations <- c("C2", "C5")
   capture.output(
