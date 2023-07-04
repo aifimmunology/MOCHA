@@ -7,12 +7,15 @@
 #' @param cellPopulation - name of the assay (cell population) to extract and use from rnaSE and atacSE
 #' @param sampleColumn - A string: the name of the column with Sample names from the metadata. 
 #'                  Must be the same from atacSE and rnaSE. This is used for aligning atacSE and rnaSE
-#' @param continuousFormula : Formula used for modeling. Must be in the form Tile ~ Gene + other factors + (1|RandomEffect)
+#' @param continuousFormula : Formula used for modeling. Must be in the form exp1 ~ exp2 + other factors + (1|RandomEffect). 
+#'          Exp1 will be the dummy veriable for accessibility, while exp2 will be the dummy variable for gene expression. 
 #' @param ziFormula list of  to tests from atacSE to test. 
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
+#'            We don't recommend changing this unless you have fully tested out the model and understand what it is doing. 
 #' @param geneList a list of genes from rnaSE to test. 
+#' @param tileList optional list of tiles to test. Default is NULL, which will test all tiles within the provided distance of the TSS. 
 #' @param distance A number limiting the distance between tiles and genes TSS at which point associations will not be tested. 
-#' @param pilot a boolean to test just 5 random genes form geneList and return full models for diagnosis, or
-#'      test all options and return the coefficients. Default is FALSE, which will test all genes. 
+#' @param initialSampling An integer. Default is 5. Represents the number of initial models to test when generating a null set (which is used when models fails). If your model fails often, increase this number or choose a better formula.
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' 
 #' @return A summarized experiment summarizing the output. 
@@ -22,18 +25,27 @@
 #'
 #' @export
 
-GeneTileAssociations <- function(atacSE, rnaSE, cellPopulation, sampleColumn, 
+GeneTile_Associations <- function(atacSE, rnaSE, cellPopulation, sampleColumn, 
                                     continuousFormula, 
                                     ziFormula, 
+                                    zi_threshold = 0,
                                     geneList, 
+                                    tileList = NULL,
                                     distance = 10^6,
-                                    pilot = FALSE, numCores) {
+                                    initialSampling = 5, numCores = 2) {
   
-   #Check whether samples align.     
+ 
+  if(!sampleColumn %in% colnames(SummarizedExperiment::colData(atacSE)) |
+          !sampleColumn %in% colnames(SummarizedExperiment::colData(rnaSE))){
+
+    stop('sampleColumn missing from atacSE and/or rnaSE.')
+  }
+
+  #Check whether samples align.     
   if(!all(atacSE@colData[,sampleColumn] %in% rnaSE@colData[,sampleColumn])) {
       stop('sampleColumns are not the same. Please ensure that sample names match in atacSE and rnaSE')
   }else if(!all(atacSE@colData[,sampleColumn] == rnaSE@colData[,sampleColumn])){
-      warning('Reording atacSE sample names to match rnaSE.')
+      warning('Reording rnaSE sample names to match atacSE.')
       rnaSE <- rnaSE[,match(colnames(atacSE), colnames(rnaSE))]
   }
 
@@ -46,146 +58,345 @@ GeneTileAssociations <- function(atacSE, rnaSE, cellPopulation, sampleColumn,
 
   }
 
-  geneRanges <- plyranges::filter(SummarizedExperiment::rowRanges(fullSE), GeneSymbol == geneList)
-
-
-                                    }
-  mat1 <- MOCHA::getCellPopMatrix(atacSE, cellPopulation, NAtoZero = TRUE)
-  mat2 <- SummarizedExperiment::assays(rnaSE)[[cellPopulation]]
-  #Test whether every gene in the geneList are found within the rnaSE
-  if(!all(geneList %in% rownames(mat2))){
-     stop('geneList not found within rnaSE. Please read documentation.')
+   #Test whether tileList and geneList are found in their assays.
+  if(!all(geneList %in% rownames(rnaSE))){
+     stop('geneList not found within rnaSE. Please read check that your genes of interest are present in rnaSE.')
   }
-  
-  #Find all tiles that overlap within the window of the geneTSS. 
-  GenomicRanges::promoters(SummarizedExperiment::rowRanges(rnaSE))
-
-  #Test whether the formula is in the right format
-  if(!(all.vars(as.formula(formula))[1] =='exp1' & any(all.vars(as.formula(formula)) %in% 'exp2'))){
-    stop('formula is not in the correct format. Data from rnaSE will be used to predict atacSE. Please format formula as exp1 ~ exp2 + OtherFixedEffects + RandomEffect.')
-  }
-
-  mat1 <- mat1[rownames(mat1) %in% sig1,,drop=FALSE]
-  mat2 <- mat2[rownames(mat2) %in% sig2,,drop=FALSE]
-  metadata1 <- SummarizedExperiment::colData(atacSE)
-  
-  # make sure the formula is a string.
-  formula = as.character(formula)
     
+  if (class(continuousFormula) == 'character') {
+    continuousFormula <- as.formula(continuousFormula)
+  }
+
+  if (class(ziFormula) == 'character') {
+    ziFormula <- as.formula(ziFormula)
+  }
+
+  #Subset down to one cell type
+  if (length(cellPopulation) > 1) {
+  stop(
+    "More than one cell population was provided. ",
+    "cellPopulation must be length 1. To run over multiple cell types, ",
+    "run combineSampleTileMatrix() to produce a new combined TSAM_Object and set ",
+    "cellPopulation = 'counts'."
+  )
+  } else if (
+    (!cellPopulation %in% names(SummarizedExperiment::assays(atacSE)) |
+      !cellPopulation %in% names(SummarizedExperiment::assays(rnaSE)))
+  ) {
+    stop("cellPopulation was not found within atacSE and/or rnaSE.")
+  } else if(cellPopulation == 'counts'){
+    newatacSE <- atacSE
+    newrnaSE <- rnaSE
+    
+  }else{
+    newatacSE <- combineSampleTileMatrix(subsetMOCHAObject(atacSE, subsetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE))
+    newrnaSE <- rnaSE
+    SummarizedExperiment::assays(newrnaSE) <- SummarizedExperiment::assays(newrnaSE)[cellPopulation]
+  }
+
+  if(!all(tileList %in% rownames(newatacSE)) & !is.null(tileList)){
+     stop('tileList not found within atacSE.  Please read check that your tiles of interest are present in atacSE.')
+  }else if(is.null(tileList)){
+    tileList = rownames(newatacSE)
+  }
+
+
+  #Test whether the continuousFormula is in the right format
+  if(!(all.vars(as.formula(continuousFormula))[1] =='exp1' & any(all.vars(as.formula(continuousFormula)) %in% 'exp2'))){
+    stop('continuousFormula is not in the correct format. Data from rnaSE will be used to predict atacSE, because atacSE is more complicated to model. Please format continuousFormula as exp1 ~ exp2 + OtherFixedEffects + RandomEffect.')
+  }
+
+  if(!( all(all.vars(as.formula(ziFormula))[1] %in% 'exp1'))){
+    stop('ziFormula is not in the correct format. Data from rnaSE will be used to predict atacSE, because atacSE is more complicated to model. Please format ziFormula as  ~ Factor1 + Factor2 + exp2. ziFormula is optional, but should ideally include at least FragNumber.')
+  }
+
+
+  if (zi_threshold < 0 | zi_threshold > 1 | ! is.numeric(zi_threshold)) {
+    stop("zi_threshold must be between 0 and 1.")
+  }
+
+  #Subset down each SummarizedExperiment to the rows of interest, and assays of interest. 
+  newatacSE <- newatacSE[rownames(newatacSE)  %in% tileList, ]
+  newrnaSE <- newrnaSE[rownames(newrnaSE)  %in% geneList, ]
+
   # initialize parallel processing
   cl <- parallel::makeCluster(numCores)
 
-  #Find all combinations of sig1 and sig2 to test. 
-  allCombo <- as.data.frame(expand.grid(as.character(sig2),as.character(sig1)), stringsAsFactors = FALSE)
-    
-  if(pilot){
-      
-     
-      
-      return(pilotModels)
-    
-    }
+  #Find all combinations of tileList and geneList to test. 
+  allCombo <- as.data.frame(expand.grid(as.character(geneList),as.character(tileList)), stringsAsFactors = FALSE)
+  browser()
 
-  # Generate all combinations of sig1 and sig2 as a list to iterate over.
-  allComboList <- lapply(c(1:dim(allCombo)[1]), function(x){
-                   rev(as.character(unlist(allCombo[x,])))
-      })
-    
-  individualAssociations <- function(x){
-    
-    df <- data.frame(exp1 = unlist(mat1[x[[1]],]), exp2 = unlist(mat2[x[[2]],]), metadata1)
-    modelRes <- lmerTest::lmer(as.formula(formula), data = df)
-    outputDF <- as.data.frame(summary(modelRes)$coefficients)
-    rownames(outputDF)[grepl('Intercept', rownames(outputDF))] = 'Intercept'
-    outputDF$Modality1 = x[[1]]
-    outputDF$Modality2 = x[[2]]
+  geneTileAssociations <- .multiModalModeling(newatacSE, newrnaSE, allCombo = allCombo, continuousFormula =  continuousFormula,
+                        ziFormula = ziFormula, zi_threshold = zi_threshold, initialSampling = initialSampling, family = stats::gaussian(),
+                        modality = 'GeneTile',
+                        numCores = numCores)
 
-    Resid <- stats::resid(modelRes)
-    
-    if(!all(metadata1[,sampleColumn] %in% names(Resid))){
-      NA_samples <- rep(NA, sum(!metadata1[,sampleColumn] %in% names(Resid)))
-      names(NA_samples) <- metadata1[!metadata1[,sampleColumn] %in% names(Resid), sampleColumn]
-      Resid <- c(Resid, NA_samples)
-    }
-    Resid <- Resid[match(names(Resid),metadata1[,sampleColumn])]
-    vcov <- as.data.frame(lme4::VarCorr(modelRes))$vcov
-    names(vcov) <- as.data.frame(lme4::VarCorr(modelRes))$grp
-    return(list('Coeff' = outputDF, 'Resid' = Resid, 'VCov'= vcov))
-    
-    }
-    
-    
-  #Export data to each core
-  parallel::clusterExport(cl, c("mat1", "mat2", "metadata1", "formula","sampleColumn","individualAssociations"), envir = environment())
-    
-  #Test for each individual combination. 
-  allRes <- pbapply::pblapply(cl = cl, X =allComboList, individualAssociations)
+  return(geneTileAssociations)
 
-  ## Identify fixed effect variables to save, and generate nullDFList for processModelOutputs
-  nullDFList <- allRes[[1]]
-  nullDFList$Coeff[!is.na(nullDFList$Coeff)] = NA
-  nullDFList$Resid[!is.na(nullDFList$Resid)] = NA
-  nullDFList$VCov[!is.na(nullDFList$VCov)] = NA
-  
-  outputList <- processModelOutputs(modelOutputList=allRes, nullDFList = nullDFList, 
-                      rownamesList =paste(allCombo$Var2,  allCombo$Var1, sep = "_"),
-                                  SummarizedExperimentObj = atacSE, returnList = TRUE) 
-
-
-  # Process rowData. 
-  rowData1 <- as.data.frame(SummarizedExperiment::rowData(atacSE))
-  rowData2 <- as.data.frame(SummarizedExperiment::rowData(rnaSE))
-  if(any(dim(rowData1) ==0) & any(dim(rowData1) == 0)){
-    #No row data available
-    allRowData = NULL
-  }else if(any(dim(rowData1) ==0)){
-    #Only rowData from rnaSE
-    allRowData <- rowData1[allCombo$Var2,]
-    allRowData$Obj2 = allCombo$Var2
-    rownames(allRowData) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
-      
-  }else if(any(dim(rowData2) ==0)){
-    #Only rowData from atacSE
-    allRowData <- rowData1[allCombo$Var1,]
-    allRowData$Obj1 = allCombo$Var1
-    rownames(allRowData) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
-
-  }else{
-
-    allRowData1 <- rowData1[allCombo$Var1,]
-    allRowData1$Obj1 = allCombo$Var1
-    rownames(allRowData1) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
-    allRowData2 <- rowData2[allCombo$Var2,]
-    allRowData2$Obj2 = allCombo$Var2
-    rownames(allRowData2) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
-    allRowData <- cbind(allRowData1, allRowData2)
-  }
-  residualDF <- outputList[[2]]
-  colnames(residualDF)[is.na(colnames(residualDF))] = rownames(SummarizedExperiment::colData(atacSE))[
-      !rownames(SummarizedExperiment::colData(atacSE)) %in% colnames(residualDF)]
-  #Create ResidualObject, and metadata list.
-  ResidualSE <- SummarizedExperiment::SummarizedExperiment(
-                      list('Residual' =  residualDF),
-                      colData = SummarizedExperiment::colData(atacSE),
-                      rowData = allRowData,
-                      metadata = S4Vectors::metadata(atacSE)
-              )
-              
-  #Package up the metadata list. 
-  metaDataList <- list('Residuals' = ResidualSE,
-                      'RandomEffectVariance' = outputList[[3]])
-
-  #Bind results into one data.frame.
-  resDF <- SummarizedExperiment::SummarizedExperiment(outputList[[1]],
-                    rowData = allRowData,
-                    metadata= metaDataList)
-
-
-  # stop parallel processing
-  parallel::stopCluster(cl)
-  # concatenate results and return
-  return(resDF)
 }
+
+
+#' @title \code{scATAC_Associations}
+#'
+#' @description \code{scATAC_Associations} leverages zero-inflated generalized linear mixed effect modeling to associate accessibility
+#                       and gene expression.
+#' @param atacSE SummarizedExperiment object from getPseudobulkRNA
+#' @param cellPopulation - name of the assay (cell population) to extract and use from atacSE
+#' @param generalSE A SummarizedExperiment containing data from another modality, like ChromVAR, 
+#' @param generalAssay Name of the assay from generalSE that you wish to use for modeling.
+#' @param sampleColumn - A string: the name of the column with Sample names from the metadata. 
+#'                  Must be the same from atacSE and generalSE. This is used for aligning atacSE and generalSE.
+#' @param continuousFormula : Formula used for modeling. Must be in the form exp1 ~ exp2 + other factors + (1|RandomEffect). 
+#'          Exp1 will be the dummy veriable for accessibility, while exp2 will be the dummy variable for gene expression. 
+#' @param ziFormula list of  to tests from atacSE to test. 
+#' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. At or above this threshold, the zero-inflated modeling kicks in.
+#'            We don't recommend changing this unless you have fully tested out the model and understand what it is doing. 
+#' @param tileList a list of tiles to test. 
+#' @param generalList A list of which rownames of generalAssay should be used for modeling associations. 
+#' @param distance A number limiting the distance between tiles and genes TSS at which point associations will not be tested. 
+#' @param initialSampling An integer. Default is 5. Represents the number of initial models to test when generating a null set (which is used when models fails). If your model fails often, increase this number or choose a better formula.
+#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' 
+#' @return A summarized experiment summarizing the output. 
+#'
+#' @details
+#'
+#'
+#' @export
+
+scATAC_Associations <- function(atacSE, cellPopulation, 
+                                    generalSE, generalAssay,
+                                    sampleColumn, 
+                                    continuousFormula, 
+                                    ziFormula, 
+                                    zi_threshold = 0,
+                                    tileList,
+                                    generalList, 
+                                    initialSampling = 5, numCores = 2) {
+  
+ 
+  if(!sampleColumn %in% colnames(SummarizedExperiment::colData(atacSE)) |
+          !sampleColumn %in% colnames(SummarizedExperiment::colData(generalSE))){
+
+    stop('sampleColumn missing from atacSE and/or generalSE.')
+  }
+
+  #Check whether samples align.     
+  if(!all(atacSE@colData[,sampleColumn] %in% generalSE@colData[,sampleColumn])) {
+      stop('sampleColumns are not the same. Please ensure that sample names match in atacSE and generalSE')
+  }else if(!all(atacSE@colData[,sampleColumn] == generalSE@colData[,sampleColumn])){
+      warning('Reording generalSE sample names to match atacSE.')
+      generalSE <- generalSE[,match(colnames(atacSE), colnames(generalSE))]
+  }
+
+  if(any(c(colnames(SummarizedExperiment::colData(atacSE)), 
+      colnames(SummarizedExperiment::colData(generalSE))) %in% c('exp1','exp2'))){
+
+    stop('metadata of atacSE and/or generalSE contains a column that contains the name exp1 or exp2.',
+    'exp1 and exp2 are hardcoded to represent the data from atacSE and generalSE, not the metadata.
+    Please remove these and try again.')
+
+  }
+
+   #Test whether tileList and geneList are found in their assays.
+  if(!all(geneList %in% rownames(generalSE))){
+     stop('geneList not found within generalSE. Please read check that your genes of interest are present in generalSE.')
+  }
+    
+  if (class(continuousFormula) == 'character') {
+    continuousFormula <- as.formula(continuousFormula)
+  }
+
+  if (class(ziFormula) == 'character') {
+    ziFormula <- as.formula(ziFormula)
+  }
+
+  #Subset down to one cell type
+  if (length(cellPopulation) > 1) {
+  stop(
+    "More than one cell population was provided. ",
+    "cellPopulation must be length 1. To run over multiple cell types, ",
+    "run combineSampleTileMatrix() to produce a new combined TSAM_Object and set ",
+    "cellPopulation = 'counts'."
+  )
+  } else if (
+    (!cellPopulation %in% names(SummarizedExperiment::assays(atacSE)) |
+      !cellPopulation %in% names(SummarizedExperiment::assays(generalSE)))
+  ) {
+    stop("cellPopulation was not found within atacSE and/or generalSE.")
+  } else if(cellPopulation == 'counts'){
+    newatacSE <- atacSE
+    
+  }else{
+    newatacSE <- combineSampleTileMatrix(subsetMOCHAObject(atacSE, subsetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE))
+   
+  }
+  newGeneral <- generalSE
+  SummarizedExperiment::assays(newGeneral) <- SummarizedExperiment::assays(newGeneral)[generalAssay]
+
+  if(!all(tileList %in% rownames(newatacSE))){
+     stop('tileList not found within atacSE.  Please read check that your tiles of interest are present in atacSE.')
+  }
+
+
+  #Test whether the continuousFormula is in the right format
+  if(!(all.vars(as.formula(continuousFormula))[1] =='exp1' & any(all.vars(as.formula(continuousFormula)) %in% 'exp2'))){
+    stop('continuousFormula is not in the correct format. Data from generalSE will be used to predict atacSE, because atacSE is more complicated to model. Please format continuousFormula as exp1 ~ exp2 + OtherFixedEffects + RandomEffect.')
+  }
+
+  if(!( all(all.vars(as.formula(ziFormula))[1] %in% 'exp1'))){
+    stop('ziFormula is not in the correct format. Data from generalSE will be used to predict atacSE, because atacSE is more complicated to model. Please format ziFormula as  ~ Factor1 + Factor2 + exp2. ziFormula is optional, but should ideally include at least FragNumber.')
+  }
+
+
+  if (zi_threshold < 0 | zi_threshold > 1 | ! is.numeric(zi_threshold)) {
+    stop("zi_threshold must be between 0 and 1.")
+  }
+
+  #Subset down each SummarizedExperiment to the rows of interest, and assays of interest. 
+  newatacSE <- newatacSE[rownames(newatacSE)  %in% tileList, ]
+  newGeneral <- newGeneral[rownames(newGeneral)  %in% generalList, ]
+
+  # initialize parallel processing
+  cl <- parallel::makeCluster(numCores)
+
+  #Find all combinations of tileList and geneList to test. 
+  allCombo <- as.data.frame(expand.grid(as.character(generalList),as.character(tileList)), stringsAsFactors = FALSE)
+
+  geneTileAssociations <- .multiModalModeling(newatacSE, newGeneral, allCombo = allCombo, continuousFormula =  continuousFormula,
+                        ziFormula = ziFormula, zi_threshold = zi_threshold, initialSampling = initialSampling, family = stats::gaussian(), modality = 'GeneTile',
+                        numCores = numCores)
+
+  return(geneTileAssociations)
+
+}
+
+
+
+#' @title \code{scRNA_Associations}
+#'
+#' @description \code{scRNA_Associations} leverages generalized linear mixed effect modeling to associate gene expression to another modality. 
+#' @param rnaSE SummarizedExperiment object from getPseudobulkRNA
+#' @param cellPopulation - name of the assay (cell population) to extract and use from rnaSE and atacSE
+#' @param generalSE A SummarizedExperiment containing data from another modality, like ChromVAR, 
+#' @param generalAssay Name of the assay from generalSE that you wish to use for modeling.
+#' @param sampleColumn - A string: the name of the column with Sample names from the metadata. 
+#'                  Must be the same from atacSE and rnaSE. This is used for aligning atacSE and rnaSE
+#' @param formula : Formula used for modeling. Must be in the form exp1 ~ exp2 + other factors + (1|RandomEffect), where 
+#'          exp1 is the dummy variable for gene expression and exp2 is the dummy variable for the rownames from generalSE. 
+#' @param geneList a list of genes from rnaSE to test. 
+#' @param generalList A list of which rownames of generalAssay should be used for modeling associations. 
+#' @param initialSampling An integer. Default is 5. Represents the number of initial models to test when generating a null set (which is used when models fails). If your model fails often, increase this number or choose a better formula.
+#' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
+#' 
+#' @return A summarized experiment summarizing the output. 
+#'
+#' @details
+#'
+#'
+#' @export
+
+scRNA_Associations <- function(rnaSE, cellPopulation, 
+                                    generalSE, generalAssay,
+                                    sampleColumn, 
+                                    formula, 
+                                    geneList, 
+                                    generalList = NULL,
+                                    initialSampling = 5, numCores = 2) {
+  
+ 
+  if(!sampleColumn %in% colnames(SummarizedExperiment::colData(generalSE)) |
+          !sampleColumn %in% colnames(SummarizedExperiment::colData(rnaSE))){
+
+    stop('sampleColumn missing from generalSE and/or rnaSE.')
+  }
+
+  #Check whether samples align.     
+  if(!all(generalSE@colData[,sampleColumn] %in% rnaSE@colData[,sampleColumn])) {
+      stop('sampleColumns are not the same. Please ensure that sample names match in generalSE and rnaSE')
+  }else if(!all(generalSE@colData[,sampleColumn] == rnaSE@colData[,sampleColumn])){
+      warning('Reording rnaSE sample names to match generalSE.')
+      rnaSE <- rnaSE[,match(colnames(generalSE), colnames(rnaSE))]
+  }
+
+  if(any(c(colnames(SummarizedExperiment::colData(generalSE)), 
+      colnames(SummarizedExperiment::colData(rnaSE))) %in% c('exp1','exp2'))){
+
+    stop('metadata of generalSE and/or rnaSE contains a column that contains the name exp1 or exp2.',
+    'exp1 and exp2 are hardcoded to represent the data from generalSE and rnaSE, not the metadata.
+    Please remove these and try again.')
+
+  }
+
+   #Test whether tileList and geneList are found in their assays.
+  if(!all(geneList %in% rownames(rnaSE))){
+     stop('geneList not found within rnaSE. Please read check that your genes of interest are present in rnaSE.')
+  }
+    
+  if (class(continuousFormula) == 'character') {
+    continuousFormula <- as.formula(continuousFormula)
+  }
+
+  if (class(ziFormula) == 'character') {
+    ziFormula <- as.formula(ziFormula)
+  }
+
+  #Subset down to one cell type
+  if (length(cellPopulation) > 1) {
+  stop(
+    "More than one cell population was provided. ",
+    "cellPopulation must be length 1. To run over multiple cell types, ",
+    "run combineSampleTileMatrix() to produce a new combined TSAM_Object and set ",
+    "cellPopulation = 'counts'."
+  )
+  } else if (
+    (!cellPopulation %in% names(SummarizedExperiment::assays(generalSE)) |
+      !cellPopulation %in% names(SummarizedExperiment::assays(rnaSE)))
+  ) {
+    stop("cellPopulation was not found within rnaSE and/or generalAssay within generalSE.")
+  } else if(cellPopulation == 'counts'){
+    newrnaSE <- rnaSE
+    
+    
+  }else{
+    newrnaSE <- rnaSE
+    SummarizedExperiment::assays(newrnaSE) <- SummarizedExperiment::assays(newrnaSE)[cellPopulation]
+  }
+
+  newGeneral <- generalSE
+  SummarizedExperiment::assays(newGeneral) <- SummarizedExperiment::assays(newGeneral)[generalAssay]
+
+  if(!all(generalList %in% rownames(newGeneral))){
+     stop('generalList not found within generalSE.  Please read check that your tiles of interest are present in generalSE.')
+  }
+
+
+  #Test whether the continuousFormula is in the right format
+  if(!(all.vars(as.formula(formula))[1] =='exp1' & any(all.vars(as.formula(formula)) %in% 'exp2'))){
+    stop('continuousFormula is not in the correct format. Data from rnaSE will be used to predict atacSE, because atacSE is more complicated to model. Please format continuousFormula as exp1 ~ exp2 + OtherFixedEffects + RandomEffect.')
+  }
+
+  #Subset down each SummarizedExperiment to the rows of interest, and assays of interest. 
+  newGeneral <- newGeneral[rownames(newGeneral)  %in% generalList, ]
+  newrnaSE <- newrnaSE[rownames(newrnaSE)  %in% geneList, ]
+
+  # initialize parallel processing
+  cl <- parallel::makeCluster(numCores)
+
+  #Find all combinations of tileList and geneList to test. 
+  allCombo <- as.data.frame(expand.grid(as.character(generalList),as.character(geneList)), stringsAsFactors = FALSE)
+  browser()
+
+  geneAssociations <- .multiModalModeling(newrnaSE, newGeneral, allCombo = allCombo, continuousFormula = formula,
+                        ziFormula = ~0, zi_threshold = 0, initialSampling = initialSampling, family = stats::poisson(),
+                        modality = 'GeneralGene',
+                        numCores = numCores)
+
+  return(geneAssociations)
+
+}
+
+
 
 
 
@@ -203,9 +414,8 @@ GeneTileAssociations <- function(atacSE, rnaSE, cellPopulation, sampleColumn,
 #'                  Must be the same from SE1 and SE2. This is used for aligning SE1 and SE2
 #' @param formula : Formula used for modeling. Must be in the form exp1 ~ exp2 + other factors + (1|RandomEffect)
 #' @param sig1 A list of rows from SE1 to test. 
-#' @param sig2 a list of rows from SE2 to test. 
-#' @param pilot a boolean to test just 10 combinations and return full models for diagnosis, or
-#'      test all options and return the coefficients. 
+#' @param sig2 A list of rows from SE2 to test. 
+#' @param initialSampling An integer. Default is 5. Represents the number of initial models to test when generating a null set (which is used when models fails). If your model fails often, increase this number or choose a better formula.
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' 
 #' @return A summarized experiment summarizing the output. 
@@ -215,7 +425,7 @@ GeneTileAssociations <- function(atacSE, rnaSE, cellPopulation, sampleColumn,
 #'
 #' @export
 
-general_associations <- function(SE1, SE2, assay1, assay2, sampleColumn, formula, sig1, sig2, family = stats::gaussian(), initialSampling = 5, pilot = FALSE, numCores) {
+general_associations <- function(SE1, SE2, assay1, assay2, sampleColumn, formula, sig1, sig2, family = stats::gaussian(), initialSampling = 5, numCores) {
   
    #Check whether samples align.     
   if(!all(SE1@colData[,sampleColumn] %in% SE2@colData[,sampleColumn])) {
@@ -543,6 +753,10 @@ individualAssociations <- function(x){
   ## Extract matrices and metadata
   mat1 <- SummarizedExperiment::assays(SE1)[[1]]
   mat2 <- SummarizedExperiment::assays(SE2)[[1]]
+
+  if(any(modality %in% c('GeneTile','General_scATAC'))){
+    mat1 <- log2(mat1 + 1)
+  }
 
   metaData <- SummarizedExperiment::colData(SE1)
 
