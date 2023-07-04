@@ -256,6 +256,7 @@ subsetPseudobulk <- function(rnaSE,
         if(all(groupList %in% names(SummarizedExperiment::assays(rnaSE)))){
             newSE <- rnaSE
             SummarizedExperiment::assays(newSE) <- SummarizedExperiment::assays(newSE)[groupList]
+            newSE@metadata$summarizedData <- newSE@metadata$summarizedData[groupList,]
         }else{
             stop('You asked to subset by cell type, but the provided list of cell types (groupList) includes some or all that are not found within rnaSE.')
         }
@@ -263,7 +264,7 @@ subsetPseudobulk <- function(rnaSE,
     }else if (subsetBy %in% colnames(sampleData)) {
         if(all(groupList) %in% unique(sampleData[,subsetBy])){
             newSE <- newSE[,sampleData[[subsetBy]] %in% groupList]
-            newSE@metadata$summarizedData[,]
+            newSE@metadata$summarizedData <- newSE@metadata$summarizedData[,groupList]
         }else{
             stop('Some indices of groupList were not found within the metadata of column provided to subsetBy.')
         }
