@@ -1,6 +1,6 @@
-#' @title \code{subsetObject}
+#' @title \code{subsetMOCHAObject}
 #'
-#' @description \code{subsetObject} subsets a tileResults-type object (from
+#' @description \code{subsetMOCHAObjectt} subsets a tileResults-type object (from
 #'   callOpenTiles), or a SummarizedExperiment-type object (from
 #'   getSampleTileMatrix), either by cell type or sample metadata.
 #'
@@ -26,6 +26,7 @@ subsetMOCHAObject <- function(Object,
                               removeNA = TRUE,
                               subsetPeaks = TRUE,
                               verbose = FALSE) {
+                                
   summarizedData <- S4Vectors::metadata(Object)$summarizedData
   sampleData <- SummarizedExperiment::colData(Object)
 
