@@ -90,8 +90,7 @@ GeneTile_Associations <- function(atacSE, rnaSE, cellPopulation, sampleColumn,
     
   }else{
     newatacSE <- combineSampleTileMatrix(subsetMOCHAObject(atacSE, subsetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE))
-    newrnaSE <- rnaSE
-    SummarizedExperiment::assays(newrnaSE) <- SummarizedExperiment::assays(newrnaSE)[cellPopulation]
+    newrnaSE <- combinePseudobulk(rnaSE, cellPopulations = cellPopulation)
   }
 
   if(!all(tileList %in% rownames(newatacSE)) & !is.null(tileList)){
@@ -123,10 +122,10 @@ GeneTile_Associations <- function(atacSE, rnaSE, cellPopulation, sampleColumn,
   cl <- parallel::makeCluster(numCores)
 
   #Find all combinations of tileList and geneList to test. 
-  allCombo <- as.data.frame(expand.grid(as.character(geneList),as.character(tileList)), stringsAsFactors = FALSE)
+  allCombos <- as.data.frame(expand.grid(as.character(geneList),as.character(tileList)), stringsAsFactors = FALSE)
   browser()
 
-  geneTileAssociations <- .multiModalModeling(newatacSE, newrnaSE, allCombo = allCombo, continuousFormula =  continuousFormula,
+  geneTileAssociations <- .multiModalModeling(newatacSE, newrnaSE, allCombos = allCombos, continuousFormula =  continuousFormula,
                         ziFormula = ziFormula, zi_threshold = zi_threshold, initialSampling = initialSampling, family = stats::gaussian(),
                         modality = 'GeneTile',
                         numCores = numCores)
@@ -261,9 +260,9 @@ scATAC_Associations <- function(atacSE, cellPopulation,
   cl <- parallel::makeCluster(numCores)
 
   #Find all combinations of tileList and geneList to test. 
-  allCombo <- as.data.frame(expand.grid(as.character(generalList),as.character(tileList)), stringsAsFactors = FALSE)
+  allCombos <- as.data.frame(expand.grid(as.character(generalList),as.character(tileList)), stringsAsFactors = FALSE)
 
-  geneTileAssociations <- .multiModalModeling(newatacSE, newGeneral, allCombo = allCombo, continuousFormula =  continuousFormula,
+  geneTileAssociations <- .multiModalModeling(newatacSE, newGeneral, allCombos = allCombos, continuousFormula =  continuousFormula,
                         ziFormula = ziFormula, zi_threshold = zi_threshold, initialSampling = initialSampling, family = stats::gaussian(), modality = 'GeneTile',
                         numCores = numCores)
 
@@ -359,8 +358,7 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
     
     
   }else{
-    newrnaSE <- rnaSE
-    SummarizedExperiment::assays(newrnaSE) <- SummarizedExperiment::assays(newrnaSE)[cellPopulation]
+    newrnaSE <- combinePseudobulk(rnaSE, cellPopulations = cellPopulation)
   }
 
   newGeneral <- generalSE
@@ -384,10 +382,10 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
   cl <- parallel::makeCluster(numCores)
 
   #Find all combinations of tileList and geneList to test. 
-  allCombo <- as.data.frame(expand.grid(as.character(generalList),as.character(geneList)), stringsAsFactors = FALSE)
+  allCombos <- as.data.frame(expand.grid(as.character(generalList),as.character(geneList)), stringsAsFactors = FALSE)
   browser()
 
-  geneAssociations <- .multiModalModeling(newrnaSE, newGeneral, allCombo = allCombo, continuousFormula = formula,
+  geneAssociations <- .multiModalModeling(newrnaSE, newGeneral, allCombos = allCombos, continuousFormula = formula,
                         ziFormula = ~0, zi_threshold = 0, initialSampling = initialSampling, family = stats::poisson(),
                         modality = 'GeneralGene',
                         numCores = numCores)
@@ -468,9 +466,9 @@ general_associations <- function(SE1, SE2, assay1, assay2, sampleColumn, formula
   cl <- parallel::makeCluster(numCores)
 
   #Find all combinations of sig1 and sig2 to test. 
-  allCombo <- as.data.frame(expand.grid(as.character(sig2),as.character(sig1)), stringsAsFactors = FALSE)
+  allCombos <- as.data.frame(expand.grid(as.character(sig2),as.character(sig1)), stringsAsFactors = FALSE)
 
-  generalAssociations <- .multiModalModeling(newSE1, newSE2, allCombo = allCombo, continuousFormula = formula,
+  generalAssociations <- .multiModalModeling(newSE1, newSE2, allCombos = allCombos, continuousFormula = formula,
                         ziFormula = ~0, zi_threshold =0, initialSampling, family = family, modality = 'GeneralAssociation',
                         numCores = numCores)
 
@@ -499,13 +497,13 @@ general_associations <- function(SE1, SE2, assay1, assay2, sampleColumn, formula
 #'
 #' @noRd
 
-generateNULL_Associations <- function(mat1, mat2, metaData, allCombo, continuousFormula, ziFormula, family, initialSampling){
+generateNULL_Associations <- function(mat1, mat2, metaData, allCombos, continuousFormula, ziFormula, family, initialSampling){
 
   #Pull out random pairs to test
-  pilotIndices <- sample(x = 1:length(allCombo), size = initialSampling, replace = FALSE)
+  pilotIndices <- sample(x = 1:length(allCombos), size = initialSampling, replace = FALSE)
 
   #Get the full name (we need to reverse the order to in order to have the first index be mat1, and the second related to mat2.)
-  pilotIndices2 <- allCombo[pilotIndices]
+  pilotIndices2 <- allCombos[pilotIndices]
 
   #Generate a list of models
   modelList <- lapply(pilotIndices2, function(x) {
@@ -735,9 +733,8 @@ individualAssociations <- function(x){
 #' @param mat2 SummarizedExperiment object for measurement-type 2. 
 #' @param allCombos all combinations of rows from mat1 and mat2 to test. 
 #' @param metaData - metadata from samples
-#' @param distance 
-#' @param formula : Formula used for modeling. Must be in the form exp1 ~ exp2 + other factors + (1|RandomEffect)
-#' @param ziformula1 : Formula used for modeling the zero-inflated component. Must be in the form  ~ exp2 + other factors + (1|RandomEffect)
+#' @param continuousFormula : Formula used for modeling. Must be in the form exp1 ~ exp2 + other factors + (1|RandomEffect)
+#' @param ziFormula : Formula used for modeling the zero-inflated component. Must be in the form  ~ exp2 + other factors + (1|RandomEffect)
 #' @param family distribution family to be provided to glmmTMB
 #' @param numCores Optional, the number of cores to use with multiprocessing. Default is 1.
 #' 
@@ -748,7 +745,7 @@ individualAssociations <- function(x){
 #'
 #' @noRd
 
-.multiModalModeling <- function(SE1, SE2, allCombo, continuousFormula, ziFormula, zi_threshold, initialSampling, family, modality, numCores) {
+.multiModalModeling <- function(SE1, SE2, allCombos, sampleColumn, continuousFormula, ziFormula, zi_threshold, initialSampling, family, modality, numCores) {
   
   ## Extract matrices and metadata
   mat1 <- SummarizedExperiment::assays(SE1)[[1]]
@@ -758,7 +755,11 @@ individualAssociations <- function(x){
     mat1 <- log2(mat1 + 1)
   }
 
-  metaData <- SummarizedExperiment::colData(SE1)
+  metaData1 <- SummarizedExperiment::colData(SE1)
+  metaData2 <- SummarizedExperiment::colData(SE2)
+  unique2 <- colnames(metaData2)[!colnames(metaData2) %in% colnames(metaData1)]
+  metaData <- dplyr::left_join(as.data.frame(metaData1), 
+                as.data.frame(metaData2[,c(unique2, sampleColumn)]), by = sampleColumn)
 
   if(numCores <= 1){
     stop('numCores must be greater than 1. This method is meant to be parallelized.')
@@ -787,15 +788,15 @@ individualAssociations <- function(x){
     stop("factors from the ziFormula were not found in the metadata.")
   }
 
-  # convert allCombo into a list to iterate ove (need to reverse order for modeling, since expand grid tends to flip it.)
-  allComboList <- lapply(c(1:dim(allCombo)[1]), function(x){
-                   rev(as.character(unlist(allCombo[x,])))
+  # convert allCombos into a list to iterate ove (need to reverse order for modeling, since expand grid tends to flip it.)
+  allComboList <- lapply(c(1:dim(allCombos)[1]), function(x){
+                   rev(as.character(unlist(allCombos[x,])))
       })
 
 
   #Generate the nullDFList, incase of model failure. 
   nullDFList <- generateNULL_Associations(mat1=mat1, mat2 = mat2, metaData = metaData,
-                       allCombo = allComboList, continuousFormula = continuousFormula, ziFormula = ziFormula,
+                       allCombos = allComboList, continuousFormula = continuousFormula, ziFormula = ziFormula,
                        family = family, initialSampling = initialSampling)
 
   cl <- parallel::makeCluster(numCores)
@@ -829,24 +830,24 @@ individualAssociations <- function(x){
     allRowData = NULL
   }else if(any(dim(rowData1) ==0)){
     #Only rowData from SE2
-    allRowData <- rowData1[allCombo$Var2,]
-    allRowData$Obj2 = allCombo$Var2
-    rownames(allRowData) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
+    allRowData <- rowData1[allCombos$Var2,]
+    allRowData$Obj2 = allCombos$Var2
+    rownames(allRowData) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
       
   }else if(any(dim(rowData2) ==0)){
     #Only rowData from SE1
-    allRowData <- rowData1[allCombo$Var1,]
-    allRowData$Obj1 = allCombo$Var1
-    rownames(allRowData) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
+    allRowData <- rowData1[allCombos$Var1,]
+    allRowData$Obj1 = allCombos$Var1
+    rownames(allRowData) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
 
   }else{
 
-    allRowData1 <- rowData1[allCombo$Var1,]
-    allRowData1$Obj1 = allCombo$Var1
-    rownames(allRowData1) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
-    allRowData2 <- rowData2[allCombo$Var2,]
-    allRowData2$Obj2 = allCombo$Var2
-    rownames(allRowData2) = paste(allCombo$Var2,  allCombo$Var1, sep = "_")
+    allRowData1 <- rowData1[allCombos$Var1,]
+    allRowData1$Obj1 = allCombos$Var1
+    rownames(allRowData1) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
+    allRowData2 <- rowData2[allCombos$Var2,]
+    allRowData2$Obj2 = allCombos$Var2
+    rownames(allRowData2) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
     allRowData <- cbind(allRowData1, allRowData2)
   }
   residualDF <- outputList[[2]]
