@@ -371,7 +371,8 @@ setMethod(
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
   # Make a copy to preserve original columns.
-  cellColDataCopy <- data.frame(cellColData)
+  cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData), 
+                                                 !!as.name(cellPopLabel) %in% cellPopulations))
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
     utils::type.convert(as.character(x), as.is = TRUE)
   })
