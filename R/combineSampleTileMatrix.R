@@ -17,12 +17,7 @@
 combineSampleTileMatrix <- function(SampleTileObj,
                                     NAtoZero = TRUE,
                                     verbose = FALSE) {
-  if (!requireNamespace("chromVAR", quietly = TRUE)) {
-    stop(
-      "Package 'chromVAR' is required for combineSampleTileMatrix. ",
-      "Please install 'chromVAR' to proceed."
-    )
-  }
+ 
   CellTypes <- FragNumber <- NULL
 
   genome <- S4Vectors::metadata(SampleTileObj)$Genome
@@ -121,20 +116,5 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rowRanges = allRanges,
     metadata = newMetadata
   )
-<<<<<<< HEAD
-
-  newObj <- chromVAR::addGCBias(newObj, genome = genome)
-
-  if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
-    naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
-
-    if (verbose) {
-      warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
-    }
-
-    SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(SummarizedExperiment::rowData(newObj)$bias, na.rm = TRUE)
-  }
-
-
   return(newObj)
 }
