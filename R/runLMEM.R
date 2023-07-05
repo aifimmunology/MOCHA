@@ -27,7 +27,6 @@
 #'
 #' @examples
 #' \dontrun{
-<<<<<<< HEAD
 #' modelList <- runLMEM(ExperimentObj,
 #'   modelFormula = NULL,
 #'   initialSampling = 5,
