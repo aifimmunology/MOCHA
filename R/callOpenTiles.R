@@ -371,7 +371,8 @@ setMethod(
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
   # Make a copy to preserve original columns.
-  cellColDataCopy <- data.frame(cellColData)
+  cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData), 
+                                                 !!as.name(cellPopLabel) %in% cellPopulations))
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
     utils::type.convert(as.character(x), as.is = TRUE)
   })
@@ -399,7 +400,7 @@ setMethod(
             values_from = meanValues
           )
       )
-
+     
       summarizedData <- as.data.frame(summarizedData)
       rownames(summarizedData) <- summarizedData[[cellPopLabel]]
       summarizedData <- summarizedData[, -1, drop = FALSE]
@@ -518,13 +519,15 @@ setMethod(
       rm(covFiles)
     }
 
+    #parallel::stopCluster(cl)
+      
     # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     iterList <- lapply(seq_along(frags), function(x) {
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
-    cl <- parallel::makeCluster(numCores)
+    #cl <- parallel::makeCluster(numCores)
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
@@ -593,12 +596,14 @@ setMethod(
   sampleData <- suppressWarnings(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
-
+    
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
     append(
       list(
-        "CellCounts" = allCellCounts,
-        "FragmentCounts" = allFragmentCounts
+        "CellCounts" = allCellCounts[
+            match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),],
+        "FragmentCounts" = allFragmentCounts[
+            match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),]
       ),
       additionalMetaData
     ),
