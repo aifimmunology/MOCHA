@@ -287,7 +287,7 @@ subsetPseudobulk <- function(rnaSE,
 #
 
 combinePseudobulk <- function(rnaSE,
-                              cellPopulations = 'All') {
+                              cellPopulations = 'All', metadataT = FALSE) {
 
     if (!grepl("SummarizedExperiment",class(rnaSE)[1] )) {
         stop('The variable rnaSE that you provided is not a Summarized Experiment.')
@@ -327,34 +327,43 @@ combinePseudobulk <- function(rnaSE,
         tmp_meta
     })))
 
-    summarizedData <- S4Vectors::metadata(rnaSE)$summarizedData
+    if(metadataT){
 
-    addMetaData <- as.data.frame(do.call('cbind',lapply(SummarizedExperiment::assays(summarizedData), function(x){
-        tmpMeta <- x
-        tmpMeta$CellType = rownames(x)
-        tmpMeta2 <- tidyr::pivot_longer(
-            tmpMeta,
-            cols = colnames(x),
-            names_to = "Sample",
-            values_to = "Freq"
-        )
-        tmpMeta2 <- dplyr::mutate(
-            tmpMeta2,
-            Sample = gsub(" ", "_", paste(CellType, Sample, sep = "__"))
-        )
-        output <- unlist(tmpMeta2$Freq )
-        names(output) <- tmpMeta2$Sample
-        output
-    })))
-    addMetaData$Sample = rownames(addMetaData)
-    fullMeta <- dplyr::full_join( as.data.frame(allSampleData), as.data.frame(addMetaData), by = 'Sample')
+        summarizedData <- S4Vectors::metadata(rnaSE)$summarizedData
 
-    History <- append(rnaSE@metadata$History, paste("combinePseudobulk", utils::packageVersion("MOCHA")))
-
-    newSE <- SummarizedExperiment::SummarizedExperiment(newAssays, 
+        addMetaData <- as.data.frame(do.call('cbind',lapply(SummarizedExperiment::assays(summarizedData), function(x){
+            tmpMeta <- x
+            tmpMeta$CellType = rownames(x)
+            tmpMeta2 <- tidyr::pivot_longer(
+                tmpMeta,
+                cols = colnames(x),
+                names_to = "Sample",
+                values_to = "Freq"
+            )
+            tmpMeta2 <- dplyr::mutate(
+                tmpMeta2,
+                Sample = gsub(" ", "_", paste(CellType, Sample, sep = "__"))
+            )
+            output <- unlist(tmpMeta2$Freq )
+            names(output) <- tmpMeta2$Sample
+            output
+        })))
+        addMetaData$Sample = rownames(addMetaData)
+        History <- append(rnaSE@metadata$History, paste("combinePseudobulk", utils::packageVersion("MOCHA")))
+        fullMeta <- dplyr::full_join( as.data.frame(allSampleData), as.data.frame(addMetaData), by = 'Sample')
+        
+        newSE <- SummarizedExperiment::SummarizedExperiment(newAssays, 
                     colData = fullMeta,
                     rowRanges = SummarizedExperiment::rowRanges(rnaSE),
                     metadata = list('History' = History))
+
+    }else{
+        newSE <- SummarizedExperiment::SummarizedExperiment(newAssays,
+                    colData = allSampleData,
+                    rowRanges = SummarizedExperiment::rowRanges(rnaSE))
+    }
+
+  
     return(newSE)
 
 }
