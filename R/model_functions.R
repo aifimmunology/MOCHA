@@ -611,12 +611,12 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
 
     newColumnNames <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',colnames(nullDFList$Coeff)))
     output_list <- lapply(coeffNames, function(z){
-      tmpCoef <- do.call("rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+      tmpCoef <- do.call("rbind", lapply(X = modelOutputList, function(x) {
             tmpDf <- x[['Coeff']][z,]
             colnames(tmpDf) <- newColumnNames
             tmpDf$FDR <- p.adjust(tmpDf$p_value, 'fdr')
             tmpDf
-          }, cl = NULL))
+          }))
       rownames(tmpCoef) <- rownamesList
       tmpCoef
     })
@@ -626,14 +626,14 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
     }
 
     residual_tmp <- do.call(
-      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+      "rbind", lapply(X = modelOutputList, function(x) {
         x[['Resid']]
-      }, cl = NULL)
+      })
     )
     vcov_tmp <- do.call(
-      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+      "rbind", lapply(X = modelOutputList, function(x) {
         x[['VCov']]
-    }, cl = NULL)
+      })
     )
     rownames(residual_tmp) <- rownames(vcov_tmp) <- rownamesList
     residual_tmp <- residual_tmp[,match(rownames(SummarizedExperiment::colData(SummarizedExperimentObj)), colnames(residual_tmp))]

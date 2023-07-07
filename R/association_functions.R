@@ -42,11 +42,12 @@ GeneTile_Associations <- function(atacSE, rnaSE, cellPopulation, sampleColumn,
   }
 
   #Check whether samples align.     
-  if(!all(atacSE@colData[,sampleColumn] %in% rnaSE@colData[,sampleColumn])) {
-      stop('sampleColumns are not the same. Please ensure that sample names match in atacSE and rnaSE')
+  if(!all(atacSE@colData[,sampleColumn] %in% rnaSE@colData[,sampleColumn]) |
+      !all(rnaSE@colData[,sampleColumn] %in% atacSE@colData[,sampleColumn])) {
+      stop(stringr::str_interp('samples names in ${sampleColumn} are not the same. Please ensure that sample names match in rnaSE and atacSE via ${sampleColumn}.'))
   }else if(!all(atacSE@colData[,sampleColumn] == rnaSE@colData[,sampleColumn])){
       warning('Reording rnaSE sample names to match atacSE.')
-      rnaSE <- rnaSE[,match(colnames(atacSE), colnames(rnaSE))]
+      rnaSE <- rnaSE[,match(atacSE@colData[,sampleColumn], rnaSE@colData[,sampleColumn])]
   }
 
   if(any(c(colnames(SummarizedExperiment::colData(atacSE)), 
@@ -181,11 +182,13 @@ scATAC_Associations <- function(atacSE, cellPopulation,
   }
 
   #Check whether samples align.     
-  if(!all(atacSE@colData[,sampleColumn] %in% generalSE@colData[,sampleColumn])) {
-      stop('sampleColumns are not the same. Please ensure that sample names match in atacSE and generalSE')
+  if(!all(atacSE@colData[,sampleColumn] %in% generalSE@colData[,sampleColumn]) |
+      !all(generalSE@colData[,sampleColum] %in% atacSE@colData[,sampleColumn])) {
+      stop(stringr::str_interp('samples names in ${sampleColumn} are not the same. Please ensure that sample names match in generalSE and atacSE via ${sampleColumn}.'))
   }else if(!all(atacSE@colData[,sampleColumn] == generalSE@colData[,sampleColumn])){
       warning('Reording generalSE sample names to match atacSE.')
-      generalSE <- generalSE[,match(colnames(atacSE), colnames(generalSE))]
+      generalSE <- generalSE[,order(generalSE@colData[,sampleColumn])]
+      atacSE <- atacSE[,order(atacSE@colData[,sampleColumn])]
   }
 
   if(any(c(colnames(SummarizedExperiment::colData(atacSE)), 
@@ -311,11 +314,13 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
   }
 
   #Check whether samples align.     
-  if(!all(generalSE@colData[,sampleColumn] %in% rnaSE@colData[,sampleColumn])) {
-      stop('sampleColumns are not the same. Please ensure that sample names match in generalSE and rnaSE')
+  if(!all(generalSE@colData[,sampleColumn] %in% rnaSE@colData[,sampleColumn]) |
+            !all(rnaSE@colData[,sampleColumn] %in% generalSE@colData[,sampleColumn])){
+      stop(stringr::str_interp('samples names in ${sampleColumn} are not the same. Please ensure that sample names match in generalSE and rnaSE via ${sampleColumn}.'))
   }else if(!all(generalSE@colData[,sampleColumn] == rnaSE@colData[,sampleColumn])){
-      warning('Reording rnaSE sample names to match generalSE.')
-      rnaSE <- rnaSE[,match(colnames(generalSE), colnames(rnaSE))]
+      warning('Reording rnaSE and generalSE to match.')
+      rnaSE <- rnaSE[,order(rnaSE@colData[,sampleColumn])]
+      generalSE <- generalSE[,order(generalSE@colData[,sampleColumn])]
   }
 
   if(any(c(colnames(SummarizedExperiment::colData(generalSE)), 
@@ -331,13 +336,15 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
   if(!all(geneList %in% rownames(rnaSE))){
      stop('geneList not found within rnaSE. Please read check that your genes of interest are present in rnaSE.')
   }
-    
-  if (class(continuousFormula) == 'character') {
-    continuousFormula <- as.formula(continuousFormula)
+  if(!all(generalList %in% rownames(generalSE))){
+     stop('generalList not found within generalSE. Please double check generalList and generalSE rownames.')
   }
-
-  if (class(ziFormula) == 'character') {
-    ziFormula <- as.formula(ziFormula)
+    
+    
+  if (class(formula) == 'character') {
+    formula <- as.formula(formula)
+  }else if(class(formula) != 'formula'){
+    stop('formula is neither a string describing a formula, nor a formula itself. Please provide one of these formats.')
   }
 
   #Subset down to one cell type
@@ -349,7 +356,7 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
     "cellPopulation = 'counts'."
   )
   } else if (
-    (!cellPopulation %in% names(SummarizedExperiment::assays(generalSE)) |
+    (!generalAssay %in% names(SummarizedExperiment::assays(generalSE)) |
       !cellPopulation %in% names(SummarizedExperiment::assays(rnaSE)))
   ) {
     stop("cellPopulation was not found within rnaSE and/or generalAssay within generalSE.")
@@ -363,10 +370,6 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
 
   newGeneral <- generalSE
   SummarizedExperiment::assays(newGeneral) <- SummarizedExperiment::assays(newGeneral)[generalAssay]
-
-  if(!all(generalList %in% rownames(newGeneral))){
-     stop('generalList not found within generalSE.  Please read check that your tiles of interest are present in generalSE.')
-  }
 
 
   #Test whether the continuousFormula is in the right format
@@ -383,9 +386,11 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
 
   #Find all combinations of tileList and geneList to test. 
   allCombos <- as.data.frame(expand.grid(as.character(generalList),as.character(geneList)), stringsAsFactors = FALSE)
-  browser()
 
-  geneAssociations <- .multiModalModeling(newrnaSE, newGeneral, allCombos = allCombos, continuousFormula = formula,
+  geneAssociations <- .multiModalModeling(newrnaSE, newGeneral, 
+                        sampleColumn =  sampleColumn, 
+                        allCombos = allCombos, 
+                        continuousFormula = formula,
                         ziFormula = ~0, zi_threshold = 0, initialSampling = initialSampling, family = stats::poisson(),
                         modality = 'GeneralGene',
                         numCores = numCores)
@@ -426,11 +431,13 @@ scRNA_Associations <- function(rnaSE, cellPopulation,
 general_associations <- function(SE1, SE2, assay1, assay2, sampleColumn, formula, sig1, sig2, family = stats::gaussian(), initialSampling = 5, numCores) {
   
    #Check whether samples align.     
-  if(!all(SE1@colData[,sampleColumn] %in% SE2@colData[,sampleColumn])) {
-      stop('sampleColumns are not the same. Please ensure that sample names match in SE1 and SE2')
+  if(!all(SE1@colData[,sampleColumn] %in% SE2@colData[,sampleColumn]) & 
+          !all(SE2@colData[,sampleColumn] %in% SE1@colData[,sampleColumn])) {
+       stop(stringr::str_interp('samples names in ${sampleColumn} are not the same. Please ensure that sample names match in SE1 and SE2 via ${sampleColumn}.'))
   }else if(!all(SE1@colData[,sampleColumn] == SE2@colData[,sampleColumn])){
-      warning('Reording SE1 sample names to match SE2.')
-      SE2 <- SE2[,match(colnames(SE1), colnames(SE2))]
+      warning('Reording SE1 and SE2 to match.')
+      SE1 <- SE1[,order(SE1@colData[,sampleColumn])]
+      SE2 <- SE2[,order(SE2@colData[,sampleColumn])]
   }
 
   if(any(c(colnames(SummarizedExperiment::colData(SE1)), 
@@ -468,8 +475,11 @@ general_associations <- function(SE1, SE2, assay1, assay2, sampleColumn, formula
   #Find all combinations of sig1 and sig2 to test. 
   allCombos <- as.data.frame(expand.grid(as.character(sig2),as.character(sig1)), stringsAsFactors = FALSE)
 
-  generalAssociations <- .multiModalModeling(newSE1, newSE2, allCombos = allCombos, continuousFormula = formula,
-                        ziFormula = ~0, zi_threshold =0, initialSampling, family = family, modality = 'GeneralAssociation',
+  generalAssociations <- .multiModalModeling(SE1 = newSE1, SE2 = newSE2, 
+                        allCombos = allCombos, 
+                        sampleColumn =  sampleColumn, continuousFormula = formula,
+                        ziFormula = ~0, zi_threshold =0, initialSampling = initialSampling, family = family, 
+                        modality = 'GeneralAssociation',
                         numCores = numCores)
 
   return(generalAssociations)
@@ -747,6 +757,9 @@ individualAssociations <- function(x){
 
 .multiModalModeling <- function(SE1, SE2, allCombos, sampleColumn, continuousFormula, ziFormula, zi_threshold, initialSampling, family, modality, numCores) {
   
+  if(any(dim(allCombos) ==0)){
+    stop('No combinations found, so there is nothing to test for associations. Please check that the input lists are not empty.')
+  }
   ## Extract matrices and metadata
   mat1 <- SummarizedExperiment::assays(SE1)[[1]]
   mat2 <- SummarizedExperiment::assays(SE2)[[1]]
@@ -758,8 +771,13 @@ individualAssociations <- function(x){
   metaData1 <- SummarizedExperiment::colData(SE1)
   metaData2 <- SummarizedExperiment::colData(SE2)
   unique2 <- colnames(metaData2)[!colnames(metaData2) %in% colnames(metaData1)]
-  metaData <- dplyr::left_join(as.data.frame(metaData1), 
+  if(length(unique2) > 0){
+    metaData <- dplyr::left_join(as.data.frame(metaData1), 
                 as.data.frame(metaData2[,c(unique2, sampleColumn)]), by = sampleColumn)
+  }else{
+    metaData = metaData1
+  }
+
 
   if(numCores <= 1){
     stop('numCores must be greater than 1. This method is meant to be parallelized.')
@@ -821,7 +839,7 @@ individualAssociations <- function(x){
                       rownamesList = rownamesList,
                                   SummarizedExperimentObj = SE1, ranged = FALSE, returnList = TRUE) 
 
-
+  
   # Process rowData. 
   rowData1 <- as.data.frame(SummarizedExperiment::rowData(SE1))
   rowData2 <- as.data.frame(SummarizedExperiment::rowData(SE2))
@@ -830,23 +848,25 @@ individualAssociations <- function(x){
     allRowData = NULL
   }else if(any(dim(rowData1) ==0)){
     #Only rowData from SE2
-    allRowData <- rowData1[allCombos$Var2,]
-    allRowData$Obj2 = allCombos$Var2
+    allRowData <- rowData2[allCombos$Var1,]
+    allRowData$Obj2 = allCombos$Var1
     rownames(allRowData) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
       
   }else if(any(dim(rowData2) ==0)){
     #Only rowData from SE1
-    allRowData <- rowData1[allCombos$Var1,]
-    allRowData$Obj1 = allCombos$Var1
+    allRowData <- rowData1[allCombos$Var2,]
+    allRowData$Obj1 = allCombos$Var2
     rownames(allRowData) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
 
   }else{
 
-    allRowData1 <- rowData1[allCombos$Var1,]
-    allRowData1$Obj1 = allCombos$Var1
+    allRowData1 <- as.data.frame(rowData1[allCombos$Var2,])
+    colnames(allRowData1) <- colnames(rowData1)
+    allRowData1$Obj1 = allCombos$Var2
     rownames(allRowData1) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
-    allRowData2 <- rowData2[allCombos$Var2,]
-    allRowData2$Obj2 = allCombos$Var2
+    allRowData2 <-  as.data.frame(rowData2[allCombos$Var1,])
+    colnames(allRowData2) <- colames(rowData2)
+    allRowData2$Obj2 = allCombos$Var1
     rownames(allRowData2) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
     allRowData <- cbind(allRowData1, allRowData2)
   }
