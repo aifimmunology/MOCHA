@@ -865,7 +865,7 @@ individualAssociations <- function(x){
     allRowData1$Obj1 = allCombos$Var2
     rownames(allRowData1) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
     allRowData2 <-  as.data.frame(rowData2[allCombos$Var1,])
-    colnames(allRowData2) <- colames(rowData2)
+    colnames(allRowData2) <- colnames(rowData2)
     allRowData2$Obj2 = allCombos$Var1
     rownames(allRowData2) = paste(allCombos$Var2,  allCombos$Var1, sep = "_")
     allRowData <- cbind(allRowData1, allRowData2)
