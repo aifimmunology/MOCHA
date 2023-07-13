@@ -596,19 +596,31 @@ setMethod(
   sampleData <- suppressWarnings(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
-    
+  
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
     append(
       list(
-        "CellCounts" = allCellCounts[
-            match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),],
-        "FragmentCounts" = allFragmentCounts[
-            match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),]
+        "CellCounts" = allCellCounts,
+        "FragmentCounts" = allFragmentCounts
       ),
       additionalMetaData
     ),
     colData = sampleData
   )
+  
+  # Match cell populations in allCellCounts/allFragmentCounts to those
+  # in additionalMetaData, in case of NA cell populations
+  if(length(additionalMetaData) >= 1){
+    allCellCounts <- allCellCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts))
+      , , drop=FALSE
+    ]
+    
+    allFragmentCounts <- allFragmentCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts))
+      , , drop=FALSE
+    ]
+  }
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
