@@ -111,7 +111,7 @@ if (
       ATACFragments = tiny_fragments,
       cellColData = tiny_cellColData,
       blackList = MOCHA::exampleBlackList,
-      genome = genome,
+      genome = "hg19",
       TxDb = TxDb,
       OrgDb = OrgDb,
       outDir = tempdir(),
