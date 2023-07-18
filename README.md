@@ -1,4 +1,4 @@
-# MOCHA: Model-based single cell Open CHromatin Analysis
+MOCHA: Model-based single cell Open CHromatin Analysis
 ------------------------------------------------------------------------
 
 ## Table of Contents
