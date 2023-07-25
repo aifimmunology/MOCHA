@@ -103,9 +103,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   # Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting.
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
-  for (i in names(assays)) {
-    GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
-  }
 
   newMetadata <- S4Vectors::metadata(SampleTileObj)
   newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", utils::packageVersion("MOCHA")))
