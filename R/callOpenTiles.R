@@ -371,7 +371,8 @@ setMethod(
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
   # Make a copy to preserve original columns.
-  cellColDataCopy <- data.frame(cellColData)
+  cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData), 
+                                                 !!as.name(cellPopLabel) %in% cellPopulations))
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
     utils::type.convert(as.character(x), as.is = TRUE)
   })
@@ -399,7 +400,7 @@ setMethod(
             values_from = meanValues
           )
       )
-
+     
       summarizedData <- as.data.frame(summarizedData)
       rownames(summarizedData) <- summarizedData[[cellPopLabel]]
       summarizedData <- summarizedData[, -1, drop = FALSE]
@@ -518,13 +519,15 @@ setMethod(
       rm(covFiles)
     }
 
+    #parallel::stopCluster(cl)
+      
     # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     iterList <- lapply(seq_along(frags), function(x) {
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
-    cl <- parallel::makeCluster(numCores)
+    #cl <- parallel::makeCluster(numCores)
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
@@ -582,151 +585,6 @@ setMethod(
     # And add it to the experimentList for this cell population
     experimentList <- append(experimentList, ragExp)
   }
-<<<<<<< HEAD
-=======
-  # Create sample metadata from cellColData using util function
-  # "Sample" is the enforced col in ArchR containing the
-  # sample IDs which correspond to the arrow files.
-  # We are assuming samples are synonymous to wells
-  # (If hashed, samples were un-hashed during ArchR project generation)
-  sampleData <- suppressWarnings(
-    sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
-  )
-  # Add experimentList to MultiAssayExperiment
-  names(experimentList) <- cellPopulations
-  tileResults <- MultiAssayExperiment::MultiAssayExperiment(
-    experiments = experimentList,
-    colData = sampleData,
-    metadata = list(
-      "CellCounts" = as.data.frame(allCellCounts),
-      "FragmentCounts" = allFragmentCounts,
-      "Genome" = metadata(genome)$genome,
-      "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
-      "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
-      "Directory" = outDir
-    )
-  )
-  return(tileResults)
-}
-
-##### Same function, but runs faster with much, much more RAM usage.
-# TODO: Deprecate
-.callOpenTilesFast <- function(ArchRProj,
-                               cellPopLabel,
-                               cellPopulations = "ALL",
-                               TxDb = NULL,
-                               OrgDb = NULL,
-                               outDir = NULL,
-                               numCores = 30,
-                               force = FALSE,
-                               studySignal = NULL,
-                               verbose = FALSE) {
-  warning("The 'fast' option in callOpenTiles is deprecated.")
-
-  # Get cell metadata and blacklisted regions from ArchR Project
-  cellColData <- ArchR::getCellColData(ArchRProj)
-  blackList <- ArchR::getBlacklist(ArchRProj)
-  
-  # Get cell populations
-  cellTypeLabelList <- cellColData[, cellPopLabel]
-  
-  # Save the cell number per population-sample in the metadata
-  allCellCounts <- table(cellColData[, "Sample"], cellTypeLabelList)
-  Var1 <- NULL
-  cellCounts <- as.data.frame(S4Vectors::metadata(SampleTileObj)$CellCounts)
-  cellCounts <- dplyr::mutate(cellCounts,
-      Sample = gsub(" ", "_", paste(cellTypeLabelList, Var1, sep = "__")))
-  cellCounts <- dplyr::select(cellCounts, Sample, Freq)
-  cellCounts  <- dplyr::rename(cellCounts, CellCount = Freq)
-  
-  # Save the fragment number per population-sample
-  allFragmentCounts <- as.data.frame(cellColData) %>% 
-    dplyr::group_by({{cellPopLabel}}, Sample) %>% 
-    dplyr::summarize(nFrags=sum(nFrags), .groups='drop')
-  
-  allFragmentCounts <- tidyr::pivot_wider(
-    allFragmentCounts,
-    names_from = tidyselect::all_of({{cellPopLabel}}),
-    values_from = "nFrags"
-  )
-  
-  allFragmentCounts <- as.data.frame(allFragmentCounts)
-  rownames(allFragmentCounts) <- allFragmentCounts$Sample
-  allFragmentCounts <- subset(allFragmentCounts, select=-Sample)
-  
-  if (all(cellPopulations == "ALL")) {
-    cellPopulations <- colnames(allCellCounts)
-  } else if (!all(cellPopulations %in% colnames(allCellCounts))) {
-    stop("Error: cellPopulations not all found in ArchR project.")
-  } else {
-    allCellCounts <- allCellCounts[, cellPopulations, drop=F]
-    allFragmentCounts <- allFragmentCounts[, cellPopulations, drop=F]
-  }
-
-  cl <- parallel::makeCluster(numCores)
-  parallel::clusterEvalQ(cl, {
-    library(ArchR)
-    library(rhdf5)
-  })
-
-  # Get frags grouped by cell population and sample
-  # This will also validate the input cellPopulations
-  frags <- MOCHA::getPopFrags(
-    ArchRProj = ArchRProj,
-    cellPopLabel = cellPopLabel,
-    cellSubsets = cellPopulations,
-    numCores = cl
-  )
-
-  # Check for and remove celltype-sample groups for which there
-  # are no fragments.
-  fragsNoNull <- frags[lengths(frags) != 0]
-  emptyFragsBool <- !(names(frags) %in% names(fragsNoNull[7:10]))
-  emptyGroups <- names(frags)[emptyFragsBool]
-  emptyGroups <- gsub("__.*", "", emptyGroups)
-
-  if (length(emptyGroups) == 0) {
-    if (verbose) {
-      warning(
-        "The following celltype#sample groupings have no fragments",
-        "and will be ignored: ", emptyGroups
-      )
-    }
-  }
-
-  prefilterCellPops <- unique(sapply(strsplit(names(frags), "#"), `[`, 1))
-  if (any(prefilterCellPops != cellPopulations)) {
-    # Removed cell populations must be filtered from cellPopulations
-    postfilterCellPops <- unique(sapply(strsplit(names(frags), "#"), `[`, 1))
-    # Match these labels by index to the original cellPopulatoins
-    retainedPopsBool <- (prefilterCellPops %in% postfilterCellPops)
-    finalCellPopulations <- cellPopulations[retainedPopsBool]
-  } else {
-    finalCellPopulations <- cellPopulations
-  }
-
-  # Split the fragments list into a list of lists per cell population
-  splitFrags <- splitFragsByCellPop(frags)
-
-  # getPopFrags needs to replace spaces for underscores, so
-  # here we rename the fragments with the original cell populations labels.
-  # Fragments maintain their order by cell population.
-  names(splitFrags) <- finalCellPopulations
-  if (verbose) {
-    message(
-      "Cell populations for peak calling: ",
-      paste(names(splitFrags), collapse = ", ")
-    )
-  }
-
-  if (is.null(outDir)) {
-    # Generate folder within ArchR project for outputting results
-    outDir <- paste(ArchR::getOutputDirectory(ArchRProj), "/MOCHA", sep = "")
-  }
-  if (!dir.exists(outDir)) {
-    dir.create(outDir)
-  }
->>>>>>> ChAI
 
   allFragmentCounts[is.na(allFragmentCounts)] <- 0
 
@@ -738,7 +596,7 @@ setMethod(
   sampleData <- suppressWarnings(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
-
+  
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
     append(
       list(
@@ -749,6 +607,20 @@ setMethod(
     ),
     colData = sampleData
   )
+  
+  # Match cell populations in allCellCounts/allFragmentCounts to those
+  # in additionalMetaData, in case of NA cell populations
+  if(length(additionalMetaData) >= 1){
+    allCellCounts <- allCellCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts))
+      , , drop=FALSE
+    ]
+    
+    allFragmentCounts <- allFragmentCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts))
+      , , drop=FALSE
+    ]
+  }
 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations

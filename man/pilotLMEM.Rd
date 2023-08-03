@@ -6,18 +6,19 @@
 \usage{
 pilotLMEM(
   ExperimentObj,
-  cellPopulation = NULL,
+  assayName = NULL,
   modelFormula = NULL,
   pilotIndices = 1:10,
   verbose = FALSE
 )
 }
 \arguments{
-\item{ExperimentObj}{A SummarizedExperiment object generated from
-getSampleTileMatrix, chromVAR, or other.}
+\item{ExperimentObj}{A SummarizedExperiment-type object generated from
+chromVAR, makePseudobulkRNA, or other. Objects from getSampleTileMatrix can work, 
+but we recommend runZIGLMM for those objects, not runLMEM>}
 
-\item{cellPopulation}{A single cell population on which to run this pilot
-model}
+\item{assayName}{a character string, matching the name of an assay within the SummarizedExperiment. 
+The assay named will be used for modeling.}
 
 \item{modelFormula}{The formula to use with lmerTest::lmer, in the
 format (exp ~ factors). All factors must be found in column names
