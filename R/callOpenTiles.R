@@ -597,6 +597,13 @@ setMethod(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
   
+  # Reorder rows of sampleData to match order of samples (colnames) in 
+  # allCellCounts/allFragmentCounts/additionalMetaData (those three should 
+  # already have matched row+colnames and matched ordering)
+  sampleData <- arrange(
+    sampleData, factor(Sample, levels = colnames(allCellCounts))
+  )
+  
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
     append(
       list(
