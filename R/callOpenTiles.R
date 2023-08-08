@@ -603,15 +603,40 @@ setMethod(
   sampleData <- arrange(
     sampleData, factor(Sample, levels = colnames(allCellCounts))
   )
+  # Reset rownames to Sample
+  rownames(sampleData) <- sampleData[,"Sample"]
+  
+  sumDataAssayList <- append(
+    list(
+      "CellCounts" = allCellCounts,
+      "FragmentCounts" = allFragmentCounts
+    ),
+    additionalMetaData
+  )
+  
+  # Validate
+  if(verbose){
+    if(!all(rownames(sampleData) == colnames(allCellCounts))){
+      warning("SampleData and allCellCounts samples mismatch:",
+              "sampleData rownames:", rownames(sampleData),
+              "allCellCounts colnames:", rownames(allCellCounts))
+    }
+    if (length(unique(lapply(sumDataAssayList, dim)))>1){
+      warning("Assays in sumDataAssayList have different dimensions: ",
+              paste(unique(lapply(sumDataAssayList, dim)), collapse="\n"))
+    }
+    if (length(unique(lapply(sumDataAssayList, rownames)))>1){
+      warning("Assays in sumDataAssayList have different rownames: ",
+              paste(unique(lapply(sumDataAssayList, rownames)), collapse="\n"))
+    }
+    if (length(unique(lapply(sumDataAssayList, colnames)))>1){
+      warning("Assays in sumDataAssayList have different colnames: ",
+        paste(unique(lapply(sumDataAssayList, colnames)), collapse="\n"))
+    }
+  }
   
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
-    append(
-      list(
-        "CellCounts" = allCellCounts,
-        "FragmentCounts" = allFragmentCounts
-      ),
-      additionalMetaData
-    ),
+    sumDataAssayList,
     colData = sampleData
   )
   
