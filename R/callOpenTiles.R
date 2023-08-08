@@ -597,15 +597,6 @@ setMethod(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
   
-  # Reorder rows of sampleData to match order of samples (colnames) in 
-  # allCellCounts/allFragmentCounts/additionalMetaData (those three should 
-  # already have matched row+colnames and matched ordering)
-  sampleData <- arrange(
-    sampleData, factor(Sample, levels = colnames(allCellCounts))
-  )
-  # Reset rownames to Sample
-  rownames(sampleData) <- sampleData[,"Sample"]
-  
   sumDataAssayList <- append(
     list(
       "CellCounts" = allCellCounts,
@@ -614,7 +605,22 @@ setMethod(
     additionalMetaData
   )
   
-  # Validate
+  # Enforce Row and Column orders in sumDataAssayList and sampleData
+  colOrder <- colnames(allCellCounts)
+  rowOrder <- rownames(allCellCounts)
+  
+  for (i in seq_along(sumDataAssayList)) {
+    assayName <- names(sumDataAssayList[i])
+    assay <- sumDataAssayList[[i]]
+    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder])
+  }
+
+  sampleData <- arrange(
+    sampleData, factor(Sample, levels = colOrder)
+  )
+  rownames(sampleData) <- sampleData[,"Sample"]
+  
+  # Validate Row and Column orders
   if(verbose){
     if(!all(rownames(sampleData) == colnames(allCellCounts))){
       warning("SampleData and allCellCounts samples mismatch:",
