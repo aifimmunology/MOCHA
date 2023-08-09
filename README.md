@@ -1,10 +1,10 @@
-# MOCHA: Model-based single cell Open CHromatin Analysis
+MOCHA: Model-based single cell Open CHromatin Analysis
 ------------------------------------------------------------------------
 
 ## Table of Contents
 
 -   [Introduction](#introduction)
--   [Installation](#library)
+-   [Installation & Requirements](#library)
 -   [Usage: Package Vignette on COVID PASC dataset](#vignette)
 -   [Tips: Result formats](#results)
 -   [Contact](#contact)
@@ -16,12 +16,18 @@
 
 MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
-# <a name="library"></a> Install package and load library
-You can install MOCHA directly from CRAN using the following command. 
-  
+# <a name="library"></a> Installation & Requirements
+MOCHA requires `R` version 4.1.0 or higher.
+
+The CRAN package is compatible with Windows (Windows Server 2022), MacOS (13 Ventura, 12 Monterey), and Linux operating systems.
+
+MOCHA can run on a standard desktop or modern laptop computer with at minimum 2GB of RAM, 1 Core CPU 2.0GHz/core. For best performance, at least 8GB of RAM and 4+ CPU cores are recommended to take advantage of MOCHA's parallelization. 
+
+You can install MOCHA directly from CRAN using the following command:
  ``` r
  install.packages('MOCHA')
  ```
+which should take approximately 2 minutes from a clean installation.
 
 # <a name="vignette"></a> Usage
 

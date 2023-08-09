@@ -597,14 +597,52 @@ setMethod(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
   
-  summarizedData <- SummarizedExperiment::SummarizedExperiment(
-    append(
-      list(
-        "CellCounts" = allCellCounts,
-        "FragmentCounts" = allFragmentCounts
-      ),
-      additionalMetaData
+  sumDataAssayList <- append(
+    list(
+      "CellCounts" = allCellCounts,
+      "FragmentCounts" = allFragmentCounts
     ),
+    additionalMetaData
+  )
+  
+  # Enforce Row and Column orders in sumDataAssayList and sampleData
+  colOrder <- colnames(allCellCounts)
+  rowOrder <- rownames(allCellCounts)
+  
+  for (i in seq_along(sumDataAssayList)) {
+    assayName <- names(sumDataAssayList[i])
+    assay <- sumDataAssayList[[i]]
+    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder])
+  }
+
+  sampleData <- arrange(
+    sampleData, factor(Sample, levels = colOrder)
+  )
+  rownames(sampleData) <- sampleData[,"Sample"]
+  
+  # Validate Row and Column orders
+  if(verbose){
+    if(!all(rownames(sampleData) == colnames(allCellCounts))){
+      warning("SampleData and allCellCounts samples mismatch:",
+              "sampleData rownames:", rownames(sampleData),
+              "allCellCounts colnames:", rownames(allCellCounts))
+    }
+    if (length(unique(lapply(sumDataAssayList, dim)))>1){
+      warning("Assays in sumDataAssayList have different dimensions: ",
+              paste(unique(lapply(sumDataAssayList, dim)), collapse="\n"))
+    }
+    if (length(unique(lapply(sumDataAssayList, rownames)))>1){
+      warning("Assays in sumDataAssayList have different rownames: ",
+              paste(unique(lapply(sumDataAssayList, rownames)), collapse="\n"))
+    }
+    if (length(unique(lapply(sumDataAssayList, colnames)))>1){
+      warning("Assays in sumDataAssayList have different colnames: ",
+        paste(unique(lapply(sumDataAssayList, colnames)), collapse="\n"))
+    }
+  }
+  
+  summarizedData <- SummarizedExperiment::SummarizedExperiment(
+    sumDataAssayList,
     colData = sampleData
   )
   
