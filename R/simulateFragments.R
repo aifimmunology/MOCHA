@@ -55,6 +55,8 @@ simulateMetaData <- function(simulatedFragmentData, sampleNumber = 1){
         subMeta$Sample <- paste(sample(LETTERS, 20, replace= TRUE), collapse = '')
         
     }
+
+    rownames(subMeta) <- subMeta$CellID
     
     return(subMeta)
 
@@ -96,8 +98,7 @@ simulateMetaData <- function(simulatedFragmentData, sampleNumber = 1){
 simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThreshold = 2000, 
                                 peakNumber = 500, peakCenters = 3, 
                                 largePeakWindow = 1000, Genome = BSgenome.Hsapiens.UCSC.hg38,
-                                FRIP = 0.9, meanLengths = c(75, 200), lengthProbability = c(0.9, 0.1),
-                                numCores = 10, verbose = TRUE){
+                                FRIP = 0.9, meanLengths = c(75, 200), lengthProbability = c(0.9, 0.1)){
 
 
     if(length(meanLengths) != length(lengthProbability)){
