@@ -277,7 +277,7 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     #Add Genome info and trim
     suppressWarnings(GenomicRanges::seqinfo(allFrags) <- GenomicRanges::seqinfo(Genome))
     allFrags <- GenomicRanges::trim(allFrags)
-
+    
     allFrags$nCells = nCells
     allFrags$meanFragsPerCell = meanFragsPerCell
     allFrags$fragThreshold = fragThreshold
@@ -285,8 +285,8 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     allFrags$peakCenters = peakCenters
     allFrags$largePeakWindow = largePeakWindow
     allFrags$FRIP = FRIP
-    allFrags$meanLengths = paste(meanLengths, collasep =', ')
-    allFrags$lengthProbability= paste(lengthProbability, collasep =', ')
+    allFrags$meanLengths = paste(meanLengths, collapse =', ')
+    allFrags$lengthProbability= paste(lengthProbability, collapse =', ')
 
     return(allFrags)
 }
