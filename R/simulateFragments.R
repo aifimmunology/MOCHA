@@ -288,7 +288,9 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     allFrags$meanLengths = paste(meanLengths, collapse =', ')
     allFrags$lengthProbability= paste(lengthProbability, collapse =', ')
 
-    return(allFrags)
+    peakSet <- GenomicRanges::makeGRangesFromDataFrame(allLocations[allLocations$isPeak,])
+                                   
+    return(list(peakSet, allFrags))
 }
 
 
