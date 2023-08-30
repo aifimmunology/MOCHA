@@ -322,3 +322,46 @@ simulateFragmentStarts <- function(LambdaVector){
     return(newStarts)
 }
 
+
+getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 1000, Genome = BSgenome.Hsapiens.UCSC.hg38){
+
+    #########################################################################
+    ## Generate peak locations and background locations across the genome
+    #########################################################################
+
+    ### Now let's determine where our peaks are.
+    ChromLengths = GenomeInfoDb::seqlengths(Genome)
+    ChromLengths <- ChromLengths[!grepl('_', names(ChromLengths))]
+
+    ### Generate all possible bins, and mark peak bins at evenly spaced intervals. 
+    allBins = sum(ChromLengths)/largePeakWindow
+
+    if(allBins <= peakNumber){
+        stop('peakNumber is greater than or equal to the total number of larger open regions possible. Please change peakNumber, largePeakWindow, or both.')
+    }
+
+    binDistance = allBins/peakNumber
+    peakLocation = seq(1, allBins, by = floor(binDistance))[1:peakNumber]
+    startBin = largePeakWindow/2
+
+    message('Placing large peak windows across genome.')
+    #This arrangement may slightly depass the ends of the chromosome when it comes to bins and trimming may be necessary before export.
+    allLocations = do.call('rbind',pbapply::pblapply(cl = NULL, X = seq_along(ChromLengths), function(XX){
+
+        #Start each chromosome at 1/2* largePeakWindow, so that the positions are the center of each bin.
+        posList <- seq(startBin,ChromLengths[[XX]], largePeakWindow)
+        ## check whether that bin is the index of a true peak, or in-between noise.
+        data.frame(chr = rep(names(ChromLengths)[[XX]], length(posList)),
+                    start = posList, end = posList + (2*startBin -1 ), mid = posList+startBin)
+
+    }))
+    allLocations$PeakID = NA
+    allLocations$isPeak = c(1:length(allLocations$start) %in% peakLocation)
+    allLocations$PeakID[allLocations$isPeak] = c(1:peakNumber)
+
+    browser()
+
+    locationGR <- GenomicRanges::makeGRangesFromDataFrame(allLocations[allLocations$isPeak,], keep.extra.columns = TRUE)
+    
+    return(locationGR)
+}
