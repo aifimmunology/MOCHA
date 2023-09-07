@@ -359,8 +359,6 @@ getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 1000, Genome
     allLocations$isPeak = c(1:length(allLocations$start) %in% peakLocation)
     allLocations$PeakID[allLocations$isPeak] = c(1:peakNumber)
 
-    browser()
-
     locationGR <- GenomicRanges::makeGRangesFromDataFrame(allLocations[allLocations$isPeak,], keep.extra.columns = TRUE)
     
     return(locationGR)
