@@ -37,7 +37,7 @@
 #' modelList <- runZIGLMM(STM[c(1:1000), ],
 #'   cellPopulation = "CD16 Mono",
 #'   continuousFormula = exp ~ Age + Sex + days_since_symptoms + (1 | PTID),
-#'   ziformula = ~ FragNumber + Age,
+#'   ziformula = ~ 0 + FragNumber + Age,
 #'   verbose = TRUE,
 #'   numCores = 35
 #' )
