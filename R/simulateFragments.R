@@ -95,9 +95,9 @@ simulateMetaData <- function(simulatedFragmentData, sampleNumber = 1){
 #' @return results a SummarizedExperiment containing LMEM results
 #'
 
-simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThreshold = 2000, 
-                                peakNumber = 500, peakCenters = 3, 
-                                largePeakWindow = 1000, Genome = BSgenome.Hsapiens.UCSC.hg38,
+simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThreshold = 1000, 
+                                peakNumber = 500, peakCenters = 1,
+                                largePeakWindow = 500, Genome = BSgenome.Hsapiens.UCSC.hg38,
                                 FRIP = 0.9, meanLengths = c(75, 200), lengthProbability = c(0.9, 0.1)){
 
 
@@ -201,23 +201,7 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     ## Generate the center of each peak, and the starting position for fragments within a peak
     #########################################################################
 
-    ## This peak center should also have some noise so that it generates a sharp peak, or multiple potential peaks. 
-    ## randomly generate the types of peak centers. 
-    message('Generating peak centers')
-    ## for each peak, randomly choose a number of peak centers (peakCenters) at positions that are between 25% and 75% of the larger peak window. 
-    ## The number of centers should be weighted by the peakIntensity - that is, peaks with more centers should have more fragments. 
-
-    numberOfCenters = rpois(n = length(peakIntensities), lambda = peakCenters)
-    numberOfCenters[numberOfCenters == 0] = 1
-    ## Now that we have a good distribution, let's sample from it, according to a weighted probability, where peaks with more fragments are more likely to have more centers. 
-    lambda_choices = pbapply::pblapply(cl = NULL, X = seq_along(peakIntensities), function(XX)
-                    c(peakIntensities[XX], sample(c(floor(largePeakWindow*0.25):ceiling(largePeakWindow*0.75)), size = numberOfCenters[XX]))
-                ) 
-    ## Generate start positions according to multiple peakcenters
-    message('Generating fragment start positions & peakIDs')
-    allStarts <- unlist(pbapply::pblapply(cl = NULL, X = lambda_choices, simulateFragmentStarts))
-
-    ## Now let's identify the peakNumber for each fragment start position.
+    ##Let's identify the peakNumber that each in-peak fragment will fall into.
     peakStarts <- do.call('rbind',
         pbapply::pblapply(cl = NULL,
                   X = seq_along(peakIntensities), function(XX) {
@@ -230,6 +214,29 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
 
             })
         )
+
+
+    ## This peak center should also have some noise so that it generates a sharp peak, or multiple potential peaks. 
+    ## randomly generate the types of peak centers. 
+    message('Generating peak centers')
+    ## for each peak, randomly choose a number of peak centers (peakCenters) at positions that are between 25% and 75% of the larger peak window. 
+    ## The number of centers should be weighted by the peakIntensity - that is, peaks with more centers should have more fragments. 
+
+    if(peakCenters != 1){
+
+        numberOfCenters = rpois(n = length(peakIntensities), lambda = peakCenters)
+        numberOfCenters[numberOfCenters == 0] = 1
+        ## Now that we have a good distribution, let's sample from it, according to a weighted probability, where peaks with more fragments are more likely to have more centers. 
+        lambda_choices = pbapply::pblapply(cl = NULL, X = seq_along(peakIntensities), function(XX)
+                        c(peakIntensities[XX], sample(c(floor(largePeakWindow*0.25):ceiling(largePeakWindow*0.75)), size = numberOfCenters[XX]))
+                    ) 
+        ## Generate start positions according to multiple peakcenters
+        message('Generating fragment start positions & peakIDs')
+        allStarts <- unlist(pbapply::pblapply(cl = NULL, X = lambda_choices, simulateFragmentStarts))
+
+    }else{
+        allStarts = round(rpois(n = length(peakStarts$PeakID), largePeakWindow/3) + (largePeakWindow/2 - largePeakWindow/3))
+    }
 
     peakStarts$FragStarts = allStarts 
 
@@ -257,27 +264,34 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
 
     #### Now we need to place the non-peak fragments randomly across the genome. 
     #### let's get a complete list of all the possible locations by generating a non-peak GRanges and reducing it. 
-    message('Placing background fragments into the genome')
-    backgroundDF <- allLocations[is.na(allLocations$PeakID),]
-    backgroundDF$backBin <- 1:dim(backgroundDF)[1]
-    backFrags <- fragDF[!fragDF$inPeak,c(1:3)]
-    ## Randomly select a position between 1 and the maximum peak window area. This will be the middle of the background tile. 
-    backFrags$FragMid <- sample(1:largePeakWindow-1, size = sum(is.na(fragDF$PeakID)), replace = TRUE) 
-    ## Sample with replacement, so that a background fragment could theoretically fall within the same background region. 
-    backFrags$backBin <- sample(1:dim(backgroundDF)[1], size = sum(is.na(fragDF$PeakID)), replace = TRUE)
+    if(FRIP < 1){
 
-    backFrags <- dplyr::left_join(backFrags, backgroundDF, by = 'backBin')
-    backFrags <- dplyr::mutate(backFrags, end = start + FragMid + ceiling(width/2), start = start + FragMid - floor(width/2))
-    backFrags <- dplyr::select(backFrags, chr, start, end, CellID, PeakID, inPeak)
+        message('Placing background fragments into the genome')
+        backgroundDF <- allLocations[is.na(allLocations$PeakID),]
+        backgroundDF$backBin <- 1:dim(backgroundDF)[1]
+        backFrags <- fragDF[!fragDF$inPeak,c(1:3)]
+        ## Randomly select a position between 1 and the maximum peak window area. This will be the middle of the background tile. 
+        backFrags$FragMid <- sample(1:largePeakWindow-1, size = sum(is.na(fragDF$PeakID)), replace = TRUE) 
+        ## Sample with replacement, so that a background fragment could theoretically fall within the same background region. 
+        backFrags$backBin <- sample(1:dim(backgroundDF)[1], size = sum(is.na(fragDF$PeakID)), replace = TRUE)
 
-    
-    #Combine background and foreground into one GRangesList
-    allFrags <- GenomicRanges::makeGRangesFromDataFrame(rbind(peakFrags, backFrags), keep.extra.columns= TRUE)
-    
+        backFrags <- dplyr::left_join(backFrags, backgroundDF, by = 'backBin')
+        backFrags <- dplyr::mutate(backFrags, end = start + FragMid + ceiling(width/2), start = start + FragMid - floor(width/2))
+        backFrags <- dplyr::select(backFrags, chr, start, end, CellID, PeakID, inPeak)
+
+
+        #Combine background and foreground into one GRangesList
+        allFrags <- GenomicRanges::makeGRangesFromDataFrame(rbind(peakFrags, backFrags), keep.extra.columns= TRUE)
+
+
+    }else{
+        allFrags <- GenomicRanges::makeGRangesFromDataFrame(peakFrags, keep.extra.columns= TRUE)
+    }
+
     #Add Genome info and trim
     suppressWarnings(GenomicRanges::seqinfo(allFrags) <- GenomicRanges::seqinfo(Genome))
     allFrags <- GenomicRanges::trim(allFrags)
-    
+
     allFrags$nCells = nCells
     allFrags$meanFragsPerCell = meanFragsPerCell
     allFrags$fragThreshold = fragThreshold
@@ -289,7 +303,7 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     allFrags$lengthProbability= paste(lengthProbability, collapse =', ')
 
     peakSet <- GenomicRanges::makeGRangesFromDataFrame(allLocations[allLocations$isPeak,])
-                                   
+
     return(list(peakSet, allFrags))
 }
 
