@@ -33,6 +33,7 @@
 #' }
 #'
 #' @export
+
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
 
   #Test for duplicate sample names
@@ -91,33 +92,65 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   #Merged sample and other metadata information. 
   allSampleData <- do.call(eval(parse(text="dplyr::bind_rows")), lapply(tileResultsList, function(x){ as.data.frame(SummarizedExperiment::colData(x))}))
  
-  #This is complicated, but it lets us handle table or data.frame outputs for this info. Merges cell counts and fragment count info across tile results. 
-  allCellCounts <- do.call('cbind',pbapply::pblapply(cl = NULL, X = subCellTypes, function(y){
-     
-     tmpCell <- data.frame(unlist(lapply(tileResultsList, function(z){ z@metadata$CellCounts[,y] })))
-     rownames(tmpCell) <- unlist(lapply(tileResultsList, function(z){ rownames(z@metadata$CellCounts)}))
-     colnames(tmpCell) = y
-     tmpCell
-  }))
-  allFragmentCounts <- do.call('cbind',pbapply::pblapply(cl = NULL, X = subCellTypes, function(y){
+  #This is complicated, let's merge the summarizedData. 
+  ## We'll need to assemble all metadata across tile results, and merge it data that's the same together. 
 
-     tmpFrag <- data.frame(y = unlist(lapply(tileResultsList, function(x){ x@metadata$FragmentCounts[,y] })))
-     rownames(tmpFrag) <- unlist(lapply(tileResultsList, function(x){ rownames(x@metadata$FragmentCounts)}))
-     tmpFrag
-  }))
-  colnames(allCellCounts) <- colnames(allFragmentCounts) <-  subCellTypes
- 
+  allCellTypes <- unique(unlist(lapply(tileResultsList, function(XX){rownames(XX@metadata$summarizedData)})))
+  allSummarizedMetrics <- unique(unlist(lapply(tileResultsList, function(XX){
+                            names(SummarizedExperiment::assays(XX@metadata$summarizedData))
+                            })))
+
+  allSummarizedData <- pbapply::pblapply(cl = NULL, X = allSummarizedMetrics, function(YY){
+     
+    allMats <- do.call('cbind', lapply(tileResultsList, function(XX) { 
+          tmpMat <- SummarizedExperiment::assays(XX@metadata$summarizedData)
+          if(YY %in% names(tmpMat)){
+
+            nextMat <- tmpMat[[YY]]
+          
+          }else{
+
+            nextMat <- matrix(NA, ncol = NCOL(tmpMat[[1]]), nrow = NROW(tmpMat[[1]]))
+            rownames(nextMat) <- rownames(tmpMat)[[1]]
+            colnames(nextMat) <- colnames(tmpmat[[1]])
+          }
+
+          if(any(!allCellTypes %in% rownames(nextMat))){
+
+            newCellTypes <- allCellTypes[!allCellTypes %in% rownames(nextMat)]
+
+            emptyMat <- matrix(NA, ncol = NCOL(nextMat), nrow = length(newCellTypes))
+            rownames(emptyMat) <- newCellTypes
+            colnames(emptyMat) <- colnames(nextMat)
+
+            nextMat <- rbind(nextMat, emptyMat)
+
+          }
+
+          return(nextMat)
+
+      }))
+
+    return(allMats)
+  })
+  
+  names(allSummarizedData) <- allSummarizedMetrics
+  newSummarizedData = SummarizedExperiment::SummarizedExperiment(allSummarizedData, colData = allSampleData)
+  
+  allHistory = lapply(tileResultsList, function(XX){ XX@metadata$History})
+  allHistory = append(allHistory, paste("mergeTileResults", utils::packageVersion("MOCHA")))
+
   #Construct final tile results object. 
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = allRaggedResults,
     colData = allSampleData,
     metadata = list(
-      "CellCounts" = allCellCounts,
-      "FragmentCounts" = allFragmentCounts,
+      "summarizedData" = newSummarizedData,
       "Genome" = GenTest,
-      "TxDb" = list(pkgname = tileResultsList[[1]]@metadata$TxDb$pkgname, metadata = TxDbTest),
-      "OrgDb" = list(pkgname = tileResultsList[[1]]@metadata$OrgDb$pkgname, metadata = OrgDbTest),
-      "Directory" = NULL
+      "TxDb" = tileResultsList[[1]]@metadata$TxDb,
+      "OrgDb" = tileResultsList[[1]]@metadata$OrgDb,
+      "Directory" = NULL,
+      "History" = allHistory
     )
   )
   return(tileResults)
