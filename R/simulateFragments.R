@@ -180,7 +180,7 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
 
     binDistance = allBins/peakNumber
     peakLocation = seq(1, allBins, by = floor(binDistance))[1:peakNumber]
-    startBin = largePeakWindow/2
+    startBin = 500
 
     message('Placing large peak windows across genome.')
     #This arrangement may slightly depass the ends of the chromosome when it comes to bins and trimming may be necessary before export.
@@ -190,7 +190,7 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
         posList <- seq(startBin,ChromLengths[[XX]], largePeakWindow)
         ## check whether that bin is the index of a true peak, or in-between noise.
         data.frame(chr = rep(names(ChromLengths)[[XX]], length(posList)),
-                    start = posList, end = posList + (2*startBin -1 ), mid = posList+startBin)
+                    start = posList, end = posList + (startBin -1 ), mid = posList+startBin)
 
     }))
     allLocations$PeakID = NA
@@ -337,7 +337,7 @@ simulateFragmentStarts <- function(LambdaVector){
 }
 
 
-getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 1000, Genome = BSgenome.Hsapiens.UCSC.hg38){
+getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 500, Genome = BSgenome.Hsapiens.UCSC.hg38){
 
     #########################################################################
     ## Generate peak locations and background locations across the genome
@@ -356,7 +356,9 @@ getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 1000, Genome
 
     binDistance = allBins/peakNumber
     peakLocation = seq(1, allBins, by = floor(binDistance))[1:peakNumber]
-    startBin = largePeakWindow/2
+    startBin = 500
+
+    browser()
 
     message('Placing large peak windows across genome.')
     #This arrangement may slightly depass the ends of the chromosome when it comes to bins and trimming may be necessary before export.
@@ -366,7 +368,7 @@ getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 1000, Genome
         posList <- seq(startBin,ChromLengths[[XX]], largePeakWindow)
         ## check whether that bin is the index of a true peak, or in-between noise.
         data.frame(chr = rep(names(ChromLengths)[[XX]], length(posList)),
-                    start = posList, end = posList + (2*startBin -1 ), mid = posList+startBin)
+                    start = posList, end = posList + (startBin -1), mid = posList+startBin)
 
     }))
     allLocations$PeakID = NA
