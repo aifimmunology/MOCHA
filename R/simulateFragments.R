@@ -196,7 +196,7 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     allLocations$PeakID = NA
     allLocations$isPeak = c(1:length(allLocations$start) %in% peakLocation)
     allLocations$PeakID[allLocations$isPeak] = c(1:peakNumber)
-    
+
     #########################################################################
     ## Generate the center of each peak, and the starting position for fragments within a peak
     #########################################################################
@@ -235,11 +235,12 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
         allStarts <- unlist(pbapply::pblapply(cl = NULL, X = lambda_choices, simulateFragmentStarts))
 
     }else{
-        allStarts = round(rpois(n = length(peakStarts$PeakID), largePeakWindow/3) + (largePeakWindow/2 - largePeakWindow/3))
+        #Add a small amount of noise to the midpoint. 
+        midPoints = largePeakWindow/2 + sample(n = c(-1,1), size = sum(fragDF$inPeak), replace = 5)*rpois(n = sum(fragDF$inPeak), lambda = 5)
+        allStarts = midPoints - round(fragDF$width[fragDF$inPeak]/2)
     }
 
     peakStarts$FragStarts = allStarts 
-
     #########################################################################
     ## Merge the fragment information together, including fragment width, cell ID, peak ID, relative start, and bin ID. 
     #########################################################################
@@ -357,8 +358,6 @@ getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 500, Genome 
     binDistance = allBins/peakNumber
     peakLocation = seq(1, allBins, by = floor(binDistance))[1:peakNumber]
     startBin = 500
-
-    browser()
 
     message('Placing large peak windows across genome.')
     #This arrangement may slightly depass the ends of the chromosome when it comes to bins and trimming may be necessary before export.
