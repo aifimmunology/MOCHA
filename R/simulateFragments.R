@@ -190,7 +190,7 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
         posList <- seq(startBin,ChromLengths[[XX]], largePeakWindow)
         ## check whether that bin is the index of a true peak, or in-between noise.
         data.frame(chr = rep(names(ChromLengths)[[XX]], length(posList)),
-                    start = posList, end = posList + (startBin -1 ), mid = posList+startBin)
+                    start = posList, end = posList + (startBin -1 ), mid = posList+startBin/2)
 
     }))
     allLocations$PeakID = NA
@@ -368,7 +368,7 @@ getSimulatedPeakSet <- function(peakNumber = 500, largePeakWindow = 500, Genome 
         posList <- seq(startBin,ChromLengths[[XX]], largePeakWindow)
         ## check whether that bin is the index of a true peak, or in-between noise.
         data.frame(chr = rep(names(ChromLengths)[[XX]], length(posList)),
-                    start = posList, end = posList + (startBin -1), mid = posList+startBin)
+                    start = posList, end = posList + (startBin -1), mid = posList+startBin/2)
 
     }))
     allLocations$PeakID = NA
