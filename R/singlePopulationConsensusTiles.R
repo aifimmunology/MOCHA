@@ -105,44 +105,41 @@ singlePopulationConsensusTiles <- function(peaksExperiment,
 }
 
 #' @title \code{simplifiedConsensusTiles}
-#' @param ref ref a list of data on one specific cell type, sampleData, threshold, groupColumn, and verbose flag. 
+#' @param ref ref a list of data on one specific cell type, sampleData, threshold, groupColumn, and verbose flag.
 #' @description \code{simplifiedConsensusTiles} is an R helper function, part of
 #'   the single-cell peak
 #'
 #' @keywords internal
-#' 
+#'
 
-simplifiedConsensusTiles <- function(ref){
-	experiments = ref[[1]]
-	sampleData = ref[[2]]
-	threshold = ref[[3]]
-	groupColumn = ref[[4]]
-	verbose = ref[[5]]
-    singlePopulationConsensusTiles(
-      experiments,
-      sampleData,
-      threshold,
-      groupColumn,
-      verbose = verbose
-    )
-
+simplifiedConsensusTiles <- function(ref) {
+  experiments <- ref[[1]]
+  sampleData <- ref[[2]]
+  threshold <- ref[[3]]
+  groupColumn <- ref[[4]]
+  verbose <- ref[[5]]
+  singlePopulationConsensusTiles(
+    experiments,
+    sampleData,
+    threshold,
+    groupColumn,
+    verbose = verbose
+  )
 }
 
 #' @title \code{extractErrorFromConsensusTiles}
-#' @param x a specific output from consensus tiles. 
+#' @param x a specific output from consensus tiles.
 #' @description \code{extractErrorFromConsensusTiles} is an R helper function, part of
 #'   the single-cell peak calling.
 #'
 #' @keywords internal
-#' 
+#'
 
 
-extractErrorFromConsensusTiles <- function(x){
-
-   if (any(grepl("Error", x))) {
-      x[grep("Error", x)]
-    } else {
-      NA
-    }
-	
+extractErrorFromConsensusTiles <- function(x) {
+  if (any(grepl("Error", x))) {
+    x[grep("Error", x)]
+  } else {
+    NA
+  }
 }

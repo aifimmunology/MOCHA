@@ -30,6 +30,7 @@ callTilesBySample <- function(blackList,
                               returnAllTiles = FALSE,
                               totalFrags,
                               fragsList,
+                              cellCol = "RG",
                               verbose = FALSE,
                               StudypreFactor) {
   # Coefficients trained on ~ 3600 frags per cell
@@ -61,6 +62,7 @@ callTilesBySample <- function(blackList,
     fragMat = fragsList,
     candidatePeaks = FinalBins,
     totalFrags = totalFrags,
+    cellCol = cellCol,
     verbose = verbose
   )
   expected_names <- c(
@@ -105,29 +107,24 @@ callTilesBySample <- function(blackList,
 #'   files and cell metadata
 #'
 #' @param x a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..
-#' 
+#'
 #' @return scMACs_PeakList an list containing peak calls for each cell
 #'   population passed on in the cell subsets argument. Each peak call is
 #'   returned as as Genomic Ranges object.
 #'
-#' @details The technical details of the algorithm are found in XX.
-#'
-#' @references XX
 #'
 #' @noRd
 #'
-#' 
+#'
 
-simplifiedTilesBySample <- function(x){
-  
-  MOCHA:::callTilesBySample(
-          blackList =  x[[1]],
-          returnAllTiles = TRUE,
-          totalFrags =  length(x[[2]]),
-          fragsList = x[[2]],
-          verbose =x[[3]],
-          StudypreFactor = x[[4]]
-        )
-
+simplifiedTilesBySample <- function(x) {
+  callTilesBySample(
+    blackList = x[[1]],
+    returnAllTiles = TRUE,
+    totalFrags = length(x[[2]]),
+    fragsList = x[[2]],
+    cellCol = x[[3]],
+    verbose = x[[4]],
+    StudypreFactor = x[[5]]
+  )
 }
-

@@ -1,26 +1,39 @@
 #' @title \code{extractRegion}
 #'
-#' @description \code{extractRegion} will extract the coverage files created
-#'   by callOpenTiles and return a specific region's coverage
+#' @description \code{extractRegion} will extract the coverage files created by
+#'   callOpenTiles and return a specific region's coverage
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
-#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE, exports Insertions. 
-#' @param region a GRanges object or vector or strings containing the regions of interest. Strings must be in the format "chr:start-end", e.g. "chr4:1300-2222".
+#' @param SampleTileObj The SummarizedExperiment object output from
+#'   getSampleTileMatrix
+#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE,
+#'   exports Insertions.
+#' @param region a GRanges object or vector or strings containing the regions of
+#'   interest. Strings must be in the format "chr:start-end", e.g.
+#'   "chr4:1300-2222".
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
-#'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
-#'   calling is done on all cell populations. Default is 'ALL'.
-#' @param groupColumn Optional, the column containing sample group labels for returning coverage within sample groups. Default is NULL, all samples will be used.
-#' @param subGroups a list of subgroup(s) within the groupColumn from the metadata. Optional, default is NULL, all labels within groupColumn will be used.
-#' @param sampleSpecific If TRUE, get a sample-specific count dataframe out. Default is FALSE, average across samples and get a dataframe out.
-#' @param approxLimit Optional limit to region size, where if region is larger than approxLimit basepairs, binning will be used. Default is 100000.
-#' @param binSize Optional numeric, size of bins in basepairs when binning is used. Default is 250.
-#' @param sliding Optional numeric. Default is NULL. This number is the size of the sliding window for generating average intensities. 
+#'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak calling
+#'   is done on all cell populations. Default is 'ALL'.
+#' @param groupColumn Optional, the column containing sample group labels for
+#'   returning coverage within sample groups. Default is NULL, all samples will
+#'   be used.
+#' @param subGroups a list of subgroup(s) within the groupColumn from the
+#'   metadata. Optional, default is NULL, all labels within groupColumn will be
+#'   used.
+#' @param sampleSpecific If TRUE, get a sample-specific count dataframe out.
+#'   Default is FALSE, average across samples and get a dataframe out.
+#' @param approxLimit Optional limit to region size, where if region is larger
+#'   than approxLimit basepairs, binning will be used. Default is 100000.
+#' @param binSize Optional numeric, size of bins in basepairs when binning is
+#'   used. Default is 250.
+#' @param sliding Optional numeric. Default is NULL. This number is the size of
+#'   the sliding window for generating average intensities.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @return countSE a SummarizedExperiment containing coverage for the given input cell populations.
+#' @return countSE a SummarizedExperiment containing coverage for the given
+#'   input cell populations.
 #'
 #' @examples
 #' \dontrun{
@@ -32,9 +45,9 @@
 #'   sampleSpecific = FALSE
 #' )
 #' }
-#' 
-#' @export
 #'
+#' @export
+#' 
 
 extractRegion <- function(SampleTileObj,
                           type = TRUE,
@@ -56,7 +69,7 @@ extractRegion <- function(SampleTileObj,
   if (is.na(outDir)) {
     stop("Missing coverage file directory. SampleTileObj$metadata must contain 'Directory'.")
   }
-  
+
   if (!file.exists(outDir)) {
     stop("Directory given by SampleTileObj@metadata$Directory does not exist.")
   }
@@ -71,6 +84,12 @@ extractRegion <- function(SampleTileObj,
     stop("Wrong region input type. Input must either be a string, or a GRanges location.")
   }
 
+  if (all(toupper(cellNames) == "COUNTS")) {
+    stop(
+      "The only assay in the SummarizedExperiment is Counts. The names of assays must reflect cell types,",
+      " such as those in the Summarized Experiment output of getSampleTileMatrix."
+    )
+  }
 
   if (all(toupper(cellPopulations) == "ALL")) {
     cellPopulations <- cellNames
@@ -126,77 +145,86 @@ extractRegion <- function(SampleTileObj,
       originalCovGRanges <- readRDS(paste(outDir, "/", x, "_InsertionFiles.RDS", sep = ""))
     }
 
+    # Edge case: One or more samples are missing coverage for this cell population,
+    # e.g. if a cell population only exists in one sample.
+    lapply(seq_along(subSamples), function(y) {
+      if (!all(subSamples[[y]] %in% names(originalCovGRanges))) {
+        missingSamples <- paste(subSamples[[y]][!subSamples[[y]] %in% names(originalCovGRanges)], collapse = ", ")
+        stop(stringr::str_interp(c(
+          "There is no fragment coverage for cell population '${x}' in the ",
+          "following samples in sample grouping '${names(subSamples)[y]}': ",
+          "${missingSamples}"
+        )))
+      }
+    })
+
     if (verbose) {
-      message(stringr::str_interp("Extracting coverage from {x}."))
+      message(stringr::str_interp("Extracting coverage from cell population '${x}'"))
     }
 
-    #If the region is too large, bin the data. 
-    if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit){
-
-      iterList <- lapply(seq_along(subSamples), function(y){
+    # If the region is too large, bin the data.
+    if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
+      iterList <- lapply(seq_along(subSamples), function(y) {
         list(binnedData, originalCovGRanges[subSamples[[y]]])
       })
 
-      #If not sample specific, take the average coverage across samples. 
-      # if it is sample specific, just subset down the coverage to the region of interest. 
+      # If not sample specific, take the average coverage across samples.
+      # if it is sample specific, just subset down the coverage to the region of interest.
       if (!sampleSpecific) {
-        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, averageBinCoverage)
-      }else{
-        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, subsetBinCoverage)
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X = iterList, averageBinCoverage)
+      } else {
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X = iterList, subsetBinCoverage)
       }
-
-
-    }else{
-
-      iterList <- lapply(seq_along(subSamples), function(y){
+    } else {
+      iterList <- lapply(seq_along(subSamples), function(y) {
         list(regionGRanges, originalCovGRanges[subSamples[[y]]])
       })
-      
-      #If not sample specific, take the average coverage across samples. 
-      # if it is sample specific, just subset down the coverage to the region of interest. 
+
+      # If not sample specific, take the average coverage across samples.
+      # if it is sample specific, just subset down the coverage to the region of interest.
       if (!sampleSpecific) {
-        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, averageBPCoverage)
-      }else{
-        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X= iterList, subsetBPCoverage)
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X = iterList, averageBPCoverage)
+      } else {
+        cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X = iterList, subsetBPCoverage)
       }
     }
 
     names(cellPopSubsampleCov) <- subGroups
     cellPopSubsampleCov
-    
   })
-  
+
   names(cellPopulation_Files) <- cellPopulations
   allGroups <- unlist(cellPopulation_Files)
 
-  if(all(lengths(allGroups) == 0)){
-    stop('No fragments found for the region provided.')
+  if (all(lengths(allGroups) == 0)) {
+    stop("No fragments found for the region provided.")
   }
 
   ## Generate a data.frame for export.
-
-  if (verbose) {
-     message(stringr::str_interp("Converting from GRanges."))
-  }
-
-  iterList <- lapply(seq_along(allGroups), function(x) { list(allGroups[[x]], names(allGroups)[x]) })
+  iterList <- lapply(seq_along(allGroups), function(x) {
+    list(allGroups[[x]], names(allGroups)[x])
+  })
 
   if (GenomicRanges::end(regionGRanges) - GenomicRanges::start(regionGRanges) > approxLimit) {
-
     allGroupsDF <- pbapply::pblapply(cl = cl, iterList, cleanDataFrame1)
-
   } else {
-
     allGroupsDF <- pbapply::pblapply(cl = cl, iterList, cleanDataFrame2)
-    
   }
   parallel::stopCluster(cl)
 
   names(allGroupsDF) <- names(allGroups)
 
-  if(type){ Type1 = 'Coverage'}else{Type1 = 'Insertions'}
+  newMetadata <- SampleTileObj@metadata
+  newMetadata$History <- append(newMetadata$History, paste("extractRegion", utils::packageVersion("MOCHA")))
+  if (type) { 
+    Type1 = 'Coverage'
+  } else { 
+    Type1 = 'Insertions' 
+  }
+  newMetadata$Type <- Type1
+  
   countSE <- SummarizedExperiment::SummarizedExperiment(allGroupsDF,
-    metadata = append(SampleTileObj@metadata, list('Type' = Type1))
+    metadata = newMetadata
   )
 
   return(countSE)
@@ -206,19 +234,7 @@ extractRegion <- function(SampleTileObj,
 ## helper functions.
 
 ## Efficiently subsets single basepair coverage for a given region across samples
-subsetBPCoverage <- function(iterList){
-    
-    sampleCount <- length(iterList[[2]])
-    tmpCounts <- lapply(1:sampleCount, function(z) {
-        plyranges::join_overlap_intersect(iterList[[2]][[z]], iterList[[1]])
-    })
-                           
-    return(tmpCounts)
-}
-                        
-## Efficiently generates average single basepair coverage for a given region
-averageBPCoverage <- function(iterList){
-
+subsetBPCoverage <- function(iterList) {
     sampleCount <- length(iterList[[2]])
     
     filterCounts <- lapply(1:sampleCount, function(z) {
@@ -325,19 +341,17 @@ cleanDataFrame1 <- function(iterList){
   colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
   return(covdf)
-
 }
 
-cleanDataFrame2 <- function(iterList){
+cleanDataFrame2 <- function(iterList) {
   group1 <- iterList[[1]]
-  tmp <-  plyranges::tile_ranges(group1,width = 1)
+  tmp <- plyranges::tile_ranges(group1, width = 1)
   tmp$score <- group1$score[tmp$partition]
-  tmp$Groups <- rep(iterList[[2]], length(tmp)) 
+  tmp$Groups <- rep(iterList[[2]], length(tmp))
 
-  
+
   covdf <- as.data.frame(tmp)[, c("seqnames", "start", "score", "Groups")]
   colnames(covdf) <- c("chr", "Locus", "Counts", "Groups")
 
   return(covdf)
-
 }

@@ -1,5 +1,6 @@
 # This test should only be used for local testing
 # with TxDb.Hsapiens.UCSC.hg38.refGene and org.Hs.eg.db installed/
+skip_on_cran()
 if (
   require("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
     require("org.Hs.eg.db", quietly = TRUE) &&
@@ -9,7 +10,6 @@ if (
   # PBMCSmall is under 'projects'
   ArchRProjDir <- "../../../PBMCSmall"
   if (require("ArchR", quietly = TRUE) & dir.exists(ArchRProjDir)) {
-
     test_that("We can call peaks by sample from an ArchR project", {
       capture.output(
         testProj <- ArchR::loadArchRProject(ArchRProjDir),
@@ -17,12 +17,12 @@ if (
       )
 
       TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
-      Org <- "org.Hs.eg.db"
+      OrgDb <- "org.Hs.eg.db"
       capture.output(
         tiles <- MOCHA::callOpenTiles(
           ATACFragments = testProj,
           TxDb = TxDb,
-          Org = Org,
+          OrgDb = OrgDb,
           cellPopLabel = "Clusters",
           cellPopulations = c("C2", "C5"),
           numCores = 1,
@@ -35,7 +35,7 @@ if (
         tiles,
         variant = "ArchR"
       )
-      
+
       tiles@metadata$Directory <- NULL # Directory uses tempdir()
       expect_snapshot(
         tiles@metadata,
@@ -46,7 +46,7 @@ if (
 
   test_that("We can call peaks independent of ArchR", {
     TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
-    Org <- "org.Hs.eg.db"
+    OrgDb <- "org.Hs.eg.db"
     capture.output(
       tiles <- MOCHA::callOpenTiles(
         ATACFragments = MOCHA::exampleFragments,
@@ -54,7 +54,7 @@ if (
         blackList = MOCHA::exampleBlackList,
         genome = "hg19",
         TxDb = TxDb,
-        Org = Org,
+        OrgDb = OrgDb,
         outDir = tempdir(),
         cellPopLabel = "Clusters",
         cellPopulations = c("C2", "C5"),
@@ -68,10 +68,14 @@ if (
       variant = "list"
     )
     expect_snapshot(
-      metadata(tiles)$CellCounts,
+      assays(metadata(tiles)$summarizedData)[["CellCounts"]],
       variant = "CellCounts"
     )
-    
+    expect_snapshot(
+      assays(metadata(tiles)$summarizedData)[["FragmentCounts"]],
+      variant = "FragmentCounts"
+    )
+
     tiles@metadata$Directory <- NULL # Directory uses tempdir()
     expect_snapshot(
       tiles@metadata,
@@ -80,6 +84,8 @@ if (
   })
 
   test_that("We throw a warning when a sample has less than 5 cells", {
+    TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
+    OrgDb <- "org.Hs.eg.db"
     sample1frags <- GenomicRanges::GRanges(
       seqnames = Rle(c("chr1"), c(1)),
       ranges = IRanges(c(760101:760110), end = c(760111:760120), names = head(letters, 10)),
@@ -105,9 +111,9 @@ if (
       ATACFragments = tiny_fragments,
       cellColData = tiny_cellColData,
       blackList = MOCHA::exampleBlackList,
-      genome = genome,
+      genome = "hg19",
       TxDb = TxDb,
-      Org = Org,
+      OrgDb = OrgDb,
       outDir = tempdir(),
       cellPopLabel = "cellPop",
       cellPopulations = c("t_cd8_temra"),
@@ -144,12 +150,12 @@ if (
       blackList = MOCHA::exampleBlackList,
       genome = genome,
       TxDb = TxDb,
-      Org = Org,
+      OrgDb = OrgDb,
       outDir = tempdir(),
       cellPopLabel = "cellPop",
       cellPopulations = c("t_cd8_temra"),
       studySignal = NULL, # manually provide or have nFrags col in cellColData
-      numCores = 1, verbose = TRUE
+      numCores = 1, verbose = FALSE
     ))
   })
 
@@ -181,7 +187,7 @@ if (
       blackList = MOCHA::exampleBlackList,
       genome = genome,
       TxDb = TxDb,
-      Org = Org,
+      OrgDb = OrgDb,
       outDir = tempdir(),
       cellPopLabel = "cellPop",
       cellPopulations = c("t_cd8_temra"),
@@ -189,10 +195,10 @@ if (
       numCores = 1, verbose = TRUE
     ))
   })
-  
+
   test_that("We error informatively when cellPopLabel is not in the metadata", {
     TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
-    Org <- "org.Hs.eg.db"
+    OrgDb <- "org.Hs.eg.db"
     expect_error(
       tiles <- MOCHA::callOpenTiles(
         ATACFragments = MOCHA::exampleFragments,
@@ -200,14 +206,13 @@ if (
         blackList = MOCHA::exampleBlackList,
         genome = "hg19",
         TxDb = TxDb,
-        Org = Org,
+        OrgDb = OrgDb,
         outDir = tempdir(),
         cellPopLabel = "INCORRECTCELLPOPLABEL",
         cellPopulations = c("C2", "C5"),
         numCores = 1
       ),
-      regexp = "cellColData must contain column cellPopLabel"
+      regexp = "cellColData must contain column 'cellPopLabel'"
     )
   })
-  
 }

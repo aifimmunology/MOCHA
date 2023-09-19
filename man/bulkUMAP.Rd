@@ -4,15 +4,31 @@
 \alias{bulkUMAP}
 \title{\code{bulkUMAP}}
 \usage{
-bulkUMAP(LSIObj, components = c(1:30), n_neighbors = 15)
+bulkUMAP(
+  SEObj,
+  assay = "LSI",
+  components = c(1:30),
+  nNeighbors = 15,
+  returnModel = FALSE,
+  seed = 1,
+  ...
+)
 }
 \arguments{
-\item{LSIObj}{The SummarizedExperiment object output from bulkLSI.}
+\item{SEObj}{The SummarizedExperiment object output from bulkDimReduction, or an STM, subsetted down to just one cell type.}
+
+\item{assay}{A string, describing the name of the assay within SEObj to run UMAP ('PCA', 'LSI', or 'counts').}
 
 \item{components}{A vector of integers. Number of components to include in LSI (1:30 typically).}
 
-\item{n_neighbors}{See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
+\item{nNeighbors}{See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
 neighboring sample points) used for manifold approximation. Default is 15.}
+
+\item{returnModel}{A boolean. Default is FALSE. If set to true, it will return a list, where the first is the UMAP coordinates with metadata for plotting, and the second is the full UMAP model so further projection can occur.}
+
+\item{seed}{an integer. Represents the random seed to pass to the UMAP. Default seed is 1.}
+
+\item{...}{Additional arguments to be passed to \link[uwot]{umap}.}
 }
 \value{
 fullUMAP data.frame of UMAP values with metadata attached.

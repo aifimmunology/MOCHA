@@ -60,7 +60,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
                                            outputGRanges = TRUE,
-                                           numCores = 2,
+                                           numCores = 1,
                                            verbose = FALSE) {
   if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
     stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
@@ -103,40 +103,49 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   #############################################################################
   # Prioritize high-signal tiles
 
+  # Log2 transform the matrix
+  # (input must not be log2 transformed prior to this)
+  sampleTileMatrix <- log2(sampleTileMatrix + 1)
+
   medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1), drop = FALSE], na.rm = T)
   medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0), drop = FALSE], na.rm = T)
 
-  # We need to enforce that NAs were set to zeros in getSampleTileMatrix
+  # Set NAs to zero
   sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
 
   zero_A <- rowMeans(sampleTileMatrix[, which(group == 1), drop = FALSE] == 0)
   zero_B <- rowMeans(sampleTileMatrix[, which(group == 0), drop = FALSE] == 0)
 
   diff0s <- abs(zero_A - zero_B)
-  log2FC_filter <- 2^signalThreshold
+
+  log2FC_filter <- signalThreshold
   idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
 
   ############################################################################
   # Estimate differential accessibility
-  sampleTileMatrix <- log2(sampleTileMatrix + 1)
 
-  #Generate list for rapid parallelization
-  iterList <- lapply(rownames(sampleTileMatrix), function(x){
-
-      toTest = which(rownames(sampleTileMatrix) == x) %in% idx
-      if(toTest){
-        list(x, sampleTileMatrix[x, ], group)
-      }else{
-        list(x, NA, NA)
+  res_pvals <- parallel::mclapply(
+    rownames(sampleTileMatrix),
+    function(x) {
+      if (which(rownames(sampleTileMatrix) == x) %in% idx) {
+        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group, F))
+      } else {
+        data.frame(
+          Tile = x,
+          P_value = NA,
+          TestStatistic = NA,
+          Log2FC_C = NA,
+          MeanDiff = NA,
+          Case_mu = NA,
+          Case_rho = NA,
+          Control_mu = NA,
+          Control_rho = NA
+        )
       }
-  })
+    },
+    mc.cores = numCores
+  )
 
-  #only test tiles that need testing. 
-  cl <- parallel::makeCluster(numCores)
-  res_pvals <- pbapply::pblapply(cl = cl, iterList, simplifiedDA)
-  parallel::stopCluster(cl)
-
-  
   # Combine results into single objects
   res_pvals <- do.call(rbind, res_pvals)
 

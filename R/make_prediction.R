@@ -19,7 +19,7 @@
 #'
 
 make_prediction <- function(X, finalModelObject) {
-  
+
   ### Model was trained on varying
   ### cell abundances. Identify
   ### Number of cells in the sample
@@ -29,12 +29,12 @@ make_prediction <- function(X, finalModelObject) {
   ### If the number of cells < 5
   ### We do not make predictions
 
-  if(cell_model < 5){
+  if (cell_model < 5) {
     return(NULL)
   } else {
 
     ### Apply model fit based on the
-    ### cell abundance. First Part is a loess
+    ### cell abundance. First Part is a LOESS
     ### Fit, final part is a linear fit,
     ### Middle part is an average between
     ### Loess & Linear fits.
