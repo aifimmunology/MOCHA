@@ -676,3 +676,4 @@ setMethod(
   )
   return(tileResults)
 }
+
