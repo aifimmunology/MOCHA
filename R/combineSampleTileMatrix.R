@@ -107,9 +107,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   # Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting.
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
-  for (i in names(assays)) {
-    GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
-  }
 
   newMetadata <- S4Vectors::metadata(SampleTileObj)
   newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", utils::packageVersion("MOCHA")))
@@ -120,18 +117,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rowRanges = allRanges,
     metadata = newMetadata
   )
-
-  newObj <- chromVAR::addGCBias(newObj, genome = genome)
-
-  if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
-    naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
-
-    if (verbose) {
-      warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
-    }
-
-    SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(SummarizedExperiment::rowData(newObj)$bias, na.rm = TRUE)
-  }
 
   return(newObj)
 }
