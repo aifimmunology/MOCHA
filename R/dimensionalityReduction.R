@@ -30,16 +30,19 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     )
   }
   allCellTypes <- names(SummarizedExperiment::assays(SampleTileObj))
-  if (all(tolower(cellType) == "all")) {
+  if (all(tolower(cellType) == "all") & all(allCellTypes != 'counts')) {
     fullObj <- combineSampleTileMatrix(SampleTileObj)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
-  } else if (all(cellType %in% allCellTypes)) {
+  } else if (all(cellType %in% allCellTypes) & all(allCellTypes != 'counts')) {
     newTSAM <- subsetMOCHAObject(SampleTileObj,
       subsetBy = "celltype",
       groupList = cellType, subsetPeaks = TRUE,
       verbose = verbose
     )
     fullObj <- combineSampleTileMatrix(newTSAM)
+    countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+  }else if(all(allCellTypes == 'counts')){
+    fullObj = SampleTileObj
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
   } else {
     stop("cellType not found. SampleTileObj must contain the given cellType.")
