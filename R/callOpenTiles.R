@@ -20,16 +20,21 @@
 #'   contain both a column 'Sample' with unique sample IDs and the column
 #'   specified by 'cellPopLabel'.
 #' @param blackList A GRanges of blacklisted regions
-#' @param genome A BSgenome object, or the full name of an installed
-#'   BSgenome data package, or a short string specifying the name of an NCBI
-#'   assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38",
-#'   "bosTau9", "galGal6", "ce11", etc...). The supplied short string must refer
+#' @param genome A BSgenome object, or the full name of an installed BSgenome
+#'   data package, or a short string specifying the name of an NCBI assembly
+#'   (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38", "bosTau9",
+#'   "galGal6", "ce11", etc...). The supplied short string must refer
 #'   unambiguously to an installed BSgenome data package. See
 #'   \link[BSgenome]{getBSgenome}.
 #' @param studySignal The median signal (number of fragments) in your study. If
 #'   not set, this will be calculated using the input ArchR project but relies
 #'   on the assumption that the ArchR project encompasses your whole study (i.e.
 #'   is not a subset).
+#' @param generalizeStudySignal If `studySignal` is not provided, calculate the
+#'   signal as the mean of the mean & median number of fragments for of
+#'   individual samples within each cell population. This may improve MOCHA's
+#'   ability to generalize to datasets with XXXXXX #TODO. Default is FALSE, use
+#'   the median number of fragments.
 #' @param cellCol The column in cellColData specifying unique cell ids or
 #'   barcodes. Default is "RG", the unique cell identifier used by ArchR.
 #' @param TxDb The exact package name of a TxDb-class transcript annotation
@@ -100,6 +105,7 @@ setGeneric(
            cellPopLabel,
            cellPopulations = "ALL",
            studySignal = NULL,
+           generalizeStudySignal = FALSE,
            cellCol = "RG",
            TxDb,
            OrgDb,
@@ -120,6 +126,7 @@ setGeneric(
                                    cellPopLabel,
                                    cellPopulations = "ALL",
                                    studySignal = NULL,
+                                   generalizeStudySignal = FALSE,
                                    cellCol = "RG",
                                    TxDb,
                                    OrgDb,
@@ -253,6 +260,7 @@ setMethod(
                                  cellPopLabel,
                                  cellPopulations = "ALL",
                                  studySignal = NULL,
+                                 generalizeStudySignal = FALSE,
                                  TxDb,
                                  OrgDb,
                                  outDir = NULL,
@@ -297,6 +305,7 @@ setMethod(
     cellPopLabel,
     cellPopulations,
     studySignal,
+    generalizeStudySignal,
     cellCol = "RG",
     TxDb,
     OrgDb,
@@ -322,6 +331,7 @@ setMethod(
                            cellPopLabel,
                            cellPopulations,
                            studySignal,
+                           generalizeStudySignal,
                            cellCol,
                            TxDb,
                            OrgDb,
@@ -423,12 +433,21 @@ setMethod(
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
     if (verbose) {
-      message(
-        "studySignal was not provided. ",
-        "Calculating study signal on cellColData as the median ",
-        "nFrags with the assumption that all cell populations are ",
-        "present in cellColData."
-      )
+      if (generalizeStudySignal) { 
+        message(
+          "studySignal was not provided. ",
+          "Calculating study signal on cellColData as the mean of the mean ",
+          "and median nFrags of individual samples within each cell population."
+        )
+      } else {
+        message(
+          "studySignal was not provided. ",
+          "Calculating study signal on cellColData as the median ",
+          "nFrags with the assumption that all cell populations are ",
+          "present in cellColData."
+        )
+      }
+
     }
     if (!("nFrags" %in% colnames(cellColData))) {
       stop(
@@ -439,8 +458,18 @@ setMethod(
       )
     }
     studySignal <- stats::median(cellColData$nFrags)
+  } else {
+    if (generalizeStudySignal) { 
+      message(
+        "Calculating study signal on cellColData as the mean of the mean ",
+        "and median nFrags of individual samples within each cell population."
+      )
+      study_prefactor <- NULL
+    } else {
+      study_prefactor <- 3668 / studySignal # Training median
+    }
   }
-  study_prefactor <- 3668 / studySignal # Training median
+  
 
   # Main loop over all cell populations
   experimentList <- list()
@@ -520,6 +549,16 @@ setMethod(
     }
 
     #parallel::stopCluster(cl)
+    
+    if (is.null(StudypreFactor)) {
+      # generalizeStudySignal = TRUE
+      # calculate this as:
+      #   training_median_nfrags / mean(median_nfrags, mean_nfrags) for this 
+      #   cell population, where training_median_nfrags = 3668
+      mean_nfrags <- mean(lengths(frags))
+      median_nfrags <- median(lengths(frags))
+      StudypreFactor <- 3668 / mean(c(median_nfrags, mean_nfrags))
+    }
       
     # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
