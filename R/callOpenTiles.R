@@ -228,6 +228,7 @@ setGeneric(
     cellPopLabel,
     cellPopulations,
     studySignal,
+    generalizeStudySignal,
     cellCol,
     TxDb,
     OrgDb,
@@ -432,40 +433,41 @@ setMethod(
 
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
-    if (verbose) {
       if (generalizeStudySignal) { 
-        message(
-          "studySignal was not provided. ",
+        if (verbose) { message(
+          "Parameter `studySignal` was not provided. ",
           "Calculating study signal on cellColData as the mean of the mean ",
           "and median nFrags of individual samples within each cell population."
-        )
+        ) }
+        study_prefactor <- NULL
       } else {
-        message(
-          "studySignal was not provided. ",
+        # Calculate study prefactor with study-wide median nfrags
+        if (verbose) { message(
+          "Parameter `studySignal` was not provided. ",
           "Calculating study signal on cellColData as the median ",
           "nFrags with the assumption that all cell populations are ",
           "present in cellColData."
-        )
+        ) } 
+        if (!("nFrags" %in% colnames(cellColData))) {
+          stop(
+            "cellColData is missing fragment count information. ",
+            "To calculate study signal, cellColData must contain a column",
+            " 'nFrags' representing the number of fragments per cell. ",
+            "Alternatively, provide a value for the parameter 'studySignal'."
+          )
+        }
+        studySignal <- stats::median(cellColData$nFrags)
+        study_prefactor <- 3668 / studySignal # Training median
       }
-
-    }
-    if (!("nFrags" %in% colnames(cellColData))) {
-      stop(
-        "cellColData is missing fragment count information. ",
-        "To calculate study signal, cellColData must contain a column",
-        " 'nFrags' representing the number of fragments per cell. ",
-        "Alternatively, provide a value for the parameter 'studySignal'."
-      )
-    }
-    studySignal <- stats::median(cellColData$nFrags)
   } else {
     if (generalizeStudySignal) { 
-      message(
+      if (verbose) { message(
         "Calculating study signal on cellColData as the mean of the mean ",
         "and median nFrags of individual samples within each cell population."
-      )
+      ) }
       study_prefactor <- NULL
     } else {
+      # Use user-provided studySignal
       study_prefactor <- 3668 / studySignal # Training median
     }
   }
@@ -679,7 +681,7 @@ setMethod(
         paste(unique(lapply(sumDataAssayList, colnames)), collapse="\n"))
     }
   }
-  
+
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
     sumDataAssayList,
     colData = sampleData
