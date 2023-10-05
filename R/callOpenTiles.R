@@ -653,7 +653,7 @@ setMethod(
   for (i in seq_along(sumDataAssayList)) {
     assayName <- names(sumDataAssayList[i])
     assay <- sumDataAssayList[[i]]
-    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder])
+    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop=FALSE])
   }
 
   sampleData <- dplyr::arrange(
