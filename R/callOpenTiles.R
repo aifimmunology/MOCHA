@@ -552,14 +552,14 @@ setMethod(
 
     #parallel::stopCluster(cl)
     
-    if (is.null(StudypreFactor)) {
+    if (is.null(study_prefactor)) {
       # generalizeStudySignal = TRUE
       # calculate this as:
       #   training_median_nfrags / mean(median_nfrags, mean_nfrags) for this 
       #   cell population, where training_median_nfrags = 3668
       mean_nfrags <- mean(lengths(frags))
       median_nfrags <- median(lengths(frags))
-      StudypreFactor <- 3668 / mean(c(median_nfrags, mean_nfrags))
+      study_prefactor <- 3668 / mean(c(median_nfrags, mean_nfrags))
     }
       
     # This pbapply will parallelize over each sample within a celltype.
@@ -656,7 +656,7 @@ setMethod(
     sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder])
   }
 
-  sampleData <- arrange(
+  sampleData <- dplyr::arrange(
     sampleData, factor(Sample, levels = colOrder)
   )
   rownames(sampleData) <- sampleData[,"Sample"]
