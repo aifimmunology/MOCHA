@@ -462,6 +462,7 @@ setMethod(
   } else {
     if (generalizeStudySignal) { 
       if (verbose) { message(
+        "Ignoring provided studySignal since `generalizeStudySignal` = TRUE. ",
         "Calculating study signal on cellColData as the mean of the mean ",
         "and median nFrags of individual samples within each cell population."
       ) }
