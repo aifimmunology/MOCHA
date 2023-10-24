@@ -372,6 +372,8 @@ setMethod(
   allFragmentCounts <- allCellCounts
   allFragmentCounts[!is.na(allFragmentCounts)] <- NA
 
+  # Filter allCellCounts and allFragmentCounts to just cell populations (rows)
+  # of interest
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
   } else {
@@ -382,8 +384,9 @@ setMethod(
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
   # Make a copy to preserve original columns.
-  cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData), 
-                                                 !!as.name(cellPopLabel) %in% cellPopulations))
+  # cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData), 
+                                                 # !!as.name(cellPopLabel) %in% cellPopulations))
+  cellColDataCopy <- copy(cellColData)
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
     utils::type.convert(as.character(x), as.is = TRUE)
   })
@@ -649,7 +652,7 @@ setMethod(
   # Enforce Row and Column orders in sumDataAssayList and sampleData
   colOrder <- colnames(allCellCounts)
   rowOrder <- rownames(allCellCounts)
-  
+
   for (i in seq_along(sumDataAssayList)) {
     assayName <- names(sumDataAssayList[i])
     assay <- sumDataAssayList[[i]]
