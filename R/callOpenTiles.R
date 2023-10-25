@@ -467,13 +467,12 @@ setMethod(
       study_prefactor <- 3668 / studySignal # Training median
     }
   } else {
-    if (generalizeStudySignal) {
-      if (verbose) {
-        message(
-          "Calculating study signal on cellColData as the mean of the mean ",
-          "and median nFrags of individual samples within each cell population."
-        )
-      }
+    if (generalizeStudySignal) { 
+      if (verbose) { message(
+        "Ignoring provided studySignal since `generalizeStudySignal` = TRUE. ",
+        "Calculating study signal on cellColData as the mean of the mean ",
+        "and median nFrags of individual samples within each cell population."
+      ) }
       study_prefactor <- NULL
     } else {
       # Use user-provided studySignal
@@ -686,7 +685,7 @@ setMethod(
   for (i in seq_along(sumDataAssayList)) {
     assayName <- names(sumDataAssayList[i])
     assay <- sumDataAssayList[[i]]
-    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder])
+    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop=FALSE])
   }
 
   sampleData <- dplyr::arrange(
