@@ -723,7 +723,15 @@ setMethod(
   }
 
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
-    sumDataAssayList,
+    append(
+      list(
+        "CellCounts" = allCellCounts[
+            match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),],
+        "FragmentCounts" = allFragmentCounts[
+            match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),]
+      ),
+      additionalMetaData
+    ),
     colData = sampleData
   )
 
@@ -759,3 +767,4 @@ setMethod(
   )
   return(tileResults)
 }
+
