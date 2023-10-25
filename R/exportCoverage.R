@@ -117,16 +117,19 @@ exportCoverage <- function(SampleTileObj,
       names(cellPopSubsampleCov) <- gsub("\\.", "__", names(cellPopSubsampleCov))
     }
 
-    for (i in 1:length(cellPopSubsampleCov)) {
-      fileName <- gsub(" ", "__", paste(groupColumn, names(cellPopSubsampleCov), sep = "__"))
-      if (!type) {
-        fileName <- paste(fileName, "__Insertions", sep = "")
+    for(i in 1:length(cellPopSubsampleCov)){
+      fileName <- gsub(" ","__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
+      if(!type){
+        fileName = paste(fileName, "__Insertions", sep = '')
       }
-      plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, ".bw", sep = ""))
+      plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, '.bw', sep =''))
     }
-    if (saveFile) {
+      
+    if(saveFile){
+
+      names(cellPopSubsampleCov) <- x
       GRangesList1 <- append(GRangesList1, cellPopSubsampleCov)
-      names(GRangesList1) <- c(names(GRangesList1), x)
+        
     }
   }
 
