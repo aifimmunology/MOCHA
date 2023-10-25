@@ -33,8 +33,8 @@ shareMOCHA <- function(MOCHA_Obj, zipName = 'ZippedMOCHA.zip'){
 #'
 #' @description \code{unpackMOCHA} Take a packed MOCHA object, and unpacks it locally, while resetting the directory path to the new location. 
 #' 
-#' @packedObject a string. The path to the packed MOCHA object.  
-#' @exdir a string. The path to the external directory where you want to unpack the MOCHA object. 
+#' @param packedObject The path to the packed MOCHA object.  
+#' @param outDir The path to the external directory where you want to unpack the MOCHA object. 
 #' 
 #' @return the MOCHA object (tile results or Sample tile matrix)
 #'
@@ -43,7 +43,7 @@ shareMOCHA <- function(MOCHA_Obj, zipName = 'ZippedMOCHA.zip'){
 #' 
 #' 
 
-unpackMOCHA <- function(packedObject = NULL, exdir = getwd()){
+unpackMOCHA <- function(packedObject = NULL, outDir = getwd()){
 
     if(is.null(packedObject)){
         stop('Please provide the name of the zipped MOCHA object. Should be in the format Name.zip')
@@ -51,19 +51,19 @@ unpackMOCHA <- function(packedObject = NULL, exdir = getwd()){
         stop('File name does not include .zip. Please provide the name of the zipped MOCHA object. Should be in the format Name.zip')
     }
 
-    zip::unzip(zipfile = packedObject, exdir = exdir)
+    zip::unzip(zipfile = packedObject, outDir = outDir)
 
     #Extract directory name
     newDirectory <- sub('\\/$','',zip::zip_list(packedObject)[1,1], )
 
     #load MOCHA Object into memory
-    MOCHA_Obj = readRDS(paste(exdir, newDirectory, 'MOCHA_Object.RDS',sep='/'))
+    MOCHA_Obj = readRDS(paste(outDir, newDirectory, 'MOCHA_Object.RDS',sep='/'))
 
     #Change directory path for the MOCHA object to the new directory
-    MOCHA_Obj@metadata$Directory = paste(exdir, newDirectory, sep='/')
+    MOCHA_Obj@metadata$Directory = paste(outDir, newDirectory, sep='/')
 
     #Over-write object so that it has the correct directory paths saved.
-    saveRDS(MOCHA_Obj, paste(exdir, newDirectory, 'MOCHA_Object.RDS',sep='/'))
+    saveRDS(MOCHA_Obj, paste(outDir, newDirectory, 'MOCHA_Object.RDS',sep='/'))
 
     return(MOCHA_Obj)
 }
