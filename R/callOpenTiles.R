@@ -384,8 +384,8 @@ setMethod(
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
   # Make a copy to preserve original columns.
-  # cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData), 
-                                                 # !!as.name(cellPopLabel) %in% cellPopulations))
+  # cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData),
+  # !!as.name(cellPopLabel) %in% cellPopulations))
   cellColDataCopy <- copy(cellColData)
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
     utils::type.convert(as.character(x), as.is = TRUE)
@@ -414,7 +414,7 @@ setMethod(
             values_from = meanValues
           )
       )
-     
+
       summarizedData <- as.data.frame(summarizedData)
       rownames(summarizedData) <- summarizedData[[cellPopLabel]]
       summarizedData <- summarizedData[, -1, drop = FALSE]
@@ -436,45 +436,51 @@ setMethod(
 
   # Add prefactor multiplier across datasets
   if (is.null(studySignal)) {
-      if (generalizeStudySignal) { 
-        if (verbose) { message(
+    if (generalizeStudySignal) {
+      if (verbose) {
+        message(
           "Parameter `studySignal` was not provided. ",
           "Calculating study signal on cellColData as the mean of the mean ",
           "and median nFrags of individual samples within each cell population."
-        ) }
-        study_prefactor <- NULL
-      } else {
-        # Calculate study prefactor with study-wide median nfrags
-        if (verbose) { message(
+        )
+      }
+      study_prefactor <- NULL
+    } else {
+      # Calculate study prefactor with study-wide median nfrags
+      if (verbose) {
+        message(
           "Parameter `studySignal` was not provided. ",
           "Calculating study signal on cellColData as the median ",
           "nFrags with the assumption that all cell populations are ",
           "present in cellColData."
-        ) } 
-        if (!("nFrags" %in% colnames(cellColData))) {
-          stop(
-            "cellColData is missing fragment count information. ",
-            "To calculate study signal, cellColData must contain a column",
-            " 'nFrags' representing the number of fragments per cell. ",
-            "Alternatively, provide a value for the parameter 'studySignal'."
-          )
-        }
-        studySignal <- stats::median(cellColData$nFrags)
-        study_prefactor <- 3668 / studySignal # Training median
+        )
       }
+      if (!("nFrags" %in% colnames(cellColData))) {
+        stop(
+          "cellColData is missing fragment count information. ",
+          "To calculate study signal, cellColData must contain a column",
+          " 'nFrags' representing the number of fragments per cell. ",
+          "Alternatively, provide a value for the parameter 'studySignal'."
+        )
+      }
+      studySignal <- stats::median(cellColData$nFrags)
+      study_prefactor <- 3668 / studySignal # Training median
+    }
   } else {
-    if (generalizeStudySignal) { 
-      if (verbose) { message(
-        "Calculating study signal on cellColData as the mean of the mean ",
-        "and median nFrags of individual samples within each cell population."
-      ) }
+    if (generalizeStudySignal) {
+      if (verbose) {
+        message(
+          "Calculating study signal on cellColData as the mean of the mean ",
+          "and median nFrags of individual samples within each cell population."
+        )
+      }
       study_prefactor <- NULL
     } else {
       # Use user-provided studySignal
       study_prefactor <- 3668 / studySignal # Training median
     }
   }
-  
+
 
   # Main loop over all cell populations
   experimentList <- list()
@@ -553,25 +559,48 @@ setMethod(
       rm(covFiles)
     }
 
-    #parallel::stopCluster(cl)
-    
+
     if (is.null(study_prefactor)) {
+      if (verbose) {
+        ("Calculating generalized study signal...")
+      }
       # generalizeStudySignal = TRUE
       # calculate this as:
-      #   training_median_nfrags / mean(median_nfrags, mean_nfrags) for this 
-      #   cell population, where training_median_nfrags = 3668
-      mean_nfrags <- mean(lengths(frags))
-      median_nfrags <- median(lengths(frags))
-      study_prefactor <- 3668 / mean(c(median_nfrags, mean_nfrags))
+      #   training_median_nfrags / mean(median_nfrags, mean_nfrags) per cell
+      #   in this cell population, where training_median_nfrags = 3668
+      allmeans <- list()
+      allmedians <- list()
+      for (sample in names(frags)) {
+        # calculate mean or median fragments in each cell
+        fragsdf <- as.data.frame(frags[[sample]])
+        cellFragsTable <- table(fragsdf[[cellCol]]) # default cellCol is "RG"
+        allmeans <- append(allmeans, mean(cellFragsTable))
+        allmedians <- append(allmedians, median(cellFragsTable))
+      }
+      # average across all samples
+      mean_nfrags <- mean(unlist(allmeans))
+      median_nfrags <- mean(unlist(allmedians))
+      combinedSignal <- mean(c(median_nfrags, mean_nfrags))
+      study_prefactor <- 3668 / combinedSignal
+
+      if (verbose) {
+        message(
+          "Mean fragments per cell: ", mean_nfrags,
+          "\nMedian fragments per cell: ", median_nfrags,
+          "\nCombined signal: ", combinedSignal
+        )
+      }
+      rm(fragsdf)
+      rm(cellFragsTable)
     }
-      
+
     # This pbapply will parallelize over each sample within a celltype.
     # Each arrow is a sample so this is allowed
     # (Arrow files are locked - one access at a time)
     iterList <- lapply(seq_along(frags), function(x) {
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
-    #cl <- parallel::makeCluster(numCores)
+    # cl <- parallel::makeCluster(numCores)
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
@@ -605,7 +634,8 @@ setMethod(
         warning(
           "The following samples have too few cells (<5) of this celltype (",
           cellPop,
-          ") and will be ignored: ", names(tilesGRangesList)[emptyGroups]
+          ") and will be ignored: ", 
+          paste(names(tilesGRangesList)[emptyGroups], collapse = ", ")
         )
       }
     }
@@ -640,7 +670,7 @@ setMethod(
   sampleData <- suppressWarnings(
     sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
   )
-  
+
   sumDataAssayList <- append(
     list(
       "CellCounts" = allCellCounts,
@@ -648,7 +678,7 @@ setMethod(
     ),
     additionalMetaData
   )
-  
+
   # Enforce Row and Column orders in sumDataAssayList and sampleData
   colOrder <- colnames(allCellCounts)
   rowOrder <- rownames(allCellCounts)
@@ -662,26 +692,34 @@ setMethod(
   sampleData <- dplyr::arrange(
     sampleData, factor(Sample, levels = colOrder)
   )
-  rownames(sampleData) <- sampleData[,"Sample"]
-  
+  rownames(sampleData) <- sampleData[, "Sample"]
+
   # Validate Row and Column orders
-  if(verbose){
-    if(!all(rownames(sampleData) == colnames(allCellCounts))){
-      warning("SampleData and allCellCounts samples mismatch:",
-              "sampleData rownames:", rownames(sampleData),
-              "allCellCounts colnames:", rownames(allCellCounts))
+  if (verbose) {
+    if (!all(rownames(sampleData) == colnames(allCellCounts))) {
+      warning(
+        "SampleData and allCellCounts samples mismatch:",
+        "sampleData rownames:", rownames(sampleData),
+        "allCellCounts colnames:", rownames(allCellCounts)
+      )
     }
-    if (length(unique(lapply(sumDataAssayList, dim)))>1){
-      warning("Assays in sumDataAssayList have different dimensions: ",
-              paste(unique(lapply(sumDataAssayList, dim)), collapse="\n"))
+    if (length(unique(lapply(sumDataAssayList, dim))) > 1) {
+      warning(
+        "Assays in sumDataAssayList have different dimensions: ",
+        paste(unique(lapply(sumDataAssayList, dim)), collapse = "\n")
+      )
     }
-    if (length(unique(lapply(sumDataAssayList, rownames)))>1){
-      warning("Assays in sumDataAssayList have different rownames: ",
-              paste(unique(lapply(sumDataAssayList, rownames)), collapse="\n"))
+    if (length(unique(lapply(sumDataAssayList, rownames))) > 1) {
+      warning(
+        "Assays in sumDataAssayList have different rownames: ",
+        paste(unique(lapply(sumDataAssayList, rownames)), collapse = "\n")
+      )
     }
-    if (length(unique(lapply(sumDataAssayList, colnames)))>1){
-      warning("Assays in sumDataAssayList have different colnames: ",
-        paste(unique(lapply(sumDataAssayList, colnames)), collapse="\n"))
+    if (length(unique(lapply(sumDataAssayList, colnames))) > 1) {
+      warning(
+        "Assays in sumDataAssayList have different colnames: ",
+        paste(unique(lapply(sumDataAssayList, colnames)), collapse = "\n")
+      )
     }
   }
 
@@ -689,18 +727,20 @@ setMethod(
     sumDataAssayList,
     colData = sampleData
   )
-  
+
   # Match cell populations in allCellCounts/allFragmentCounts to those
   # in additionalMetaData, in case of NA cell populations
-  if(length(additionalMetaData) >= 1){
+  if (length(additionalMetaData) >= 1) {
     allCellCounts <- allCellCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts))
-      , , drop=FALSE
+      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),
+      ,
+      drop = FALSE
     ]
-    
+
     allFragmentCounts <- allFragmentCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts))
-      , , drop=FALSE
+      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
+      ,
+      drop = FALSE
     ]
   }
 
