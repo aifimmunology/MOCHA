@@ -382,7 +382,6 @@ plotRegion <- function(countSE,
       label.bg.color = "transparent",
       label.width = grid::unit(2, "lines")
     )
-    # coord_cartesian(clip = "off")
   )
 
   return(g_tracks)
