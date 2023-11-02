@@ -271,8 +271,9 @@ plotRegion <- function(countSE,
           )
         )
       } else {
+        print("empty gene track")
         # Empty gene track to prevent errors resulting from p2 nonexistence
-        p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white", axis.text.x = TRUE) +
+        p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
           ggplot2::theme_void()
         relativeHeights["Genes"] <- 10^6
         showGene <- FALSE
@@ -280,7 +281,7 @@ plotRegion <- function(countSE,
     }
   } else {
     # If user wishes to hide genes
-    p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white", axis.text.x = TRUE)
+    p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white", truncate.gaps = FALSE)
     relativeHeights["Genes"] <- 0.1
   }
 
@@ -351,7 +352,7 @@ plotRegion <- function(countSE,
 
   # Additional Ranges
   if (!is.null(additionalGRangesTrack)) {
-    p4 <- verbf(ggbio::autoplot(additionalGRangesTrack, axis.text.x = TRUE)) + ggplot2::theme_minimal()
+    p4 <- verbf(ggbio::autoplot(additionalGRangesTrack)) + ggplot2::theme_minimal()
     track_list <- c(track_list, list("AdditionalGRanges" = p4))
   }
 
@@ -367,6 +368,7 @@ plotRegion <- function(countSE,
     ))
   }
   trackHeights <- relativeHeights[names(track_list)] # ensure intended order
+
 
   # Plot All Supplied Plots
   g_tracks <- verbf(

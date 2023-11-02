@@ -780,19 +780,18 @@ plot_geneBody <- function(organismdb,
     stat_val <- NULL
   }
 
-  g_geneBody <- ggbio::autoplot(organismdb, wh = geneBody_gr) # , stat = stat_val)
+  g_geneBody <- ggbio::autoplot(organismdb, wh = geneBody_gr, truncate.gaps = FALSE) # , stat = stat_val)
 
   if (!is.null(x_lim)) { # had to move this here, otherwise theme would be overwritten...
     g_geneBody <- g_geneBody + ggplot2::xlim(x_lim[1], x_lim[2])
   }
   theme <- NULL
   g_geneBody <- g_geneBody +
-    ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) +
-    ggplot2::theme_bw(base_size = base_size) +
-    ggplot2::coord_cartesian(clip = "off") +
-    do.call(ggplot2::theme, theme_ls)
+    ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) + 
+    ggplot2::theme_bw(base_size = base_size) + 
+    do.call(ggplot2::theme, theme_ls) 
 
-
+  # works with packageVersion('ggbio')=='1.46.0'
   return(g_geneBody)
 }
 
