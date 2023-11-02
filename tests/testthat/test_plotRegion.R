@@ -123,10 +123,16 @@ if (
     ###########################################################
     # 6. plot region
     ###########################################################
-    pdf(file.path(mytempdir, "./testplotregion.pdf"))
+    pdf(file.path(mytempdir, "testplotregion.pdf"))
     MOCHA::plotRegion(countSE = countSE)
     dev.off()
     
+    if (requireNamespace("RMariaDB", quietly = TRUE)) {
+      pdf(file.path(mytempdir, "testplotregionwhichgene.pdf"))
+      MOCHA::plotRegion(countSE = countSE,
+                        whichGene = "IL21")
+      dev.off()
+    }
     # Remove mytempdir in case not generated with tempdir()
     unlink(mytempdir, recursive=TRUE)
     
