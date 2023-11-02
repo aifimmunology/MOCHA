@@ -42,6 +42,8 @@ if (
     idxSample <- BiocGenerics::which(ArchRProj$Sample %in% samplesToKeep)
     cellsSample <- ArchRProj$cellNames[idxSample]
     ArchRProj <- ArchRProj[cellsSample, ]
+    
+    mytempdir <- tempdir()
 
     ###########################################################
     # 2. Call open tiles (main peak calling step)
@@ -57,7 +59,7 @@ if (
       Org = "org.Hs.eg.db",
       numCores = 50,
       studySignal = studySignal, # should be 3628
-      outDir = "./local_Deleteme",
+      outDir = mytempdir,
       verbose = TRUE
     ))
 
@@ -118,13 +120,15 @@ if (
       )
     )
     
-    
     ###########################################################
     # 6. plot region
     ###########################################################
-    pdf("./testoplotregion2.pdf")
+    pdf(file.path(mytempdir, "./testplotregion.pdf"))
     MOCHA::plotRegion(countSE = countSE)
     dev.off()
+    
+    # Remove mytempdir in case not generated with tempdir()
+    unlink(mytempdir, recursive=TRUE)
     
   })
   options(warn = oldw)
