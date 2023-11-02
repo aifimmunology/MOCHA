@@ -780,7 +780,7 @@ plot_geneBody <- function(organismdb,
     stat_val <- NULL
   }
 
-  g_geneBody <- ggbio::autoplot(organismdb, wh = geneBody_gr, truncate.gaps = FALSE) # , stat = stat_val)
+  g_geneBody <- ggbio::autoplot(organismdb, wh = geneBody_gr, truncate.gaps = FALSE)
 
   if (!is.null(x_lim)) { # had to move this here, otherwise theme would be overwritten...
     g_geneBody <- g_geneBody + ggplot2::xlim(x_lim[1], x_lim[2])
