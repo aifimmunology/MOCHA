@@ -1,25 +1,34 @@
 #' @title \code{exportCoverage}
 #'
-#' @description \code{exportCoverage} will export normalized coverage files to 
-#'   BigWig files, either as sample-specific or sample-averaged files, for 
+#' @description \code{exportCoverage} will export normalized coverage files to
+#'   BigWig files, either as sample-specific or sample-averaged files, for
 #'   visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
+#' @param SampleTileObj The SummarizedExperiment object output from
+#'   getSampleTileMatrix
 #' @param dir string. Directory to save files to.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
-#'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak
-#'   calling is done on all cell populations. Default is 'ALL'.
-#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE, exports Insertions.
-#' @param groupColumn Optional, the column containing sample group labels for returning coverage within sample groups. Default is NULL, all samples will be used.
-#' @param subGroups a list of subgroup(s) within the groupColumn from the metadata. Optional, default is NULL, all labels within groupColumn will be used.
-#' @param sampleSpecific If TRUE, a BigWig will export for each sample-cell type combination.
-#' @param saveFile Boolean. If TRUE, it will save to a BigWig. If FALSE, it will return the GRangesList.
+#'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak calling
+#'   is done on all cell populations. Default is 'ALL'.
+#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE,
+#'   exports Insertions.
+#' @param groupColumn Optional, the column containing sample group labels for
+#'   returning coverage within sample groups. Default is NULL, all samples will
+#'   be used.
+#' @param subGroups a list of subgroup(s) within the groupColumn from the
+#'   metadata. Optional, default is NULL, all labels within groupColumn will be
+#'   used.
+#' @param sampleSpecific If TRUE, a BigWig will export for each sample-cell type
+#'   combination.
+#' @param saveFile Boolean. If TRUE, it will save to a BigWig. If FALSE, it will
+#'   return the GRangesList.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @return countSE a SummarizedExperiment containing coverage for the given input cell populations.
+#' @return countSE a SummarizedExperiment containing coverage for the given
+#'   input cell populations.
 #'
 #' @examples
 #' \dontrun{
@@ -32,7 +41,7 @@
 #' }
 #'
 #' @export
-#'
+#' 
 
 exportCoverage <- function(SampleTileObj,
                            dir = getwd(),
@@ -93,10 +102,13 @@ exportCoverage <- function(SampleTileObj,
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   GRangesList1 <- NULL
   for (x in cellPopulations) {
-    if (type) {
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
-    } else {
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_InsertionFiles.RDS", sep = ""))
+    # MOCHA::getCoverage outputs a single list with two named items: "Accessibility" 
+    # and "Insertions". 
+    # This is saved to *_CoverageFiles.RDS in MOCHA::callOpenTiles
+    if (type) { # Accessibility
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Accessibility
+    } else { # Insertions
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Insertions
     }
 
     if (verbose) {
@@ -117,19 +129,17 @@ exportCoverage <- function(SampleTileObj,
       names(cellPopSubsampleCov) <- gsub("\\.", "__", names(cellPopSubsampleCov))
     }
 
-    for(i in 1:length(cellPopSubsampleCov)){
-      fileName <- gsub(" ","__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
-      if(!type){
-        fileName = paste(fileName, "__Insertions", sep = '')
+    for (i in 1:length(cellPopSubsampleCov)) {
+      fileName <- gsub(" ", "__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
+      if (!type) {
+        fileName <- paste(fileName, "__Insertions", sep = "")
       }
-      plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, '.bw', sep =''))
+      plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, ".bw", sep = ""))
     }
-      
-    if(saveFile){
 
+    if (saveFile) {
       names(cellPopSubsampleCov) <- x
       GRangesList1 <- append(GRangesList1, cellPopSubsampleCov)
-        
     }
   }
 
@@ -155,13 +165,13 @@ averageCoverage <- function(coverageList) {
 
 #' @title \code{exportDifferentials}
 #'
-#' @description \code{exportDifferentials} exports the differential peaks 
-#'  output GRangesList output from \code{getDifferentialAccessibleTiles} to 
+#' @description \code{exportDifferentials} exports the differential peaks
+#'  output GRangesList output from \code{getDifferentialAccessibleTiles} to
 #'  bigBed format for visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from 
+#' @param SampleTileObj The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
-#' @param DifferentialsGRList The GRangesList output from 
+#' @param DifferentialsGRList The GRangesList output from
 #'   \code{getDifferentialAccessibleTiles}
 #' @param outDir Desired output directory where bigBed files will be saved
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -178,9 +188,9 @@ averageCoverage <- function(coverageList) {
 #'
 #' @export
 #'
-exportDifferentials <- function(SampleTileObject, 
-                                DifferentialsGRList, 
-                                outDir, 
+exportDifferentials <- function(SampleTileObject,
+                                DifferentialsGRList,
+                                outDir,
                                 verbose = FALSE) {
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
 
@@ -207,7 +217,7 @@ exportDifferentials <- function(SampleTileObject,
 #' @description \code{exportOpenTiles} exports the open tiles of a given cell
 #'  population to bigBed file for visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from 
+#' @param SampleTileObj The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param cellPopulation The name of the cell population to export
 #' @param outDir Desired output directory where bigBed files will be saved
@@ -225,9 +235,9 @@ exportDifferentials <- function(SampleTileObject,
 #'
 #' @export
 #'
-exportOpenTiles <- function(SampleTileObject, 
-                            cellPopulation, 
-                            outDir, 
+exportOpenTiles <- function(SampleTileObject,
+                            cellPopulation,
+                            outDir,
                             verbose = FALSE) {
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
 
@@ -266,7 +276,7 @@ exportOpenTiles <- function(SampleTileObject,
 #' @description \code{exportMotifs} exports a motif set GRanges from running
 #'    \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
 #'    in genome browsers.
-#' @param SampleTileObj The SummarizedExperiment object output from 
+#' @param SampleTileObj The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param motifsGRanges A GRanges containing motif annotations, typically from
 #'   \code{addMotifSet(returnSTM=FALSE)}
