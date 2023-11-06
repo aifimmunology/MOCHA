@@ -44,7 +44,7 @@
 #' }
 #'
 #' @export
-#' 
+#'
 runZIGLMM <- function(TSAM_Object,
                       cellPopulation = "all",
                       continuousFormula = NULL,
@@ -157,8 +157,10 @@ runZIGLMM <- function(TSAM_Object,
   # Make your clusters for efficient parallelization
   cl <- parallel::makeCluster(numCores)
   iterList <- lapply(rownames(modelingData), function(x) {
-    list(x, continuousFormula, modelingData, MetaDF, nullDF, 
-         zi_threshold, ziformula)
+    list(
+      x, continuousFormula, modelingData, MetaDF, nullDF,
+      zi_threshold, ziformula
+    )
   })
   parallel::clusterExport(
     cl = cl, varlist = c(iterList),
@@ -244,7 +246,7 @@ extractVariable <- function(varList, varType, variable, nullDF) {
 #'
 #' @return A linear model
 #' @noRd
-#' 
+#'
 individualZIGLMM <- function(iterList) {
   x <- iterList[[1]]
   continuousFormula <- iterList[[2]]
@@ -253,7 +255,7 @@ individualZIGLMM <- function(iterList) {
   nullDF <- iterList[[5]]
   zi_threshold <- iterList[[6]]
   ziformula <- iterList[[7]]
-  
+
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
     MetaDF, stringsAsFactors = FALSE

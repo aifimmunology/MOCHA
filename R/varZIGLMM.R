@@ -4,8 +4,8 @@
 #'  space using a zero-inflated general linear mixed model \code{\link[glmmTMB]{glmmTMB}}
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
-#'   getSampleTileMatrix. 
-#' @param cellTypeName Name of a cell type. Should match up exactly with the assay name within SummarizedExperiment. 
+#'   getSampleTileMatrix.
+#' @param cellTypeName Name of a cell type. Should match up exactly with the assay name within SummarizedExperiment.
 #' @param continuousRandom Random effects to test in the continuous portion. All factors must be found in column names
 #'   of the TSAM_Object metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.
 #' @param ziRandom Random effects to test in the zero-inflated portion. All factors must be found in column names
@@ -19,16 +19,17 @@
 #'
 #' @examples
 #' \dontrun{
-#'   modelList <- runZIGLMM(STM[c(1:1000),], 
-#'                  cellTypeName = 'CD16 Mono',
-#'                  continuousRandom = c('Age', 'Sex', 'Days'),
-#'                  ziRandom = c('FragNumber', 'Days'),
-#'                  verbose = TRUE, 
-#'                  numCores = 35 )
+#' modelList <- runZIGLMM(STM[c(1:1000), ],
+#'   cellTypeName = "CD16 Mono",
+#'   continuousRandom = c("Age", "Sex", "Days"),
+#'   ziRandom = c("FragNumber", "Days"),
+#'   verbose = TRUE,
+#'   numCores = 35
+#' )
 #' }
 #'
 #' @export
-#' 
+#'
 varZIGLMM <- function(TSAM_Object,
                       cellPopulation = NULL,
                       continuousRandom = NULL,
@@ -36,7 +37,6 @@ varZIGLMM <- function(TSAM_Object,
                       zi_threshold = 0.1,
                       verbose = FALSE,
                       numCores = 1) {
-
   if (length(cellPopulation) > 1) {
     stop(
       "More than one cell population was provided. ",
@@ -48,16 +48,16 @@ varZIGLMM <- function(TSAM_Object,
     (!cellPopulation %in% names(SummarizedExperiment::assays(TSAM_Object)))
   ) {
     stop("cellPopulation was not found within TSAM_Object.")
-  } else if(cellPopulation == 'counts'){
+  } else if (cellPopulation == "counts") {
     newObj <- TSAM_Object
-  }else{
-    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = 'celltype', groupList = cellPopulation, subsetPeaks = TRUE))
+  } else {
+    newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = "celltype", groupList = cellPopulation, subsetPeaks = TRUE))
   }
 
-  
-  modelingData <- log2(SummarizedExperiment::assays(newObj)[['counts']]+1)
+
+  modelingData <- log2(SummarizedExperiment::assays(newObj)[["counts"]] + 1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
- 
+
   if (!all(continuousRandom %in% c("exp", colnames(MetaDF)))) {
     stop("Random continuous effects are not found in metadata.")
   }
@@ -66,17 +66,17 @@ varZIGLMM <- function(TSAM_Object,
     stop("Random Zero-inflated effects are not found in metadata.")
   }
 
-  CondvarForm <- paste0(unlist(lapply(continuousRandom, function(x) paste('(1|',x,')',sep=''))), collapse = ' + ')
-  continuousFormula <- paste('exp ~ ',CondvarForm, sep = '')
+  CondvarForm <- paste0(unlist(lapply(continuousRandom, function(x) paste("(1|", x, ")", sep = ""))), collapse = " + ")
+  continuousFormula <- paste("exp ~ ", CondvarForm, sep = "")
 
-  if(all(ziRandom != 0)){
-    zi_form <- paste0(unlist(lapply(ziRandom, function(x) paste('(1|',x,')',sep=''))), collapse = ' + ')
+  if (all(ziRandom != 0)) {
+    zi_form <- paste0(unlist(lapply(ziRandom, function(x) paste("(1|", x, ")", sep = ""))), collapse = " + ")
     variableList <- c(continuousRandom, ziRandom)
-  }else{
-    zi_form = ziRandom
+  } else {
+    zi_form <- ziRandom
     variableList <- continuousRandom
   }
-  ziformula = paste("~ ", zi_form)
+  ziformula <- paste("~ ", zi_form)
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[, match(colnames(modelingData), MetaDF$Sample)]
@@ -88,64 +88,62 @@ varZIGLMM <- function(TSAM_Object,
     stop("NAs are included in the MetaDF. Please remove them and try again.")
   }
 
-    # Subset metadata to just the variables needed. This minimizes overhead for parallelization
+  # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
 
   ## Log transform the FragmentNumbers so as to stabilize the model. But only if FragNumber is in the model. Same for CellCounts.
-  if(any(colnames(MetaDF) %in% c('FragNumber'))){
-    MetaDF$rawFragNumber = MetaDF$FragNumber
+  if (any(colnames(MetaDF) %in% c("FragNumber"))) {
+    MetaDF$rawFragNumber <- MetaDF$FragNumber
     MetaDF$FragNumber <- log10(MetaDF$FragNumber)
   }
-  if(any(colnames(MetaDF) %in% c('CellCounts'))){
-    MetaDF$rawCellCounts = MetaDF$CellCounts
+  if (any(colnames(MetaDF) %in% c("CellCounts"))) {
+    MetaDF$rawCellCounts <- MetaDF$CellCounts
     MetaDF$CellCounts <- log10(MetaDF$CellCounts)
   }
 
 
 
-  #Generate null results.
-  if(all(ziRandom != 0)){
+  # Generate null results.
+  if (all(ziRandom != 0)) {
     nullDF <- rep(NA, length(continuousRandom) + length(ziRandom) + 1)
-    names(nullDF) <- c(paste('Cond', continuousRandom, sep="_"), paste('ZI', ziRandom, sep="_"), 'Residual')
-  }else{
+    names(nullDF) <- c(paste("Cond", continuousRandom, sep = "_"), paste("ZI", ziRandom, sep = "_"), "Residual")
+  } else {
     nullDF <- rep(NA, length(continuousRandom) + 1)
-    names(nullDF) <- c(paste('Cond', continuousRandom, sep="_"), 'Residual')
+    names(nullDF) <- c(paste("Cond", continuousRandom, sep = "_"), "Residual")
   }
-  
+
   # Subset metadata to just the variables needed. This minimizes overhead for parallelization
   MetaDF <- MetaDF[, colnames(MetaDF) %in% c("Sample", variableList)]
 
   if (any(is.na(MetaDF))) {
     stop("NAs are included in the MetaDF. Please remove them and try again.")
   }
-  
+
   # Make your clusters for efficient parallelization
-  if(numCores > 1){
-      cl <- parallel::makeCluster(numCores)
-      parallel::clusterEvalQ(cl, {
-                library(glmmTMB)
-        })
-  
+  if (numCores > 1) {
+    cl <- parallel::makeCluster(numCores)
+    parallel::clusterEvalQ(cl, {
+      library(glmmTMB)
+    })
+
     parallel::clusterExport(
-    cl = cl, varlist = c("continuousFormula", "ziformula","zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
-    envir = environment()
+      cl = cl, varlist = c("continuousFormula", "ziformula", "zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
+      envir = environment()
     )
 
     varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
-
-      
-  }else{
-
-    varDecompList <- pbapply::pblapply(cl = NULL, X = rownames(modelingData), function(x) { individualVarZIGLMM(x)})
-
+  } else {
+    varDecompList <- pbapply::pblapply(cl = NULL, X = rownames(modelingData), function(x) {
+      individualVarZIGLMM(x)
+    })
   }
-   
 
-  if(!is.null(cl)){
+
+  if (!is.null(cl)) {
     parallel::stopCluster(cl)
   }
-                                    
-  results <- do.call('rbind', varDecompList)
+
+  results <- do.call("rbind", varDecompList)
   rownames(results) <- rownames(modelingData)
 
   return(results)
@@ -165,32 +163,30 @@ varZIGLMM <- function(TSAM_Object,
 #'
 
 individualVarZIGLMM <- function(x) {
-    
-    
-    df <- data.frame(
-        exp = as.numeric(modelingData[x, ]),
-        MetaDF, stringsAsFactors = FALSE
-      )
+  df <- data.frame(
+    exp = as.numeric(modelingData[x, ]),
+    MetaDF, stringsAsFactors = FALSE
+  )
 
-    
+
   output_vector <- tryCatch(
     {
-      if(all(df$exp !=0, na.rm = T)){
-        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
-          ziformula = ~ 0,
-          data = df,
-          family = stats::gaussian(),
-          REML = TRUE
-        )
-      }else if(sum(df$exp ==0, na.rm = T)/length(df$exp) < zi_threshold){
-        df$exp[df$exp ==0] = NA
+      if (all(df$exp != 0, na.rm = T)) {
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
           ziformula = ~0,
           data = df,
           family = stats::gaussian(),
           REML = TRUE
         )
-      }else{
+      } else if (sum(df$exp == 0, na.rm = T) / length(df$exp) < zi_threshold) {
+        df$exp[df$exp == 0] <- NA
+        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
+          ziformula = ~0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      } else {
         modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
           ziformula = as.formula(ziformula),
           data = df,
@@ -199,34 +195,31 @@ individualVarZIGLMM <- function(x) {
         )
       }
 
-      if(!modelRes$sdr$pdHess){
+      if (!modelRes$sdr$pdHess) {
         return(nullDF)
       }
 
 
-      cond_other = unlist(glmmTMB::VarCorr(modelRes)$cond)
-      names(cond_other) = paste('Cond', names(cond_other), sep = "_")
-      residual = as.vector(attr(glmmTMB::VarCorr(modelRes)$cond, "sc")^2)
-      names(residual) = 'Residual'
+      cond_other <- unlist(glmmTMB::VarCorr(modelRes)$cond)
+      names(cond_other) <- paste("Cond", names(cond_other), sep = "_")
+      residual <- as.vector(attr(glmmTMB::VarCorr(modelRes)$cond, "sc")^2)
+      names(residual) <- "Residual"
 
-     if(all(df$exp !=0, na.rm = T)){
-        subNull = nullDF[grepl('ZI_', names(nullDF))]
-        zi_other = rep(0, length(subNull))
-        names(zi_other) = names(subNull)
-        varcor_df <- c(cond_other, zi_other,residual)
-        
-     }else if(length(all.vars(as.formula(ziformula))) != 0){
-        zi_other = unlist(glmmTMB::VarCorr(modelRes)$zi)
-        names(zi_other) = paste('ZI', names(zi_other), sep = "_")
-        varcor_df <- c(cond_other, zi_other,residual)
-
-      }else {
+      if (all(df$exp != 0, na.rm = T)) {
+        subNull <- nullDF[grepl("ZI_", names(nullDF))]
+        zi_other <- rep(0, length(subNull))
+        names(zi_other) <- names(subNull)
+        varcor_df <- c(cond_other, zi_other, residual)
+      } else if (length(all.vars(as.formula(ziformula))) != 0) {
+        zi_other <- unlist(glmmTMB::VarCorr(modelRes)$zi)
+        names(zi_other) <- paste("ZI", names(zi_other), sep = "_")
+        varcor_df <- c(cond_other, zi_other, residual)
+      } else {
         varcor_df <- c(cond_other, residual)
       }
 
-      varDecomp <- varcor_df/sum(varcor_df)
+      varDecomp <- varcor_df / sum(varcor_df)
       return(varDecomp)
-
     },
     error = function(e) {
       nullDF

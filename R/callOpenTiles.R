@@ -386,7 +386,7 @@ setMethod(
   # Make a copy to preserve original columns.
 
   # This filtering introduced a bug where a cell population was only present
-  # in one sample - resulted in entire samples being dropped from 
+  # in one sample - resulted in entire samples being dropped from
   # summarizedData.
   # cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData),
   # !!as.name(cellPopLabel) %in% cellPopulations))
@@ -419,7 +419,7 @@ setMethod(
             values_from = meanValues
           )
       )
-     
+
       summarizedData <- as.data.frame(summarizedData)
       rownames(summarizedData) <- summarizedData[[cellPopLabel]]
       summarizedData <- summarizedData[, -1, drop = FALSE]
@@ -472,12 +472,14 @@ setMethod(
       study_prefactor <- 3668 / studySignal # Training median
     }
   } else {
-    if (generalizeStudySignal) { 
-      if (verbose) { message(
-        "Ignoring provided studySignal since `generalizeStudySignal` = TRUE. ",
-        "Calculating study signal on cellColData as the mean of the mean ",
-        "and median nFrags of individual samples within each cell population."
-      ) }
+    if (generalizeStudySignal) {
+      if (verbose) {
+        message(
+          "Ignoring provided studySignal since `generalizeStudySignal` = TRUE. ",
+          "Calculating study signal on cellColData as the mean of the mean ",
+          "and median nFrags of individual samples within each cell population."
+        )
+      }
       study_prefactor <- NULL
     } else {
       # Use user-provided studySignal
@@ -639,7 +641,7 @@ setMethod(
         warning(
           "The following samples have too few cells (<5) of this celltype (",
           cellPop,
-          ") and will be ignored: ", 
+          ") and will be ignored: ",
           paste(names(tilesGRangesList)[emptyGroups], collapse = ", ")
         )
       }
@@ -691,7 +693,7 @@ setMethod(
   for (i in seq_along(sumDataAssayList)) {
     assayName <- names(sumDataAssayList[i])
     assay <- sumDataAssayList[[i]]
-    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop=FALSE])
+    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop = FALSE])
   }
 
   sampleData <- dplyr::arrange(
@@ -732,28 +734,16 @@ setMethod(
     append(
       list(
         "CellCounts" = allCellCounts[
-            match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),],
+          match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),
+        ],
         "FragmentCounts" = allFragmentCounts[
-            match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),]
+          match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
+        ]
       ),
       additionalMetaData
     ),
     colData = sampleData
   )
-  
-  # Match cell populations in allCellCounts/allFragmentCounts to those
-  # in additionalMetaData, in case of NA cell populations
-  if(length(additionalMetaData) >= 1){
-    allCellCounts <- allCellCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts))
-      , , drop=FALSE
-    ]
-    
-    allFragmentCounts <- allFragmentCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts))
-      , , drop=FALSE
-    ]
-  }
 
   # Match cell populations in allCellCounts/allFragmentCounts to those
   # in additionalMetaData, in case of NA cell populations
@@ -767,6 +757,20 @@ setMethod(
     allFragmentCounts <- allFragmentCounts[
       match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
       ,
+      drop = FALSE
+    ]
+  }
+
+  # Match cell populations in allCellCounts/allFragmentCounts to those
+  # in additionalMetaData, in case of NA cell populations
+  if (length(additionalMetaData) >= 1) {
+    allCellCounts <- allCellCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)), ,
+      drop = FALSE
+    ]
+
+    allFragmentCounts <- allFragmentCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)), ,
       drop = FALSE
     ]
   }

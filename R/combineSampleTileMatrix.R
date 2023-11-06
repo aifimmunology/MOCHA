@@ -17,7 +17,6 @@
 combineSampleTileMatrix <- function(SampleTileObj,
                                     NAtoZero = TRUE,
                                     verbose = FALSE) {
- 
   CellTypes <- FragNumber <- NULL
 
   genome <- S4Vectors::metadata(SampleTileObj)$Genome

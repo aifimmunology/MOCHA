@@ -209,16 +209,16 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
 #' @description \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
 #'
 #' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
-#' @return a vector of cell type names. 
+#' @return a vector of cell type names.
 #'
 #' @export
 getCellTypes <- function(object) {
-  if(class(object)[1] == 'MultiAssayExperiment'){
+  if (class(object)[1] == "MultiAssayExperiment") {
     return(names(object))
-  }else if(class(object)[1] == 'RangedSummarizedExperiment'){
+  } else if (class(object)[1] == "RangedSummarizedExperiment") {
     return(names(SummarizedExperiment::assays(object)))
-  }else{
-    stop('Object not recognized. Please provide an object from callOpenTiles or getSampleTileMatrix.')
+  } else {
+    stop("Object not recognized. Please provide an object from callOpenTiles or getSampleTileMatrix.")
   }
 }
 
@@ -227,67 +227,61 @@ getCellTypes <- function(object) {
 #'
 #' @description \code{getCellTypeTiles} Returns a GRanges object of all tiles called for a certain cell type
 #'
-#' @param object A SampleTileObject. 
+#' @param object A SampleTileObject.
 #' @param cellType A string describing one cell type.
-#' @return a vector of cell type names. 
+#' @return a vector of cell type names.
 #'
 #' @export
 getCellTypeTiles <- function(object, cellType) {
-  if(class(object)[1] == 'MultiAssayExperiment'){
-    stop('This is a MultiAssayExperiment, and thus like a tileResults object. Please provide a SampleTileMatrix object.')
-  }else if(class(object)[1] == 'RangedSummarizedExperiment'){
-
+  if (class(object)[1] == "MultiAssayExperiment") {
+    stop("This is a MultiAssayExperiment, and thus like a tileResults object. Please provide a SampleTileMatrix object.")
+  } else if (class(object)[1] == "RangedSummarizedExperiment") {
     all_ranges <- SummarizedExperiment::rowRanges(object)
 
-    if(sum(cellType == names(SummarizedExperiment::assays(object))) != 1){
-
-      stop('Please provide a single cell type, which must be present in the SampleTileObject. cellType is either not found, or is a list of multiple cell types.')
-
-    }else{
-
-      subRange <- all_ranges[unlist(GenomicRanges::mcols(all_ranges)[,cellType])]
-
+    if (sum(cellType == names(SummarizedExperiment::assays(object))) != 1) {
+      stop("Please provide a single cell type, which must be present in the SampleTileObject. cellType is either not found, or is a list of multiple cell types.")
+    } else {
+      subRange <- all_ranges[unlist(GenomicRanges::mcols(all_ranges)[, cellType])]
     }
 
     return(subRange)
-  }else{
-    stop('Object not recognized. Please provide a SampleTileMatrix object (SummarizedExperiment).')
+  } else {
+    stop("Object not recognized. Please provide a SampleTileMatrix object (SummarizedExperiment).")
   }
 }
 
 
 #' @title \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata
-#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and 
+#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and
 #'
 #' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
-#' @return a SummarizedExperiment where each assay is a different type of metadata.  
+#' @return a SummarizedExperiment where each assay is a different type of metadata.
 #'
 #' @export
 getSampleCellTypeMetadata <- function(object) {
-  #Check if the object has Sample-CellType-level metadata stored in the metadata slot.
-  if(all(c('FragmentCounts','CellCounts') %in% names(object@metadata))){
-
+  # Check if the object has Sample-CellType-level metadata stored in the metadata slot.
+  if (all(c("FragmentCounts", "CellCounts") %in% names(object@metadata))) {
     sampleData <- SummarizedExperiment::colData(object)
 
     fragCounts <- object@metadata$FragmentCounts
-    fragMat <- as.matrix(t(fragCounts[match(rownames(sampleData), rownames(fragCounts)),]))
+    fragMat <- as.matrix(t(fragCounts[match(rownames(sampleData), rownames(fragCounts)), ]))
     rownames(fragMat) <- colnames(fragCounts)
 
     cellCounts <- object@metadata$CellCounts
-    cellMat <- as.matrix(t(cellCounts[match(rownames(sampleData), rownames(cellCounts)),]))
+    cellMat <- as.matrix(t(cellCounts[match(rownames(sampleData), rownames(cellCounts)), ]))
     rownames(cellMat) <- colnames(cellMat)
 
-    if(any(!dim(cellMat) %in% dim(cellCounts))){
-      stop('Error in processing Sample-Cell type metadata. Some Samples may be missing. Please correct Sample-Cell type metadata manually or regenerate the object.')
+    if (any(!dim(cellMat) %in% dim(cellCounts))) {
+      stop("Error in processing Sample-Cell type metadata. Some Samples may be missing. Please correct Sample-Cell type metadata manually or regenerate the object.")
     }
 
     metaList <- list(fragMat, cellMat)
-    names(metaList) <- c('FragmentCounts','CellCounts')
+    names(metaList) <- c("FragmentCounts", "CellCounts")
 
     SE <- SummarizedExperiment::SummarizedExperiment(metaList, colData = sampleData)
     return(SE)
-  }else{
-    stop('Object does not appear to have Sample-Celltype metadata.')
+  } else {
+    stop("Object does not appear to have Sample-Celltype metadata.")
   }
 }
 
@@ -298,25 +292,26 @@ getSampleCellTypeMetadata <- function(object) {
 #' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
 #' @param cellPopulation Cell type names (assay name) within the TSAM_object
 #' @param density Boolean to determine whether to plot density or histogram. Default is TRUE (plots density).
-#' @return data.frame or ggplot histogram. 
+#' @return data.frame or ggplot histogram.
 #'
 #' @export
 
-plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE){
-
-  mat <- unlist(Biobase::rowMedians(log2(getCellPopMatrix(STM, cellPopulation)+1)))
+plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE) {
+  mat <- unlist(Biobase::rowMedians(log2(getCellPopMatrix(STM, cellPopulation) + 1)))
   plotMat <- data.frame(Values = mat)
 
-  if(returnDF){
+  if (returnDF) {
     return(plotMat)
   }
-  if(density){
-    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) + ggplot2::geom_density() + ggplot2::theme_bw() 
-  }else{
-    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) + ggplot2::geom_histogram() + ggplot2::theme_bw() 
+  if (density) {
+    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) +
+      ggplot2::geom_density() +
+      ggplot2::theme_bw()
+  } else {
+    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) +
+      ggplot2::geom_histogram() +
+      ggplot2::theme_bw()
   }
-  
+
   return(p1)
-
 }
-

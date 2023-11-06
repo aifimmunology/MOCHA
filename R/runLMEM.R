@@ -8,7 +8,7 @@
 #'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only
 #'   one assay, or only the first assay will be used for the model.
 #'   Data should not be zero-inflated.
-#' @param assayName The name of the assay to model within the SummarizedExperiment. 
+#' @param assayName The name of the assay to model within the SummarizedExperiment.
 #' @param modelFormula The formula to use with lmerTest::lmer, in the
 #'   format (exp ~ factors). All factors must be found in column names
 #'   of the ExperimentObj metadata. modelFormula must start with 'exp' as the response.
@@ -20,8 +20,8 @@
 #' @return results a SummarizedExperiment containing LMEM results. Assays are metrics related to the model coefficients,
 #'          including the Estimate, Std_Error, df, t_value, p_value. Within each assay, each row corresponds to each row of
 #'          the SummarizedExperiment and columns correspond to each fixed effect variable within the model.
-#'          Any row metadata from the ExperimentObject (see rowData(ExperimentObj)) is preserved in the output. 
-#'          The Residual matrix and the variance of the random effects are saved in the metadata slot of the output. 
+#'          Any row metadata from the ExperimentObject (see rowData(ExperimentObj)) is preserved in the output.
+#'          The Residual matrix and the variance of the random effects are saved in the metadata slot of the output.
 #'
 #'
 #'
@@ -49,11 +49,10 @@ runLMEM <- function(ExperimentObj,
       "Package 'lmerTest' is required for runLMEM ",
       "Please install 'lmerTest' to proceed."
     )
-    }
-  
-  if(!any(names(SummarizedExperiment::assays(ExperimentObj)) %in% assayName)){
-    stop('ExperimentObj does not contain an assay that matches the assayName input variable.')
+  }
 
+  if (!any(names(SummarizedExperiment::assays(ExperimentObj)) %in% assayName)) {
+    stop("ExperimentObj does not contain an assay that matches the assayName input variable.")
   }
 
   modelingData <- as.data.frame(
@@ -67,16 +66,17 @@ runLMEM <- function(ExperimentObj,
       "(exp ~ factors)"
     )
   }
-  
-  if (!methods::is(modelFormula, "formula") & !methods::is(modelFormula, "character")){
-    stop("modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
-        "(exp ~ factors)")   
-  }else if(!methods::is(modelFormula, "formula")) {
-    modelFormula = as.character(modelFormula)
+
+  if (!methods::is(modelFormula, "formula") & !methods::is(modelFormula, "character")) {
+    stop(
+      "modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
+      "(exp ~ factors)"
+    )
+  } else if (!methods::is(modelFormula, "formula")) {
+    modelFormula <- as.character(modelFormula)
   }
-  
+
   if (!"exp" %in% all.vars(as.formula(modelFormula))) {
-      
     stop(
       "modelFormula is not in the format (exp ~ factors). ",
       "modelFormula must start with 'exp' as the response."
@@ -92,7 +92,7 @@ runLMEM <- function(ExperimentObj,
       "modelFormula is not in the format ",
       "(exp ~ factors)."
     )
-    }
+  }
   variableList <- all.vars(as.formula(modelFormula))[all.vars(as.formula(modelFormula)) != "exp"]
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
@@ -140,33 +140,33 @@ runLMEM <- function(ExperimentObj,
     idx <- which(!is.na(unlist(modelList)))
     nullDF <- as.data.frame(summary(modelList[[idx[1]]])$coefficients)
 
-    nullDF[!is.na(nullDF)] <- NA 
-    nullResidual <- stats::resid(modelList[[idx[1]]])  
-    nullResidual[!is.na(nullResidual)] <- NA 
+    nullDF[!is.na(nullDF)] <- NA
+    nullResidual <- stats::resid(modelList[[idx[1]]])
+    nullResidual[!is.na(nullResidual)] <- NA
 
-    #Add in missing residuals 
-    if(!all(MetaDF$Sample %in% names(nullResidual))){
+    # Add in missing residuals
+    if (!all(MetaDF$Sample %in% names(nullResidual))) {
       NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(nullResidual)))
       names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(nullResidual)]
       nullResidual <- c(nullResidual, NA_samples)
     }
-    nullResidual <- nullResidual[match(names(nullResidual),MetaDF$Sample)]
+    nullResidual <- nullResidual[match(names(nullResidual), MetaDF$Sample)]
     nullVcov <- as.data.frame(lme4::VarCorr(modelList[[idx[1]]]))$vcov
     names(nullVcov) <- as.data.frame(lme4::VarCorr(modelList[[idx[1]]]))$grp
-    nullVcov[!is.na(nullVcov)] <- NA 
+    nullVcov[!is.na(nullVcov)] <- NA
 
-    nullDFList <- list('Coeff' = nullDF, 'Resid' = nullResidual, 'VCov'= nullVcov)
-      
+    nullDFList <- list("Coeff" = nullDF, "Resid" = nullResidual, "VCov" = nullVcov)
+
     rm(modelList)
     # Why do we make and then export to cluster this nullDFList if it is not used?
-    # It's used as a dummy variable in cases where the model fails. NAs are returned from individualLMEM instead of the function breaking. 
+    # It's used as a dummy variable in cases where the model fails. NAs are returned from individualLMEM instead of the function breaking.
   }
-  if(numCores > 1){
+  if (numCores > 1) {
     cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(
       cl = cl, varlist = c(
         "modelFormula", "modelingData",
-        "MetaDF", "individualLMEM", "nullDFList" 
+        "MetaDF", "individualLMEM", "nullDFList"
       ),
       envir = environment()
     )
@@ -179,24 +179,25 @@ runLMEM <- function(ExperimentObj,
       individualLMEM
     )
     parallel::stopCluster(cl)
-  }else {
+  } else {
     coeffList <- pbapply::pblapply(
       cl = NULL,
       X = rownames(modelingData),
       individualLMEM
     )
   }
-  
+
 
   if (verbose) {
     message("Reorganizing coefficients.")
   }
 
-  processedOuts <- processModelOutputs(modelOutputList = coeffList, 
-                                        nullDFList = nullDFList, 
-                                        rownamesList = rownames(modelingData),
-                                        SummarizedExperimentObj = ExperimentObj
-                                        )
+  processedOuts <- processModelOutputs(
+    modelOutputList = coeffList,
+    nullDFList = nullDFList,
+    rownamesList = rownames(modelingData),
+    SummarizedExperimentObj = ExperimentObj
+  )
 
   return(processedOuts)
 }
@@ -230,16 +231,16 @@ individualLMEM <- function(iterList) {
       modelRes <- lmerTest::lmer(formula = as.character(modelFormula), data = df)
       Coeff <- as.data.frame(summary(modelRes)$coefficients)
       Resid <- stats::resid(modelRes)
-      
-      if(!all(MetaDF$Sample %in% names(Resid))){
+
+      if (!all(MetaDF$Sample %in% names(Resid))) {
         NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
         names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
         Resid <- c(Resid, NA_samples)
       }
-      Resid <- Resid[match(names(Resid),MetaDF$Sample)]
+      Resid <- Resid[match(names(Resid), MetaDF$Sample)]
       vcov <- as.data.frame(lme4::VarCorr(modelRes))$vcov
       names(vcov) <- as.data.frame(lme4::VarCorr(modelRes))$grp
-      list('Coeff' = Coeff, 'Resid' = Resid, 'VCov'= vcov)
+      list("Coeff" = Coeff, "Resid" = Resid, "VCov" = vcov)
     },
     error = function(e) {
       nullDFList
@@ -250,79 +251,80 @@ individualLMEM <- function(iterList) {
 
 #' @title Internal function to processing model outputs
 #'
-#' @description \code{processModelOutputs} 
-#' @param modelOutputList. A list of modeloutputs, processed by either individualLMEM or individualZIGLMM. 
-#'        The first output is the coefficient data.frame, then the residuals, and the Variance. 
+#' @description \code{processModelOutputs}
+#' @param modelOutputList. A list of modeloutputs, processed by either individualLMEM or individualZIGLMM.
+#'        The first output is the coefficient data.frame, then the residuals, and the Variance.
 #' @param nullDFList A null templates for the model outputs
-#' @param rownamesList a name of all the rows that were interate over. 
+#' @param rownamesList a name of all the rows that were interate over.
 #' @param SummarizedExperiment SummarizedExperiment object used for modeling. From this, rowData and colData will be preserved with the residuals.
-#' @return A SummarizedExperiment object, that captures the models performance. Each fixed effect will be one assay, columns will be the 
+#' @return A SummarizedExperiment object, that captures the models performance. Each fixed effect will be one assay, columns will be the
 #'        statistics for the fixed effect and measurements (Estimate, Error, p-value, etc..). Residuals and Variance will be saved in the object's metadata.
 #'
 #' @noRd
 processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, ranged = FALSE,
-                                  SummarizedExperimentObj, returnList = FALSE) {
+                                SummarizedExperimentObj, returnList = FALSE) {
+  coeffNames <- rownames(nullDFList$Coeff)
+  newColumnNames <- gsub("Pr\\(>\\|.\\|)", "p_value", gsub(" |\\. ", "_", colnames(nullDFList$Coeff)))
+  output_list <- lapply(coeffNames, function(z) {
+    tmpCoef <- do.call("rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+      tmpDf <- x[["Coeff"]][z, ]
+      colnames(tmpDf) <- newColumnNames
+      tmpDf$FDR <- p.adjust(tmpDf$p_value, "fdr")
+      tmpDf
+    }, cl = NULL))
+    rownames(tmpCoef) <- rownamesList
+    tmpCoef
+  })
+  names(output_list) <- gsub("Pr\\(>\\|.\\|)", "p_value", gsub(" |\\. ", "_", coeffNames))
 
-    coeffNames <- rownames(nullDFList$Coeff)
-    newColumnNames <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',colnames(nullDFList$Coeff)))
-    output_list <- lapply(coeffNames, function(z){
-      tmpCoef <- do.call("rbind", pbapply::pblapply(X = modelOutputList, function(x) {
-            tmpDf <- x[['Coeff']][z,]
-            colnames(tmpDf) <- newColumnNames
-            tmpDf$FDR <- p.adjust(tmpDf$p_value, 'fdr')
-            tmpDf
-          }, cl = NULL))
-      rownames(tmpCoef) <- rownamesList
-      tmpCoef
-    })
-    names(output_list) <- gsub('Pr\\(>\\|.\\|)','p_value', gsub(' |\\. ','_',coeffNames))
-
-    residual_tmp <- do.call(
-      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
-        x[['Resid']]
-      }, cl = NULL)
-    )
-    vcov_tmp <- do.call(
-      "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
-        x[['VCov']]
+  residual_tmp <- do.call(
+    "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+      x[["Resid"]]
     }, cl = NULL)
+  )
+  vcov_tmp <- do.call(
+    "rbind", pbapply::pblapply(X = modelOutputList, function(x) {
+      x[["VCov"]]
+    }, cl = NULL)
+  )
+  rownames(residual_tmp) <- rownames(vcov_tmp) <- rownamesList
+
+  residual_tmp <- residual_tmp[, match(rownames(SummarizedExperiment::colData(SummarizedExperimentObj)), colnames(residual_tmp))]
+
+  if (returnList) {
+    return(list("output" = output_list, "Resid" = residual_tmp, "Variance" = vcov_tmp))
+  }
+  # Repackage Residuals into a SummarizedExperiment
+  if (ranged) {
+    ResidualSE <- SummarizedExperiment::SummarizedExperiment(
+      list("Residual" = residual_tmp),
+      colData = SummarizedExperiment::colData(SummarizedExperimentObj),
+      rowRanges = SummarizedExperiment::rowRanges(SummarizedExperimentObj),
+      metadata = S4Vectors::metadata(SummarizedExperimentObj)
     )
-    rownames(residual_tmp) <- rownames(vcov_tmp) <- rownamesList
-
-    residual_tmp <- residual_tmp[,match(rownames(SummarizedExperiment::colData(SummarizedExperimentObj)), colnames(residual_tmp))]
-
-    if(returnList){
-      return(list('output' = output_list , 'Resid' = residual_tmp , 'Variance' = vcov_tmp))
-    }
-    #Repackage Residuals into a SummarizedExperiment
-    if(ranged){
-      ResidualSE <- SummarizedExperiment::SummarizedExperiment(
-                      list('Residual' =  residual_tmp),
-                      colData = SummarizedExperiment::colData(SummarizedExperimentObj),
-                      rowRanges = SummarizedExperiment::rowRanges(SummarizedExperimentObj),
-                      metadata = S4Vectors::metadata(SummarizedExperimentObj)
-              )
-    }else{
-      ResidualSE <- SummarizedExperiment::SummarizedExperiment(
-                  list('Residual' =  residual_tmp),
-                  colData = SummarizedExperiment::colData(SummarizedExperimentObj),
-                  rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
-                  metadata = S4Vectors::metadata(SummarizedExperimentObj)
-          )
-    }
-
-              
-    #Package up the metadata list. 
-    metaDataList <- list('Residuals' = ResidualSE,
-                        'RandomEffectVariance' = vcov_tmp)
-
-    results <- SummarizedExperiment::SummarizedExperiment(
-      output_list,
+  } else {
+    ResidualSE <- SummarizedExperiment::SummarizedExperiment(
+      list("Residual" = residual_tmp),
+      colData = SummarizedExperiment::colData(SummarizedExperimentObj),
       rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
-      metadata = metaDataList
+      metadata = S4Vectors::metadata(SummarizedExperimentObj)
     )
-    
-    return(results)
+  }
+
+
+  # Package up the metadata list.
+  metaDataList <- list(
+    "Residuals" = ResidualSE,
+    "RandomEffectVariance" = vcov_tmp
+  )
+
+  results <- SummarizedExperiment::SummarizedExperiment(
+    output_list,
+    rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
+    metadata = metaDataList
+  )
+
+  return(results)
 }
 
 #' @title Execute a pilot run of single linear model on a subset of data
@@ -331,10 +333,10 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
 #'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 #'
 #' @param ExperimentObj A SummarizedExperiment-type object generated from
-#'   chromVAR, makePseudobulkRNA, or other. Objects from getSampleTileMatrix can work, 
+#'   chromVAR, makePseudobulkRNA, or other. Objects from getSampleTileMatrix can work,
 #'   but we recommend runZIGLMM for those objects, not runLMEM>
-#' @param assayName a character string, matching the name of an assay within the SummarizedExperiment. 
-#'   The assay named will be used for modeling. 
+#' @param assayName a character string, matching the name of an assay within the SummarizedExperiment.
+#'   The assay named will be used for modeling.
 #' @param modelFormula The formula to use with lmerTest::lmer, in the
 #'   format (exp ~ factors). All factors must be found in column names
 #'   of the ExperimentObj metadata.
@@ -352,7 +354,6 @@ pilotLMEM <- function(ExperimentObj,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
   if (length(assayName) > 1) {
-
     stop(
       "More than one assay was provided. ",
       "assayName must be length 1. To run over multiple assays/cell types, ",
@@ -367,13 +368,14 @@ pilotLMEM <- function(ExperimentObj,
 
   modelingData <- SummarizedExperiment::assays(ExperimentObj)[[assayName]]
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
-  
-   if (!is(modelFormula, "formula") & !is(modelFormula, "character")){
-    stop("modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
-        "(exp ~ factors)")   
-  }else if(is(modelFormula, "formula")) {
-    modelFormula = as.character(modelFormula)
 
+  if (!is(modelFormula, "formula") & !is(modelFormula, "character")) {
+    stop(
+      "modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
+      "(exp ~ factors)"
+    )
+  } else if (is(modelFormula, "formula")) {
+    modelFormula <- as.character(modelFormula)
   }
 
   if (!"exp" %in% all.vars(as.formula(modelFormula))) {

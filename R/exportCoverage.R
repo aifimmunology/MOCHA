@@ -41,7 +41,7 @@
 #' }
 #'
 #' @export
-#' 
+#'
 
 exportCoverage <- function(SampleTileObj,
                            dir = getwd(),
@@ -102,8 +102,8 @@ exportCoverage <- function(SampleTileObj,
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   GRangesList1 <- NULL
   for (x in cellPopulations) {
-    # MOCHA::getCoverage outputs a single list with two named items: "Accessibility" 
-    # and "Insertions". 
+    # MOCHA::getCoverage outputs a single list with two named items: "Accessibility"
+    # and "Insertions".
     # This is saved to *_CoverageFiles.RDS in MOCHA::callOpenTiles
     if (type) { # Accessibility
       originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Accessibility

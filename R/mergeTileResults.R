@@ -4,7 +4,7 @@
 #'   callOpenTiles and creates sample-tile matrices containing the signal
 #'   intensity at each tile.
 #'
-#' @param tileResultsList List of MultiAssayExperiments objects returned by 
+#' @param tileResultsList List of MultiAssayExperiments objects returned by
 #'   callOpenTiles containing containing peak calling results.
 #' @param numCores Optional, the number of cores to use with multiprocessing.
 #'   Default is 1.
@@ -15,29 +15,30 @@
 #'
 #' @examples
 #' \donttest{
+#'
 #' }
 #'
 #' @export
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
 
-  #Test for duplicate sample names
+  # Test for duplicate sample names
   sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(colData(x))))
   if (any(duplicated(sampleTest))) {
     stop("Sample names are duplicated in your list of tileResults. Please provide tileResults from different samples, not the same one's duplicated. ")
   }
 
-  #Test whether all the tileResultsList indices are MultiAssayExperiments. 
+  # Test whether all the tileResultsList indices are MultiAssayExperiments.
   classTest <- lapply(tileResultsList, function(x) class(x)[1])
   if (any(unlist(classTest) != "MultiAssayExperiment")) {
     stop("At least one index of the tileResultsList is not MultiAssayExperiment")
   }
 
-  #Test whether all the tileResults objects have the same Transcript, organism, and genome databases involved before merging. 
+  # Test whether all the tileResults objects have the same Transcript, organism, and genome databases involved before merging.
   TxDbTest <- unique(unlist(lapply(tileResultsList, function(x) x@metadata$TxDb$pkgname)))
   if (length(TxDbTest) > 1) {
     stop("Different TxDb were used to generates these tile results. Please re-run with the same TxDb")
   }
-  
+
   OrgDbTest <- unique(unlist(lapply(tileResultsList, function(x) x@metadata$OrgDb$pkgname)))
   if (length(OrgDbTest) > 1) {
     stop("These tileResults are from different organisms and should not be merged. Why are you doing this to us?")
@@ -48,83 +49,82 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
     stop("These tileResults are from different genome assemblies and cannot be merged.")
   }
 
-  #Find all celltypes across all tile results objects. 
+  # Find all celltypes across all tile results objects.
   allCellTypes <- as.data.frame(table(unlist(lapply(tileResultsList, names))))
 
-  #Find the subset of cell types that are in common across all tileResults objects. Merge those. 
+  # Find the subset of cell types that are in common across all tileResults objects. Merge those.
   subCellTypes <- as.character(unlist(dplyr::filter(allCellTypes, Freq == length(tileResultsList))$Var))
 
-  if(length(subCellTypes) == 0){
-    stop('No cell types in common across tileResults objects.')
+  if (length(subCellTypes) == 0) {
+    stop("No cell types in common across tileResults objects.")
   }
-  if(verbose){
-    message(paste0(subCellTypes, sep = ', '), 'are in common between all tileResults objects. These will be merged.')
+  if (verbose) {
+    message(paste0(subCellTypes, sep = ", "), "are in common between all tileResults objects. These will be merged.")
   }
 
-  #Iterate across each tileResults object, extracting the RaggedExperiments and turning them back into GRangesList. 
-  #These GRangesList can then be concatenated easily, and then turned back into RaggedExperiments, and joined into one final tile results object. 
-  cl = parallel::makeCluster(numCores)
-  allRaggedResults <- lapply(subCellTypes, function(y){
-            ragRes <- lapply(tileResultsList, function(x) x[[as.character(y)]])
-            ragExp <- do.call('c', pbapply::pblapply(cl = cl, X = ragRes, combineRagged))
-            RaggedExperiment::RaggedExperiment(ragExp)
+  # Iterate across each tileResults object, extracting the RaggedExperiments and turning them back into GRangesList.
+  # These GRangesList can then be concatenated easily, and then turned back into RaggedExperiments, and joined into one final tile results object.
+  cl <- parallel::makeCluster(numCores)
+  allRaggedResults <- lapply(subCellTypes, function(y) {
+    ragRes <- lapply(tileResultsList, function(x) x[[as.character(y)]])
+    ragExp <- do.call("c", pbapply::pblapply(cl = cl, X = ragRes, combineRagged))
+    RaggedExperiment::RaggedExperiment(ragExp)
   })
   names(allRaggedResults) <- subCellTypes
 
   parallel::stopCluster(cl)
 
-  #Merged sample and other metadata information. 
-  allSampleData <- do.call(eval(parse(text="dplyr::bind_rows")), lapply(tileResultsList, function(x){ as.data.frame(SummarizedExperiment::colData(x))}))
- 
-  #This is complicated, let's merge the summarizedData. 
-  ## We'll need to assemble all metadata across tile results, and merge it data that's the same together. 
+  # Merged sample and other metadata information.
+  allSampleData <- do.call(eval(parse(text = "dplyr::bind_rows")), lapply(tileResultsList, function(x) {
+    as.data.frame(SummarizedExperiment::colData(x))
+  }))
 
-  allCellTypes <- unique(unlist(lapply(tileResultsList, function(XX){rownames(XX@metadata$summarizedData)})))
-  allSummarizedMetrics <- unique(unlist(lapply(tileResultsList, function(XX){
-                            names(SummarizedExperiment::assays(XX@metadata$summarizedData))
-                            })))
+  # This is complicated, let's merge the summarizedData.
+  ## We'll need to assemble all metadata across tile results, and merge it data that's the same together.
 
-  allSummarizedData <- pbapply::pblapply(cl = NULL, X = allSummarizedMetrics, function(YY){
-     
-    allMats <- do.call('cbind', lapply(tileResultsList, function(XX) { 
-          tmpMat <- SummarizedExperiment::assays(XX@metadata$summarizedData)
-          if(YY %in% names(tmpMat)){
+  allCellTypes <- unique(unlist(lapply(tileResultsList, function(XX) {
+    rownames(XX@metadata$summarizedData)
+  })))
+  allSummarizedMetrics <- unique(unlist(lapply(tileResultsList, function(XX) {
+    names(SummarizedExperiment::assays(XX@metadata$summarizedData))
+  })))
 
-            nextMat <- tmpMat[[YY]]
-          
-          }else{
+  allSummarizedData <- pbapply::pblapply(cl = NULL, X = allSummarizedMetrics, function(YY) {
+    allMats <- do.call("cbind", lapply(tileResultsList, function(XX) {
+      tmpMat <- SummarizedExperiment::assays(XX@metadata$summarizedData)
+      if (YY %in% names(tmpMat)) {
+        nextMat <- tmpMat[[YY]]
+      } else {
+        nextMat <- matrix(NA, ncol = NCOL(tmpMat[[1]]), nrow = NROW(tmpMat[[1]]))
+        rownames(nextMat) <- rownames(tmpMat)[[1]]
+        colnames(nextMat) <- colnames(tmpmat[[1]])
+      }
 
-            nextMat <- matrix(NA, ncol = NCOL(tmpMat[[1]]), nrow = NROW(tmpMat[[1]]))
-            rownames(nextMat) <- rownames(tmpMat)[[1]]
-            colnames(nextMat) <- colnames(tmpmat[[1]])
-          }
+      if (any(!allCellTypes %in% rownames(nextMat))) {
+        newCellTypes <- allCellTypes[!allCellTypes %in% rownames(nextMat)]
 
-          if(any(!allCellTypes %in% rownames(nextMat))){
+        emptyMat <- matrix(NA, ncol = NCOL(nextMat), nrow = length(newCellTypes))
+        rownames(emptyMat) <- newCellTypes
+        colnames(emptyMat) <- colnames(nextMat)
 
-            newCellTypes <- allCellTypes[!allCellTypes %in% rownames(nextMat)]
+        nextMat <- rbind(nextMat, emptyMat)
+      }
 
-            emptyMat <- matrix(NA, ncol = NCOL(nextMat), nrow = length(newCellTypes))
-            rownames(emptyMat) <- newCellTypes
-            colnames(emptyMat) <- colnames(nextMat)
-
-            nextMat <- rbind(nextMat, emptyMat)
-
-          }
-
-          return(nextMat)
-
-      }))
+      return(nextMat)
+    }))
 
     return(allMats)
   })
-  
-  names(allSummarizedData) <- allSummarizedMetrics
-  newSummarizedData = SummarizedExperiment::SummarizedExperiment(allSummarizedData, colData = allSampleData)
-  
-  allHistory = lapply(tileResultsList, function(XX){ XX@metadata$History})
-  allHistory = append(allHistory, paste("mergeTileResults", utils::packageVersion("MOCHA")))
 
-  #Construct final tile results object. 
+  names(allSummarizedData) <- allSummarizedMetrics
+  newSummarizedData <- SummarizedExperiment::SummarizedExperiment(allSummarizedData, colData = allSampleData)
+
+  allHistory <- lapply(tileResultsList, function(XX) {
+    XX@metadata$History
+  })
+  allHistory <- append(allHistory, paste("mergeTileResults", utils::packageVersion("MOCHA")))
+
+  # Construct final tile results object.
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
     experiments = allRaggedResults,
     colData = allSampleData,
@@ -138,12 +138,9 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
     )
   )
   return(tileResults)
- 
 }
 
 
-combineRagged <- function(x){
-
-    as(x, 'GRangesList')
-
+combineRagged <- function(x) {
+  as(x, "GRangesList")
 }
