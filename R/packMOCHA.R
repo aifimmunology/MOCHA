@@ -8,28 +8,35 @@
 #'
 #' @param MOCHAObj A MultiAssayExperiment or RangedSummarizedExperiment, from
 #'   MOCHA
-#' @param zipFile Filename and path of the zip archive.
+#' @param zipfile Filename and path of the zip archive.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @zipFile Path to zip archive.
+#' @zipfile Path to zip archive.
+#' 
+#' @example 
+#' \donttest{
+#' zipPath <- MOCHA::packMOCHA(
+#'   tileResults, zipfile = file.path(myOutputDir, "testzip.zip")
+#' )
+#' }
 #'
 #' @export
 #'
 packMOCHA <- function(MOCHAObj,
-                      zipFile,
+                      zipfile,
                       verbose = FALSE) {
-  if (class(zipFile) != "character" || !grepl("\\.zip$", zipFile)) {
-    stop("`zipFile` must be a character string ending in .zip")
+  if (class(zipfile) != "character" || !grepl("\\.zip$", zipfile)) {
+    stop("`zipfile` must be a character string ending in .zip")
   }
 
   saveRDS(MOCHAObj, paste(MOCHAObj@metadata$Directory, "/MOCHA_Object.RDS", sep = ""))
 
-  zip::zipr(zipFile, MOCHAObj@metadata$Directory)
+  zip::zipr(zipfile, MOCHAObj@metadata$Directory)
   if (verbose) {
-    message("Object & Coverage files saved: ", zipFile)
+    message("Object & Coverage files saved: ", zipfile)
   }
 
-  return(zipFile)
+  return(zipfile)
 }
 
 
@@ -39,33 +46,37 @@ packMOCHA <- function(MOCHAObj,
 #'   \link[MOCHA]{unpackMOCHA}, setting the stored MOCHA object's stored
 #'   directory path to the new location. See also: \link[MOCHA]{packMOCHA}
 #'
-#' @param zipFile Filepath to the packed MOCHA object.
-#' @param outDir The path to the external directory where you want to unpack the MOCHA object.
+#' @param zipfile Filepath to the packed MOCHA object.
+#' @param exdir The path to the external directory where you want to unpack the MOCHA object.
 #'
 #' @return MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)
 #'
+#' @example
+#' \donttest{
+#' MOCHA::unpackMOCHA(zipfile = "./mochaobj.zip", exdir = "./newMOCHAdir")
+#' }
 #' @export
 #'
-unpackMOCHA <- function(zipFile,
-                        outDir,
+unpackMOCHA <- function(zipfile,
+                        exdir,
                         verbose = FALSE) {
-  if (!grepl("\\.zip$", zipFile)) {
-    stop("`zipFile` must be a character string ending in .zip")
+  if (!grepl("\\.zip$", zipfile)) {
+    stop("`zipfile` must be a character string ending in .zip")
   }
 
-  zip::unzip(zipfile = zipFile, outDir = outDir)
+  zip::unzip(zipfile = zipfile, exdir = exdir)
 
   # Extract directory name
-  newDirectory <- sub("\\/$", "", zip::zip_list(zipFile)[1, 1], )
+  newDirectory <- sub("\\/$", "", zip::zip_list(zipfile)[1, 1], )
 
   # load MOCHA Object into memory
-  MOCHAObj <- readRDS(paste(outDir, newDirectory, "MOCHA_Object.RDS", sep = "/"))
+  MOCHAObj <- readRDS(paste(exdir, newDirectory, "MOCHA_Object.RDS", sep = "/"))
 
   # Change directory path for the MOCHA object to the new directory
-  MOCHAObj@metadata$Directory <- paste(outDir, newDirectory, sep = "/")
+  MOCHAObj@metadata$Directory <- paste(exdir, newDirectory, sep = "/")
 
   # Over-write object so that it has the correct directory paths saved.
-  saveRDS(MOCHAObj, paste(outDir, newDirectory, "MOCHA_Object.RDS", sep = "/"))
+  saveRDS(MOCHAObj, paste(exdir, newDirectory, "MOCHA_Object.RDS", sep = "/"))
 
   return(MOCHAObj)
 }
