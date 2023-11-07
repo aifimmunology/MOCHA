@@ -1,8 +1,10 @@
 #' @title \code{mergeTileResults}
 #'
-#' @description \code{mergeTileResults} takes the output of peak calling with
-#'   callOpenTiles and creates sample-tile matrices containing the signal
-#'   intensity at each tile.
+#' @description \code{mergeTileResults} merges a list of tileResults that
+#'   each contain unique samples into a single object encompassing all samples.
+#'   Only cell populations shared among all input tileResults will be retained.
+#'   This function can merge MultiAssayExperiment objects from callOpenTiles
+#'   that are created with the same TxDb, OrgDb, and Genome assembly.
 #'
 #' @param tileResultsList List of MultiAssayExperiments objects returned by
 #'   callOpenTiles containing containing peak calling results.
@@ -11,42 +13,60 @@
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return tileResults a single MultiAssayExperiment containing a sample-tile
-#'   intensity matrix for each cell population
+#'   intensity matrix for each sample and common cell population in the input
+#'   tileResultsList.
 #'
 #' @examples
-#' \donttest{
-#'
-#' }
+#' mergeTileResults(
+#'   list(MOCHA:::testTileResults, MOCHA:::testTileResultsMultisample)
+#' )
 #'
 #' @export
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
 
   # Test for duplicate sample names
-  sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(colData(x))))
+  sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(SummarizedExperiment::colData(x))))
   if (any(duplicated(sampleTest))) {
-    stop("Sample names are duplicated in your list of tileResults. Please provide tileResults from different samples, not the same one's duplicated. ")
+    stop(
+      "Sample names are duplicated in your list of tileResults.",
+      " Samples must be unique between tileResults and not duplicated."
+    )
   }
 
-  # Test whether all the tileResultsList indices are MultiAssayExperiments.
+  # Test whether all the tileResultsList indices are MultiAssayExperiments
   classTest <- lapply(tileResultsList, function(x) class(x)[1])
   if (any(unlist(classTest) != "MultiAssayExperiment")) {
-    stop("At least one index of the tileResultsList is not MultiAssayExperiment")
+    stop(
+      "At least one index of the tileResultsList is not ",
+      "a MultiAssayExperiment. All objects in tileResultsList must be ",
+      "MultiAssayExperiment output from callOpenTiles."
+    )
   }
 
-  # Test whether all the tileResults objects have the same Transcript, organism, and genome databases involved before merging.
+  # Test whether all the tileResults objects have the same Transcript,
+  # organism, and genome databases involved before merging
   TxDbTest <- unique(unlist(lapply(tileResultsList, function(x) x@metadata$TxDb$pkgname)))
   if (length(TxDbTest) > 1) {
-    stop("Different TxDb were used to generates these tile results. Please re-run with the same TxDb")
+    stop(
+      "Different TxDb were used to generate these tileResults. ",
+      "tileResults must be created with the same TxDb to be merged."
+    )
   }
 
   OrgDbTest <- unique(unlist(lapply(tileResultsList, function(x) x@metadata$OrgDb$pkgname)))
   if (length(OrgDbTest) > 1) {
-    stop("These tileResults are from different organisms and should not be merged. Why are you doing this to us?")
+    stop(
+      "These tileResults are from different organisms and cannot not be ",
+      " merged. tileResults must be created with the same OrgDb to be merged."
+    )
   }
 
   GenTest <- unique(unlist(lapply(tileResultsList, function(x) x@metadata$Genome)))
   if (length(GenTest) > 1) {
-    stop("These tileResults are from different genome assemblies and cannot be merged.")
+    stop(
+      "These tileResults are from different genome assemblies and cannot be ",
+      " merged. tileResults must be created with the same Genome to be merged."
+    )
   }
 
   # Find all celltypes across all tile results objects.
@@ -56,10 +76,17 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   subCellTypes <- as.character(unlist(dplyr::filter(allCellTypes, Freq == length(tileResultsList))$Var))
 
   if (length(subCellTypes) == 0) {
-    stop("No cell types in common across tileResults objects.")
+    stop(
+      "Input tileResults in tileResultsList do not share any common cell ",
+      "populations."
+    )
   }
   if (verbose) {
-    message(paste0(subCellTypes, sep = ", "), "are in common between all tileResults objects. These will be merged.")
+    message(
+      "Cell population(s) ",
+      paste0(subCellTypes, collapse = ", "),
+      " are in present all tileResults objects and will be retained in the merge."
+    )
   }
 
   # Iterate across each tileResults object, extracting the RaggedExperiments and turning them back into GRangesList.
@@ -80,7 +107,7 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   }))
 
   # This is complicated, let's merge the summarizedData.
-  ## We'll need to assemble all metadata across tile results, and merge it data that's the same together.
+  # We'll need to assemble all metadata across tile results, and merge data that's the same together.
 
   allCellTypes <- unique(unlist(lapply(tileResultsList, function(XX) {
     rownames(XX@metadata$summarizedData)
@@ -96,8 +123,8 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
         nextMat <- tmpMat[[YY]]
       } else {
         nextMat <- matrix(NA, ncol = NCOL(tmpMat[[1]]), nrow = NROW(tmpMat[[1]]))
-        rownames(nextMat) <- rownames(tmpMat)[[1]]
-        colnames(nextMat) <- colnames(tmpmat[[1]])
+        rownames(nextMat) <- rownames(tmpMat[[1]])
+        colnames(nextMat) <- colnames(tmpMat[[1]])
       }
 
       if (any(!allCellTypes %in% rownames(nextMat))) {
