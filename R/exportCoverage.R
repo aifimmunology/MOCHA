@@ -11,7 +11,7 @@
 #'   peaks. This list of group names must be identical to names that appear in
 #'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak calling
 #'   is done on all cell populations. Default is 'ALL'.
-#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE,
+#' @param type Boolean. Default is TRUE, and exports Coverage. If set to FALSE,
 #'   exports Insertions.
 #' @param groupColumn Optional, the column containing sample group labels for
 #'   returning coverage within sample groups. Default is NULL, all samples will
@@ -22,7 +22,7 @@
 #' @param sampleSpecific If TRUE, a BigWig will export for each sample-cell type
 #'   combination.
 #' @param saveFile Boolean. If TRUE, it will save to a BigWig. If FALSE, it will
-#'   return the GRangesList.
+#'   return the GRangesList without writing a BigWig.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -100,50 +100,93 @@ exportCoverage <- function(SampleTileObj,
     library(GenomicRanges)
   })
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
-  GRangesList1 <- NULL
+  allCellPopCoverage <- NULL
   for (x in cellPopulations) {
     # MOCHA::getCoverage outputs a single list with two named items: "Accessibility"
     # and "Insertions".
     # This is saved to *_CoverageFiles.RDS in MOCHA::callOpenTiles
     if (type) { # Accessibility
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Accessibility
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+      # For backwards compatibility, only use "Accessibility" if it exists.
+      if ("Accessibility" %in% names(originalCovGRanges)) {
+        originalCovGRanges <- originalCovGRanges$Accessibility
+      }
     } else { # Insertions
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Insertions
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+      # For backwards compatibility, only use "Insertions" if it exists.
+      if ("Insertions" %in% names(originalCovGRanges)) {
+        originalCovGRanges <- originalCovGRanges$Insertions
+      } else {
+        # Check for a separate "Insertions" file
+        originalCovGRanges <- readRDS(paste(outDir, "/", x, "_InsertionFiles.RDS", sep = ""))
+      }
     }
 
     if (verbose) {
-      message(stringr::str_interp("Extracting coverage from {x}."))
+      message(stringr::str_interp("Extracting coverage for cell population ${x}."))
     }
 
     iterList <- lapply(subSamples, function(y) {
       originalCovGRanges[y]
     })
+    
+    # Check for and remove null elements from iterlist
+    # Covers edge case where coverage files do not contain all samples
+    missingSamples <- lapply(seq_along(iterList), function(x) {
+      groupIterList <- iterList[[x]]
+      groupSubSamples <- subSamples[[x]]
+      groupSubSamples[lengths(groupIterList) == 0]
+    })
+    missingSamples <- unique(unlist(missingSamples))
+    
+    if (length(missingSamples) > 0) {
+      if(verbose) { 
+        warning(
+          "The following samples have no saved coverage and will be skipped: ",
+          paste0(missingSamples, collapse = ", ")
+        ) 
+      }
+      iterList <- lapply(iterList, function(x) {
+        x[lengths(x) != 0]
+      })
+    }
+    
     # If not sample specific, take the average coverage across samples.
     # if it is sample specific, just subset down the coverage to the region of interest.
     if (!sampleSpecific) {
       cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X = iterList, averageCoverage)
       names(cellPopSubsampleCov) <- subGroups
-    } else {
+    } else { # sample specific
       names(iterList) <- subGroups
       cellPopSubsampleCov <- unlist(iterList, recursive = FALSE)
       names(cellPopSubsampleCov) <- gsub("\\.", "__", names(cellPopSubsampleCov))
     }
-
-    for (i in 1:length(cellPopSubsampleCov)) {
-      fileName <- gsub(" ", "__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
-      if (!type) {
-        fileName <- paste(fileName, "__Insertions", sep = "")
-      }
-      plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, ".bw", sep = ""))
-    }
-
+    
     if (saveFile) {
-      names(cellPopSubsampleCov) <- x
-      GRangesList1 <- append(GRangesList1, cellPopSubsampleCov)
+      # Export bigwig
+      for (i in 1:length(cellPopSubsampleCov)) {
+        fileName <- gsub(" ", "__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
+        if (!type) {
+          fileName <- paste(fileName, "__Insertions", sep = "")
+        }
+        # Edge case where there was only 1 sample to be averaged if !sampleSpecific
+        if (class(cellPopSubsampleCov[[i]]) == "list"){
+          if (length(cellPopSubsampleCov[[i]]) == 1) {
+            cellPopSubsampleCov[[i]] <- cellPopSubsampleCov[[i]][[1]]
+          }
+        }
+        if (verbose) {
+          message("Exporting: ", paste(dir, "/", fileName, ".bw", sep = ""))
+        }
+        plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, ".bw", sep = ""))
+      }
     }
+
+    names(cellPopSubsampleCov) <- x
+    allCellPopCoverage <- append(allCellPopCoverage, cellPopSubsampleCov)
   }
 
-  return(GRangesList1)
+  return(allCellPopCoverage)
 }
 
 
