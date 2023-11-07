@@ -11,9 +11,9 @@
 #' @param zipfile Filename and path of the zip archive.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
-#' @zipfile Path to zip archive.
+#' @return zipfile Path to zip archive.
 #' 
-#' @example 
+#' @examples 
 #' \donttest{
 #' zipPath <- MOCHA::packMOCHA(
 #'   tileResults, zipfile = file.path(myOutputDir, "testzip.zip")
@@ -51,7 +51,7 @@ packMOCHA <- function(MOCHAObj,
 #'
 #' @return MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)
 #'
-#' @example
+#' @examples
 #' \donttest{
 #' MOCHA::unpackMOCHA(zipfile = "./mochaobj.zip", exdir = "./newMOCHAdir")
 #' }
