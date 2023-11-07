@@ -734,17 +734,17 @@ setMethod(
     append(
       list(
         "CellCounts" = allCellCounts[
-          match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),
-        ],
+          match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),,
+        drop = FALSE],
         "FragmentCounts" = allFragmentCounts[
-          match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
-        ]
+          match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),,
+        drop = FALSE]
       ),
       additionalMetaData
     ),
     colData = sampleData
   )
-
+ 
   # Match cell populations in allCellCounts/allFragmentCounts to those
   # in additionalMetaData, in case of NA cell populations
   if (length(additionalMetaData) >= 1) {
