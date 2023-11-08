@@ -214,11 +214,13 @@ averageCoverage <- function(coverageList) {
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
-#' @param DifferentialsGRList The GRangesList output from
+#' @param DifferentialsGRList GRangesList output from
 #'   \code{getDifferentialAccessibleTiles}
 #' @param outDir Desired output directory where bigBed files will be saved
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
+#' @return outList A List of output filepaths
+#' 
 #' @examples
 #' \dontrun{
 #' MOCHA::exportDifferentials(
@@ -236,23 +238,38 @@ exportDifferentials <- function(SampleTileObject,
                                 outDir,
                                 verbose = FALSE) {
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
-
+  outList <- list()
   for (i in seq_along(DifferentialsGRList)) {
     comparison_name <- names(DifferentialsGRList)[[i]]
+    if (is.null(comparison_name)) {
+      comparison_name <- "Differentials"
+    }
     DiffPeaksGR <- DifferentialsGRList[[i]]
-
+    
+    # Remove NA metadata
+    # causes error: In isSingleString(path) : Unknown type 'NA'
+    mcols(DiffPeaksGR) <- NULL
+    
     # Set score and seqinfo for bigBed
     DiffPeaksGR$score <- 1
     seqinfo(DiffPeaksGR) <- seqinfo(genome)[seqnames(seqinfo(DiffPeaksGR))]
 
     outFile <- file.path(outDir, paste(comparison_name, sep = "__"))
+    outFile <- paste0(outFile, ".bigBed")
     if (verbose) {
       message("Exporting: ", outFile)
     }
-
+    
     # Output to bigbed
-    rtracklayer::export.bb(DiffPeaksGR, paste0(outFile, ".bigBed"))
+    rtracklayer::export.bb(GRanges(DiffPeaksGR), outFile)
+    
+    # Check for success
+    if (!file.exists(outFile)) {
+      stop("Silent error in rtracklayer::export.bb")
+    }
+    outList <- append(outList, outFile)
   }
+  outList
 }
 
 #' @title \code{exportOpenTiles}
@@ -266,6 +283,8 @@ exportDifferentials <- function(SampleTileObject,
 #' @param outDir Desired output directory where bigBed files will be saved
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
+#' @return outList A List of output filepaths
+#' 
 #' @examples
 #' \dontrun{
 #' MOCHA::exportOpenTiles(
@@ -284,6 +303,7 @@ exportOpenTiles <- function(SampleTileObject,
                             verbose = FALSE) {
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
 
+  outList <- list()
   for (cellPopulation in names(assays(SampleTileObject))) {
     cellPopMatrix <- MOCHA::getCellPopMatrix(
       SampleTileObject,
@@ -304,14 +324,18 @@ exportOpenTiles <- function(SampleTileObject,
       sampleRow <- colData(SampleTileObject)[sample, ]
       pbmc_sample_id <- sampleRow[["Sample"]] # Enforced colname in callOpenTiles
       outFile <- file.path(outDir, paste(cellPopulation, pbmc_sample_id, sep = "__"))
+      outFile <- paste0(outFile, ".bigBed")
       if (verbose) {
         message("Exporting: ", outFile)
       }
 
       # Output to bigbed
-      rtracklayer::export.bb(samplePeaksGR, paste0(outFile, ".bigBed"))
+      rtracklayer::export.bb(samplePeaksGR, outFile)
+      
+      outList <- append(outList, outFile)
     }
   }
+  outList
 }
 
 #' @title \code{exportMotifs}
@@ -330,7 +354,9 @@ exportOpenTiles <- function(SampleTileObject,
 #' @param motifSetName Optional, a name indicating the motif set. Used to name
 #'   files in the specified \code{outdir}. Default is "motifs".
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#'
+#' 
+#' @return outList A List of output filepaths
+#' 
 #' @examples
 #' \dontrun{
 #' MOCHA::exportMotifs(
@@ -351,20 +377,29 @@ exportMotifs <- function(SampleTileObject,
                          filterByOpenTiles = FALSE,
                          outDir,
                          verbose = FALSE) {
-
+  
+  if (class(motifsGRanges) != "GRanges") {
+    if (class(motifsGRanges) == "CompressedGRangesList") {
+      motifsGRanges <- unlist(motifsGRanges)
+    } else {
+      stop("`motifsGRanges` is an unrecognized type. `motifsGRanges` must
+           be either 'GRanges' or 'CompressedGRangesList'.")
+    }
+  }
+  
   # Map over the seqinfo from our genome to the motifsGRanges
-  # Required for bigBed export
+  # Required for bigBed export 
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
   seqinfo(motifsGRanges) <- seqinfo(genome)[seqnames(seqinfo(motifsGRanges))]
-
+  
   # # Truncate trailing zeroes from score https://www.biostars.org/p/235193/
   # # (Error : Trailing characters parsing integer in field 4 line 1 of text, got 10.3405262378482)
   motifsGRanges$score <- floor(motifsGRanges$score)
-
+  
   # Filter out negative scores https://github.com/jhkorhonen/MOODS/issues/12
   motifsGRanges <- motifsGRanges[motifsGRanges$score > 0]
 
-
+  outList <- list()
   if (filterByOpenTiles) {
     # Split motifsGRangesFiltered by cell population, filtered to open tiles in cell population
     allPeaks <- rowRanges(SampleTileObject)
@@ -380,6 +415,7 @@ exportMotifs <- function(SampleTileObject,
       }
       # Output to bigbed
       rtracklayer::export.bb(cellTypePeakMotifs, outFile)
+      outList <- append(outList, outFile)
     }
   } else {
     outFile <- file.path(outDir, paste(motifSetName, "motifset.bigBed", sep = "__"))
@@ -388,5 +424,7 @@ exportMotifs <- function(SampleTileObject,
     }
     # Output to bigbed
     rtracklayer::export.bb(motifsGRanges, outFile)
+    outList <- append(outList, outFile)
   }
+  outList
 }
