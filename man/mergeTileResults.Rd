@@ -2,49 +2,34 @@
 % Please edit documentation in R/mergeTileResults.R
 \name{mergeTileResults}
 \alias{mergeTileResults}
-\title{\code{getSampleTileMatrix}}
+\title{\code{mergeTileResults}}
 \usage{
 mergeTileResults(tileResultsList, numCores = 1, verbose = TRUE)
 }
 \arguments{
+\item{tileResultsList}{List of MultiAssayExperiments objects returned by
+callOpenTiles containing containing peak calling results.}
+
 \item{numCores}{Optional, the number of cores to use with multiprocessing.
 Default is 1.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{tileResults}{a MultiAssayExperiment returned by callOpenTiles
-containing containing peak calling results.}
-
-\item{cellPopulations}{vector of strings. Cell subsets in TileResults for
-which to generate sample-tile matrices. This list of group names must be
-identical to names that appear in the ArchRProject metadata.  If
-cellPopulations='ALL', then peak calling is done on all cell populations in
-the ArchR project metadata. Default is 'ALL'.}
-
-\item{groupColumn}{Optional, the column containing sample group labels for
-determining consensus tiles within sample groups. Default is NULL, all
-samples will be used for determining consensus tiles.}
-
-\item{threshold}{Threshold for consensus tiles, the minimum \% of samples
-(within a sample group, if groupColumn is set) that a peak must be called
-in to be retained. If set to 0, retain the union of all samples' peaks
-(this is equivalent to a threshold of 1/numSamples). It is recommended to
-tune this parameter to omit potentially spurious peaks.}
-
-\item{tiles}{Optional, the number of cores to use with multiprocessing.
-Default is 1.}
 }
 \value{
-SampleTileMatrices a MultiAssayExperiment containing a sample-tile
-  intensity matrix for each cell population
+tileResults a single MultiAssayExperiment containing a sample-tile
+  intensity matrix for each sample and common cell population in the input
+  tileResultsList.
 }
 \description{
-\code{getSampleTileMatrix} takes the output of peak calling with
-  callOpenTiles and creates sample-tile matrices containing the signal
-  intensity at each tile.
+\code{mergeTileResults} merges a list of tileResults that
+  each contain unique samples into a single object encompassing all samples.
+  Only cell populations shared among all input tileResults will be retained.
+  This function can merge MultiAssayExperiment objects from callOpenTiles
+  that are created with the same TxDb, OrgDb, and Genome assembly.
 }
 \examples{
-\donttest{
-}
+mergeTileResults(
+  list(MOCHA:::testTileResults, MOCHA:::testTileResultsMultisample)
+)
 
 }

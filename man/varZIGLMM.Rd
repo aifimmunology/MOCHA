@@ -39,12 +39,13 @@ results a SummarizedExperiment containing results from ZIGLMM (Fixed effect esti
 }
 \examples{
 \dontrun{
-  modelList <- runZIGLMM(STM[c(1:1000),], 
-                 cellTypeName = 'CD16 Mono',
-                 continuousRandom = c('Age', 'Sex', 'Days'),
-                 ziRandom = c('FragNumber', 'Days'),
-                 verbose = TRUE, 
-                 numCores = 35 )
+modelList <- runZIGLMM(STM[c(1:1000), ],
+  cellTypeName = "CD16 Mono",
+  continuousRandom = c("Age", "Sex", "Days"),
+  ziRandom = c("FragNumber", "Days"),
+  verbose = TRUE,
+  numCores = 35
+)
 }
 
 }

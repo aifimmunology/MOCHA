@@ -37,7 +37,7 @@ See \link[lmerTest]{lmer}.}
 results a SummarizedExperiment containing LMEM results. Assays are metrics related to the model coefficients,
          including the Estimate, Std_Error, df, t_value, p_value. Within each assay, each row corresponds to each row of
          the SummarizedExperiment and columns correspond to each fixed effect variable within the model.
-         Any row metadata from the ExperimentObject (see rowData(ExperimentObj)) is preserved in the output. 
+         Any row metadata from the ExperimentObject (see rowData(ExperimentObj)) is preserved in the output.
          The Residual matrix and the variance of the random effects are saved in the metadata slot of the output.
 }
 \description{
