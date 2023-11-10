@@ -100,6 +100,5 @@ Suggests:
     Matrix,
     lmerTest
 Additional_repositories: https://imran-aifi.github.io/drat
-biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization
 VignetteBuilder: knitr
 Config/testthat/edition: 3
