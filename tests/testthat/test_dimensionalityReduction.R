@@ -1,6 +1,7 @@
-skip_if_not_installed("chromVAR")
+skip_if_not_installed("BSgenome.Hsapiens.UCSC.hg19")
 if (requireNamespace("irlba", quietly = TRUE) &&
   requireNamespace("Matrix", quietly = TRUE) &&
+  requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE) &&
   requireNamespace("uwot", quietly = TRUE)) {
   test_that("bulkDimReduction works on a 3 sample test dataset", {
     cellPopulations <- c("C2", "C3")
