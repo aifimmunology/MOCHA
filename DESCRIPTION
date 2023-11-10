@@ -14,7 +14,7 @@ Authors@R:
     person(given = "Imran",
            family = "McGrath",
            role = c("aut", "cre"),
-           email = "imran.mcgrath@alleninstitute.org"),
+           email = "aifi.compbio.support@alleninstitute.org"),
     person(given = "Lauren",
            family = "Okada",
            role = c("aut", "ctb"),
@@ -25,7 +25,7 @@ Authors@R:
            email = "xiaojun.li@alleninstitute.org")
     )
 Maintainer: 
-        Imran McGrath <imran.mcgrath@alleninstitute.org>
+        Imran McGrath <aifi.compbio.support@alleninstitute.org>
 Description: A statistical framework and analysis tool for open chromatin 
   analysis designed specifically for single cell ATAC-seq (Assay for 
   Transposase-Accessible Chromatin) data, after cell type/cluster 

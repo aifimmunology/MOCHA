@@ -4,6 +4,8 @@ skip_if_not_installed() statements were added to tests to conditionally run
 tests that used dependencies in Suggests.
 'biocViews:' was added to the DESCRIPTION to potentially encourage installation
 of Bioconductor dependencies.
+We also update the maintainer email to aifi.compbio.support@alleninstitute.org
+(previously imran.mcgrath@alleninstitute.org).
 
 ## R CMD check results
 
