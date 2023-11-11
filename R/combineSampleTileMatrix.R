@@ -3,8 +3,7 @@
 #'
 #' @description \code{combineSampleTileMatrix} combines all celltypes in a
 #'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
-#'   across all cell types and samples, annotating GC bias using
-#'   chromVAR.
+#'   across all cell types and samples,
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
