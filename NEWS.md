@@ -1,5 +1,8 @@
 # MOCHA 1.0.1
 
+* Deprecates `testCoAccessibilityChromVAR()` and `testCoAccessibilityRandom()` in favor of `testCoAccessibility()`
+* Updates maintainer email
+
 # MOCHA 1.0.0
 
 * Adopting semantic versioning starting with this version, versioning reflects breaking changes compared to previous CRAN release.
