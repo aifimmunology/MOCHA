@@ -304,7 +304,7 @@ exportOpenTiles <- function(SampleTileObject,
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
 
   outList <- list()
-  for (cellPopulation in names(assays(SampleTileObject))) {
+  for (cellPopulation in names(SummarizedExperiment::assays(SampleTileObject))) {
     cellPopMatrix <- MOCHA::getCellPopMatrix(
       SampleTileObject,
       cellPopulation,
