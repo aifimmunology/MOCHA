@@ -321,7 +321,7 @@ exportOpenTiles <- function(SampleTileObject,
       samplePeaksGR$score <- 1
       seqinfo(samplePeaksGR) <- seqinfo(genome)[seqnames(seqinfo(samplePeaksGR))]
 
-      sampleRow <- colData(SampleTileObject)[sample, ]
+      sampleRow <- SummarizedExperiment::colData(SampleTileObject)[sample, ]
       pbmc_sample_id <- sampleRow[["Sample"]] # Enforced colname in callOpenTiles
       outFile <- file.path(outDir, paste(cellPopulation, pbmc_sample_id, sep = "__"))
       outFile <- paste0(outFile, ".bigBed")
