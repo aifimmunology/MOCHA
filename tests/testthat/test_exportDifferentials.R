@@ -23,6 +23,8 @@ test_that("exportDifferentials works on a 3 sample test dataset", {
     )
   )
   
+  mytempdir <- tempdir()
+  
   out <- MOCHA::exportDifferentials(
     SampleTileObject = SampleTileMatrix,
     DifferentialsGRList = list(differentials),
