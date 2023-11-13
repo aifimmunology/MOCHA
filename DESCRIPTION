@@ -80,7 +80,8 @@ Imports:
     pbapply,
     BSgenome,
     tidyselect,
-    purrr
+    purrr,
+    lifecycle
 Suggests: 
     ArchR,
     RMariaDB,

@@ -111,7 +111,7 @@
     [1] "callOpenTiles 1.0.0"
     
     $History[[2]]
-    [1] "getSampleTileMatrix 1.0.0"
+    [1] "getSampleTileMatrix 1.0.1"
     
     
 

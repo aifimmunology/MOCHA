@@ -615,7 +615,7 @@ setMethod(
     sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder])
   }
 
-  sampleData <- arrange(
+  sampleData <- dplyr::arrange(
     sampleData, factor(Sample, levels = colOrder)
   )
   rownames(sampleData) <- sampleData[,"Sample"]
