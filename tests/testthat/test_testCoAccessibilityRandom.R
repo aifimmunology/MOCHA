@@ -25,7 +25,7 @@ if (requireNamespace("chromVAR", quietly = TRUE) &
     )
   
     capture.output(
-      results <- MOCHA::testCoAccessibilityRandom(
+      results <- MOCHA::testCoAccessibility(
         SampleTileMatrix,
         tile1 = links$Tile1,
         tile2 = links$Tile2,
@@ -66,7 +66,7 @@ if (requireNamespace("chromVAR", quietly = TRUE) &
     )
   
     capture.output(
-      results <- MOCHA::testCoAccessibilityRandom(
+      results <- MOCHA::testCoAccessibility(
         SampleTileMatrix,
         tile1 = links$Tile1,
         tile2 = links$Tile2,
@@ -79,6 +79,23 @@ if (requireNamespace("chromVAR", quietly = TRUE) &
   
     expect_snapshot(
       results,
+      variant = "3sample"
+    )
+    
+    expect_warning(
+      results2 <- MOCHA::testCoAccessibilityChromVar(
+        SampleTileMatrix,
+        tile1 = links$Tile1,
+        tile2 = links$Tile2,
+        numCores = 1,
+        ZI = TRUE,
+        backNumber = 1000,
+        verbose = FALSE
+      )
+    )
+    
+    expect_snapshot(
+      results2,
       variant = "3sample"
     )
   })

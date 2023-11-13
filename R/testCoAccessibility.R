@@ -1,6 +1,10 @@
 #' @title \code{testCoAccessibilityChromVar}
 #'
-#' @description \code{testCoAccessibilityChromVar} takes an input set of tile
+#' @description
+#'   `r lifecycle::badge("deprecated")`
+#'   This function is deprecated due as we no longer recommend using a chromVAR 
+#'   background set.
+#'   \code{testCoAccessibilityChromVar} takes an input set of tile
 #'   pairs and tests whether they are significantly different compared to a
 #'   background set found via ChromVAR
 #'
@@ -28,7 +32,7 @@
 #'   for that correlation compared to the background
 #'
 #' @export
-#'
+#' @keywords internal
 testCoAccessibilityChromVar <- function(SampleTileObj,
                                         tile1,
                                         tile2,
@@ -38,6 +42,9 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
                                         returnBackGround = FALSE,
                                         highMem = FALSE,
                                         verbose = TRUE) {
+  lifecycle::deprecate_warn("1.0.1", 
+                            "testCoAccessibilityChromVar()", 
+                            "MOCHA::testCoAccessibility()")
   . <- NULL
 
   if (!requireNamespace("chromVAR", quietly = TRUE)) {
@@ -220,9 +227,15 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
 
 #' @title \code{testCoAccessibilityRandom}
 #'
-#' @description \code{testCoAccessibilityRandom} takes an input set of tile
+#' @description 
+#'   `r lifecycle::badge("deprecated")`
+#'   Renamed to `testCoAccessibility` to remove unnecessary specificity around
+#'   the background set, and for a shorter function name.
+#' 
+#'   \code{testCoAccessibilityRandom} takes an input set of tile
 #'   pairs and tests whether they are significantly different compared to
 #'   random, non-overlapping background set.
+#'   
 #' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
 #' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs
@@ -243,7 +256,7 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
 #' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
 #'   for that correlation compared to the background
 #'
-#'
+#' @keywords internal
 #' @export
 #'
 testCoAccessibilityRandom <- function(SampleTileObj,
@@ -256,26 +269,79 @@ testCoAccessibilityRandom <- function(SampleTileObj,
                                       returnBackGround = FALSE,
                                       verbose = TRUE) {
   . <- NULL
+  lifecycle::deprecate_warn("1.0.1", 
+                            "testCoAccessibilityRandom()", 
+                            "MOCHA::testCoAccessibility()")
+  testCoAccessibility(SampleTileObj,
+                      tile1,
+                      tile2,
+                      numCores,
+                      ZI,
+                      backNumber,
+                      calcPValue,
+                      returnBackGround,
+                      verbose)
+}
 
+#' @title \code{testCoAccessibility}
+#'
+#' @description 
+#'   \code{testCoAccessibility} takes an input set of tile
+#'   pairs and tests whether they are significantly different compared to
+#'   random, non-overlapping background set.
+#'   
+#' @param SampleTileObj The SummarizedExperiment object output from
+#'   getSampleTileMatrix containing your sample-tile matrices
+#' @param tile1 vector of indices or tile names (chrX:100-2000) for tile pairs
+#'   to test (first tile in each pair)
+#' @param tile2 vector of indices or tile names (chrX:100-2000) for tile pairs
+#'   to test (second tile in each pair)
+#' @param backNumber number of background pairs. Default is 1000.
+#' @param calcPValue Boolean, if TRUE calculate p-values. Default is TRUE.
+#' @param returnBackGround Boolean, if TRUE return the background correlations
+#'   as well as foreground. Default is FALSE.
+#' @param numCores Optional, the number of cores to use with multiprocessing.
+#'   Default is 1.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param ZI boolean flag that enables zero-inflated (ZI) Spearman correlations
+#'   to be used. Default is TRUE. If FALSE, skip zero-inflation and calculate
+#'   the normal Spearman.
+#'
+#' @return foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
+#'   for that correlation compared to the background
+#'
+#' @export
+#'
+testCoAccessibility <- function(SampleTileObj,
+                                tile1,
+                                tile2,
+                                numCores = 1,
+                                ZI = TRUE,
+                                backNumber = 1000,
+                                calcPValue = TRUE,
+                                returnBackGround = FALSE,
+                                verbose = TRUE) {
+  . <- NULL
+  
   if (length(tile1) != length(tile2)) {
     stop("tile1 and tile2 must be the same length.")
   }
-
+  
   fullObj <- combineSampleTileMatrix(SampleTileObj)
-
+  
   if (is.character(tile1) && is.character(tile2)) {
     nTile1 <- match(tile1, rownames(fullObj))
     nTile2 <- match(tile2, rownames(fullObj))
   } else if (is.numeric(tile1) && is.numeric(tile2)) {
     nTile1 <- tile1
     nTile2 <- tile2
-
+    
     tile1 <- rownames(fullObj)[nTile1]
     tile2 <- rownames(fullObj)[nTile2]
   } else {
     stop("tile1 and tile 2 must both be either numbers (indices) or strings")
   }
-
+  
   # Only run this if the backNumber is an actual number. If an actually background set is prepare, skip it.
   if (is.null(dim(backNumber))) {
     if (backNumber >= length(rownames(fullObj)) - length(unique(c(tile1, tile2)))) {
@@ -287,45 +353,45 @@ testCoAccessibilityRandom <- function(SampleTileObj,
       stop("backNumber too low (<=10). We recommend 1000.")
     }
   }
-
+  
   accMat <- SummarizedExperiment::assays(fullObj)[[1]]
-
+  
   ## Test original pairs of locations
   combPairs <- data.frame(tile1, tile2)
-
+  
   if (verbose) {
     message("Identifying foreground")
   }
-
+  
   cl <- parallel::makeCluster(numCores)
   foreGround <- runCoAccessibility(accMat, combPairs, ZI, verbose, cl)
   parallel::stopCluster(cl)
   gc()
-
+  
   if (any(is.na(foreGround$Correlation))) {
     if (verbose) {
       warning("All foreground correlations are undefined")
     }
   }
-
+  
   if (is.null(dim(backNumber))) {
     if (verbose) {
       message("Finding background peak pairs")
     }
-
+    
     backGroundTiles <- rownames(accMat)[!rownames(accMat) %in% c(tile1, tile2)]
-
+    
     backgroundCombos <- data.frame(
       Tile1 = sample(backGroundTiles, backNumber),
       Tile2 = sample(backGroundTiles, backNumber)
     )
-
+    
     backgroundCombos <- backgroundCombos[backgroundCombos[, 1] != backgroundCombos[, 2], ]
   } else if (dim(backNumber)[2] > 1) {
     if (verbose) {
       message("Using user-defined background pairs")
     }
-
+    
     backNumber <- as.data.frame(backNumber)
     if (!all(c("Tile1", "Tile2") %in% colnames(backNumber))) {
       stop("User-defined background pairs requires a column for Tile1 and Tile2")
@@ -334,9 +400,9 @@ testCoAccessibilityRandom <- function(SampleTileObj,
     } else if (!all(c(backNumber[, "Tile1"], backNumber[, "Tile2"]) %in% rownames(fullObj))) {
       stop("User-defined background pairs includes regions not found within the sample tile accessibility matrix.")
     }
-
+    
     backgroundCombos <- as.data.frame(backNumber)[, c("Tile1", "Tile2")]
-
+    
     if (sum(backgroundCombos[, "Tile1"] != backgroundCombos[, "Tile2"]) < 10) {
       stop("User-defined background pairs are fewer than 10. Please provide a larger background.")
     } else {
@@ -346,9 +412,9 @@ testCoAccessibilityRandom <- function(SampleTileObj,
     stop("Incorrect backNumber provided. Please provider either a number, or a data.frame with columns entitled Tile1 and Tile2, describing pairs to test. The tile names should be in the format ChrX:100-2000.")
   }
   rm(combPairs)
-
+  
   ## Now we need to test the background set
-
+  
   if (verbose) {
     message("Identifying background correlations.")
   }
@@ -358,41 +424,41 @@ testCoAccessibilityRandom <- function(SampleTileObj,
     pairs = backgroundCombos, ZI = ZI, verbose = verbose,
     numCores = cl
   )
-
-
+  
+  
   parallel::stopCluster(cl)
   gc()
-
+  
   rm(accMat)
   rm(backgroundCombos)
   rm(fullObj)
-
+  
   if (calcPValue) {
     if (verbose) {
       message("Generating p-values.")
     }
-
+    
     greatList <- unlist(pbapply::pblapply(foreGround$Correlation[which(foreGround$Correlation > 0)],
-      function(x) {
-        return(sum(x > backGround$Correlation))
-      },
-      cl = 1
+                                          function(x) {
+                                            return(sum(x > backGround$Correlation))
+                                          },
+                                          cl = 1
     )) / length(backGround$Correlation)
-
+    
     lesserList <- unlist(pbapply::pblapply(foreGround$Correlation[which(foreGround$Correlation < 0)],
-      function(x) {
-        return(sum(x < backGround$Correlation))
-      },
-      cl = 1
+                                           function(x) {
+                                             return(sum(x < backGround$Correlation))
+                                           },
+                                           cl = 1
     )) / length(backGround$Correlation)
-
-
+    
+    
     foreGround$pValues <- rep(NA, length(foreGround$Correlation))
     foreGround$pValues[which(foreGround$Correlation > 0)] <- 1 - greatList
     foreGround$pValues[which(foreGround$Correlation < 0)] <- 1 - lesserList
   }
-
-
+  
+  
   if (returnBackGround) {
     return(list("Foreground" = foreGround, "Background" = backGround))
   } else {
