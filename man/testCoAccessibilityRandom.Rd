@@ -47,7 +47,12 @@ foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
   for that correlation compared to the background
 }
 \description{
-\code{testCoAccessibilityRandom} takes an input set of tile
+`r lifecycle::badge("deprecated")`
+  Renamed to `testCoAccessibility` to remove unnecessary specificity around
+  the background set, and for a shorter function name.
+
+  \code{testCoAccessibilityRandom} takes an input set of tile
   pairs and tests whether they are significantly different compared to
   random, non-overlapping background set.
 }
+\keyword{internal}

@@ -1,7 +1,7 @@
 Package: MOCHA
 Type: Package
 Title: Modeling for Single-Cell Open Chromatin Analysis
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: 
     c(person(given = "Samir",
            family = "Rachid Zaim",
@@ -14,7 +14,7 @@ Authors@R:
     person(given = "Imran",
            family = "McGrath",
            role = c("aut", "cre"),
-           email = "imran.mcgrath@alleninstitute.org"),
+           email = "aifi.compbio.support@alleninstitute.org"),
     person(given = "Lauren",
            family = "Okada",
            role = c("aut", "ctb"),
@@ -25,7 +25,7 @@ Authors@R:
            email = "xiaojun.li@alleninstitute.org")
     )
 Maintainer: 
-        Imran McGrath <imran.mcgrath@alleninstitute.org>
+        Imran McGrath <aifi.compbio.support@alleninstitute.org>
 Description: A statistical framework and analysis tool for open chromatin 
   analysis designed specifically for single cell ATAC-seq (Assay for 
   Transposase-Accessible Chromatin) data, after cell type/cluster 
@@ -45,6 +45,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
 Depends: R (>= 4.1.0)
+biocViews:
 Imports:
     data.table,
     plyranges (>= 1.14.0),
@@ -79,7 +80,8 @@ Imports:
     pbapply,
     BSgenome,
     tidyselect,
-    purrr
+    purrr,
+    lifecycle
 Suggests: 
     ArchR,
     RMariaDB,
@@ -99,6 +101,5 @@ Suggests:
     Matrix,
     lmerTest
 Additional_repositories: https://imran-aifi.github.io/drat
-biocViews: Data analysis, Chromatin Accessibility, Single cell, scATAC, Software, Visualization
 VignetteBuilder: knitr
 Config/testthat/edition: 3
