@@ -88,7 +88,8 @@ getSequencingBias <- function(TSAM, cellPopulations = 'all',
                                            cellPopulation,
                                            groupColumn,
                                            foreground,
-                                           background,){
+                                           background,
+                                           verbose = TRUE){
 
     if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
         stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
