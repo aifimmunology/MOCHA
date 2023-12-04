@@ -144,11 +144,11 @@ plotRegion <- function(countSE,
   # Validate input
   supported_tracks <- c("Chr", "Normalized Counts", "Genes", "Links", "AdditionalGRanges")
   if (length(setdiff(names(relativeHeights), supported_tracks)) > 0) {
-    warning(sprintf(
+    if (verbose) { warning(sprintf(
       "1 or more values of relative heights not in supported tracks: %s.\n Supported track names: %s",
       paste(setdiff(names(relativeHeights), supported_tracks), collapse = ", "),
       paste(supported_tracks, collapse = ", ")
-    ))
+    )) }
   }
 
   # function wrapper based on verbosity to hide messages
@@ -272,6 +272,7 @@ plotRegion <- function(countSE,
           )
         )
       } else {
+        print("empty gene track")
         # Empty gene track to prevent errors resulting from p2 nonexistence
         p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
           ggplot2::theme_minimal()
@@ -281,7 +282,7 @@ plotRegion <- function(countSE,
     }
   } else {
     # If user wishes to hide genes
-    p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white")
+    p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white", truncate.gaps = FALSE)
     relativeHeights["Genes"] <- 0.1
   }
 
@@ -361,13 +362,14 @@ plotRegion <- function(countSE,
     missing_heights <- setdiff(names(track_list), names(relativeHeights))
     append_heights <- .relativeHeights_default[missing_heights]
     relativeHeights <- c(relativeHeights, append_heights)
-    warning(sprintf(
+    if (verbose) { warning(sprintf(
       "Relative heights were not defined for included plots [%s]. Using defaults for these tracks [%s]",
       paste(missing_heights, collapse = ", "),
       paste(append_heights, collapse = ", ")
-    ))
+    )) }
   }
   trackHeights <- relativeHeights[names(track_list)] # ensure intended order
+
 
   # Plot All Supplied Plots
   g_tracks <- verbf(
@@ -381,7 +383,6 @@ plotRegion <- function(countSE,
       label.bg.color = "transparent",
       label.width = grid::unit(2, "lines")
     )
-    # coord_cartesian(clip = "off")
   )
 
   return(g_tracks)

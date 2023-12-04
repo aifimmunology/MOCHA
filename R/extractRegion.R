@@ -59,6 +59,7 @@ extractRegion <- function(SampleTileObj,
                           approxLimit = 100000,
                           sliding = NULL,
                           binSize = 250,
+                          sliding = NULL,
                           numCores = 1,
                           verbose = FALSE) {
   . <- idx <- score <- NULL
@@ -154,7 +155,8 @@ extractRegion <- function(SampleTileObj,
     
         stop('Error around reading coverage files. Check that coverage files are not corrupted.')
     }
-
+    
+    
     # Edge case: One or more samples are missing coverage for this cell population,
     # e.g. if a cell population only exists in one sample.
     lapply(seq_along(subSamples), function(y) {
@@ -242,6 +244,23 @@ extractRegion <- function(SampleTileObj,
 
 
 ## helper functions.
+                         
+# Generates average single basepair coverage for a given region
+averageBPCoverage <- function(iterList) {
+  regionGRanges <- iterList[[1]]
+  sampleCount <- length(iterList[[2]])
+
+  filterCounts <- lapply(1:sampleCount, function(z) {
+    plyranges::join_overlap_intersect(iterList[[2]][[z]], regionGRanges)
+  })
+
+  mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
+  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+  mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
+  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+
+  return(mergedCounts)
+}
 
 ## Efficiently subsets single basepair coverage for a given region across samples
 subsetBPCoverage <- function(iterList) {
