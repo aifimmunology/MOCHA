@@ -194,6 +194,7 @@ plotRegion <- function(countSE,
     )
   )
 
+
   # Add Motifs to Base Plot if Requested
   if (!is.null(motifSetName)) {
     assertthat::assert_that(motifSetName %in% names(countSE@metadata),
@@ -274,8 +275,8 @@ plotRegion <- function(countSE,
         print("empty gene track")
         # Empty gene track to prevent errors resulting from p2 nonexistence
         p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
-          ggplot2::theme_void()
-        relativeHeights["Genes"] <- 10^6
+          ggplot2::theme_minimal()
+        relativeHeights["Genes"] <- 10^-6
         showGene <- FALSE
       }
     }

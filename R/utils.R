@@ -110,9 +110,9 @@ StringsToGRanges <- function(regionString) {
   . <- NULL
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
-    gsub("-.*", "", .) %>%
+    gsub("-.*|−.*", "", .) %>%
     as.numeric()
-  endSite <- gsub(".*-", "", regionString) %>% as.numeric()
+  endSite <- gsub(".*-|.*−", "", regionString) %>% as.numeric()
 
   if (any(startSite >= endSite)) {
     stop("Error in region string: Make sure the start of the genomic range occurs before the end")

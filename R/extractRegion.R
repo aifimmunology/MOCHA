@@ -57,6 +57,7 @@ extractRegion <- function(SampleTileObj,
                           subGroups = NULL,
                           sampleSpecific = FALSE,
                           approxLimit = 100000,
+                          sliding = NULL,
                           binSize = 250,
                           sliding = NULL,
                           numCores = 1,
@@ -85,6 +86,8 @@ extractRegion <- function(SampleTileObj,
     stop("Wrong region input type. Input must either be a string, or a GRanges location.")
   }
 
+    
+    
   if (all(toupper(cellNames) == "COUNTS")) {
     stop(
       "The only assay in the SummarizedExperiment is Counts. The names of assays must reflect cell types,",
@@ -139,16 +142,26 @@ extractRegion <- function(SampleTileObj,
   cl <- parallel::makeCluster(numCores)
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
-    
-    if(type){
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Accessibility
+      
+    #Pull up coverage files
+     originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    if(type & 'Accessibility' %in% names(originalCovGRanges)){
+     originalCovGRanges <- originalCovGRanges[['Accessibility']]
+    }else if (type & !'Accessibility' %in% names(originalCovGRanges)){
+      originalCovGRanges <- originalCovGRanges
+    }else if (!type & 'Accessibility' %in% names(originalCovGRanges)){
+      originalCovGRanges <- originalCovGRanges[['Insertions']]
     }else{
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Insertions
+    
+        stop('Error around reading coverage files. Check that coverage files are not corrupted.')
     }
     
     
     # Edge case: One or more samples are missing coverage for this cell population,
     # e.g. if a cell population only exists in one sample.
+      
+    browser()
+      
     lapply(seq_along(subSamples), function(y) {
       if (!all(subSamples[[y]] %in% names(originalCovGRanges))) {
         missingSamples <- paste(subSamples[[y]][!subSamples[[y]] %in% names(originalCovGRanges)], collapse = ", ")
