@@ -286,6 +286,7 @@ plotRegion <- function(countSE,
     relativeHeights["Genes"] <- 0.1
   }
 
+ 
   if (!is.null(additionalGRangesTrack)) {
 
     # Check for name metadata column
@@ -363,13 +364,13 @@ plotRegion <- function(countSE,
     append_heights <- .relativeHeights_default[missing_heights]
     relativeHeights <- c(relativeHeights, append_heights)
     if (verbose) { warning(sprintf(
-      "Relative heights were not defined for included plots [%s]. Using defaults for these tracks [%s]",
       paste(missing_heights, collapse = ", "),
       paste(append_heights, collapse = ", ")
     )) }
   }
   trackHeights <- relativeHeights[names(track_list)] # ensure intended order
-
+    
+   browser()
 
   # Plot All Supplied Plots
   g_tracks <- verbf(
