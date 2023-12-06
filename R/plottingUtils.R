@@ -152,7 +152,7 @@ countdf_to_region <- function(countdf) {
 
       regionGRanges <- .getSpacing(regionGRanges, overlapFeat = name)
       trackDF <- as.data.frame(regionGRanges)
-      trackLabels <- getTrackLabels(trackDF, groupVar = name, nameFeat = name){
+      trackLabels <- getTrackLabels(trackDF, groupVar = name, nameFeat = name)
 
       p <- ggplot2::ggplot() + 
           ggplot2::geom_segment(
