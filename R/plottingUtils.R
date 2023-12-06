@@ -64,21 +64,270 @@ countdf_to_region <- function(countdf) {
   return(regionGRanges)
 }
 
-#' Get GeneBody GRanges for a given region
+
+#' Get a spacing between overlapping genes or other genomic ranges. 
 #'
 #' Used in `plotRegion()`
-#'
-#' @param regionGRanges regionGRanges A region Granges object to retrieve gene bodies for. For example, the output of countdf_to_region.
-#' @param TxDb A TxDb database
-#' @param single.strand.genes.only Logical, default FALSE.
+#; 
+#' @param theme_ls Named list of `ggplot2::theme()` parameters.
+#' @param GRangesObj A GRanges with potentially overlapping features. 
+#' @param overlapFeat A string. Name of metadata column that identifies unique features that should not be overlapped.
+#' @param type A string, describing what the track should visualize. Default is genes
 #'
 #' @noRd
-get_grange_genebody <- function(regionGRanges, TxDb, single.strand.genes.only = TRUE) {
-  geneBody <- GenomicFeatures::genes(TxDb, single.strand.genes.only = single.strand.genes.only) %>%
-    plyranges::join_overlap_intersect(regionGRanges)
-  return(geneBody)
+
+.getSpacing <- function(GRangesObj, overlapFeat = tx_name){
+
+  ## Identified overlaps
+  Features = NULL
+  reduceRanges1 <- plyranges::reduce_ranges(GRangesObj, Features = unique({{ overlapFeat }}))
+  geneSpacing = do.call('rbind', lapply(reduceRanges1$Features, function(XX) {
+
+          tx_list_tmp = unlist(XX)
+          data.frame(tx_name = tx_list_tmp,
+                      Spacing = seq(0, length(tx_list_tmp)-1, by =1))
+          }))
+  newGR <- GenomicRanges::makeGRangesFromDataFrame(dplyr::full_join(as.data.frame(GRangesObj), geneSpacing, by = 'tx_name'),
+              keep.extra.columns = TRUE)
+
+  return(newGR)
+
 }
 
+#' Get a data.frame for labeling tracks. 
+#'
+#' Used in `plotRegion()`
+#; 
+#' @param theme_ls Named list of `ggplot2::theme()` parameters.
+#' @param TrackDF A data.frame converted from a GRanges object. Must contain a column start, end, Spacing, as well as whateveris provided for nameFeat and groupVar.
+#' @param groupVar A variable name. Name of metadata column that identifies the features to be labeled together (i.e. all the exons from the same transcript, tx_name)
+#' @param nameFeat A variable name. Name of metadata column that identifies the features to be named.
+#'
+#' @noRd
+
+.getTrackLabels <- function(TrackDF, groupVar = tx_name, nameFeat = GeneName){
+
+  ## Identified overlaps
+  trackLabels = dplyr::reframe(dplyr::group_by(TrackDF, {{groupVar}}), 
+                              minStart = min(start),
+                              maxEnd = max(end),
+                              name = unique({{nameFeat}}), 
+                              Spacing = unique(Spacing))
+  colnames(trackLabels)[colnames(trackLabels) %in% 'name'] =  deparse(substitute(nameFeat))
+
+  trackLabels = dplyr::mutate(trackLabels, label.x = round((minStart+maxEnd)/2))
+
+  return(trackLabels)
+
+}
+
+
+
+#' Get a ggplot object with tracks to visualize
+#'
+#' Used in `plotRegion()`
+#; 
+#' @param theme_ls Named list of `ggplot2::theme()` parameters.
+#' @param regionGRanges regionGRanges A region Granges object to retrieve gene bodies for. For example, the output of countdf_to_region.
+#' @param empty A boolean. If the visualized regions should be set to empty. 
+#' @param type A string, describing what the track should visualize. Default is genes
+#'
+#' @noRd
+
+.plot_GRanges <- function(regionGRanges, theme_ls = .gene_plot_theme, empty = TRUE, type = 'Genes'){
+
+   if(empty){
+
+      p <- ggplot2::ggplot(as.data.frame(regionGRanges)) + 
+          ggplot2::geom_segment(
+            mapping = aes(
+              x = start,
+              y = 0,
+              xend = end
+              yend = 0,
+              color = "white"
+            ),
+            show.legend = FALSE)
+    }else{
+
+      regionGRanges <- .getSpacing(regionGRanges, overlapFeat = name)
+      trackDF <- as.data.frame(regionGRanges)
+      trackLabels <- getTrackLabels(trackDF, groupVar = name, nameFeat = name){
+
+      p <- ggplot2::ggplot() + 
+          ggplot2::geom_segment(
+            data = trackDF,
+            mapping = ggplot2::aes(
+              x = start,
+              y = Spacing,
+              xend = end
+              yend = Spacing,
+              color = name
+            ),
+            show.legend = FALSE) +
+          #gene names
+          ggrepel::geom_text_repel(
+            data = trackLabels,
+            mapping = ggplot2::aes(x = label.x, y = Spacing, label = name),
+            size = 3, vjust=-1, min.segment.length = 1000
+          ) 
+
+    }
+            
+    p <- p +
+         ggplot2::theme_minimal() +
+          ggplot2::ylab(type) + 
+          ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +
+          ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)) " Loci (bp)"))  +
+          do.call(ggplot2::theme, theme_ls)
+
+    return(p)
+}
+
+#' Get a ggplot object with genes visualized
+#'
+#' Used in `plotRegion()`
+#; 
+#' @param whichGenes The name of the gene to plot. 
+#' @param TxDb A TxDb database
+#' @param OrgDb A OrgDb database
+#' @param collapseGenes A boolean. Determines whether transcripts should be plotted individually or merged into one representative gene body for gene.
+#' @param regionGRanges regionGRanges A region Granges object to retrieve gene bodies for. For example, the output of countdf_to_region.
+#' @param theme_ls Named list of `ggplot2::theme()` parameters.
+#' @param db_id_col Character value. Column in `orgdb` containing the output id. Default "REFSEQ".
+#'
+#' @noRd
+get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes = TRUE, 
+                   theme_ls = .gene_plot_theme, db_id_col = 'REFSEQ') { 
+
+  # Fill in theme any unspecified theme options with defaults
+  default_theme <- .gene_plot_theme
+  unspec_param <- setdiff(names(default_theme), names(theme_ls))
+  if (length(unspec_param) > 0) {
+    theme_ls <- c(theme_ls, default_theme[unspec_param])
+  }
+  
+  allGenes <- sort(c(GenomicFeatures::intronicParts(TxDb, linked.to.single.gene.only = TRUE),
+                  GenomicFeatures::exonicParts(TxDb, linked.to.single.gene.only = TRUE)))
+    
+  geneTrackDF <- as.data.frame(
+      plyranges::join_overlap_intersect(allGenes, regionGRanges))
+
+  if(dim(geneTrackDF)[1] == 0){
+
+        warning("Could not find any transcripts in this region. Setting gene plot to empty. ")
+        p <- .plot_GRanges(regionGRanges, theme_ls, empty = TRUE, type = 'Genes')
+        return(p)
+    }
+
+                                  
+  if(!collapseGenes){
+      geneTrackDF$tx_name = unlist(lapply(geneTrackDF$tx_name, function(ZZ) paste0(ZZ, collapse = ', ')))
+      geneTrackDF <- tidyr::separate_longer_delim(geneTrackDF, 
+                          cols = c('tx_name'), delim = ", ")
+      geneTrackDF$GeneName <- AnnotationDbi::mapIds(
+                    org.Hs.eg.db,
+                    keys = unlist(geneTrackDF$tx_name),
+                    column = "SYMBOL",
+                    keytype = db_id_col)
+
+  }else{
+      #Just choose the first one. You only need one to get the gene symbol. 
+
+      geneTrackDF$tx_name = unlist(lapply(geneTrackDF$tx_name, function(ZZ) ZZ[[1]]))
+      geneTrackDF$GeneName <- AnnotationDbi::mapIds(
+                    OrgDb,
+                    keys = unlist(geneTrackDF$tx_name),
+                    column = "SYMBOL",
+                    keytype = db_id_col)
+      geneTrackDF$tx_name = geneTrackDF$GeneName
+
+  }
+                                          
+  if(!is.null(whichGene)){
+      
+      geneTrackDF <- dplyr::filter(geneTrackDF, GeneName %in% whichGene)
+      if(dim(geneTrackDF)[1] == 0){
+
+        stop(sprintf(
+          "Could not find 'whichGene' argument [%s] within the region provided. Please check region and organism database.",
+          paste(whichGene, collapse = ","), e
+        ))
+    }
+  }
+                                      
+  ##reduced ranges to identify overlapping genes
+  geneTrackGRanges <- makeGRangesFromDataFrame(geneTrackDF, keep.extra.columns = TRUE)  
+
+  #Figure out spacing between genes
+  geneTrackGRanges <- .getSpacing(regionGRanges, overlapFeat = tx_name)         
+ 
+  ## Generate additional arrows for long introns. 
+  dupIntrons <- plyranges::filter(geneTrackGRanges,  is.na(exonic_part))
+  dupIntrons <- plyranges::join_overlap_intersect(
+      plyranges::tile_ranges(dupIntrons, totalLength/20),dupIntrons)
+
+  # Generate data.frame
+  geneTrackDF <- as.data.frame(c(geneTrackGRanges, dupIntrons))
+  geneTrackDF$tx_name = as.character(geneTrackDF$tx_name) 
+                                      
+  #Set reverse the direction of start and end if it's a gene on the reverse strand.
+  geneTrackDF <- dplyr::mutate(geneTrackDF, 
+                                newStart = ifelse(strand == '-', end, start), 
+                                newEnd = ifelse(strand == '-', start, end))                                        
+  geneTrackDF$Spacing = as.character(geneTrackDF$Spacing)
+  
+  #Generate track labels
+  trackLabels <- .getTrackLabels(geneTrackDF, groupVar = tx_name, nameFeat = GeneName)
+  
+  p <- ggplot2::ggplot() +
+    # Exons by themselves
+    ggplot2::geom_segment(
+      data = dplyr::filter(geneTrackDF, is.na(intronic_part)),
+      mapping = ggplot2::aes_string(
+        x = start,
+        y = Spacing,
+        xend = end,
+        yend = Spacing,
+        color = GeneName
+      ),
+      show.legend = FALSE,
+      linewidth = 5
+    ) +
+    # Introns with arrows for direction of gene
+    ggplot2::geom_segment(
+      data = dplyr::filter(geneTrackDF, is.na(exonic_part)),
+      mapping = ggplot2::aes(
+        x = start,
+        y = Spacing,
+        xend = end,
+        yend = Spacing,
+        color = GeneName
+      ),
+      alpha = 0.8,
+      show.legend = FALSE,
+        arrow = ggplot2::arrow(
+        ends = "first",
+        type = "open",
+        angle = 45,
+        length = unit(x = 0.05, units = "inches")
+      ),
+      size = 1/2
+    ) + #gene names
+  ggrepel::geom_text_repel(
+    data = trackLabels,
+    mapping = ggplot2::aes_string(x = label.x, y = Spacing, label = GeneName),
+    size = 3, vjust=-1, min.segment.length = 1000
+  ) + # Set theme
+  ggplot2::theme_minimal() +
+  ggplot2::ylab("Genes") + 
+  ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +
+  ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)) " Loci (bp)"))  +
+      do.call(ggplot2::theme, theme_ls)
+
+  return(p)
+                                            
+}
 
 #' Default ggplot theme for counts plot
 .counts_plot_default_theme <- list(
@@ -569,278 +818,14 @@ counts_plot_motif_overlay <- function(p1,
   return(p1)
 }
 
-
-#' Get Gene Body Model
-#'
-#' Get Gene Body model for specific gene in region ranges
-#'
-#' Used in `plotRegion()` to preformat GRanges for selected genes
-#'
-#' @param whichGene Character value. Gene symbol for a single gene to plot.
-#' @param regionGRanges Granges object for region of interest. Ie, an output of `countdf_to_region()`
-#' @param countdf  A dataframe that comes from `getbpCounts()` or `getbpInserts()`
-#' @param orgdb An organism database containing the gene
-#' @param db_id_col Character value. Column in `orgdb` containing the output id. Default "REFSEQ".
-#' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#' @return GRanges object for gene to plot
-#'
-#' @noRd
-
-get_gene_body_model <- function(whichGene,
-                                regionGRanges,
-                                countdf,
-                                orgdb,
-                                db_id_col = "REFSEQ",
-                                verbose = TRUE) {
-  seqnames <- . <- tx_name <- model <- NULL
-  # Check for dependency RMariaDB needed for GenomicFeatures::makeTxDbFromUCSC
-  if (!requireNamespace("RMariaDB", quietly = TRUE)) {
-    stop(
-      "Package 'RMariaDB' is required to plot specific genes with GenomicFeatures::makeTxDbFromUCSC. ",
-      "Please install 'RMariaDB' to proceed."
-    )
-  }
-
-  # Get REFSEQ values for gene symbol
-  txList <- tryCatch(
-    unlist(AnnotationDbi::mapIds(
-      x = orgdb,
-      keys = whichGene,
-      column = db_id_col,
-      keytype = "SYMBOL",
-      multiVals = "list"
-    )),
-    error = function(e) {
-      stop(sprintf(
-        "Error attempting to query symbol for 'whichGene' argument [%s] from specified database. Full error message: %s",
-        paste(whichGene, collapse = ","), e
-      ))
-      return(NULL)
-    }
-  )
-
-  # Pull specified database and table for the transcripts
-  # This requires package "RMariaDB" available on CRAN and corresponding linux library "libmariadb-dev"
-  newTxDB <- GenomicFeatures::makeTxDbFromUCSC(genome = "hg38", tablename = "refGene", transcript_ids = txList)
-
-  # Get granges object from database and intersect with region granges
-  newTxDBgenes <- unlist(GenomicFeatures::genes(newTxDB, single.strand.genes.only = FALSE)) %>%
-    plyranges::filter(!grepl("_", seqnames))
-  newGRanges <- biovizBase::crunch(newTxDB, which = newTxDBgenes) %>%
-    plyranges::join_overlap_intersect(regionGRanges)
-  colnames(GenomicRanges::values(newGRanges))[4] <- "model" # rename 'Type' column to models
-
-  if (length(newGRanges) > 0) {
-    newGRangesf <- as.data.frame(newGRanges)
-    startSide <- newGRangesf[newGRangesf$start %in% GenomicRanges::start(regionGRanges) & newGRangesf$model == "gap", ]
-    endSide <- newGRangesf[newGRangesf$end %in% GenomicRanges::end(regionGRanges) & newGRangesf$model == "gap", ]
-    beginexon <- NULL
-    endexon <- NULL
-
-    if (dim(startSide)[1] > 0) {
-      beginexon <- data.frame(
-        seqnames = unique(countdf$chr),
-        start = min(countdf$Locus) - 1,
-        end = min(countdf$Locus) - 1,
-        width = 1,
-        strand = "*",
-        tx_id = unique(startSide$tx_id),
-        tx_name = unique(startSide$tx_name),
-        gene_id = unique(startSide$gene_id),
-        model = "exon"
-      )
-    }
-
-    if (dim(endSide)[1] > 0) {
-      endexon <- data.frame(
-        seqnames = unique(countdf$chr),
-        start = max(countdf$Locus) + 1,
-        end = max(countdf$Locus) + 1,
-        width = 1,
-        strand = "*",
-        tx_id = unique(endSide$tx_id),
-        tx_name = unique(endSide$tx_name),
-        gene_id = unique(endSide$gene_id),
-        model = "exon"
-      )
-    }
-
-    newModel <- rbind(newGRangesf, beginexon, endexon) %>%
-      plyranges::mutate(nameList = paste(whichGene, tx_name, sep = ": ")) %>%
-      GenomicRanges::makeGRangesListFromDataFrame(., split.field = "nameList", keep.extra.columns = TRUE)
-
-    # check for transcripts that are identical within the window. If only one transcript, then just rename it to the gene name.
-    if (length(newModel) > 1) {
-      uniqueTranscripts <- IRanges::stack(newModel)[!duplicated(GenomicRanges::ranges(IRanges::stack(newModel)))] %>%
-        plyranges::filter(model != "utr") %>%
-        as.data.frame() %>%
-        dplyr::select(tx_name) %>%
-        unique(.)
-      newModel <- newModel[grepl(paste(unlist(uniqueTranscripts), collapse = "|"), names(newModel))]
-      names(newModel) <- rep(whichGene, length(newModel))
-    } else {
-      names(newModel) <- whichGene
-    }
-    return(newModel)
-  } else {
-    warning("whichGene did not contain sgenes names for any genes in the window. Plotting all transcripts.")
-    return(NULL)
-  }
-}
-
-
 #' Common theme for gene plots
 .gene_plot_theme <- list(
-  panel.grid = ggplot2::element_blank(),
-  panel.border = ggplot2::element_blank(),
-  axis.ticks = ggplot2::element_blank(),
   axis.text.y = ggplot2::element_blank(),
+  axis.ticks.y  = ggplot2::element_blank(),
+  panel.grid.minor.y =  ggplot2::element_blank(),
+  panel.grid.major.y =  ggplot2::element_blank(),
   plot.margin = grid::unit(c(.5, .5, .5, .5), "cm")
 )
-
-
-#' Generate a ggplot based on a Gene Model
-#'
-#' Creates a gene track ggplot based on gene model GRanges
-#' Used conditinally in `plotRegion()` for gene plot.
-#'
-#' @param newModel gene granges model, ie generated by `get_gene_body_model()`
-#' @param x_lim Numeric value. Min x-axis limit. If NULL (default) will use min value from newModel granges.
-#' @param base_size Numeric, default 12. Global plot base text size parameter
-#' @param theme_ls Named list of parameters passed to `theme()`. For defaults see `.gene_plot_theme`
-#'
-#' @noRd
-plot_whichGene <- function(newModel,
-                           x_lim = NULL,
-                           base_size = 12,
-                           theme_ls = .gene_plot_theme) {
-  model <- theme <- NULL
-
-  # if(is.null(x_min)){
-  #     xmin = min(newModel$
-  # }
-
-  # Fill in theme any unspecified theme options with defaults
-  default_theme <- .gene_plot_theme
-  unspec_param <- setdiff(names(default_theme), names(theme_ls))
-  if (length(unspec_param) > 0) {
-    theme_ls <- c(theme_ls, default_theme[unspec_param])
-  }
-
-  p_gene <- ggbio::ggbio() +
-    ggbio::geom_alignment(newModel,
-      ggplot2::aes(type = model),
-      cds.rect.h = 0.25,
-      rect.height = 0.25 / 4
-    )
-
-  if (!is.null(x_lim)) {
-    p_gene <- p_gene + ggplot2::xlim(x_lim[1], x_lim[2])
-  }
-
-  p_gene <- p_gene +
-    ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) +
-    ggplot2::theme_bw(base_size = base_size) +
-    ggplot2::coord_cartesian(clip = "off") +
-    do.call(ggplot2::theme, theme_ls)
-
-  return(p_gene)
-}
-
-#' Plot a genebody from a specific database
-#'
-#' Used in `plotRegion()` to plot gene track for granges input containing all genes in a region
-#'
-#' @param organismdb Database object, for example the output of `OrganismDbi::makeOrganismDbFromTxDb()`
-#' @param geneBody_gr A GRanges object containing the gene, for example an output of `get_grange_genebody()`
-#' @param x_lim vector of (x_min, x_max)
-#' @param base_size Numeric, default 12. Global plot base text size parameter
-#' @param theme_ls Named list of `ggplot2::theme()` parameters.
-#' @param collapseGenes Logical value, default FALSE. If TRUE will collapse all genes into one line.
-#' sites into a single row
-#' @return A ggplot object
-#'
-#' @noRd
-plot_geneBody <- function(organismdb,
-                          geneBody_gr,
-                          x_lim = NULL,
-                          base_size = 12,
-                          theme_ls = .gene_plot_theme,
-                          collapseGenes = FALSE) {
-  # Fill in theme any unspecified theme options with defaults
-  default_theme <- .gene_plot_theme
-  unspec_param <- setdiff(names(default_theme), names(theme_ls))
-  if (length(unspec_param) > 0) {
-    theme_ls <- c(theme_ls, default_theme[unspec_param])
-  }
-
-  if (collapseGenes) {
-    stat_val <- "reduce"
-  } else {
-    stat_val <- NULL
-  }
-
-  g_geneBody <- ggbio::autoplot(organismdb, wh = geneBody_gr, truncate.gaps = FALSE)
-
-  if (!is.null(x_lim)) { # had to move this here, otherwise theme would be overwritten...
-    g_geneBody <- g_geneBody + ggplot2::xlim(x_lim[1], x_lim[2])
-  }
-  theme <- NULL
-  g_geneBody <- g_geneBody +
-    ggplot2::scale_y_continuous(expand = c(0.3, 0.3)) + 
-    ggplot2::theme_bw(base_size = base_size) + 
-    do.call(ggplot2::theme, theme_ls) 
-
-  # works with packageVersion('ggbio')=='1.46.0'
-  return(g_geneBody)
-}
-
-##### simplifiedOrgDb: Generates a simplified OrganismDb object for plotting only the longest transcript for each gene.
-
-#' Generate a simplified Organism Db object.
-#'
-#' Pulls out only the longest transcripts for each gene and repackages them into an organism database object for plotting.
-#'
-#' @param TxDb A TxDb object with transcript info.
-#' @param orgdb A OrgDb object with gene name info.
-#'
-#' @noRd
-simplifiedOrgDb <- function(TxDb = TxDb, orgdb = orgdb) {
-  len <- tx_len <- utr5_len <- utr3_len <- gene_id <- tx_id <- . <- NULL
-
-  # retrieve transcript lengths
-  txlen <- GenomicFeatures::transcriptLengths(TxDb, with.utr5_len = TRUE, with.utr3_len = TRUE)
-  setDT(txlen)
-  txlen$len <- rowSums(as.matrix(txlen[, .(tx_len, utr5_len, utr3_len)]))
-
-  setkey(txlen, gene_id, len, tx_id)
-
-  # filter longesttranscript by gene_id
-  ltx <- txlen[!is.na(gene_id)][, utils::tail(.SD, 1), by = gene_id]$tx_id
-
-  # filter txdb object
-  txb <- as.list(TxDb)
-  txb$transcripts <- as.data.frame(txb$transcripts[txb$transcripts$tx_id %in% ltx, ])
-  txb$splicings <- as.data.frame(txb$splicings[txb$splicings$tx_id %in% ltx, ])
-  txb$genes <- as.data.frame(txb$genes[txb$genes$tx_id %in% ltx, ])
-  chrominfo <- as.data.frame(GenomeInfoDb::seqinfo(TxDb)) %>%
-    dplyr::mutate(chrom = rownames(.data)) %>%
-    dplyr::rename(length = .data$seqlengths, is_circular = .data$isCircular) %>%
-    as.data.frame()
-  txb2 <- GenomicFeatures::makeTxDb(txb$transcripts, txb$splicings, txb$genes, chrominfo,
-    metadata =
-      dplyr::filter(
-        S4Vectors::metadata(TxDb),
-        grepl("Genome|Organism|Data source|UCSC Table", .data$name)
-      )
-  )
-  Homo.sapiens.hg38 <- OrganismDbi::makeOrganismDbFromTxDb(txb2,
-    orgdb = orgdb
-  )
-
-  return(Homo.sapiens.hg38)
-}
-
 
 #' Generate a link plot from a dataframe of co-accessible links
 #'

@@ -129,7 +129,7 @@ plotRegion <- function(countSE,
                        showGene = TRUE,
                        whichGene = NULL,
                        db_id_col = "REFSEQ",
-                       collapseGenes = "None",
+                       collapseGenes = NULL,
                        gene_theme_ls = NULL,
                        # single.strand.genes.only = TRUE,
                        # Additional Tracks
@@ -224,66 +224,20 @@ plotRegion <- function(countSE,
 
   # Build P2, Ref Genes track
   if (showGene) {
-    # If user provided a specific gene symbol(s), pull new granges from database and format models
-    if (!is.null(whichGene)) {
-      newModel <- verbf(
-        get_gene_body_model(
-          whichGene = whichGene,
-          countdf = countdf,
+
+    p2 <- get_gene_plot(
           regionGRanges = regionGRanges,
-          orgdb = OrgDb,
-          verbose = verbose
+          TxDb = TxDb,
+          orgdb = OrgDb
+          whichGene = whichGene,
+          collapseGenes= collapseGenes,
+          theme_ls = gene_theme_ls, 
+          db_id_col = 'REFSEQ'
         )
-      )
-    } else {
-      newModel <- NULL
-    }
-
-
-    if (!is.null(whichGene) & !is.null(newModel)) {
-      # Successful newmodel generated
-      p2 <- verbf(
-        plot_whichGene(newModel,
-          base_size = base_size,
-          x_lim = range(countdf$Locus),
-          theme_ls = gene_theme_ls
-        )
-      )
-    } else {
-      # Create your reference for plotting gene body
-
-      if (tolower(collapseGenes) == "longesttx") {
-        Homo.sapiens.hg38 <- simplifiedOrgDb(TxDb = TxDb, orgdb = OrgDb)
-      } else {
-        Homo.sapiens.hg38 <- verbf(OrganismDbi::makeOrganismDbFromTxDb(TxDb, orgdb = OrgDb))
-      }
-
-      geneBody <- verbf(get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
-
-      if (length(geneBody) > 0) {
-        p2 <- verbf(
-          plot_geneBody(
-            organismdb = Homo.sapiens.hg38,
-            geneBody_gr = geneBody,
-            collapseGenes = tolower(collapseGenes) == "collapseall",
-            base_size = base_size,
-            x_lim = range(countdf$Locus),
-            theme_ls = gene_theme_ls
-          )
-        )
-      } else {
-        print("empty gene track")
-        # Empty gene track to prevent errors resulting from p2 nonexistence
-        p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
-          ggplot2::theme_minimal()
-        relativeHeights["Genes"] <- 10^-6
-        showGene <- FALSE
-      }
-    }
   } else {
     # If user wishes to hide genes
-    p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white", truncate.gaps = FALSE)
-    relativeHeights["Genes"] <- 0.1
+    p2 <- NULL
+    relativeHeights["Genes"] <- 0
   }
 
  
@@ -293,20 +247,17 @@ plotRegion <- function(countSE,
     if ("name" %in% colnames(GenomicRanges::mcols(additionalGRangesTrack))) {
       # Only plot the overlap of this region and the additional GRanges Track
       overlapGRanges <- verbf(plyranges::join_overlap_intersect(additionalGRangesTrack, regionGRanges))
+
+     
       if (length(overlapGRanges) > 0) {
         # Use the subset within our region as the track we want to plot
-        # Assign exon status to each row
-        GenomicRanges::mcols(overlapGRanges)$type <- rep("exon", each = length(overlapGRanges))
-        # split into list of GRanges -> GRangesList named for the names metadata col
-        additionalGRangesTrack <- split(overlapGRanges, overlapGRanges$name)
+        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = FALSE, type = 'Tracks')
+
       } else {
-        additionalGRangesTrack <- NULL
-        # Avoids the following error:
-        # Error: Faceting variables must have at least one value
-        # Error in deparse(x[[i]], nlines = nlines) :   no slot of name "elementType" for this object of class "GRanges"
+        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = TRUE, type = 'Tracks')
       }
     } else {
-      additionalGRangesTrack <- NULL
+      p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = TRUE, type = 'Tracks')
     }
   }
 
@@ -354,7 +305,6 @@ plotRegion <- function(countSE,
 
   # Additional Ranges
   if (!is.null(additionalGRangesTrack)) {
-    p4 <- verbf(ggbio::autoplot(additionalGRangesTrack)) + ggplot2::theme_minimal()
     track_list <- c(track_list, list("AdditionalGRanges" = p4))
   }
 
@@ -369,8 +319,9 @@ plotRegion <- function(countSE,
     )) }
   }
   trackHeights <- relativeHeights[names(track_list)] # ensure intended order
-    
-   browser()
+
+  browser()
+
 
   # Plot All Supplied Plots
   g_tracks <- verbf(
