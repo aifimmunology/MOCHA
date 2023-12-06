@@ -143,7 +143,7 @@ countdf_to_region <- function(countdf) {
             mapping = aes(
               x = start,
               y = 0,
-              xend = end
+              xend = end,
               yend = 0,
               color = "white"
             ),
@@ -160,7 +160,7 @@ countdf_to_region <- function(countdf) {
             mapping = ggplot2::aes(
               x = start,
               y = Spacing,
-              xend = end
+              xend = end, 
               yend = Spacing,
               color = name
             ),
