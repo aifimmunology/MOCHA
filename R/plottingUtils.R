@@ -178,7 +178,7 @@ countdf_to_region <- function(countdf) {
          ggplot2::theme_minimal() +
           ggplot2::ylab(type) + 
           ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +
-          ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)) " Loci (bp)"))  +
+          ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)), " Loci (bp)"))  +
           do.call(ggplot2::theme, theme_ls)
 
     return(p)
@@ -322,7 +322,7 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
   ggplot2::theme_minimal() +
   ggplot2::ylab("Genes") + 
   ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +
-  ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)) " Loci (bp)"))  +
+  ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)), " Loci (bp)"))  +
       do.call(ggplot2::theme, theme_ls)
 
   return(p)
