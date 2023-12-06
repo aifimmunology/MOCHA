@@ -244,14 +244,14 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
 
   }
                                           
-  if(!is.null(whichGene)){
+  if(!is.null(whichGenes)){
       
-      geneTrackDF <- dplyr::filter(geneTrackDF, GeneName %in% whichGene)
+      geneTrackDF <- dplyr::filter(geneTrackDF, GeneName %in% whichGenes)
       if(dim(geneTrackDF)[1] == 0){
 
         stop(sprintf(
-          "Could not find 'whichGene' argument [%s] within the region provided. Please check region and organism database.",
-          paste(whichGene, collapse = ","), e
+          "Could not find 'whichGenes' argument [%s] within the region provided. Please check region and organism database.",
+          paste(whichGenes, collapse = ","), e
         ))
     }
   }
