@@ -228,7 +228,7 @@ plotRegion <- function(countSE,
     p2 <- get_gene_plot(
           regionGRanges = regionGRanges,
           TxDb = TxDb,
-          orgdb = OrgDb,
+          OrgDb = OrgDb,
           whichGene = whichGene,
           collapseGenes= collapseGenes,
           theme_ls = gene_theme_ls, 
