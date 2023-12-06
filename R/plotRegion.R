@@ -228,7 +228,7 @@ plotRegion <- function(countSE,
     p2 <- get_gene_plot(
           regionGRanges = regionGRanges,
           TxDb = TxDb,
-          orgdb = OrgDb
+          orgdb = OrgDb,
           whichGene = whichGene,
           collapseGenes= collapseGenes,
           theme_ls = gene_theme_ls, 
@@ -321,6 +321,8 @@ plotRegion <- function(countSE,
   trackHeights <- relativeHeights[names(track_list)] # ensure intended order
 
   browser()
+
+
 
 
   # Plot All Supplied Plots
