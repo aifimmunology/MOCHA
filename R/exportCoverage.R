@@ -169,7 +169,7 @@ averageCoverage <- function(coverageList) {
 #'  output GRangesList output from \code{getDifferentialAccessibleTiles} to
 #'  bigBed format for visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param DifferentialsGRList The GRangesList output from
 #'   \code{getDifferentialAccessibleTiles}
@@ -179,7 +179,7 @@ averageCoverage <- function(coverageList) {
 #' @examples
 #' \dontrun{
 #' MOCHA::exportDifferentials(
-#'   SampleTileObj = SampleTileMatrices,
+#'   SampleTileObject = SampleTileMatrices,
 #'   DifferentialsGRList,
 #'   outDir = tempdir(),
 #'   verbose = TRUE
@@ -192,15 +192,15 @@ exportDifferentials <- function(SampleTileObject,
                                 DifferentialsGRList,
                                 outDir,
                                 verbose = FALSE) {
-  genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
-
+  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
+  
   for (i in seq_along(DifferentialsGRList)) {
     comparison_name <- names(DifferentialsGRList)[[i]]
     DiffPeaksGR <- DifferentialsGRList[[i]]
 
     # Set score and seqinfo for bigBed
     DiffPeaksGR$score <- 1
-    seqinfo(DiffPeaksGR) <- seqinfo(genome)[seqnames(seqinfo(DiffPeaksGR))]
+    GenomeInfoDb::seqinfo(DiffPeaksGR) <- GenomeInfoDb::seqinfo(genome)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(DiffPeaksGR))]
 
     outFile <- file.path(outDir, paste(comparison_name, sep = "__"))
     if (verbose) {
@@ -217,7 +217,7 @@ exportDifferentials <- function(SampleTileObject,
 #' @description \code{exportOpenTiles} exports the open tiles of a given cell
 #'  population to bigBed file for visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param cellPopulation The name of the cell population to export
 #' @param outDir Desired output directory where bigBed files will be saved
@@ -239,9 +239,10 @@ exportOpenTiles <- function(SampleTileObject,
                             cellPopulation,
                             outDir,
                             verbose = FALSE) {
-  genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
+    
+  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
 
-  for (cellPopulation in names(assays(SampleTileObject))) {
+  for (cellPopulation in names(SummarizedExperiment::assays(SampleTileObject))) {
     cellPopMatrix <- MOCHA::getCellPopMatrix(
       SampleTileObject,
       cellPopulation,
@@ -256,9 +257,9 @@ exportOpenTiles <- function(SampleTileObject,
 
       # Set score and seqinfo for bigBed
       samplePeaksGR$score <- 1
-      seqinfo(samplePeaksGR) <- seqinfo(genome)[seqnames(seqinfo(samplePeaksGR))]
+      GenomeInfoDb::seqinfo(samplePeaksGR) <- GenomeInfoDb::seqinfo(genome)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(samplePeaksGR))]
 
-      sampleRow <- colData(SampleTileObject)[sample, ]
+      sampleRow <- SummarizedExperiment::colData(SampleTileObject)[sample, ]
       pbmc_sample_id <- sampleRow[["Sample"]] # Enforced colname in callOpenTiles
       outFile <- file.path(outDir, paste(cellPopulation, pbmc_sample_id, sep = "__"))
       if (verbose) {
@@ -276,7 +277,8 @@ exportOpenTiles <- function(SampleTileObject,
 #' @description \code{exportMotifs} exports a motif set GRanges from running
 #'    \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
 #'    in genome browsers.
-#' @param SampleTileObj The SummarizedExperiment object output from
+#'
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param motifsGRanges A GRanges containing motif annotations, typically from
 #'   \code{addMotifSet(returnSTM=FALSE)}
@@ -311,8 +313,8 @@ exportMotifs <- function(SampleTileObject,
 
   # Map over the seqinfo from our genome to the motifsGRanges
   # Required for bigBed export
-  genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
-  seqinfo(motifsGRanges) <- seqinfo(genome)[seqnames(seqinfo(motifsGRanges))]
+  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
+  GenomeInfoDb::seqinfo(motifsGRanges) <- GenomeInfoDb::seqinfo(genome)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(motifsGRanges))]
 
   # # Truncate trailing zeroes from score https://www.biostars.org/p/235193/
   # # (Error : Trailing characters parsing integer in field 4 line 1 of text, got 10.3405262378482)
@@ -324,8 +326,8 @@ exportMotifs <- function(SampleTileObject,
 
   if (filterByOpenTiles) {
     # Split motifsGRangesFiltered by cell population, filtered to open tiles in cell population
-    allPeaks <- rowRanges(SampleTileObject)
-    samplePeakTable <- mcols(allPeaks)
+    allPeaks <- SummarizedExperiment::rowRanges(SampleTileObject)
+    samplePeakTable <- GenomicRanges::mcols(allPeaks)
     for (celltype in names(samplePeakTable)) {
       # Filter rows with boolean index
       samplePeaksGR <- allPeaks[samplePeakTable[[celltype]], ]

@@ -303,7 +303,8 @@ getSampleCellTypeMetadata <- function(object) {
 
 plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE){
 
-  mat <- unlist(as.data.frame(log2(getCellPopMatrix(STM, cellPopulation)+1)))
+     values <- NULL
+  mat <- unlist(as.data.frame(log2(getCellPopMatrix(TSAM_object, cellPopulation)+1)))
   plotMat <- data.frame(Values = mat)
 
   if(returnDF){

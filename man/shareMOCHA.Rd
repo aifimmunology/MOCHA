@@ -9,7 +9,7 @@ shareMOCHA(MOCHA_Obj, zipName = "ZippedMOCHA.zip")
 \arguments{
 \item{zipName}{zipName Name of the compressed file that will be exported.}
 
-\item{Object}{A MultiAssayExperiment or RangedSummarizedExperiment, from MOCHA}
+\item{MOCHA_Object}{A MultiAssayExperiment or RangedSummarizedExperiment, from MOCHA}
 }
 \value{
 path to zipped object.

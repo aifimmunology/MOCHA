@@ -239,7 +239,7 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
                 db_id_col = 'REFSEQ', 
                 monotoneGenes = FALSE) { 
 
-    exonic_part <- strand <- end <- intronic_part <- Spacing <- NULL
+    exonic_part <- strand <-start <- end <- intronic_part <- Spacing <- NULL
     TinyIntron <- newStart <- newEnd <- unit <- label.x <- NULL
     
   # Fill in theme any unspecified theme options with defaults

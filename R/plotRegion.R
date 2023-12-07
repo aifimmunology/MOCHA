@@ -24,6 +24,7 @@
 #' @param legend.position Any acceptable `legend.position` argument to theme().
 #'   Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
 #'   "right" for faceted plots.
+#' @param legendRatio Ratio of width or height of the main plot to the legend. Useful if the legend is to large. If only used when legend.position is set to top, bottom, left, or right. 
 #' @param facet_label_side Direction character value, default "top". Can also be
 #'   "right", "left", or "bottom". Position of facet label.
 #' @param counts_group_colors Optional named color vector. Values as colors,
@@ -57,6 +58,7 @@
 #' @param showGene Logical value, default TRUE. Whether or not the gene track
 #'   should be plotted.
 #' @param whichGenes Name of gene for plotting this specific gene in region.
+#' @param monotoneGenes Boolean. Determines whether to color-code genes by gene name, or to set them all to dark gray. 
 #' @param db_id_col Character value. Column in `OrgDb` containing the output id
 #'   for `whichGenes` plotting. Default "REFSEQ".
 #' @param collapseGenes Options include 'collapseAll', 'longestTx', or 'None'
@@ -316,7 +318,7 @@ plotRegion <- function(countSE,
       ggplot2::theme(axis.text.x = ggplot2::element_blank(),
                      axis.ticks.x = ggplot2::element_blank(),
                     plot.margin = grid::unit(c(0, 0, 0, 0), "cm")) + 
-      xlab(NULL)
+      ggplot2::xlab(NULL)
     # Counts
     track_list <- c(track_list, list("Normalized Counts" = p1))
 
@@ -372,7 +374,7 @@ plotRegion <- function(countSE,
     if(any(grepl('legend', names(counts_theme_ls)))){
         legend_theme = counts_theme_ls[grep('legend', names(counts_theme_ls))]
         
-        p1 <- p1 + ggplot2::theme(legend.box.margin = margin(1,1,1,1)) + do.call('ggplot2::theme', legend_theme)
+        p1 <- p1 + ggplot2::theme(legend.box.margin = ggplot2::margin(1,1,1,1)) + do.call('ggplot2::theme', legend_theme)
         
     }else{
         

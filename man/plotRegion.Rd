@@ -63,6 +63,8 @@ range label}
 Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
 "right" for faceted plots.}
 
+\item{legendRatio}{Ratio of width or height of the main plot to the legend. Useful if the legend is to large. If only used when legend.position is set to top, bottom, left, or right.}
+
 \item{facet_label_side}{Direction character value, default "top". Can also be
 "right", "left", or "bottom". Position of facet label.}
 
@@ -111,6 +113,8 @@ color value.}
 should be plotted.}
 
 \item{whichGenes}{Name of gene for plotting this specific gene in region.}
+
+\item{monotoneGenes}{Boolean. Determines whether to color-code genes by gene name, or to set them all to dark gray.}
 
 \item{db_id_col}{Character value. Column in `OrgDb` containing the output id
 for `whichGenes` plotting. Default "REFSEQ".}

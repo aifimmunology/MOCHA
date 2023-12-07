@@ -27,7 +27,7 @@ getIntensityThreshold <- function(TSAM, cellPopulations = 'all', type = 'mean', 
         combMat <- do.call('cbind', as.list(allMat[names(allMat) %in% cellPopulations]))
     }else{
 
-        error('Cell populations were not all found within the MOCHA object.')
+        stop('Cell populations were not all found within the MOCHA object.')
     }
 
     combMat[is.na(combMat)] <- 0
@@ -47,14 +47,14 @@ getIntensityThreshold <- function(TSAM, cellPopulations = 'all', type = 'mean', 
 
     }else if(tolower(type) == 'median'){
 
-            median_intensities = rowMedians(combMat)
+            median_intensities = matrixStats::rowMedians(combMat)
 
             unmixedMat = mixtools::normalmixEM(median_intensities,
                             lambda=0.5, sigma=1)
 
     }else{
 
-        error('type is not mean or median.')
+        stop('type is not mean or median.')
     }
 
     if(returnPlots){
