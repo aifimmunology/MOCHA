@@ -69,7 +69,6 @@ countdf_to_region <- function(countdf) {
 #'
 #' Used in `plotRegion()`
 #; 
-#' @param theme_ls Named list of `ggplot2::theme()` parameters.
 #' @param GRangesObj A GRanges with potentially overlapping features. 
 #' @param overlapFeat A string. Name of metadata column that identifies unique features that should not be overlapped.
 #' @param type A string, describing what the track should visualize. Default is genes
@@ -79,7 +78,7 @@ countdf_to_region <- function(countdf) {
 .getSpacing <- function(GRangesObj, overlapFeat = tx_name){
 
   ## Identified overlaps
-  Features = NULL
+  Features <- tx_name <- NULL
   reduceRanges1 <- plyranges::reduce_ranges(GRangesObj, Features = unique({{ overlapFeat }}))
   geneSpacing = do.call('rbind', lapply(reduceRanges1$Features, function(XX) {
 
@@ -98,7 +97,6 @@ countdf_to_region <- function(countdf) {
 #'
 #' Used in `plotRegion()`
 #; 
-#' @param theme_ls Named list of `ggplot2::theme()` parameters.
 #' @param TrackDF A data.frame converted from a GRanges object. Must contain a column start, end, Spacing, as well as whateveris provided for nameFeat and groupVar.
 #' @param groupVar A variable name. Name of metadata column that identifies the features to be labeled together (i.e. all the exons from the same transcript, tx_name)
 #' @param nameFeat A variable name. Name of metadata column that identifies the features to be named.
@@ -106,7 +104,8 @@ countdf_to_region <- function(countdf) {
 #' @noRd
 
 .getTrackLabels <- function(TrackDF, groupVar = tx_name, nameFeat = GeneName){
-
+    
+  start <- end <- Spacing <- minStart <- maxEnd <- GeneName <- NULL
   ## Identified overlaps
   trackLabels = dplyr::reframe(dplyr::group_by(TrackDF, {{groupVar}}), 
                               minStart = min(start),
@@ -121,6 +120,41 @@ countdf_to_region <- function(countdf) {
 
 }
 
+#' Set legend correctly so that it doesn't mess with x-axis alignment. 
+#'
+#' Used in `plotRegion()`
+#; 
+#' @param existingPlot combined plots, already generated via cowplot
+#' @param newLegend The new legend to add
+#' @param legend.position The position of the new legend. 
+#' @param relativeRatio Ratio of plot to legend width or height. 
+#' @param legendMergee Boolean. If TRUE, then it's meant to merge legends.
+#'             For top or bottom, legends are added next to each other.
+#'             For left or right, legends are added on top of each other. 
+#'
+#' @noRd
+
+.setUpLegend <- function(existingPlot, newLegend, legend.position, legendMerge, relativeRatio = 0.1){
+    
+    positionDict = data.frame(row.names = c("left", "right", "bottom", "top"), 
+                              variable = c("rel_widths", "rel_widths", "rel_heights", "rel_heights"),
+                              dim_var = c(2, 2, 1, 1))
+    
+    if((grepl('left|right', legend.position) & !legendMerge) | 
+       (!grepl('left|right', legend.position) & legendMerge)){
+    
+        optionsList = list(ncol = 2, rel_widths = c(1, relativeRatio*1))
+        
+    }else{
+        
+        optionsList = list(ncol = 1, rel_heights = c(1, relativeRatio*1))
+    }
+    
+    g1 <- do.call(cowplot::plot_grid, append(list(plotlist= list(existingPlot, newLegend)), optionsList))
+  
+    return(g1)   
+    
+}
 
 
 #' Get a ggplot object with tracks to visualize
@@ -136,11 +170,12 @@ countdf_to_region <- function(countdf) {
 
 .plot_GRanges <- function(regionGRanges, theme_ls = .gene_plot_theme, empty = TRUE, type = 'Genes'){
 
+    start <- end <- Spacing <- label.x <- NULL
    if(empty){
 
       p <- ggplot2::ggplot(as.data.frame(regionGRanges)) + 
           ggplot2::geom_segment(
-            mapping = aes(
+            mapping = ggplot2::aes(
               x = start,
               y = 0,
               xend = end,
@@ -152,7 +187,8 @@ countdf_to_region <- function(countdf) {
 
       regionGRanges <- .getSpacing(regionGRanges, overlapFeat = name)
       trackDF <- as.data.frame(regionGRanges)
-      trackLabels <- getTrackLabels(trackDF, groupVar = name, nameFeat = name)
+      name <- NULL
+      trackLabels <- .getTrackLabels(trackDF, groupVar = name, nameFeat = name)
 
       p <- ggplot2::ggplot() + 
           ggplot2::geom_segment(
@@ -197,9 +233,15 @@ countdf_to_region <- function(countdf) {
 #' @param db_id_col Character value. Column in `orgdb` containing the output id. Default "REFSEQ".
 #'
 #' @noRd
-get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes = TRUE, 
-                   theme_ls = .gene_plot_theme, db_id_col = 'REFSEQ') { 
+get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
+                whichGenes = NULL, collapseGenes = TRUE, 
+                theme_ls = .gene_plot_theme, 
+                db_id_col = 'REFSEQ', 
+                monotoneGenes = FALSE) { 
 
+    exonic_part <- strand <- end <- intronic_part <- Spacing <- NULL
+    TinyIntron <- newStart <- newEnd <- unit <- label.x <- NULL
+    
   # Fill in theme any unspecified theme options with defaults
   default_theme <- .gene_plot_theme
   unspec_param <- setdiff(names(default_theme), names(theme_ls))
@@ -207,6 +249,8 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
     theme_ls <- c(theme_ls, default_theme[unspec_param])
   }
   
+  totalLength = GenomicRanges::width(regionGRanges)
+    
   allGenes <- sort(c(GenomicFeatures::intronicParts(TxDb, linked.to.single.gene.only = TRUE),
                   GenomicFeatures::exonicParts(TxDb, linked.to.single.gene.only = TRUE)))
     
@@ -216,17 +260,17 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
   if(dim(geneTrackDF)[1] == 0){
 
         warning("Could not find any transcripts in this region. Setting gene plot to empty. ")
-        p <- .plot_GRanges(regionGRanges, theme_ls, empty = TRUE, type = 'Genes')
+        p <- .plot_GRanges(regionGRanges, theme_ls, 
+                           empty = TRUE, type = 'Genes')
         return(p)
     }
-
                                   
   if(!collapseGenes){
       geneTrackDF$tx_name = unlist(lapply(geneTrackDF$tx_name, function(ZZ) paste0(ZZ, collapse = ', ')))
       geneTrackDF <- tidyr::separate_longer_delim(geneTrackDF, 
                           cols = c('tx_name'), delim = ", ")
       geneTrackDF$GeneName <- AnnotationDbi::mapIds(
-                    org.Hs.eg.db,
+                    OrgDb,
                     keys = unlist(geneTrackDF$tx_name),
                     column = "SYMBOL",
                     keytype = db_id_col)
@@ -251,16 +295,21 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
 
         stop(sprintf(
           "Could not find 'whichGenes' argument [%s] within the region provided. Please check region and organism database.",
-          paste(whichGenes, collapse = ","), e
+          paste(whichGenes, collapse = ",")
         ))
     }
   }
                                       
   ##reduced ranges to identify overlapping genes
-  geneTrackGRanges <- makeGRangesFromDataFrame(geneTrackDF, keep.extra.columns = TRUE)  
+  geneTrackGRanges <- GenomicRanges::makeGRangesFromDataFrame(geneTrackDF, keep.extra.columns = TRUE)  
 
   #Figure out spacing between genes
-  geneTrackGRanges <- .getSpacing(regionGRanges, overlapFeat = tx_name)         
+  tx_name <- NULL
+  geneTrackGRanges <- .getSpacing(geneTrackGRanges, overlapFeat = tx_name)    
+  ## Identify introns that are too small for arrows, as measured by 1/100 of the region size
+  geneTrackGRanges <- plyranges::mutate(geneTrackGRanges,
+                                    TinyIntron = is.na(exonic_part) & 
+                                    GenomicRanges::width(geneTrackGRanges) < totalLength/100)
  
   ## Generate additional arrows for long introns. 
   dupIntrons <- plyranges::filter(geneTrackGRanges,  is.na(exonic_part))
@@ -273,18 +322,24 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
                                       
   #Set reverse the direction of start and end if it's a gene on the reverse strand.
   geneTrackDF <- dplyr::mutate(geneTrackDF, 
-                                newStart = ifelse(strand == '-', end, start), 
-                                newEnd = ifelse(strand == '-', start, end))                                        
+                                newStart = ifelse(strand == '+', end, start), 
+                                newEnd = ifelse(strand == '+', start, end))                                        
   geneTrackDF$Spacing = as.character(geneTrackDF$Spacing)
-  
+
   #Generate track labels
+  GeneName <- NULL
   trackLabels <- .getTrackLabels(geneTrackDF, groupVar = tx_name, nameFeat = GeneName)
-  
+    
+  if(monotoneGenes){
+      geneTrackDF$GeneName = 'Same'
+  }
+                                          
+  ## Plot the genes
   p <- ggplot2::ggplot() +
     # Exons by themselves
     ggplot2::geom_segment(
       data = dplyr::filter(geneTrackDF, is.na(intronic_part)),
-      mapping = ggplot2::aes_string(
+      mapping = ggplot2::aes(
         x = start,
         y = Spacing,
         xend = end,
@@ -293,14 +348,27 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
       ),
       show.legend = FALSE,
       linewidth = 5
-    ) +
-    # Introns with arrows for direction of gene
-    ggplot2::geom_segment(
-      data = dplyr::filter(geneTrackDF, is.na(exonic_part)),
+    ) + #plot all introns, without arrows. 
+     ggplot2::geom_segment(
+      data = dplyr::filter(geneTrackDF, is.na(exonic_part) ),
       mapping = ggplot2::aes(
         x = start,
         y = Spacing,
         xend = end,
+        yend = Spacing,
+        color = GeneName
+      ),
+      alpha = 0.8,
+      show.legend = FALSE,
+      size = 1/2
+    ) +
+    # Introns with arrows for direction of gene
+    ggplot2::geom_segment(
+      data = dplyr::filter(geneTrackDF, is.na(exonic_part) & !TinyIntron),
+      mapping = ggplot2::aes(
+        x = newStart,
+        y = Spacing,
+        xend = newEnd,
         yend = Spacing,
         color = GeneName
       ),
@@ -316,23 +384,31 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb, whichGenes, collapseGenes
     ) + #gene names
   ggrepel::geom_text_repel(
     data = trackLabels,
-    mapping = ggplot2::aes_string(x = label.x, y = Spacing, label = GeneName),
+    mapping = ggplot2::aes(x = label.x, y = Spacing, label = GeneName),
     size = 3, vjust=-1, min.segment.length = 1000
   ) + # Set theme
   ggplot2::theme_minimal() +
-  ggplot2::ylab("Genes") + 
-  ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +
+  ggplot2::ylab("Genes") +  ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +
   ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)), " Loci (bp)"))  +
       do.call(ggplot2::theme, theme_ls)
+                                          
+ if(monotoneGenes){
+  
+     p <- p + 
+     ggplot2::scale_color_manual(
+         values = c('Same' = '#646464'))
+     
+  }
 
   return(p)
                                             
 }
-
+                                    
+                                        
 #' Default ggplot theme for counts plot
 .counts_plot_default_theme <- list(
-  panel.grid = ggplot2::element_blank(),
-  plot.margin = grid::unit(c(0, 0, 0, 0), "cm"),
+  panel.grid.major.y = ggplot2::element_blank(),
+  panel.grid.minor.y = ggplot2::element_blank(),
   legend.title = ggplot2::element_text(size = 12),
   legend.text = ggplot2::element_text(size = 10),
   axis.text.y = ggplot2::element_blank(),
@@ -383,6 +459,7 @@ counts_plot_samples <- function(countdf,
   assertthat::assert_that(counts_color_var %in% names(countdf))
 
   Locus <- Counts <- Groups <- Groups2 <- NULL
+    
   # Fill in theme any unspecified theme options with defaults
   default_theme <- .counts_plot_default_theme
   unspec_param <- setdiff(names(default_theme), names(theme_ls))
@@ -420,9 +497,9 @@ counts_plot_samples <- function(countdf,
     # Base Plot
     p1 <- p1 +
       ggplot2::geom_line(ggplot2::aes(color = !!as.name(counts_color_var)), alpha = 0.75, size = 1.5) +
-      ggplot2::ylab(NULL) +
+      ggplot2::ylab('Normalized Coverage') +
       ggplot2::labs(Groups = "Groups") +
-      ggplot2::coord_cartesian(clip = "off") +
+      #ggplot2::coord_cartesian(clip = "off") +
       ggplot2::geom_text(
         data = df_range,
         ggplot2::aes(x = x, y = y, label = label),
@@ -461,7 +538,7 @@ counts_plot_samples <- function(countdf,
 
     # Base Plot, common elements
     p1 <- p1 +
-      ggplot2::ylab(NULL) +
+      ggplot2::ylab('Normalized Coverage') +
       ggplot2::facet_wrap(dplyr::vars(Groups), ncol = 1, strip.position = facet_label_side) +
       ggplot2::geom_text(
         data = df_range,
@@ -503,7 +580,7 @@ counts_plot_samples <- function(countdf,
 
     # Base Plot, common elements
     p1 <- p1 +
-      ggplot2::ylab(NULL) +
+      ggplot2::ylab('Normalized Coverage') +
       ggplot2::facet_wrap(dplyr::vars(Groups), ncol = 1, strip.position = facet_label_side) +
       ggplot2::geom_text(
         data = df_range,
@@ -540,7 +617,7 @@ counts_plot_samples <- function(countdf,
         ),
         alpha = 0.25
       ) +
-      ggplot2::ylab(NULL) +
+      ggplot2::ylab('Normalized Coverage') +
       ggplot2::scale_y_continuous(
         breaks = c(1:length(countdf_tmp$Var1)),
         label = countdf_tmp$Var1
@@ -824,7 +901,7 @@ counts_plot_motif_overlay <- function(p1,
   axis.ticks.y  = ggplot2::element_blank(),
   panel.grid.minor.y =  ggplot2::element_blank(),
   panel.grid.major.y =  ggplot2::element_blank(),
-  plot.margin = grid::unit(c(.5, .5, .5, .5), "cm")
+  plot.margin = grid::unit(c(0, .5, .5, .5), "cm")
 )
 
 #' Generate a link plot from a dataframe of co-accessible links
@@ -869,7 +946,7 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
       0,
       floor(10 * max(linkdf2$Correlation)) / 10
     )) +
-    ggplot2::coord_cartesian(clip = "off", ylim = c(-0.75, 0)) +
+    #ggplot2::coord_cartesian(clip = "off", ylim = c(-0.75, 0)) +
     ggplot2::theme(
       panel.grid = ggplot2::element_blank(), panel.border = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank(),

@@ -34,19 +34,22 @@ the zero-inflation formula in models where the conditional effects formula
 contains an offset term, the offset term will automatically be dropped. The
 zero-inflation model uses a logit link.}
 
-\item{zi_threshold}{Zero-inflated threshold ( range = 0-1), representing the fraction of samples with zeros. When the percentage of zeros in the tile is between 0 and zi_threshold,
-samples with zeroes are dropped and only the continous formula is used. Use this parameter at your own risk. Default is 0.}
+\item{zi_threshold}{Zero-inflated threshold (range = 0-1), representing the
+fraction of samples with zeros. When the percentage of zeros in the tile is
+between 0 and zi_threshold, samples with zeroes are dropped and only the
+continous formula is used. Use this parameter at your own risk. Default is
+0.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 
-\item{pilotIndices}{A vector of integers defining the subset of
-the ExperimentObj matrix. Default is 1:10.}
+\item{pilotIndices}{A vector of integers defining the subset of the
+ExperimentObj matrix. Default is 1:10.}
 }
 \value{
 modelList a list of outputs from glmmTMB::glmmTMB
 }
 \description{
-\code{pilotLMEM} Runs linear mixed-effects modeling for
-  zero inflated data using \code{\link[glmmTMB]{glmmTMB}}.
-TryCatch will catch errors, and return the error and dataframe for troubleshooting.
+\code{pilotLMEM} Runs linear mixed-effects modeling for zero
+  inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch
+  errors, and return the error and dataframe for troubleshooting.
 }

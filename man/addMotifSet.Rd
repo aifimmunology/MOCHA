@@ -23,7 +23,7 @@ PFMatrixList, PWMatrix, or PWMatrixList}
 Default is 7.}
 
 \item{returnSTM}{If TRUE, return the modified SampleTileObj with motif set
-added to metadata (default). If FALSE, return just the motifs from motifmatchr.}
+added to metadata (default). If FALSE, return the motifs from motifmatchr as a GRanges.}
 
 \item{motifSetName}{Name to give motifList in the SampleTileObj's metadata
 if `returnSTM=TRUE`. Default is 'Motifs'.}
