@@ -140,17 +140,44 @@ countdf_to_region <- function(countdf) {
                               variable = c("rel_widths", "rel_widths", "rel_heights", "rel_heights"),
                               dim_var = c(2, 2, 1, 1))
     
+    ncol = ifelse((grepl('left|right', legend.position) & !legendMerge) | 
+                   (!grepl('left|right', legend.position) & legendMerge), 
+                2, 1)
+    
+    #if the legend is on the left or the top, the relativeRatio comes in first. 
+    #if the legend is on the right or bottom, then we need to put it second. 
+    ratioDirection = ifelse((grepl('left|top', legend.position) & !legendMerge), 
+                            list(c(relativeRatio*1,1)),
+                            list(c(1, relativeRatio*1)))
+    #Create the optionsList to iterate over. 
+    optionsList = list(ncol, unlist(ratioDirection))
+    
+    #if the legend is on the right or left (and we are not merging legends), then we need two columns
+    #if the legend is on the top or botttom and we are merging legends, then we need two columns
+    #if the legend is on the top or bottom and we are not merging legends, we need one column
+    #if the legend is on the left or right and we are merging legends, then we need one column.
     if((grepl('left|right', legend.position) & !legendMerge) | 
        (!grepl('left|right', legend.position) & legendMerge)){
-    
-        optionsList = list(ncol = 2, rel_widths = c(1, relativeRatio*1))
-        
+
+        names(optionsList) <- c('ncol', 'rel_widths')
     }else{
-        
-        optionsList = list(ncol = 1, rel_heights = c(1, relativeRatio*1))
+        names(optionsList) <- c('ncol', 'rel_heights')
     }
     
-    g1 <- do.call(cowplot::plot_grid, append(list(plotlist= list(existingPlot, newLegend)), optionsList))
+    #Now set-up order of the merge
+    ## if left and top, then put the newLegend first (as long as we aren't merging two legends).
+    ## otherwise, put the existing plot first. 
+    if(grepl('left|top', legend.position) & !legendMerge){
+
+            g1 <- do.call(cowplot::plot_grid, 
+                          append(list(plotlist= list(newLegend,existingPlot)), optionsList))
+        
+
+    }else{
+        g1 <- do.call(cowplot::plot_grid, append(list(plotlist= list(existingPlot, newLegend)), optionsList))
+
+    }
+
   
     return(g1)   
     
@@ -385,7 +412,7 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
   ggrepel::geom_text_repel(
     data = trackLabels,
     mapping = ggplot2::aes(x = label.x, y = Spacing, label = GeneName),
-    size = 3, vjust=-1, min.segment.length = 1000
+    size = 3, vjust=-1, max.overlaps = Inf, min.segment.length = 2
   ) + # Set theme
   ggplot2::theme_minimal() +
   ggplot2::ylab("Genes") +  ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +

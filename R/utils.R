@@ -108,6 +108,7 @@ StringsToGRanges <- function(regionString) {
   #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
   # }
   . <- NULL
+  regionString <- gsub(",","",regionString)
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
     gsub("-.*|−.*", "", .) %>%

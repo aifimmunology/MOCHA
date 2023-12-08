@@ -112,7 +112,7 @@ plotRegion <- function(countSE,
                        counts_color = NULL,
                        range_label_size = 2,
                        legend.position = NULL,
-                       legendRatio = 0.05,
+                       legendRatio = 0.25,
                        facet_label_side = "top",
                        counts_color_var = "Groups",
                        counts_group_colors = NULL,
@@ -155,6 +155,15 @@ plotRegion <- function(countSE,
     )) }
   }
 
+  if(showIdeogram){
+      if (!requireNamespace("ggbio", quietly = TRUE)) {
+        stop(
+        "Package 'ggbio' is required for generating ideograms. ",
+        "Please install 'ggbio' to proceed or set showIdeogram = FALSE."
+        )
+    } 
+  }
+    
   # function wrapper based on verbosity to hide messages
   verbf <- function(x) {
     if (verbose) {
@@ -184,11 +193,11 @@ plotRegion <- function(countSE,
   OrgDb <- getAnnotationDbFromInstalledPkgname(countSE@metadata$OrgDb$pkgname, "OrgDb")
   # Base Plot of Sample Counts
 
-  if(!is.null(legend.position) & plotType == 'overlaid'){
+  if(is.null(legend.position) & plotType == 'overlaid'){
       
       legend.position = 'right'
       legendRatio = 0.25
-  }else{
+  }else if(is.null(legend.position)){
   
       legend.position = 'none'
       
@@ -360,7 +369,6 @@ plotRegion <- function(countSE,
   g_tracks <- cowplot::plot_grid(plotlist = track_list[names(track_list) != 'Chr'], 
                                  ncol=1, align = 'v',
                                 rel_heights = trackHeights[-1])
-    
   #Now add the ideogram
   g_tracks <- cowplot::plot_grid(track_list$Chr, g_tracks, 
                 ncol=1, 
@@ -395,9 +403,10 @@ plotRegion <- function(countSE,
         )
         legend1 <- .setUpLegend(legend1, legend2, 
                                 legend.position = legend.position, legendMerge = TRUE,
-                                relativeRatio = legendRatio)
+                                relativeRatio = 0.5)
     }
-      
+    
+    #Add legend and g_tracks together
     g_tracks <- .setUpLegend(g_tracks, legend1, 
             legend.position = legend.position, 
             legendMerge = FALSE, relativeRatio = legendRatio)
