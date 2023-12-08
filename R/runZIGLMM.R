@@ -246,6 +246,8 @@ extractVariable <- function(varList, varType, variable, nullDF) {
 #' @noRd
 #' 
 individualZIGLMM <- function(iterList) {
+  
+  
   x <- iterList[[1]]
   continuousFormula <- iterList[[2]]
   modelingData <- iterList[[3]]

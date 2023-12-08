@@ -280,8 +280,8 @@ subsetBPCoverage <- function(iterList) {
 ## Efficiently subsets and bins coverage for a given region across samples
 subsetBinCoverage <- function(iterList){
 
-    regionGRanges_tmp <- plyranges::reduce_ranges(iterList[[1]])
-    indTiles <- plyranges::select(plyranges::tile_ranges(regionGRanges_tmp, 1), -partition)
+    regionGRanges <- plyranges::reduce_ranges(iterList[[1]])
+    indTiles <- plyranges::select(plyranges::tile_ranges(regionGRanges, 1), -partition)
 
     tmpCounts <- lapply(iterList[[2]], function(z) {
         tmpGR <- plyranges::join_overlap_intersect(z, indTiles)
@@ -295,34 +295,18 @@ subsetBinCoverage <- function(iterList){
     return(tmpCounts)
 }
                 
-# Generates average single basepair coverage for a given region
-averageBPCoverage <- function(iterList) {
-  regionGRanges <- iterList[[1]]
-  sampleCount <- length(iterList[[2]])
-
-  filterCounts <- lapply(1:sampleCount, function(z) {
-    plyranges::join_overlap_intersect(iterList[[2]][[z]], regionGRanges)
-  })
-
-  mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
-  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
-  mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
-  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
-
-  return(mergedCounts)
-}
                         
 ## Efficiently generates averaged coverage across samples by bins within a given region
 averageBinCoverage <- function(iterList){
 
-    regionGRanges_tmp <- plyranges::reduce_ranges(iterList[[1]])
-    indTiles <- plyranges::select(plyranges::tile_ranges(regionGRanges_tmp, 1), -partition)
+    regionGRanges <- plyranges::reduce_ranges(iterList[[1]])
+    indTiles <- plyranges::select(plyranges::tile_ranges(regionGRanges, 1), -partition)
     sampleCount <- length(iterList[[2]])
     
     filterCounts <- lapply(iterList[[2]], function(z) {
         tmpGR <- plyranges::join_overlap_intersect(z, indTiles)
         tmpGR <- plyranges::join_overlap_intersect(tmpGR, iterList[[1]])
-        tmpGR <- plyranges::group_by(tmpGR, idx) %>%
+        tmpGR <- plyranges::group_by(tmpGR, idx)
         tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
         tmpGR <- dplyr::ungroup(tmpGR)
         tmpGR
@@ -331,7 +315,7 @@ averageBinCoverage <- function(iterList){
     mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges) 
     mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
-    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+    mergedCounts <- plyranges::join_overlap_intersect(mergedCounts,regionGRanges)
     mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, iterList[[1]])
                            
                            
@@ -347,7 +331,7 @@ subsetSlidingBinCoverag <- function(iterList){
     tmpCounts <- lapply(subList, function(z) {
         tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges) %>%
         tmpGR <- plyranges::join_overlap_intersect(tmpGR, binnedData)
-        tmpGR <- plyranges::group_by(tmpGR, idx) %>%
+        tmpGR <- plyranges::group_by(tmpGR, idx) 
         tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
         tmpGR <- dplyr::ungroup(tmpGR)
         tmpGR

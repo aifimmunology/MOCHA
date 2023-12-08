@@ -7,10 +7,11 @@
 \usage{
 runLMEM(
   ExperimentObj,
+  assayName = NULL,
   modelFormula = NULL,
   initialSampling = 5,
   verbose = FALSE,
-  numCores = 1
+  numCores = 2
 )
 }
 \arguments{
@@ -18,6 +19,8 @@ runLMEM(
 getSampleTileMatrix, chromVAR, or other. It is expected to contain only
 one assay, or only the first assay will be used for the model.
 Data should not be zero-inflated.}
+
+\item{assayName}{The name of the assay to model within the SummarizedExperiment.}
 
 \item{modelFormula}{The formula to use with lmerTest::lmer, in the
 format (exp ~ factors). All factors must be found in column names
@@ -31,7 +34,11 @@ See \link[lmerTest]{lmer}.}
 \item{numCores}{integer. Number of cores to parallelize across.}
 }
 \value{
-results a SummarizedExperiment containing LMEM results
+results a SummarizedExperiment containing LMEM results. Assays are metrics related to the model coefficients,
+         including the Estimate, Std_Error, df, t_value, p_value. Within each assay, each row corresponds to each row of
+         the SummarizedExperiment and columns correspond to each fixed effect variable within the model.
+         Any row metadata from the ExperimentObject (see rowData(ExperimentObj)) is preserved in the output. 
+         The Residual matrix and the variance of the random effects are saved in the metadata slot of the output.
 }
 \description{
 \code{runLMEM} Runs linear mixed-effects modeling for

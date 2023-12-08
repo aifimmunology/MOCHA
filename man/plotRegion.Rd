@@ -11,6 +11,7 @@ plotRegion(
   counts_color = NULL,
   range_label_size = 2,
   legend.position = NULL,
+  legendRatio = 0.05,
   facet_label_side = "top",
   counts_color_var = "Groups",
   counts_group_colors = NULL,
@@ -26,9 +27,10 @@ plotRegion(
   motif_line_alpha = 0.25,
   motif_line_size = 0.75,
   showGene = TRUE,
-  whichGene = NULL,
+  whichGenes = NULL,
+  monotoneGenes = FALSE,
   db_id_col = "REFSEQ",
-  collapseGenes = "None",
+  collapseGenes = FALSE,
   gene_theme_ls = NULL,
   additionalGRangesTrack = NULL,
   linkdf = NULL,
@@ -60,6 +62,8 @@ range label}
 \item{legend.position}{Any acceptable `legend.position` argument to theme().
 Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
 "right" for faceted plots.}
+
+\item{legendRatio}{Ratio of width or height of the main plot to the legend. Useful if the legend is to large. If only used when legend.position is set to top, bottom, left, or right.}
 
 \item{facet_label_side}{Direction character value, default "top". Can also be
 "right", "left", or "bottom". Position of facet label.}
@@ -108,10 +112,12 @@ color value.}
 \item{showGene}{Logical value, default TRUE. Whether or not the gene track
 should be plotted.}
 
-\item{whichGene}{Name of gene for plotting this specific gene in region.}
+\item{whichGenes}{Name of gene for plotting this specific gene in region.}
+
+\item{monotoneGenes}{Boolean. Determines whether to color-code genes by gene name, or to set them all to dark gray.}
 
 \item{db_id_col}{Character value. Column in `OrgDb` containing the output id
-for `whichGene` plotting. Default "REFSEQ".}
+for `whichGenes` plotting. Default "REFSEQ".}
 
 \item{collapseGenes}{Options include 'collapseAll', 'longestTx', or 'None'
 Default 'None' will plot the expanded view of the reference genes,
@@ -151,7 +157,7 @@ The input ggplot object with motif labels overlaid
   your counts SummarizedExperiment. A basic plot can be rendered with just a
   counts SummarizedExperiment, but additional formatting arguments allow for
   further customization. Note that to show specific genes with the option
-  'whichGene' the \pkg{RMariaDB} package must be installed.
+  'whichGenes' the \pkg{RMariaDB} package must be installed.
 }
 \examples{
 \dontrun{

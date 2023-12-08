@@ -25,6 +25,5 @@ test_that("exportCoverage works on a 3 sample test dataset", {
         numCores = 1,
         verbose = FALSE)
     ))
-  )
 
 })

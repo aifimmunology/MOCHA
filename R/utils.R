@@ -108,6 +108,7 @@ StringsToGRanges <- function(regionString) {
   #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
   # }
   . <- NULL
+  regionString <- gsub(",","",regionString)
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
     gsub("-.*|−.*", "", .) %>%
@@ -290,28 +291,3 @@ getSampleCellTypeMetadata <- function(object) {
     stop('Object does not appear to have Sample-Celltype metadata.')
   }
 }
-
-
-#' @title \code{plotIntensityDistribution}
-#' @description \code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a give cell type
-#'
-#' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
-#' @param cellPopulation Cell type names (assay name) within the TSAM_object
-#' @return data.frame or ggplot histogram. 
-#'
-#' @export
-
-plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE){
-
-  mat <- unlist(as.data.frame(log2(getCellPopMatrix(STM, cellPopulation)+1)))
-  plotMat <- data.frame(Values = mat)
-
-  if(returnDF){
-    return(plotMat)
-  }
-
-  p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) + ggplot2::geom_histogram() + ggplot2::theme_bw() 
-  return(p1)
-
-}
-

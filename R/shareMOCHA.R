@@ -3,7 +3,7 @@
 #' @description \code{packMOCHA} compresses a MOCHA sample-tile object or tile results object, along with the coverage tracks necessary for plotting, 
 #'      and exports 
 #'
-#' @param Object A MultiAssayExperiment or RangedSummarizedExperiment, from MOCHA
+#' @param MOCHA_Obj A MultiAssayExperiment or RangedSummarizedExperiment, from MOCHA
 #' @param zipName zipName Name of the compressed file that will be exported. 
 #'
 #' @return path to zipped object. 
