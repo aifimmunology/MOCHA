@@ -134,13 +134,15 @@ exportCoverage <- function(SampleTileObj,
       if (!type) {
         fileName <- paste(fileName, "__Insertions", sep = "")
       }
-      plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, ".bw", sep = ""))
+      fileToWrite <- plyranges::filter(cellPopSubsampleCov[[i]], score != 0)
+      plyranges::write_bigwig(fileToWrite, paste(dir, "/", fileName, ".bw", sep = ""))
     }
 
     if (saveFile) {
       names(cellPopSubsampleCov) <- x
       GRangesList1 <- append(GRangesList1, cellPopSubsampleCov)
     }
+      
   }
 
   return(GRangesList1)
