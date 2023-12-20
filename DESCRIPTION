@@ -99,7 +99,8 @@ Suggests:
     irlba,
     glmmTMB,
     Matrix,
-    lmerTest
+    lmerTest,
+    waldo
 Additional_repositories: https://imran-aifi.github.io/drat
 VignetteBuilder: knitr
 Config/testthat/edition: 3
