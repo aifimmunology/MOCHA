@@ -38,10 +38,12 @@ if (
         MOCHA::packMOCHA(tiles, zipfile = file.path(mytempdir, "testzip.zap"))
       )
       
-      unpackedmochaObj <- MOCHA::unpackMOCHA(zipPath, mytempdir)
-      diff <- waldo::compare(unpackedmochaObj, tiles)
-      expect_length(diff, 1)
-      expect_true(grepl('metadata$Directory', diff[1], fixed = TRUE))
+      if (requireNamespace("waldo")) {
+        unpackedmochaObj <- MOCHA::unpackMOCHA(zipPath, mytempdir)
+        diff <- waldo::compare(unpackedmochaObj, tiles)
+        expect_length(diff, 1)
+        expect_true(grepl('metadata$Directory', diff[1], fixed = TRUE))
+      }
     })
   }
 }
