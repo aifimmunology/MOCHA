@@ -80,7 +80,6 @@ Imports:
     pbapply,
     BSgenome,
     tidyselect,
-    purrr,
     lifecycle
 Suggests: 
     ArchR,
@@ -99,6 +98,7 @@ Suggests:
     irlba,
     glmmTMB,
     Matrix,
+    purrr,
     lmerTest
 Additional_repositories: https://imran-aifi.github.io/drat
 VignetteBuilder: knitr
