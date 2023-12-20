@@ -53,7 +53,6 @@
 #'
 #' @return tileResults A MultiAssayExperiment object containing ranged data for
 #'   each tile
-#'
 #' @examples
 #' \dontrun{
 #' # Starting from an ArchR Project:
@@ -612,7 +611,7 @@ setMethod(
   for (i in seq_along(sumDataAssayList)) {
     assayName <- names(sumDataAssayList[i])
     assay <- sumDataAssayList[[i]]
-    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder])
+    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop=FALSE])
   }
 
   sampleData <- dplyr::arrange(
@@ -640,7 +639,7 @@ setMethod(
         paste(unique(lapply(sumDataAssayList, colnames)), collapse="\n"))
     }
   }
-  
+
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
     sumDataAssayList,
     colData = sampleData
