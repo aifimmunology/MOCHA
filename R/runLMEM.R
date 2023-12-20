@@ -1,33 +1,38 @@
-#' @title Run Linear Mixed-Effects Modeling for continuous,
-#'  non-zero inflated data
+#' @title Run Linear Mixed-Effects Modeling for continuous, non-zero inflated
+#'   data
 #'
 #' @description \code{runLMEM} Runs linear mixed-effects modeling for
 #'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 #'
 #' @param ExperimentObj A SummarizedExperiment object generated from
-#'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only
-#'   one assay, or only the first assay will be used for the model.
-#'   Data should not be zero-inflated.
-#' @param assayName The name of the assay to model within the SummarizedExperiment.
-#' @param modelFormula The formula to use with lmerTest::lmer, in the
-#'   format (exp ~ factors). All factors must be found in column names
-#'   of the ExperimentObj metadata. modelFormula must start with 'exp' as the response.
+#'   getSampleTileMatrix, chromVAR, or other. It is expected to contain only one
+#'   assay, or only the first assay will be used for the model. Data should not
+#'   be zero-inflated.
+#' @param assayName The name of the assay to model within the
+#'   SummarizedExperiment.
+#' @param modelFormula The formula to use with lmerTest::lmer, in the format
+#'   (exp ~ factors). All factors must be found in column names of the
+#'   ExperimentObj metadata. modelFormula must start with 'exp' as the response.
 #'   See \link[lmerTest]{lmer}.
 #' @param initialSampling Size of data to use for pilot
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
-#' @return results a SummarizedExperiment containing LMEM results. Assays are metrics related to the model coefficients,
-#'          including the Estimate, Std_Error, df, t_value, p_value. Within each assay, each row corresponds to each row of
-#'          the SummarizedExperiment and columns correspond to each fixed effect variable within the model.
-#'          Any row metadata from the ExperimentObject (see rowData(ExperimentObj)) is preserved in the output.
-#'          The Residual matrix and the variance of the random effects are saved in the metadata slot of the output.
+#' @return results a SummarizedExperiment containing LMEM results. Assays are
+#'   metrics related to the model coefficients, including the Estimate,
+#'   Std_Error, df, t_value, p_value. Within each assay, each row corresponds to
+#'   each row of the SummarizedExperiment and columns correspond to each fixed
+#'   effect variable within the model. Any row metadata from the
+#'   ExperimentObject (see rowData(ExperimentObj)) is preserved in the output.
+#'   The Residual matrix and the variance of the random effects are saved in the
+#'   metadata slot of the output.
 #'
 #'
 #'
 #' @examples
 #' \dontrun{
 #' modelList <- runLMEM(ExperimentObj,
+#'   assayName = names(ExperimentObj)[[1]]
 #'   modelFormula = NULL,
 #'   initialSampling = 5,
 #'   verbose = FALSE,
@@ -37,8 +42,8 @@
 #'
 #' @export
 runLMEM <- function(ExperimentObj,
-                    assayName = NULL,
-                    modelFormula = NULL,
+                    assayName,
+                    modelFormula,
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 2) {
@@ -60,23 +65,17 @@ runLMEM <- function(ExperimentObj,
   )
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
 
-  if (!methods::is(modelFormula, "formula")) {
-    stop(
-      "modelFormula is not a formula. modelFormula must be a formula in the format ",
-      "(exp ~ factors)"
-    )
-  }
 
-  if (!methods::is(modelFormula, "formula") & !methods::is(modelFormula, "character")) {
+  if (!methods::is(modelFormula, "character")) {
     stop(
-      "modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
-      "(exp ~ factors)"
+      "modelFormula is not a  string. modelFormula must be a character string ",
+      "describing a formula in the format (exp ~ factors)"
     )
   } else if (!methods::is(modelFormula, "formula")) {
     modelFormula <- as.character(modelFormula)
   }
 
-  if (!"exp" %in% all.vars(as.formula(modelFormula))) {
+  if (!"exp" %in% all.vars(formula(paste(modelFormula, collapse = " ")))) {
     stop(
       "modelFormula is not in the format (exp ~ factors). ",
       "modelFormula must start with 'exp' as the response."
@@ -84,7 +83,7 @@ runLMEM <- function(ExperimentObj,
   }
 
   if (
-    !all(all.vars(as.formula(modelFormula)) %in% c("~", "exp", colnames(MetaDF)))
+    !all(all.vars(formula(paste(modelFormula, collapse = " "))) %in% c("~", "exp", colnames(MetaDF)))
   ) {
     stop(
       "Model factors are not found ",
@@ -93,7 +92,7 @@ runLMEM <- function(ExperimentObj,
       "(exp ~ factors)."
     )
   }
-  variableList <- all.vars(as.formula(modelFormula))[all.vars(as.formula(modelFormula)) != "exp"]
+  variableList <- all.vars(formula(paste(modelFormula, collapse = " ")))[all.vars(formula(paste(modelFormula, collapse = " "))) != "exp"]
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[
@@ -122,7 +121,7 @@ runLMEM <- function(ExperimentObj,
 
     tryCatch(
       {
-        lmerTest::lmer(formula = as.formula(modelFormula), data = df)
+        lmerTest::lmer(formula = formula(paste(modelFormula, collapse = " ")), data = df)
       },
       error = function(e) {
         NA
@@ -349,8 +348,8 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
 #'
 #' @export
 pilotLMEM <- function(ExperimentObj,
-                      assayName = NULL,
-                      modelFormula = NULL,
+                      assayName,
+                      modelFormula,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
   if (length(assayName) > 1) {
@@ -378,7 +377,7 @@ pilotLMEM <- function(ExperimentObj,
     modelFormula <- as.character(modelFormula)
   }
 
-  if (!"exp" %in% all.vars(as.formula(modelFormula))) {
+  if (!"exp" %in% all.vars(formula(paste(modelFormula, collapse = " ")))) {
     stop(
       "modelFormula is not in the format (exp ~ factors). ",
       "modelFormula must start with 'exp' as the response."
@@ -386,7 +385,7 @@ pilotLMEM <- function(ExperimentObj,
   }
 
   if (
-    !all(all.vars(as.formula(modelFormula)) %in% c("exp", colnames(MetaDF)))
+    !all(all.vars(formula(paste(modelFormula, collapse = " "))) %in% c("exp", colnames(MetaDF)))
   ) {
     stop(
       "Model factors are not found ",
@@ -396,7 +395,7 @@ pilotLMEM <- function(ExperimentObj,
     )
   }
 
-  variableList <- all.vars(as.formula(modelFormula))[all.vars(as.formula(modelFormula)) != "exp"]
+  variableList <- all.vars(formula(paste(modelFormula, collapse = " ")))[all.vars(formula(paste(modelFormula, collapse = " "))) != "exp"]
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[
