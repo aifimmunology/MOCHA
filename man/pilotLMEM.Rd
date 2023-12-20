@@ -6,8 +6,8 @@
 \usage{
 pilotLMEM(
   ExperimentObj,
-  assayName = NULL,
-  modelFormula = NULL,
+  assayName,
+  modelFormula,
   pilotIndices = 1:10,
   verbose = FALSE
 )
