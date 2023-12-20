@@ -11,12 +11,13 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       type = "message"
     )
 
-    modelFormula <- exp ~ Sample + PassQC
+    modelFormula <- "exp ~ Sample + PassQC"
 
     expect_error(
       modelList <- runLMEM(
         ExperimentObj,
         modelFormula,
+        assayName = "C2",
         initialSampling = 5,
         verbose = FALSE,
         numCores = 1
@@ -35,12 +36,13 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       )
     )
 
-    modelFormula <- exp ~ Sample + PassQC
+    modelFormula <- "exp ~ Sample + PassQC"
 
     expect_error(
       modelList <- runLMEM(
         ExperimentObj,
         modelFormula,
+        assayName = "C2",
         initialSampling = 5,
         verbose = FALSE,
         numCores = 1
@@ -61,14 +63,14 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       type = "message"
     )
 
-    modelFormula <- exp ~ Sample + PassQC
+    modelFormula <- "exp ~ Sample + PassQC"
 
     expect_error(modelList <- pilotLMEM(
       ExperimentObj,
-      cellPopulation = "C2",
+      assayName = "C2",
       pilotIndices = c(1:5),
-      modelFormula = exp ~ Sample + PassQC
-    ), "No random effects terms specified in formula")
+      modelFormula = modelFormula
+    ), "0")
   })
 
   test_that("pilotLMEM errors with formula on a 3-sample dataset", {
@@ -83,10 +85,10 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
 
     expect_error(modelList <- pilotLMEM(
       ExperimentObj,
-      cellPopulation = "C2",
+      assayName = "C2",
       pilotIndices = c(1:5),
-      modelFormula = exp ~ Sample + PassQC
-    ), "No random effects terms specified in formula")
+      modelFormula = "exp ~ Sample + PassQC"
+    ), "0")
   })
 
   test_that("runLMEM errors with invalid formula", {
@@ -101,24 +103,27 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
 
     expect_error(modelList <- runLMEM(
       ExperimentObj,
-      modelFormula = Sample ~ PassQC,
+      assayName = "C2",
+      modelFormula = "Sample ~ PassQC",
       initialSampling = 5,
       numCores = 1
-    ), "modelFormula must start with 'exp' as the response.")
+    ), "modelFormula is not in the format")
 
     expect_error(modelList <- runLMEM(
       ExperimentObj,
-      modelFormula = exp ~ PassQC + Nonsense,
+      assayName = "C2",
+      modelFormula = "exp ~ PassQC + Nonsense",
       initialSampling = 5,
       numCores = 1
     ), "Model factors are not found in the 'colData' of the ExperimentObj")
 
     expect_error(modelList <- runLMEM(
       ExperimentObj,
+      assayName = "C2",
       modelFormula = "exp ~ PassQC+Sample",
       initialSampling = 5,
       numCores = 1
-    ), "modelFormula is not a formula")
+    ), "For the initial sampling, every test model failed to converge.")
   })
 
   test_that("pilotLMEM errors with invalid formula", {
@@ -133,20 +138,20 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
 
     expect_error(modelList <- pilotLMEM(
       ExperimentObj,
-      modelFormula = Sample ~ PassQC,
-      cellPopulation = "C2",
+      modelFormula = "Sample ~ PassQC",
+      assayName = "C2",
     ), "modelFormula must start with 'exp' as the response.")
 
     expect_error(modelList <- pilotLMEM(
       ExperimentObj,
-      modelFormula = exp ~ PassQC + Nonsense,
-      cellPopulation = "C2",
+      modelFormula = "exp ~ PassQC + Nonsense",
+      assayName = "C2",
     ), "Model factors are not found in the 'colData' of the ExperimentObj")
 
     expect_error(modelList <- pilotLMEM(
       ExperimentObj,
       modelFormula = "exp ~ PassQC+Sample",
-      cellPopulation = "C2",
-    ), "modelFormula is not a formula")
+      assayName = "C2",
+    ), "0")
   })
 }
