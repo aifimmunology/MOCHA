@@ -1,3 +1,5 @@
+# MOCHA 1.0.2
+
 # MOCHA 1.0.1
 
 * Deprecates `testCoAccessibilityChromVAR()` and `testCoAccessibilityRandom()` in favor of `testCoAccessibility()`

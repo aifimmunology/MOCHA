@@ -58,7 +58,6 @@
 #'
 #' @return tileResults A MultiAssayExperiment object containing ranged data for
 #'   each tile
-#'
 #' @examples
 #' \dontrun{
 #' # Starting from an ArchR Project:
