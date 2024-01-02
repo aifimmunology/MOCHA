@@ -4,6 +4,7 @@
 #'   that serves as a wrapper function to call peaks provided a set of fragment
 #'   files and cell metadata
 #'
+#' @param x A list of parameters, meant for memory-efficient parallelization in R. 
 #' @param blackList A GRanges object containing a blacklist of regions to
 #'   exclude
 #' @param returnAllPeaks boolean. Indicates whether MOCHA should return object
@@ -26,13 +27,26 @@
 #' @noRd
 #'
 
-callTilesBySample <- function(blackList,
+callTilesBySample <- function(x = NULL,
                               returnAllTiles = FALSE,
+                              blackList,
                               totalFrags,
                               fragsList,
                               cellCol = "RG",
                               verbose = FALSE,
                               StudypreFactor) {
+
+  if(!all(is.null(x))){
+    blackList = x[[1]],
+    totalFrags = length(x[[2]]),
+    fragsList = x[[2]],
+    cellCol = x[[3]],
+    verbose = x[[4]],
+    StudypreFactor = x[[5]]
+  }
+
+
+
   # Coefficients trained on ~ 3600 frags per cell
   # Future datasets need to be calibrated to
   # these coefficients
@@ -98,33 +112,4 @@ callTilesBySample <- function(blackList,
   }
 
   return(MOCHA_tiles)
-}
-
-#' @title \code{callTilesBySample}
-#'
-#' @description \code{callTilesBySample} is the main peak-calling function in MOCHA
-#'   that serves as a wrapper function to call peaks provided a set of fragment
-#'   files and cell metadata
-#'
-#' @param x a list of blackList, total fragment number, fragsList, verbose, study prefactors, etc..
-#'
-#' @return scMACs_PeakList an list containing peak calls for each cell
-#'   population passed on in the cell subsets argument. Each peak call is
-#'   returned as as Genomic Ranges object.
-#'
-#'
-#' @noRd
-#'
-#'
-
-simplifiedTilesBySample <- function(x) {
-  callTilesBySample(
-    blackList = x[[1]],
-    returnAllTiles = TRUE,
-    totalFrags = length(x[[2]]),
-    fragsList = x[[2]],
-    cellCol = x[[3]],
-    verbose = x[[4]],
-    StudypreFactor = x[[5]]
-  )
 }

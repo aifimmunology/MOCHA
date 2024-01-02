@@ -599,11 +599,13 @@ setMethod(
     iterList <- lapply(seq_along(frags), function(x) {
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
+
     # cl <- parallel::makeCluster(numCores)
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
-      FUN = simplifiedTilesBySample
+      FUN = callTilesBySample,
+      returnAllTiles = TRUE
     )
     parallel::stopCluster(cl)
     names(tilesGRangesList) <- names(frags)
