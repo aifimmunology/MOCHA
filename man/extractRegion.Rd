@@ -14,6 +14,7 @@ extractRegion(
   sampleSpecific = FALSE,
   approxLimit = 1e+05,
   binSize = 250,
+  sliding = NULL,
   numCores = 1,
   verbose = FALSE
 )
@@ -51,13 +52,13 @@ than approxLimit basepairs, binning will be used. Default is 100000.}
 \item{binSize}{Optional numeric, size of bins in basepairs when binning is
 used. Default is 250.}
 
+\item{sliding}{Optional numeric. Default is NULL. This number is the size of
+the sliding window for generating average intensities.}
+
 \item{numCores}{integer. Number of cores to parallelize peak-calling across
 multiple cell populations}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{sliding}{Optional numeric. Default is NULL. This number is the size of
-the sliding window for generating average intensities.}
 }
 \value{
 countSE a SummarizedExperiment containing coverage for the given
