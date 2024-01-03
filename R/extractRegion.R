@@ -58,6 +58,7 @@ extractRegion <- function(SampleTileObj,
                           sampleSpecific = FALSE,
                           approxLimit = 100000,
                           binSize = 250,
+                          sliding = NULL,
                           numCores = 1,
                           verbose = FALSE) {
   . <- idx <- score <- NULL
