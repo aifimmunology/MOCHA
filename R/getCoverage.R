@@ -91,20 +91,20 @@ getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
 }
 
 
-######## calculateInsertionCoverage: Function that takes in a GRanges fragment object and generates coverage GRanges for insertions.
-## @param ref
+# helper function that takes in a GRanges fragment object and generates coverage GRanges for insertions.
 calculateInsertionCoverage <- function(ref) {
+  score <- NULL
   popFrags <- ref[[1]]
   Num <- ref[[2]]
   filterEmpty <- ref[[3]]
 
-  cutstart <- GRanges(
-    seqnames = as(seqnames(popFrags), "vector"),
-    ranges = IRanges(start = start(popFrags), width = 1), strand = "*"
+  cutstart <- GenomicRanges::GRanges(
+    seqnames = methods::as(GenomicRanges::seqnames(popFrags), "vector"),
+    ranges = IRanges(start = IRanges::start(popFrags), width = 1), strand = "*"
   )
-  cutend <- GRanges(
-    seqnames = as(seqnames(popFrags), "vector"),
-    ranges = IRanges(start = end(popFrags), width = 1), strand = "*"
+  cutend <- GenomicRanges::GRanges(
+    seqnames = methods::as(GenomicRanges::seqnames(popFrags), "vector"),
+    ranges = IRanges::IRanges(start = IRanges::end(popFrags), width = 1), strand = "*"
   )
 
   counts_gr <- plyranges::compute_coverage(plyranges::bind_ranges(cutstart, cutend))
