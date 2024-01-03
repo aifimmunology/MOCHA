@@ -248,6 +248,23 @@ subsetBPCoverage <- function(iterList) {
   return(mergedCounts)
 }
 
+# Generates average single basepair coverage for a given region
+averageBPCoverage <- function(iterList) {
+  regionGRanges <- iterList[[1]]
+  sampleCount <- length(iterList[[2]])
+  
+  filterCounts <- lapply(1:sampleCount, function(z) {
+    plyranges::join_overlap_intersect(iterList[[2]][[z]], regionGRanges)
+  })
+  
+  mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
+  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+  mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
+  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+  
+  return(mergedCounts)
+}
+
 ## Efficiently subsets and bins coverage for a given region across samples
 subsetBinCoverage <- function(iterList) {
   partition <- idx <- NULL
