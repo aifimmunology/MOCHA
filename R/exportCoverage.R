@@ -243,7 +243,7 @@ exportDifferentials <- function(SampleTileObject,
       "Please install 'rtracklayer' to proceed."
     )
   }
-  genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
+  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
   outList <- list()
   for (i in seq_along(DifferentialsGRList)) {
     comparison_name <- names(DifferentialsGRList)[[i]]
@@ -254,11 +254,11 @@ exportDifferentials <- function(SampleTileObject,
     
     # Remove NA metadata
     # causes error: In isSingleString(path) : Unknown type 'NA'
-    mcols(DiffPeaksGR) <- NULL
+    GenomicRanges::mcols(DiffPeaksGR) <- NULL
     
     # Set score and seqinfo for bigBed
     DiffPeaksGR$score <- 1
-    seqinfo(DiffPeaksGR) <- seqinfo(genome)[seqnames(seqinfo(DiffPeaksGR))]
+    GenomicRanges::seqinfo(DiffPeaksGR) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(DiffPeaksGR))]
 
     outFile <- file.path(outDir, paste(comparison_name, sep = "__"))
     outFile <- paste0(outFile, ".bigBed")
@@ -267,7 +267,7 @@ exportDifferentials <- function(SampleTileObject,
     }
     
     # Output to bigbed
-    rtracklayer::export.bb(GRanges(DiffPeaksGR), outFile)
+    rtracklayer::export.bb(GenomicRanges::GRanges(DiffPeaksGR), outFile)
     
     # Check for success
     if (!file.exists(outFile)) {
@@ -313,7 +313,7 @@ exportOpenTiles <- function(SampleTileObject,
       "Please install 'rtracklayer' to proceed."
     )
   }
-  genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
+  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
 
   outList <- list()
   for (cellPopulation in names(SummarizedExperiment::assays(SampleTileObject))) {
@@ -331,7 +331,7 @@ exportOpenTiles <- function(SampleTileObject,
 
       # Set score and seqinfo for bigBed
       samplePeaksGR$score <- 1
-      seqinfo(samplePeaksGR) <- seqinfo(genome)[seqnames(seqinfo(samplePeaksGR))]
+      GenomicRanges::seqinfo(samplePeaksGR) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(samplePeaksGR))]
 
       sampleRow <- SummarizedExperiment::colData(SampleTileObject)[sample, ]
       pbmc_sample_id <- sampleRow[["Sample"]] # Enforced colname in callOpenTiles
@@ -407,8 +407,8 @@ exportMotifs <- function(SampleTileObject,
   
   # Map over the seqinfo from our genome to the motifsGRanges
   # Required for bigBed export 
-  genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
-  seqinfo(motifsGRanges) <- seqinfo(genome)[seqnames(seqinfo(motifsGRanges))]
+  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
+  GenomicRanges::seqinfo(motifsGRanges) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(motifsGRanges))]
   
   # # Truncate trailing zeroes from score https://www.biostars.org/p/235193/
   # # (Error : Trailing characters parsing integer in field 4 line 1 of text, got 10.3405262378482)
@@ -420,8 +420,8 @@ exportMotifs <- function(SampleTileObject,
   outList <- list()
   if (filterByOpenTiles) {
     # Split motifsGRangesFiltered by cell population, filtered to open tiles in cell population
-    allPeaks <- rowRanges(SampleTileObject)
-    samplePeakTable <- mcols(allPeaks)
+    allPeaks <- SummarizedExperiment::rowRanges(SampleTileObject)
+    samplePeakTable <- GenomicRanges::mcols(allPeaks)
     for (celltype in names(samplePeakTable)) {
       # Filter rows with boolean index
       samplePeaksGR <- allPeaks[samplePeakTable[[celltype]], ]
