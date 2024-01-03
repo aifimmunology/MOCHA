@@ -55,6 +55,7 @@ packMOCHA <- function(MOCHAObj,
 #'
 #' @param zipfile Filepath to the packed MOCHA object.
 #' @param exdir The path to the external directory where you want to unpack the MOCHA object.
+#' @param verbose Display additional messages. Default is FALSE.
 #'
 #' @return MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)
 #'

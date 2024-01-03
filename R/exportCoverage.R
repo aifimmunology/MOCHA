@@ -4,12 +4,12 @@
 #'   BigWig files, either as sample-specific or sample-averaged files, for
 #'   visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   getSampleTileMatrix
 #' @param dir string. Directory to save files to.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
-#'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak calling
+#'   the SampleTileObject.  Optional, if cellPopulations='ALL', then peak calling
 #'   is done on all cell populations. Default is 'ALL'.
 #' @param type Boolean. Default is TRUE, and exports Coverage. If set to FALSE,
 #'   exports Insertions.
@@ -33,7 +33,7 @@
 #' @examples
 #' \dontrun{
 #' MOCHA::exportCoverage(
-#'   SampleTileObj = SampleTileMatrices,
+#'   SampleTileObject = SampleTileMatrices,
 #'   cellPopulations = "ALL",
 #'   numCores = 30,
 #'   sampleSpecific = FALSE
@@ -43,7 +43,7 @@
 #' @export
 #'
 
-exportCoverage <- function(SampleTileObj,
+exportCoverage <- function(SampleTileObject,
                            dir = getwd(),
                            type = TRUE,
                            cellPopulations = "ALL",
@@ -55,16 +55,16 @@ exportCoverage <- function(SampleTileObj,
                            verbose = FALSE) {
   . <- idx <- score <- NULL
 
-  cellNames <- names(SummarizedExperiment::assays(SampleTileObj))
-  metaFile <- SummarizedExperiment::colData(SampleTileObj)
-  outDir <- SampleTileObj@metadata$Directory
+  cellNames <- names(SummarizedExperiment::assays(SampleTileObject))
+  metaFile <- SummarizedExperiment::colData(SampleTileObject)
+  outDir <- SampleTileObject@metadata$Directory
 
   if (is.na(outDir)) {
-    stop("Missing coverage file directory. SampleTileObj$metadata must contain 'Directory'.")
+    stop("Missing coverage file directory. SampleTileObject$metadata must contain 'Directory'.")
   }
 
   if (!file.exists(outDir)) {
-    stop("Directory given by SampleTileObj@metadata$Directory does not exist.")
+    stop("Directory given by SampleTileObject@metadata$Directory does not exist.")
   }
 
   if (all(toupper(cellPopulations) == "ALL")) {
@@ -212,7 +212,7 @@ averageCoverage <- function(coverageList) {
 #'  output GRangesList output from \code{getDifferentialAccessibleTiles} to
 #'  bigBed format for visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param DifferentialsGRList GRangesList output from
 #'   \code{getDifferentialAccessibleTiles}
@@ -224,7 +224,7 @@ averageCoverage <- function(coverageList) {
 #' @examples
 #' \dontrun{
 #' MOCHA::exportDifferentials(
-#'   SampleTileObj = SampleTileMatrices,
+#'   SampleTileObject = SampleTileMatrices,
 #'   DifferentialsGRList,
 #'   outDir = tempdir(),
 #'   verbose = TRUE
@@ -283,7 +283,7 @@ exportDifferentials <- function(SampleTileObject,
 #' @description \code{exportOpenTiles} exports the open tiles of a given cell
 #'  population to bigBed file for visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param cellPopulation The name of the cell population to export
 #' @param outDir Desired output directory where bigBed files will be saved
@@ -294,7 +294,7 @@ exportDifferentials <- function(SampleTileObject,
 #' @examples
 #' \dontrun{
 #' MOCHA::exportOpenTiles(
-#'   SampleTileObj = SampleTileObject,
+#'   SampleTileObject = SampleTileObject,
 #'   cellPopulation,
 #'   outDir = tempdir(),
 #'   verbose = TRUE
@@ -355,7 +355,7 @@ exportOpenTiles <- function(SampleTileObject,
 #' @description \code{exportMotifs} exports a motif set GRanges from running
 #'    \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
 #'    in genome browsers.
-#' @param SampleTileObj The SummarizedExperiment object output from
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param motifsGRanges A GRanges containing motif annotations, typically from
 #'   \code{addMotifSet(returnSTM=FALSE)}
@@ -372,7 +372,7 @@ exportOpenTiles <- function(SampleTileObject,
 #' @examples
 #' \dontrun{
 #' MOCHA::exportMotifs(
-#'   SampleTileObj = SampleTileMatrices,
+#'   SampleTileObject = SampleTileMatrices,
 #'   motifsGRanges,
 #'   motifSetName = "CISBP",
 #'   filterByOpenTiles = FALSE,

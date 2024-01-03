@@ -292,6 +292,7 @@ getSampleCellTypeMetadata <- function(object) {
 #' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
 #' @param cellPopulation Cell type names (assay name) within the TSAM_object
 #' @param density Boolean to determine whether to plot density or histogram. Default is TRUE (plots density).
+#' @param returnDF If TRUE, return the data frame without plotting. Default is FALSE.
 #' @return data.frame or ggplot histogram.
 #'
 #' @export
