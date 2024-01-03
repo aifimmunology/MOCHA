@@ -130,6 +130,7 @@ varZIGLMM <- function(TSAM_Object,
       cl = cl, varlist = c("continuousFormula", "ziformula", "zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
       envir = environment()
     )
+    utils::globalVariables(c("continuousFormula", "ziformula", "zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"))
 
     varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
   } else {
@@ -157,11 +158,9 @@ varZIGLMM <- function(TSAM_Object,
 #' @param refList. A list where the first index is a data.frame to use for modeling, and the second is the formula for modeling.
 #'
 #' @return A linear model
-
 #' @noRd
 #'
 #'
-
 individualVarZIGLMM <- function(x) {
   df <- data.frame(
     exp = as.numeric(modelingData[x, ]),
@@ -172,7 +171,7 @@ individualVarZIGLMM <- function(x) {
   output_vector <- tryCatch(
     {
       if (all(df$exp != 0, na.rm = T)) {
-        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
+        modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
           ziformula = ~0,
           data = df,
           family = stats::gaussian(),
@@ -180,15 +179,15 @@ individualVarZIGLMM <- function(x) {
         )
       } else if (sum(df$exp == 0, na.rm = T) / length(df$exp) < zi_threshold) {
         df$exp[df$exp == 0] <- NA
-        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
+        modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
           ziformula = ~0,
           data = df,
           family = stats::gaussian(),
           REML = TRUE
         )
       } else {
-        modelRes <- glmmTMB::glmmTMB(as.formula(continuousFormula),
-          ziformula = as.formula(ziformula),
+        modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
+          ziformula = stats::as.formula(ziformula),
           data = df,
           family = stats::gaussian(),
           REML = TRUE
@@ -210,7 +209,7 @@ individualVarZIGLMM <- function(x) {
         zi_other <- rep(0, length(subNull))
         names(zi_other) <- names(subNull)
         varcor_df <- c(cond_other, zi_other, residual)
-      } else if (length(all.vars(as.formula(ziformula))) != 0) {
+      } else if (length(all.vars(stats::as.formula(ziformula))) != 0) {
         zi_other <- unlist(glmmTMB::VarCorr(modelRes)$zi)
         names(zi_other) <- paste("ZI", names(zi_other), sep = "_")
         varcor_df <- c(cond_other, zi_other, residual)

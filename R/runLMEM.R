@@ -175,6 +175,8 @@ runLMEM <- function(ExperimentObj,
       ),
       envir = environment()
     )
+    utils::globalVariables(c("nullDFList"))
+    
     parallel::clusterEvalQ(cl, {
       library(lmerTest)
     })
@@ -248,7 +250,7 @@ individualLMEM <- function(iterList) {
       list("Coeff" = Coeff, "Resid" = Resid, "VCov" = vcov)
     },
     error = function(e) {
-      nullDFList
+      nullDFList # is not defined here
     }
   )
   return(output_vector)

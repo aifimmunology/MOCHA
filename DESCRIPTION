@@ -103,7 +103,8 @@ Suggests:
     lmerTest,
     Biobase,
     lme4,
-    zip
+    zip,
+    rtracklayer
 Additional_repositories: https://imran-aifi.github.io/drat
 VignetteBuilder: knitr
 Config/testthat/edition: 3
