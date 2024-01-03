@@ -112,8 +112,8 @@ annotateTiles <- function(Obj,
 #'
 #' @export
 #'
-
 getPromoterGenes <- function(GRangesObj) {
+  tileType <- NULL
   if (class(GRangesObj)[1] != "GRanges") {
     stop("Object provided is not a GRanges object.")
   }
