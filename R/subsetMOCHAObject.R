@@ -129,7 +129,7 @@ subsetMOCHAObject <- function(Object,
 renameCellTypes <- function(MOCHAObject,
                             oldNames,
                             newNames) {
-  if (is(MOCHAObject, "SummarizedExperiment")) {
+  if (methods::is(MOCHAObject, "SummarizedExperiment")) {
     if (!any(grepl("getSampleTileMatrix", unlist(MOCHAObject@metadata$History)))) {
       stop("MOCHAObject is not an SampleTile object from MOCHA.")
     }

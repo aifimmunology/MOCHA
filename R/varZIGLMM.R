@@ -37,6 +37,8 @@ varZIGLMM <- function(TSAM_Object,
                       zi_threshold = 0.1,
                       verbose = FALSE,
                       numCores = 1) {
+  Sample <- NULL
+  
   if (length(cellPopulation) > 1) {
     stop(
       "More than one cell population was provided. ",
@@ -130,7 +132,6 @@ varZIGLMM <- function(TSAM_Object,
       cl = cl, varlist = c("continuousFormula", "ziformula", "zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
       envir = environment()
     )
-    utils::globalVariables(c("continuousFormula", "ziformula", "zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"))
 
     varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
   } else {

@@ -23,7 +23,7 @@
 #'
 #' @export
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
-
+  Freq <- NULL
   # Test for duplicate sample names
   sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(SummarizedExperiment::colData(x))))
   if (any(duplicated(sampleTest))) {

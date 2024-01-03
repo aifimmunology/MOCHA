@@ -578,7 +578,7 @@ setMethod(
         # calculate mean or median fragments in each cell
         fragsdf <- as.data.frame(frags[[sample]])
         cellFragsTable <- table(fragsdf[[cellCol]]) # default cellCol is "RG"
-        allmeans <- append(allmeans, stats::mean(cellFragsTable))
+        allmeans <- append(allmeans, mean(cellFragsTable))
         allmedians <- append(allmedians, stats::median(cellFragsTable))
       }
       # average across all samples

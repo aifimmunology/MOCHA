@@ -100,7 +100,7 @@ calculateInsertionCoverage <- function(ref) {
 
   cutstart <- GenomicRanges::GRanges(
     seqnames = methods::as(GenomicRanges::seqnames(popFrags), "vector"),
-    ranges = IRanges(start = IRanges::start(popFrags), width = 1), strand = "*"
+    ranges = IRanges::IRanges(start = IRanges::start(popFrags), width = 1), strand = "*"
   )
   cutend <- GenomicRanges::GRanges(
     seqnames = methods::as(GenomicRanges::seqnames(popFrags), "vector"),

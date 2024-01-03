@@ -81,7 +81,7 @@ runLMEM <- function(ExperimentObj,
     modelFormula <- as.character(modelFormula)
   }
 
-  if (!"exp" %in% all.vars(formula(paste(modelFormula, collapse = " ")))) {
+  if (!"exp" %in% all.vars(stats::formula(paste(modelFormula, collapse = " ")))) {
     stop(
       "modelFormula is not in the format (exp ~ factors). ",
       "modelFormula must start with 'exp' as the response."
@@ -89,7 +89,7 @@ runLMEM <- function(ExperimentObj,
   }
 
   if (
-    !all(all.vars(formula(paste(modelFormula, collapse = " "))) %in% c("~", "exp", colnames(MetaDF)))
+    !all(all.vars(stats::formula(paste(modelFormula, collapse = " "))) %in% c("~", "exp", colnames(MetaDF)))
   ) {
     stop(
       "Model factors are not found ",
@@ -98,7 +98,7 @@ runLMEM <- function(ExperimentObj,
       "(exp ~ factors)."
     )
   }
-  variableList <- all.vars(formula(paste(modelFormula, collapse = " ")))[all.vars(formula(paste(modelFormula, collapse = " "))) != "exp"]
+  variableList <- all.vars(stats::formula(paste(modelFormula, collapse = " ")))[all.vars(stats::formula(paste(modelFormula, collapse = " "))) != "exp"]
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[
@@ -127,7 +127,7 @@ runLMEM <- function(ExperimentObj,
 
     tryCatch(
       {
-        lmerTest::lmer(formula = formula(paste(modelFormula, collapse = " ")), data = df)
+        lmerTest::lmer(formula = stats::formula(paste(modelFormula, collapse = " ")), data = df)
       },
       error = function(e) {
         NA
@@ -175,7 +175,6 @@ runLMEM <- function(ExperimentObj,
       ),
       envir = environment()
     )
-    utils::globalVariables(c("nullDFList"))
     
     parallel::clusterEvalQ(cl, {
       library(lmerTest)
@@ -276,7 +275,7 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
     tmpCoef <- do.call("rbind", pbapply::pblapply(X = modelOutputList, function(x) {
       tmpDf <- x[["Coeff"]][z, ]
       colnames(tmpDf) <- newColumnNames
-      tmpDf$FDR <- p.adjust(tmpDf$p_value, "fdr")
+      tmpDf$FDR <- stats::p.adjust(tmpDf$p_value, "fdr")
       tmpDf
     }, cl = NULL))
     rownames(tmpCoef) <- rownamesList
@@ -360,6 +359,7 @@ pilotLMEM <- function(ExperimentObj,
                       modelFormula,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
+  Sample <- NULL
   if (length(assayName) > 1) {
     stop(
       "More than one assay was provided. ",
@@ -376,16 +376,16 @@ pilotLMEM <- function(ExperimentObj,
   modelingData <- SummarizedExperiment::assays(ExperimentObj)[[assayName]]
   MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
 
-  if (!is(modelFormula, "formula") & !is(modelFormula, "character")) {
+  if (!methods::is(modelFormula, "formula") & !methods::is(modelFormula, "character")) {
     stop(
       "modelFormula is not a formula or string. modelFormula must be a formula or character string in the format ",
       "(exp ~ factors)"
     )
-  } else if (is(modelFormula, "formula")) {
+  } else if (methods::is(modelFormula, "formula")) {
     modelFormula <- as.character(modelFormula)
   }
 
-  if (!"exp" %in% all.vars(formula(paste(modelFormula, collapse = " ")))) {
+  if (!"exp" %in% all.vars(stats::formula(paste(modelFormula, collapse = " ")))) {
     stop(
       "modelFormula is not in the format (exp ~ factors). ",
       "modelFormula must start with 'exp' as the response."
@@ -393,7 +393,7 @@ pilotLMEM <- function(ExperimentObj,
   }
 
   if (
-    !all(all.vars(formula(paste(modelFormula, collapse = " "))) %in% c("exp", colnames(MetaDF)))
+    !all(all.vars(stats::formula(paste(modelFormula, collapse = " "))) %in% c("exp", colnames(MetaDF)))
   ) {
     stop(
       "Model factors are not found ",
@@ -403,7 +403,7 @@ pilotLMEM <- function(ExperimentObj,
     )
   }
 
-  variableList <- all.vars(formula(paste(modelFormula, collapse = " ")))[all.vars(formula(paste(modelFormula, collapse = " "))) != "exp"]
+  variableList <- all.vars(stats::formula(paste(modelFormula, collapse = " ")))[all.vars(stats::formula(paste(modelFormula, collapse = " "))) != "exp"]
 
   MetaDF <- dplyr::filter(MetaDF, Sample %in% colnames(modelingData))
   modelingData <- modelingData[
