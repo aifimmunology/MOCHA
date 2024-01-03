@@ -169,5 +169,5 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
 
 
 combineRagged <- function(x) {
-  as(x, "GRangesList")
+  methods::as(x, "GRangesList")
 }
