@@ -237,6 +237,12 @@ exportDifferentials <- function(SampleTileObject,
                                 DifferentialsGRList,
                                 outDir,
                                 verbose = FALSE) {
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop(
+      "Package 'rtracklayer' is required for exportDifferentials. ",
+      "Please install 'rtracklayer' to proceed."
+    )
+  }
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
   outList <- list()
   for (i in seq_along(DifferentialsGRList)) {
@@ -301,6 +307,12 @@ exportOpenTiles <- function(SampleTileObject,
                             cellPopulation,
                             outDir,
                             verbose = FALSE) {
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop(
+      "Package 'rtracklayer' is required for exportOpenTiles. ",
+      "Please install 'rtracklayer' to proceed."
+    )
+  }
   genome <- BSgenome::getBSgenome(metadata(SampleTileObject)$Genome)
 
   outList <- list()
@@ -377,6 +389,12 @@ exportMotifs <- function(SampleTileObject,
                          filterByOpenTiles = FALSE,
                          outDir,
                          verbose = FALSE) {
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop(
+      "Package 'rtracklayer' is required for exportMotifs. ",
+      "Please install 'rtracklayer' to proceed."
+    )
+  }
   
   if (class(motifsGRanges) != "GRanges") {
     if (class(motifsGRanges) == "CompressedGRangesList") {

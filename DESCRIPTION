@@ -100,7 +100,10 @@ Suggests:
     Matrix,
     waldo,
     purrr,
-    lmerTest
+    lmerTest,
+    Biobase,
+    lme4,
+    zip
 Additional_repositories: https://imran-aifi.github.io/drat
 VignetteBuilder: knitr
 Config/testthat/edition: 3

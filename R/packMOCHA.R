@@ -25,6 +25,13 @@
 packMOCHA <- function(MOCHAObj,
                       zipfile,
                       verbose = FALSE) {
+  if (!requireNamespace("zip", quietly = TRUE)) {
+    stop(
+      "Package 'zip' is required for packMOCHA. ",
+      "Please install 'zip' to proceed."
+    )
+  }
+  
   if (class(zipfile) != "character" || !grepl("\\.zip$", zipfile)) {
     stop("`zipfile` must be a character string ending in .zip")
   }
@@ -60,6 +67,12 @@ packMOCHA <- function(MOCHAObj,
 unpackMOCHA <- function(zipfile,
                         exdir,
                         verbose = FALSE) {
+  if (!requireNamespace("zip", quietly = TRUE)) {
+    stop(
+      "Package 'zip' is required for unpackMOCHA. ",
+      "Please install 'zip' to proceed."
+    )
+  }
   if (!grepl("\\.zip$", zipfile)) {
     stop("`zipfile` must be a character string ending in .zip")
   }

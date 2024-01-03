@@ -55,6 +55,12 @@ runLMEM <- function(ExperimentObj,
       "Please install 'lmerTest' to proceed."
     )
   }
+  if (!requireNamespace("lme4", quietly = TRUE)) {
+    stop(
+      "Package 'lme4' is required for runLMEM. ",
+      "Please install 'lme4' to proceed."
+    )
+  }
 
   if (!any(names(SummarizedExperiment::assays(ExperimentObj)) %in% assayName)) {
     stop("ExperimentObj does not contain an assay that matches the assayName input variable.")

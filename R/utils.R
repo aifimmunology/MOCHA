@@ -295,8 +295,10 @@ getSampleCellTypeMetadata <- function(object) {
 #' @return data.frame or ggplot histogram.
 #'
 #' @export
-
 plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE) {
+  if (!requireNamespace("Biobase", quietly = TRUE)){
+    stop("Package 'Biobase' is not installed. 'Biobase' is required for `plotIntensityDistribution`.")
+  }
   mat <- unlist(Biobase::rowMedians(log2(getCellPopMatrix(STM, cellPopulation) + 1)))
   plotMat <- data.frame(Values = mat)
 
