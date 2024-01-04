@@ -62,7 +62,8 @@ packMOCHA <- function(MOCHAObj,
 #' @return MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
+#' # Depends on files existing on your system
 #' MOCHA::unpackMOCHA(zipfile = "./mochaobj.zip", exdir = "./newMOCHAdir")
 #' }
 #' @export
