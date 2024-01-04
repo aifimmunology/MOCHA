@@ -1,16 +1,21 @@
 #' @title Zero-inflated Variance Decomposition for pseudobulked scATAC data
 #'
-#' @description \code{varZIGLMM} Identified variance decomposition on a given cell type across both zero-inflated and continous
-#'  space using a zero-inflated general linear mixed model \code{\link[glmmTMB]{glmmTMB}}
+#' @description \code{varZIGLMM} Identified variance decomposition on a given
+#'   cell type across both zero-inflated and continuous space using a
+#'   zero-inflated general linear mixed model \code{\link[glmmTMB]{glmmTMB}}
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
 #'   getSampleTileMatrix.
 #' @param cellPopulation Name of a cell type(s), or 'all'. The function will
 #'   combine the cell types mentioned into one matrix before running the model.
-#' @param continuousRandom Random effects to test in the continuous portion. All factors must be found in column names
-#'   of the TSAM_Object metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.
-#' @param ziRandom Random effects to test in the zero-inflated portion. All factors must be found in column names
-#'   of the TSAM_Object colData metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.
+#' @param continuousRandom Random effects to test in the continuous portion. All
+#'   factors must be found in column names of the TSAM_Object metadata, except
+#'   for FragNumber and CellCount, which will be extracted from the
+#'   TSAM_Object's metadata.
+#' @param ziRandom Random effects to test in the zero-inflated portion. All
+#'   factors must be found in column names of the TSAM_Object colData metadata,
+#'   except for FragNumber and CellCount, which will be extracted from the
+#'   TSAM_Object's metadata.
 #' @param zi_threshold Zero-inflated threshold ( range = 0-1), representing the
 #'   fraction of samples with zeros. When the percentage of zeros in the tile is
 #'   between 0 and zi_threshold, samples with zeroes are dropped and only the
@@ -19,7 +24,8 @@
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #' @param numCores integer. Number of cores to parallelize across.
 #'
-#' @return results a SummarizedExperiment containing results from ZIGLMM (Fixed effect estiamtes, P-values, and Std Error)
+#' @return results a SummarizedExperiment containing results from ZIGLMM (Fixed
+#'   effect estiamtes, P-values, and Std Error)
 #'
 #' @examples
 #' \dontrun{
@@ -33,7 +39,7 @@
 #' }
 #'
 #' @export
-#'
+#' 
 varZIGLMM <- function(TSAM_Object,
                       cellPopulation = NULL,
                       continuousRandom = NULL,

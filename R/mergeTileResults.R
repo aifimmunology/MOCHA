@@ -17,7 +17,7 @@
 #'   tileResultsList.
 #'
 #' @examples
-#' mergeTileResults(
+#' MOCHA::mergeTileResults(
 #'   list(MOCHA:::testTileResults, MOCHA:::testTileResultsMultisample)
 #' )
 #'
