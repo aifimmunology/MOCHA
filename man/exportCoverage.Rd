@@ -5,7 +5,7 @@
 \title{\code{exportCoverage}}
 \usage{
 exportCoverage(
-  SampleTileObj,
+  SampleTileObject,
   dir = getwd(),
   type = TRUE,
   cellPopulations = "ALL",
@@ -18,7 +18,7 @@ exportCoverage(
 )
 }
 \arguments{
-\item{SampleTileObj}{The SummarizedExperiment object output from
+\item{SampleTileObject}{The SummarizedExperiment object output from
 getSampleTileMatrix}
 
 \item{dir}{string. Directory to save files to.}
@@ -28,7 +28,7 @@ exports Insertions.}
 
 \item{cellPopulations}{vector of strings. Cell subsets for which to call
 peaks. This list of group names must be identical to names that appear in
-the SampleTileObj.  Optional, if cellPopulations='ALL', then peak calling
+the SampleTileObject.  Optional, if cellPopulations='ALL', then peak calling
 is done on all cell populations. Default is 'ALL'.}
 
 \item{groupColumn}{Optional, the column containing sample group labels for
@@ -62,7 +62,7 @@ countSE a SummarizedExperiment containing coverage for the given
 \examples{
 \dontrun{
 MOCHA::exportCoverage(
-  SampleTileObj = SampleTileMatrices,
+  SampleTileObject = SampleTileMatrices,
   cellPopulations = "ALL",
   numCores = 30,
   sampleSpecific = FALSE

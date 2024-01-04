@@ -12,15 +12,15 @@ exportDifferentials(
 )
 }
 \arguments{
+\item{SampleTileObject}{The SummarizedExperiment object output from
+\code{getSampleTileMatrix}}
+
 \item{DifferentialsGRList}{GRangesList output from
 \code{getDifferentialAccessibleTiles}}
 
 \item{outDir}{Desired output directory where bigBed files will be saved}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{SampleTileObj}{The SummarizedExperiment object output from
-\code{getSampleTileMatrix}}
 }
 \value{
 outList A List of output filepaths
@@ -33,7 +33,7 @@ outList A List of output filepaths
 \examples{
 \dontrun{
 MOCHA::exportDifferentials(
-  SampleTileObj = SampleTileMatrices,
+  SampleTileObject = SampleTileMatrices,
   DifferentialsGRList,
   outDir = tempdir(),
   verbose = TRUE

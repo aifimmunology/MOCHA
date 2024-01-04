@@ -16,6 +16,8 @@ plotIntensityDistribution(
 
 \item{cellPopulation}{Cell type names (assay name) within the TSAM_object}
 
+\item{returnDF}{If TRUE, return the data frame without plotting. Default is FALSE.}
+
 \item{density}{Boolean to determine whether to plot density or histogram. Default is TRUE (plots density).}
 }
 \value{

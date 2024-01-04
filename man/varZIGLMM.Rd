@@ -18,17 +18,24 @@ varZIGLMM(
 \item{TSAM_Object}{A SummarizedExperiment object generated from
 getSampleTileMatrix.}
 
+\item{cellPopulation}{Name of a cell type(s), or 'all'. The function will
+combine the cell types mentioned into one matrix before running the model.}
+
 \item{continuousRandom}{Random effects to test in the continuous portion. All factors must be found in column names
 of the TSAM_Object metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.}
 
 \item{ziRandom}{Random effects to test in the zero-inflated portion. All factors must be found in column names
 of the TSAM_Object colData metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.}
 
+\item{zi_threshold}{Zero-inflated threshold ( range = 0-1), representing the
+fraction of samples with zeros. When the percentage of zeros in the tile is
+between 0 and zi_threshold, samples with zeroes are dropped and only the
+continous formula is used. Use this parameter at your own risk. Default is
+0.}
+
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 
 \item{numCores}{integer. Number of cores to parallelize across.}
-
-\item{cellTypeName}{Name of a cell type. Should match up exactly with the assay name within SummarizedExperiment.}
 }
 \value{
 results a SummarizedExperiment containing results from ZIGLMM (Fixed effect estiamtes, P-values, and Std Error)
@@ -40,7 +47,7 @@ results a SummarizedExperiment containing results from ZIGLMM (Fixed effect esti
 \examples{
 \dontrun{
 modelList <- runZIGLMM(STM[c(1:1000), ],
-  cellTypeName = "CD16 Mono",
+  cellPopulation = "CD16 Mono",
   continuousRandom = c("Age", "Sex", "Days"),
   ziRandom = c("FragNumber", "Days"),
   verbose = TRUE,

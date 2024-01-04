@@ -10,6 +10,8 @@ unpackMOCHA(zipfile, exdir, verbose = FALSE)
 \item{zipfile}{Filepath to the packed MOCHA object.}
 
 \item{exdir}{The path to the external directory where you want to unpack the MOCHA object.}
+
+\item{verbose}{Display additional messages. Default is FALSE.}
 }
 \value{
 MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)

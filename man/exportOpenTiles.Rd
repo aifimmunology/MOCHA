@@ -7,14 +7,14 @@
 exportOpenTiles(SampleTileObject, cellPopulation, outDir, verbose = FALSE)
 }
 \arguments{
+\item{SampleTileObject}{The SummarizedExperiment object output from
+\code{getSampleTileMatrix}}
+
 \item{cellPopulation}{The name of the cell population to export}
 
 \item{outDir}{Desired output directory where bigBed files will be saved}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{SampleTileObj}{The SummarizedExperiment object output from
-\code{getSampleTileMatrix}}
 }
 \value{
 outList A List of output filepaths
@@ -26,7 +26,7 @@ outList A List of output filepaths
 \examples{
 \dontrun{
 MOCHA::exportOpenTiles(
-  SampleTileObj = SampleTileObject,
+  SampleTileObject = SampleTileObject,
   cellPopulation,
   outDir = tempdir(),
   verbose = TRUE

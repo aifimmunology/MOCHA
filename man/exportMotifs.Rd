@@ -14,6 +14,9 @@ exportMotifs(
 )
 }
 \arguments{
+\item{SampleTileObject}{The SummarizedExperiment object output from
+\code{getSampleTileMatrix}}
+
 \item{motifsGRanges}{A GRanges containing motif annotations, typically from
 \code{addMotifSet(returnSTM=FALSE)}}
 
@@ -27,9 +30,6 @@ only in open tiles.}
 \item{outDir}{Desired output directory where bigBed files will be saved}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{SampleTileObj}{The SummarizedExperiment object output from
-\code{getSampleTileMatrix}}
 }
 \value{
 outList A List of output filepaths
@@ -42,7 +42,7 @@ outList A List of output filepaths
 \examples{
 \dontrun{
 MOCHA::exportMotifs(
-  SampleTileObj = SampleTileMatrices,
+  SampleTileObject = SampleTileMatrices,
   motifsGRanges,
   motifSetName = "CISBP",
   filterByOpenTiles = FALSE,
