@@ -14,7 +14,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
     modelFormula <- "exp ~ Sample + PassQC"
 
     expect_error(
-      modelList <- runLMEM(
+      modelList <- MOCHA::runLMEM(
         ExperimentObj,
         modelFormula,
         assayName = "C2",
@@ -39,7 +39,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
     modelFormula <- "exp ~ Sample + PassQC"
 
     expect_error(
-      modelList <- runLMEM(
+      modelList <- MOCHA::runLMEM(
         ExperimentObj,
         modelFormula,
         assayName = "C2",
@@ -65,7 +65,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
 
     modelFormula <- "exp ~ Sample + PassQC"
 
-    expect_error(modelList <- pilotLMEM(
+    expect_error(modelList <- MOCHA::pilotLMEM(
       ExperimentObj,
       assayName = "C2",
       pilotIndices = c(1:5),
@@ -83,7 +83,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       )
     )
 
-    expect_error(modelList <- pilotLMEM(
+    expect_error(modelList <- MOCHA::pilotLMEM(
       ExperimentObj,
       assayName = "C2",
       pilotIndices = c(1:5),
@@ -101,7 +101,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       )
     )
 
-    expect_error(modelList <- runLMEM(
+    expect_error(modelList <- MOCHA::runLMEM(
       ExperimentObj,
       assayName = "C2",
       modelFormula = "Sample ~ PassQC",
@@ -109,7 +109,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       numCores = 1
     ), "modelFormula is not in the format")
 
-    expect_error(modelList <- runLMEM(
+    expect_error(modelList <- MOCHA::runLMEM(
       ExperimentObj,
       assayName = "C2",
       modelFormula = "exp ~ PassQC + Nonsense",
@@ -117,7 +117,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       numCores = 1
     ), "Model factors are not found in the 'colData' of the ExperimentObj")
 
-    expect_error(modelList <- runLMEM(
+    expect_error(modelList <- MOCHA::runLMEM(
       ExperimentObj,
       assayName = "C2",
       modelFormula = "exp ~ PassQC+Sample",
@@ -136,19 +136,19 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       )
     )
 
-    expect_error(modelList <- pilotLMEM(
+    expect_error(modelList <- MOCHA::pilotLMEM(
       ExperimentObj,
       modelFormula = "Sample ~ PassQC",
       assayName = "C2",
     ), "modelFormula must start with 'exp' as the response.")
 
-    expect_error(modelList <- pilotLMEM(
+    expect_error(modelList <- MOCHA::pilotLMEM(
       ExperimentObj,
       modelFormula = "exp ~ PassQC + Nonsense",
       assayName = "C2",
     ), "Model factors are not found in the 'colData' of the ExperimentObj")
 
-    expect_error(modelList <- pilotLMEM(
+    expect_error(modelList <- MOCHA::pilotLMEM(
       ExperimentObj,
       modelFormula = "exp ~ PassQC+Sample",
       assayName = "C2",
