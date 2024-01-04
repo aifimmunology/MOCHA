@@ -275,8 +275,8 @@ subsetBinCoverage <- function(iterList) {
   tmpCounts <- lapply(iterList[[2]], function(z) {
     tmpGR <- plyranges::join_overlap_intersect(z, indTiles)
     tmpGR <- plyranges::join_overlap_intersect(tmpGR, iterList[[1]])
-    tmpGR <- plyranges::group_by(tmpGR, idx) %>%
-      tmpGR() <- plyranges::reduce_ranges(tmpGR, score = mean(score))
+    tmpGR <- plyranges::group_by(tmpGR, idx)
+    tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
     tmpGR <- dplyr::ungroup(tmpGR)
     tmpGR
   })
@@ -294,8 +294,8 @@ averageBinCoverage <- function(iterList) {
   filterCounts <- lapply(iterList[[2]], function(z) {
     tmpGR <- plyranges::join_overlap_intersect(z, indTiles)
     tmpGR <- plyranges::join_overlap_intersect(tmpGR, iterList[[1]])
-    tmpGR <- plyranges::group_by(tmpGR, idx) %>%
-      tmpGR() <- plyranges::reduce_ranges(tmpGR, score = mean(score))
+    tmpGR <- plyranges::group_by(tmpGR, idx)
+    tmpGR <- plyranges::reduce_ranges(tmpGR, score = mean(score))
     tmpGR <- dplyr::ungroup(tmpGR)
     tmpGR
   })
