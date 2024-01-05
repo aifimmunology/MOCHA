@@ -1,7 +1,11 @@
 #' @title Run Zero-inflated Generalized Linear Mixed Modeling on pseudobulked
 #'   scATAC data
 #'
-#' @description \code{runZIGLMM} Runs linear mixed-effects modeling for
+#' @description 
+#'   `r lifecycle::badge("deprecated")`
+#'   This function is deprecated - improved modeling functions can be found in 
+#'   the package "ChAI" at https://github.com/aifimmunology/ChAI
+#'   \code{runZIGLMM} Runs linear mixed-effects modeling for
 #'   zero-inflated data using \code{\link[glmmTMB]{glmmTMB}}.
 #'
 #' @param TSAM_Object A SummarizedExperiment object generated from
@@ -53,6 +57,13 @@ runZIGLMM <- function(TSAM_Object,
                       initialSampling = 5,
                       verbose = FALSE,
                       numCores = 1) {
+  
+  lifecycle::deprecate_warn(
+    when="1.1.0", 
+    what="runZIGLMM()", 
+    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+  )
+  
   Sample <- NULL
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
@@ -238,7 +249,11 @@ extractVariable <- function(varList, varType, variable, nullDF) {
 
 #' @title \code{IndividualZIGLMM}
 #'
-#' @description \code{IndividualZIGLMM} Runs zero-inflated linear modeling on
+#' @description 
+#'   `r lifecycle::badge("deprecated")`
+#'   This function is deprecated - improved modeling functions can be found in 
+#'   the package "ChAI" at https://github.com/aifimmunology/ChAI
+#'   \code{IndividualZIGLMM} Runs zero-inflated linear modeling on
 #'   data provided. Written for efficient parallelization.
 #'
 #' @param iterList A list where the first index is a data.frame to use for
@@ -248,6 +263,11 @@ extractVariable <- function(varList, varType, variable, nullDF) {
 #' @noRd
 #'
 individualZIGLMM <- function(iterList) {
+  lifecycle::deprecate_soft(
+    when="1.1.0", 
+    what="individualZIGLMM()", 
+    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+  )
   x <- iterList[[1]]
   continuousFormula <- iterList[[2]]
   modelingData <- iterList[[3]]
@@ -300,7 +320,11 @@ individualZIGLMM <- function(iterList) {
 
 #' @title Execute a pilot run of model on a subset of data
 #'
-#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for zero
+#' @description 
+#'   `r lifecycle::badge("deprecated")`
+#'   This function is deprecated - improved modeling functions can be found in 
+#'   the package "ChAI" at https://github.com/aifimmunology/ChAI
+#'   \code{pilotLMEM} Runs linear mixed-effects modeling for zero
 #'   inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch
 #'   errors, and return the error and dataframe for troubleshooting.
 #'
@@ -339,6 +363,11 @@ pilotZIGLMM <- function(TSAM_Object,
                         zi_threshold = 0,
                         verbose = FALSE,
                         pilotIndices = 1:10) {
+  lifecycle::deprecate_warn(
+    when="1.1.0", 
+    what="pilotZIGLMM()", 
+    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+  )
   Sample <- NULL
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
     stop("continuousFormula and/or ziformula was not provided as a formula.")
@@ -434,7 +463,11 @@ pilotZIGLMM <- function(TSAM_Object,
 
 #' @title getModelValues from runZIGLMM output.
 #'
-#' @description \code{getModelValues} Pull out a data.frame of model values (slope, significance, and std.error) for a given factor from the SummarizedExperiment output of runZIGLMM.
+#' @description 
+#'   `r lifecycle::badge("deprecated")`
+#'   This function is deprecated - improved modeling functions can be found in 
+#'   the package "ChAI" at https://github.com/aifimmunology/ChAI
+#'   \code{getModelValues} Pull out a data.frame of model values (slope, significance, and std.error) for a given factor from the SummarizedExperiment output of runZIGLMM.
 #' @param object A SummarizedExperiment object generated from runZIGLMM.
 #' @param specificVariable A string, describing the factor of influence.
 #'
@@ -450,6 +483,11 @@ pilotZIGLMM <- function(TSAM_Object,
 #' @export
 #'
 getModelValues <- function(object, specificVariable) {
+  lifecycle::deprecate_warn(
+    when="1.1.0", 
+    what="getModelValues()", 
+    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+  )
   slopes <- SummarizedExperiment::assays(object)[["Slopes"]]
   significance <- SummarizedExperiment::assays(object)[["Significance"]]
   if (length(specificVariable) > 1) {

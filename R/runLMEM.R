@@ -47,6 +47,11 @@ runLMEM <- function(ExperimentObj,
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 2) {
+  lifecycle::deprecate_warn(
+    when="1.1.0", 
+    what="runLMEM()", 
+    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+  )
   Sample <- NULL
 
   if (!requireNamespace("lmerTest", quietly = TRUE)) {
@@ -166,6 +171,43 @@ runLMEM <- function(ExperimentObj,
     # Why do we make and then export to cluster this nullDFList if it is not used?
     # It's used as a dummy variable in cases where the model fails. NAs are returned from individualLMEM instead of the function breaking.
   }
+  
+  # Nested internal helper function used in parallelization
+  individualLMEM <- function(iterList) {
+    x <- iterList[[1]]
+    modelFormula <- iterList[[2]]
+    modelingData <- iterList[[3]]
+    MetaDF <- iterList[[4]]
+    nullDF <- iterList[[5]]
+    
+    df <- data.frame(
+      exp = as.numeric(modelingData[x, ]),
+      MetaDF, stringsAsFactors = FALSE
+    )
+    
+    output_vector <- tryCatch(
+      {
+        modelRes <- lmerTest::lmer(formula = as.character(modelFormula), data = df)
+        Coeff <- as.data.frame(summary(modelRes)$coefficients)
+        Resid <- stats::resid(modelRes)
+        
+        if (!all(MetaDF$Sample %in% names(Resid))) {
+          NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
+          names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
+          Resid <- c(Resid, NA_samples)
+        }
+        Resid <- Resid[match(names(Resid), MetaDF$Sample)]
+        vcov <- as.data.frame(lme4::VarCorr(modelRes))$vcov
+        names(vcov) <- as.data.frame(lme4::VarCorr(modelRes))$grp
+        list("Coeff" = Coeff, "Resid" = Resid, "VCov" = vcov)
+      },
+      error = function(e) {
+        nullDFList # is not defined here
+      }
+    )
+    return(output_vector)
+  }
+  
   if (numCores > 1) {
     cl <- parallel::makeCluster(numCores)
     parallel::clusterExport(
@@ -209,55 +251,59 @@ runLMEM <- function(ExperimentObj,
 }
 
 
-#' @title Internal function to run linear modeling
-#'
-#' @description \code{IndividualLMEM} Runs linear modeling
-#'   with lmerTest::lmer
-#' @param iterList A list where the first index is a data.frame
-#'   to use for modeling, and the second is the formula for modeling.
-#'   list(x, modelFormula, modelingData, MetaDF, nullDF)
-#'
-#' @return output_vector A linear model
-#'
-#' @noRd
-individualLMEM <- function(iterList) {
-  x <- iterList[[1]]
-  modelFormula <- iterList[[2]]
-  modelingData <- iterList[[3]]
-  MetaDF <- iterList[[4]]
-  nullDF <- iterList[[5]]
-
-  df <- data.frame(
-    exp = as.numeric(modelingData[x, ]),
-    MetaDF, stringsAsFactors = FALSE
-  )
-
-  output_vector <- tryCatch(
-    {
-      modelRes <- lmerTest::lmer(formula = as.character(modelFormula), data = df)
-      Coeff <- as.data.frame(summary(modelRes)$coefficients)
-      Resid <- stats::resid(modelRes)
-
-      if (!all(MetaDF$Sample %in% names(Resid))) {
-        NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
-        names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
-        Resid <- c(Resid, NA_samples)
-      }
-      Resid <- Resid[match(names(Resid), MetaDF$Sample)]
-      vcov <- as.data.frame(lme4::VarCorr(modelRes))$vcov
-      names(vcov) <- as.data.frame(lme4::VarCorr(modelRes))$grp
-      list("Coeff" = Coeff, "Resid" = Resid, "VCov" = vcov)
-    },
-    error = function(e) {
-      nullDFList # is not defined here
-    }
-  )
-  return(output_vector)
-}
+# #' @title Internal function to run linear modeling
+# #'
+# #' @description \code{IndividualLMEM} Runs linear modeling
+# #'   with lmerTest::lmer
+# #' @param iterList A list where the first index is a data.frame
+# #'   to use for modeling, and the second is the formula for modeling.
+# #'   list(x, modelFormula, modelingData, MetaDF, nullDF)
+# #'
+# #' @return output_vector A linear model
+# #'
+# #' @noRd
+# individualLMEM <- function(iterList) {
+#   x <- iterList[[1]]
+#   modelFormula <- iterList[[2]]
+#   modelingData <- iterList[[3]]
+#   MetaDF <- iterList[[4]]
+#   nullDF <- iterList[[5]]
+# 
+#   df <- data.frame(
+#     exp = as.numeric(modelingData[x, ]),
+#     MetaDF, stringsAsFactors = FALSE
+#   )
+# 
+#   output_vector <- tryCatch(
+#     {
+#       modelRes <- lmerTest::lmer(formula = as.character(modelFormula), data = df)
+#       Coeff <- as.data.frame(summary(modelRes)$coefficients)
+#       Resid <- stats::resid(modelRes)
+# 
+#       if (!all(MetaDF$Sample %in% names(Resid))) {
+#         NA_samples <- rep(NA, sum(!MetaDF$Sample %in% names(Resid)))
+#         names(NA_samples) <- MetaDF$Sample[!MetaDF$Sample %in% names(Resid)]
+#         Resid <- c(Resid, NA_samples)
+#       }
+#       Resid <- Resid[match(names(Resid), MetaDF$Sample)]
+#       vcov <- as.data.frame(lme4::VarCorr(modelRes))$vcov
+#       names(vcov) <- as.data.frame(lme4::VarCorr(modelRes))$grp
+#       list("Coeff" = Coeff, "Resid" = Resid, "VCov" = vcov)
+#     },
+#     error = function(e) {
+#       nullDFList # is not defined here
+#     }
+#   )
+#   return(output_vector)
+# }
 
 #' @title Internal function to processing model outputs
 #'
-#' @description \code{processModelOutputs}
+#' @description 
+#'  `r lifecycle::badge("deprecated")`
+#'   This function is deprecated - improved modeling functions can be found in 
+#'   the package "ChAI" at https://github.com/aifimmunology/ChAI
+#'   \code{processModelOutputs}
 #' @param modelOutputList. A list of modeloutputs, processed by either individualLMEM or individualZIGLMM.
 #'        The first output is the coefficient data.frame, then the residuals, and the Variance.
 #' @param nullDFList A null templates for the model outputs
@@ -269,6 +315,11 @@ individualLMEM <- function(iterList) {
 #' @noRd
 processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, ranged = FALSE,
                                 SummarizedExperimentObj, returnList = FALSE) {
+  lifecycle::deprecate_warn(
+    when="1.1.0", 
+    what="processModelOutputs()", 
+    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+  )
   coeffNames <- rownames(nullDFList$Coeff)
   newColumnNames <- gsub("Pr\\(>\\|.\\|)", "p_value", gsub(" |\\. ", "_", colnames(nullDFList$Coeff)))
   output_list <- lapply(coeffNames, function(z) {
@@ -335,7 +386,11 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
 
 #' @title Execute a pilot run of single linear model on a subset of data
 #'
-#' @description \code{pilotLMEM} Runs linear mixed-effects modeling for
+#' @description
+#'   `r lifecycle::badge("deprecated")`
+#'   This function is deprecated - improved modeling functions can be found in 
+#'   the package "ChAI" at https://github.com/aifimmunology/ChAI
+#'   \code{pilotLMEM} Runs linear mixed-effects modeling for
 #'   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 #'
 #' @param ExperimentObj A SummarizedExperiment-type object generated from
@@ -359,6 +414,11 @@ pilotLMEM <- function(ExperimentObj,
                       modelFormula,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
+  lifecycle::deprecate_warn(
+    when="1.1.0", 
+    what="pilotLMEM()", 
+    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+  )
   Sample <- NULL
   if (length(assayName) > 1) {
     stop(
