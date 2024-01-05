@@ -7,7 +7,7 @@
 #'   your counts SummarizedExperiment. A basic plot can be rendered with just a
 #'   counts SummarizedExperiment, but additional formatting arguments allow for
 #'   further customization. Note that to show specific genes with the option
-#'   'whichGene' the \pkg{RMariaDB} package must be installed.
+#'   'whichGenes' the \pkg{RMariaDB} package must be installed.
 #'
 #' @param countSE A SummarizedExperiment from MOCHA::getCoverage
 #' @param plotType Options include 'overlaid','area', 'line', or 'RidgePlot'.
@@ -24,6 +24,7 @@
 #' @param legend.position Any acceptable `legend.position` argument to theme().
 #'   Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
 #'   "right" for faceted plots.
+#' @param legendRatio Ratio of width or height of the main plot to the legend. Useful if the legend is to large. If only used when legend.position is set to top, bottom, left, or right. 
 #' @param facet_label_side Direction character value, default "top". Can also be
 #'   "right", "left", or "bottom". Position of facet label.
 #' @param counts_group_colors Optional named color vector. Values as colors,
@@ -56,9 +57,10 @@
 #' @param motif_line_alpha Numeric value, default 0.25. Alpha for motif lines.
 #' @param showGene Logical value, default TRUE. Whether or not the gene track
 #'   should be plotted.
-#' @param whichGene Name of gene for plotting this specific gene in region.
+#' @param whichGenes Name of gene for plotting this specific gene in region.
+#' @param monotoneGenes Boolean. Determines whether to color-code genes by gene name, or to set them all to dark gray. 
 #' @param db_id_col Character value. Column in `OrgDb` containing the output id
-#'   for `whichGene` plotting. Default "REFSEQ".
+#'   for `whichGenes` plotting. Default "REFSEQ".
 #' @param collapseGenes Options include 'collapseAll', 'longestTx', or 'None'
 #'   Default 'None' will plot the expanded view of the reference genes,
 #'   'collapseAll' if you want collapse the gene tracks into one, and
@@ -110,6 +112,7 @@ plotRegion <- function(countSE,
                        counts_color = NULL,
                        range_label_size = 2,
                        legend.position = NULL,
+                       legendRatio = 0.25,
                        facet_label_side = "top",
                        counts_color_var = "Groups",
                        counts_group_colors = NULL,
@@ -127,9 +130,10 @@ plotRegion <- function(countSE,
                        motif_line_size = 0.75,
                        # Genes plot args
                        showGene = TRUE,
-                       whichGene = NULL,
+                       whichGenes = NULL,
+                       monotoneGenes = FALSE,
                        db_id_col = "REFSEQ",
-                       collapseGenes = "None",
+                       collapseGenes = FALSE,
                        gene_theme_ls = NULL,
                        # single.strand.genes.only = TRUE,
                        # Additional Tracks
@@ -144,13 +148,22 @@ plotRegion <- function(countSE,
   # Validate input
   supported_tracks <- c("Chr", "Normalized Counts", "Genes", "Links", "AdditionalGRanges")
   if (length(setdiff(names(relativeHeights), supported_tracks)) > 0) {
-    warning(sprintf(
+    if (verbose) { warning(sprintf(
       "1 or more values of relative heights not in supported tracks: %s.\n Supported track names: %s",
       paste(setdiff(names(relativeHeights), supported_tracks), collapse = ", "),
       paste(supported_tracks, collapse = ", ")
-    ))
+    )) }
   }
 
+  if(showIdeogram){
+      if (!requireNamespace("ggbio", quietly = TRUE)) {
+        stop(
+        "Package 'ggbio' is required for generating ideograms. ",
+        "Please install 'ggbio' to proceed or set showIdeogram = FALSE."
+        )
+    } 
+  }
+    
   # function wrapper based on verbosity to hide messages
   verbf <- function(x) {
     if (verbose) {
@@ -167,7 +180,6 @@ plotRegion <- function(countSE,
     )
   }
 
-
   countdf <- do.call("rbind", as.list(SummarizedExperiment::assays(countSE)))
 
   # Extract region from region string as granges
@@ -180,6 +192,17 @@ plotRegion <- function(countSE,
   TxDb <- getAnnotationDbFromInstalledPkgname(countSE@metadata$TxDb$pkgname, "TxDb")
   OrgDb <- getAnnotationDbFromInstalledPkgname(countSE@metadata$OrgDb$pkgname, "OrgDb")
   # Base Plot of Sample Counts
+
+  if(is.null(legend.position) & plotType == 'overlaid'){
+      
+      legend.position = 'right'
+      legendRatio = 0.25
+  }else if(is.null(legend.position)){
+  
+      legend.position = 'none'
+      
+  }
+
   p1 <- verbf(
     counts_plot_samples(countdf,
       plotType = plotType,
@@ -193,6 +216,13 @@ plotRegion <- function(countSE,
       theme_ls = counts_theme_ls
     )
   )
+    
+  if(!is.numeric(legend.position)){
+
+    p1 <- p1 + ggplot2::theme(legend.position = 'none')
+      
+  }
+
 
   # Add Motifs to Base Plot if Requested
   if (!is.null(motifSetName)) {
@@ -223,87 +253,41 @@ plotRegion <- function(countSE,
 
   # Build P2, Ref Genes track
   if (showGene) {
-    # If user provided a specific gene symbol(s), pull new granges from database and format models
-    if (!is.null(whichGene)) {
-      newModel <- verbf(
-        get_gene_body_model(
-          whichGene = whichGene,
-          countdf = countdf,
+
+    p2 <- get_gene_plot(
           regionGRanges = regionGRanges,
-          orgdb = OrgDb,
-          verbose = verbose
+          TxDb = TxDb,
+          OrgDb = OrgDb,
+          whichGenes = whichGenes,
+          monotoneGenes = monotoneGenes,
+          collapseGenes= collapseGenes,
+          theme_ls = gene_theme_ls, 
+          db_id_col = 'REFSEQ'
         )
-      )
-    } else {
-      newModel <- NULL
-    }
-
-
-    if (!is.null(whichGene) & !is.null(newModel)) {
-      # Successful newmodel generated
-      p2 <- verbf(
-        plot_whichGene(newModel,
-          base_size = base_size,
-          x_lim = range(countdf$Locus),
-          theme_ls = gene_theme_ls
-        )
-      )
-    } else {
-      # Create your reference for plotting gene body
-
-      if (tolower(collapseGenes) == "longesttx") {
-        Homo.sapiens.hg38 <- simplifiedOrgDb(TxDb = TxDb, orgdb = OrgDb)
-      } else {
-        Homo.sapiens.hg38 <- verbf(OrganismDbi::makeOrganismDbFromTxDb(TxDb, orgdb = OrgDb))
-      }
-
-      geneBody <- verbf(get_grange_genebody(regionGRanges, TxDb = TxDb, single.strand.genes.only = TRUE))
-
-      if (length(geneBody) > 0) {
-        p2 <- verbf(
-          plot_geneBody(
-            organismdb = Homo.sapiens.hg38,
-            geneBody_gr = geneBody,
-            collapseGenes = tolower(collapseGenes) == "collapseall",
-            base_size = base_size,
-            x_lim = range(countdf$Locus),
-            theme_ls = gene_theme_ls
-          )
-        )
-      } else {
-        # Empty gene track to prevent errors resulting from p2 nonexistence
-        p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white") +
-          ggplot2::theme_void()
-        relativeHeights["Genes"] <- 10^6
-        showGene <- FALSE
-      }
-    }
   } else {
     # If user wishes to hide genes
-    p2 <- ggbio::autoplot(regionGRanges, label.color = "white", color = "white", fill = "white")
-    relativeHeights["Genes"] <- 0.1
+    p2 <- NULL
+    relativeHeights["Genes"] <- 0
   }
 
+ 
   if (!is.null(additionalGRangesTrack)) {
 
     # Check for name metadata column
     if ("name" %in% colnames(GenomicRanges::mcols(additionalGRangesTrack))) {
       # Only plot the overlap of this region and the additional GRanges Track
       overlapGRanges <- verbf(plyranges::join_overlap_intersect(additionalGRangesTrack, regionGRanges))
+
+     
       if (length(overlapGRanges) > 0) {
         # Use the subset within our region as the track we want to plot
-        # Assign exon status to each row
-        GenomicRanges::mcols(overlapGRanges)$type <- rep("exon", each = length(overlapGRanges))
-        # split into list of GRanges -> GRangesList named for the names metadata col
-        additionalGRangesTrack <- split(overlapGRanges, overlapGRanges$name)
+        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = FALSE, type = 'Tracks')
+
       } else {
-        additionalGRangesTrack <- NULL
-        # Avoids the following error:
-        # Error: Faceting variables must have at least one value
-        # Error in deparse(x[[i]], nlines = nlines) :   no slot of name "elementType" for this object of class "GRanges"
+        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = TRUE, type = 'Tracks')
       }
     } else {
-      additionalGRangesTrack <- NULL
+      p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = TRUE, type = 'Tracks')
     }
   }
 
@@ -333,25 +317,39 @@ plotRegion <- function(countSE,
   if (showIdeogram) {
     # Show Ideogram
     p3 <- verbf(ggbio::Ideogram(genome = ideogram_genome, subchr = chrom))
-
+    p3 <- p3@ggplot
     track_list <- c(track_list, list("Chr" = p3))
   }
+    
+  # Genes
+  if (!is.null(p2)) {
+    p1 <- p1 + 
+      ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                     axis.ticks.x = ggplot2::element_blank(),
+                    plot.margin = grid::unit(c(0, 0, 0, 0), "cm")) + 
+      ggplot2::xlab(NULL)
+    # Counts
+    track_list <- c(track_list, list("Normalized Counts" = p1))
 
-  # Counts
-  track_list <- c(track_list, list("Normalized Counts" = p1))
+    track_list <- c(track_list, list("Genes" = p2))
+      
+  }else{
+      
+    # Counts
+    track_list <- c(track_list, list("Normalized Counts" = p1))
+    
+ }
 
   # Links
   if (!is.null(linkdf)) {
     track_list <- c(track_list, list("Links" = p5))
   }
 
-  # Genes
-  track_list <- c(track_list, list("Genes" = p2))
+ 
 
 
   # Additional Ranges
   if (!is.null(additionalGRangesTrack)) {
-    p4 <- verbf(ggbio::autoplot(additionalGRangesTrack)) + ggplot2::theme_minimal()
     track_list <- c(track_list, list("AdditionalGRanges" = p4))
   }
 
@@ -360,28 +358,63 @@ plotRegion <- function(countSE,
     missing_heights <- setdiff(names(track_list), names(relativeHeights))
     append_heights <- .relativeHeights_default[missing_heights]
     relativeHeights <- c(relativeHeights, append_heights)
-    warning(sprintf(
-      "Relative heights were not defined for included plots [%s]. Using defaults for these tracks [%s]",
+    if (verbose) { warning(sprintf(
       paste(missing_heights, collapse = ", "),
       paste(append_heights, collapse = ", ")
-    ))
+    )) }
   }
   trackHeights <- relativeHeights[names(track_list)] # ensure intended order
+    
+  #First, combine everything but the Ideogram
+  g_tracks <- cowplot::plot_grid(plotlist = track_list[names(track_list) != 'Chr'], 
+                                 ncol=1, align = 'v',
+                                rel_heights = trackHeights[-1])
+  #Now add the ideogram
+  g_tracks <- cowplot::plot_grid(track_list$Chr, g_tracks, 
+                ncol=1, 
+     rel_heights = c(trackHeights[1], sum(trackHeights[-1])))
+    
+  ## Extract the legend for the data plot, if necessary (i.e. if the legend position is set to 'none', or overlaps with graph, this is unnecessary). 
+  if(!all(is.numeric(legend.position)) & 
+     all(legend.position != 'none')){
 
-  # Plot All Supplied Plots
-  g_tracks <- verbf(
-    ggbio::tracks(
-      track_list,
-      heights = trackHeights,
-      xlim = range(countdf$Locus),
-      track.bg.color = "transparent",
-      padding = grid::unit(-1, "lines"),
-      label.bg.fill = "transparent",
-      label.bg.color = "transparent",
-      label.width = grid::unit(2, "lines")
+    #extract all legend parameters, if any, within the counts_theme
+    if(any(grepl('legend', names(counts_theme_ls)))){
+        legend_theme = counts_theme_ls[grep('legend', names(counts_theme_ls))]
+        
+        p1 <- p1 + ggplot2::theme(legend.box.margin = ggplot2::margin(1,1,1,1)) + do.call('ggplot2::theme', legend_theme)
+        
+    }else{
+        
+    }
+      
+    legend1 <- cowplot::get_legend(
+       # create some space to the left of the legend
+       p1 +  ggplot2::theme(legend.position = legend.position)
     )
-    # coord_cartesian(clip = "off")
-  )
+    
+    ## generate legend for linkDF
+    if (!is.null(linkdf)) {
+        track_list <- c(track_list, list("Links" = p5))
+        
+        legend2 <- cowplot::get_legend(
+           # create some space to the left of the legend
+           p5 + ggplot2::theme(legend.position = legend.position)
+        )
+        legend1 <- .setUpLegend(legend1, legend2, 
+                                legend.position = legend.position, legendMerge = TRUE,
+                                relativeRatio = 0.5)
+    }
+    
+    #Add legend and g_tracks together
+    g_tracks <- .setUpLegend(g_tracks, legend1, 
+            legend.position = legend.position, 
+            legendMerge = FALSE, relativeRatio = legendRatio)
+    
+
+  }
+
 
   return(g_tracks)
 }
+

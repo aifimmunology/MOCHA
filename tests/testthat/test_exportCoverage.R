@@ -49,3 +49,4 @@ if (dir.exists(MOCHA:::testTileResultsMultisample@metadata$Directory)) {
     expect_equal(names(outGR), names(MOCHA:::testTileResultsMultisample))
   })
 }
+

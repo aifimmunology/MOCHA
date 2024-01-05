@@ -108,11 +108,12 @@ StringsToGRanges <- function(regionString) {
   #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
   # }
   . <- NULL
+  regionString <- gsub(",","",regionString)
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
-    gsub("-.*", "", .) %>%
+    gsub("-.*|−.*", "", .) %>%
     as.numeric()
-  endSite <- gsub(".*-", "", regionString) %>% as.numeric()
+  endSite <- gsub(".*-|.*−", "", regionString) %>% as.numeric()
 
   if (any(startSite >= endSite)) {
     stop("Error in region string: Make sure the start of the genomic range occurs before the end")
@@ -319,3 +320,4 @@ plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FA
 
   return(p1)
 }
+

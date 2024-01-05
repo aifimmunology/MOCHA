@@ -85,6 +85,8 @@ extractRegion <- function(SampleTileObj,
     stop("Wrong region input type. Input must either be a string, or a GRanges location.")
   }
 
+    
+    
   if (all(toupper(cellNames) == "COUNTS")) {
     stop(
       "The only assay in the SummarizedExperiment is Counts. The names of assays must reflect cell types,",
@@ -139,12 +141,20 @@ extractRegion <- function(SampleTileObj,
   cl <- parallel::makeCluster(numCores)
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
   cellPopulation_Files <- lapply(cellPopulations, function(x) {
-    if (type) {
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
-    } else {
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_InsertionFiles.RDS", sep = ""))
-    }
 
+    # Pull up coverage files
+    originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    if(type & 'Accessibility' %in% names(originalCovGRanges)){
+     originalCovGRanges <- originalCovGRanges[['Accessibility']]
+    }else if (type & !'Accessibility' %in% names(originalCovGRanges)){
+      originalCovGRanges <- originalCovGRanges
+    }else if (!type & 'Accessibility' %in% names(originalCovGRanges)){
+      originalCovGRanges <- originalCovGRanges[['Insertions']]
+    }else{
+        stop('Error around reading coverage files. Check that coverage files are not corrupted.')
+    }
+    
+    
     # Edge case: One or more samples are missing coverage for this cell population,
     # e.g. if a cell population only exists in one sample.
     lapply(seq_along(subSamples), function(y) {
@@ -232,6 +242,23 @@ extractRegion <- function(SampleTileObj,
 
 
 ## helper functions.
+                         
+# Generates average single basepair coverage for a given region
+averageBPCoverage <- function(iterList) {
+  regionGRanges <- iterList[[1]]
+  sampleCount <- length(iterList[[2]])
+
+  filterCounts <- lapply(1:sampleCount, function(z) {
+    plyranges::join_overlap_intersect(iterList[[2]][[z]], regionGRanges)
+  })
+
+  mergedCounts <- IRanges::stack(methods::as(filterCounts, "GRangesList"))
+  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+  mergedCounts <- plyranges::compute_coverage(mergedCounts, weight = mergedCounts$score / sampleCount)
+  mergedCounts <- plyranges::join_overlap_intersect(mergedCounts, regionGRanges)
+
+  return(mergedCounts)
+}
 
 ## Efficiently subsets single basepair coverage for a given region across samples
 subsetBPCoverage <- function(iterList) {
@@ -284,6 +311,7 @@ subsetBinCoverage <- function(iterList) {
   return(tmpCounts)
 }
 
+
 ## Efficiently generates averaged coverage across samples by bins within a given region
 averageBinCoverage <- function(iterList) {
   idx <- score <- partition <- NULL
@@ -308,6 +336,7 @@ averageBinCoverage <- function(iterList) {
 
 
   return(mergedCounts)
+
 }
 
 # This function is not used.
@@ -328,6 +357,7 @@ averageBinCoverage <- function(iterList) {
 # 
 #   return(tmpCounts)
 # }
+
 
 ## Efficiently generates averaged coverage across samples by bins within a given region
 averageSlidingBinCoverage <- function(iterList) {

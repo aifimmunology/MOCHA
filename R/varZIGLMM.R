@@ -51,6 +51,7 @@ varZIGLMM <- function(TSAM_Object,
                       zi_threshold = 0.1,
                       verbose = FALSE,
                       numCores = 1) {
+
   lifecycle::deprecate_warn(
     when="1.1.0", 
     what="varZIGLMM()", 
@@ -310,3 +311,4 @@ varZIGLMM <- function(TSAM_Object,
 #   )
 #   return(output_vector)
 # }
+

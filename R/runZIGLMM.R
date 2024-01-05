@@ -263,11 +263,13 @@ extractVariable <- function(varList, varType, variable, nullDF) {
 #' @noRd
 #'
 individualZIGLMM <- function(iterList) {
+
   lifecycle::deprecate_soft(
     when="1.1.0", 
     what="individualZIGLMM()", 
     details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
+
   x <- iterList[[1]]
   continuousFormula <- iterList[[2]]
   modelingData <- iterList[[3]]

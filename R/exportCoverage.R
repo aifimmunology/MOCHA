@@ -161,7 +161,7 @@ exportCoverage <- function(SampleTileObject,
       cellPopSubsampleCov <- unlist(iterList, recursive = FALSE)
       names(cellPopSubsampleCov) <- gsub("\\.", "__", names(cellPopSubsampleCov))
     }
-    
+
     if (saveFile) {
       # Export bigwig
       for (i in 1:length(cellPopSubsampleCov)) {
@@ -184,6 +184,7 @@ exportCoverage <- function(SampleTileObject,
 
     names(cellPopSubsampleCov) <- x
     allCellPopCoverage <- append(allCellPopCoverage, cellPopSubsampleCov)
+
   }
 
   return(allCellPopCoverage)
@@ -237,6 +238,7 @@ exportDifferentials <- function(SampleTileObject,
                                 DifferentialsGRList,
                                 outDir,
                                 verbose = FALSE) {
+
   if (!requireNamespace("rtracklayer", quietly = TRUE)) {
     stop(
       "Package 'rtracklayer' is required for exportDifferentials. ",
@@ -245,6 +247,7 @@ exportDifferentials <- function(SampleTileObject,
   }
   genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
   outList <- list()
+
   for (i in seq_along(DifferentialsGRList)) {
     comparison_name <- names(DifferentialsGRList)[[i]]
     if (is.null(comparison_name)) {
@@ -258,6 +261,7 @@ exportDifferentials <- function(SampleTileObject,
     
     # Set score and seqinfo for bigBed
     DiffPeaksGR$score <- 1
+
     GenomicRanges::seqinfo(DiffPeaksGR) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(DiffPeaksGR))]
 
     outFile <- file.path(outDir, paste(comparison_name, sep = "__"))
@@ -307,6 +311,7 @@ exportOpenTiles <- function(SampleTileObject,
                             cellPopulation,
                             outDir,
                             verbose = FALSE) {
+
   if (!requireNamespace("rtracklayer", quietly = TRUE)) {
     stop(
       "Package 'rtracklayer' is required for exportOpenTiles. ",
@@ -316,6 +321,7 @@ exportOpenTiles <- function(SampleTileObject,
   genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
 
   outList <- list()
+
   for (cellPopulation in names(SummarizedExperiment::assays(SampleTileObject))) {
     cellPopMatrix <- MOCHA::getCellPopMatrix(
       SampleTileObject,
@@ -331,7 +337,9 @@ exportOpenTiles <- function(SampleTileObject,
 
       # Set score and seqinfo for bigBed
       samplePeaksGR$score <- 1
+
       GenomicRanges::seqinfo(samplePeaksGR) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(samplePeaksGR))]
+
 
       sampleRow <- SummarizedExperiment::colData(SampleTileObject)[sample, ]
       pbmc_sample_id <- sampleRow[["Sample"]] # Enforced colname in callOpenTiles
@@ -355,6 +363,7 @@ exportOpenTiles <- function(SampleTileObject,
 #' @description \code{exportMotifs} exports a motif set GRanges from running
 #'    \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
 #'    in genome browsers.
+#'    
 #' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param motifsGRanges A GRanges containing motif annotations, typically from
@@ -406,6 +415,7 @@ exportMotifs <- function(SampleTileObject,
   }
   
   # Map over the seqinfo from our genome to the motifsGRanges
+
   # Required for bigBed export 
   genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
   GenomicRanges::seqinfo(motifsGRanges) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(motifsGRanges))]
