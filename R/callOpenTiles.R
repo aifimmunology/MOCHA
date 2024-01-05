@@ -728,22 +728,7 @@ setMethod(
       )
     }
   }
-
-  summarizedData <- SummarizedExperiment::SummarizedExperiment(
-    append(
-      list(
-        "CellCounts" = allCellCounts[
-          match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),,
-        drop = FALSE],
-        "FragmentCounts" = allFragmentCounts[
-          match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),,
-        drop = FALSE]
-      ),
-      additionalMetaData
-    ),
-    colData = sampleData
-  )
- 
+  
   # Match cell populations in allCellCounts/allFragmentCounts to those
   # in additionalMetaData, in case of NA cell populations
   if (length(additionalMetaData) >= 1) {
@@ -752,28 +737,25 @@ setMethod(
       ,
       drop = FALSE
     ]
-
+    
     allFragmentCounts <- allFragmentCounts[
       match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
       ,
       drop = FALSE
     ]
   }
-
-  # Match cell populations in allCellCounts/allFragmentCounts to those
-  # in additionalMetaData, in case of NA cell populations
-  if (length(additionalMetaData) >= 1) {
-    allCellCounts <- allCellCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)), ,
-      drop = FALSE
-    ]
-
-    allFragmentCounts <- allFragmentCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)), ,
-      drop = FALSE
-    ]
-  }
-
+  
+  summarizedData <- SummarizedExperiment::SummarizedExperiment(
+    append(
+      list(
+        "CellCounts" = allCellCounts,
+        "FragmentCounts" = allFragmentCounts
+      ),
+      additionalMetaData
+    ),
+    colData = sampleData
+  )
+ 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
