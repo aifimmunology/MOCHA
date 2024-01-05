@@ -31,6 +31,9 @@ only in open tiles.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
+\value{
+outList A List of output filepaths
+}
 \description{
 \code{exportMotifs} exports a motif set GRanges from running
    \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
@@ -39,7 +42,7 @@ only in open tiles.}
 \examples{
 \dontrun{
 MOCHA::exportMotifs(
-  SampleTileObj = SampleTileMatrices,
+  SampleTileObject = SampleTileMatrices,
   motifsGRanges,
   motifSetName = "CISBP",
   filterByOpenTiles = FALSE,

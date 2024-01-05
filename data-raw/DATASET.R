@@ -8,7 +8,7 @@ library(org.Hs.eg.db)
 ArchR::getTestProject()
 testProj <- ArchR::loadArchRProject("PBMCSmall")
 
-TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene"
+TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene" # should be hg19 - for future update
 Org <- "org.Hs.eg.db"
 
 testTileResults <- MOCHA::callOpenTiles(

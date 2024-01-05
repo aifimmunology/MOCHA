@@ -3,8 +3,7 @@
 #'
 #' @description \code{combineSampleTileMatrix} combines all celltypes in a
 #'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
-#'   across all cell types and samples, annotating GC bias using
-#'   chromVAR.
+#'   across all cell types and samples,
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
@@ -17,12 +16,6 @@
 combineSampleTileMatrix <- function(SampleTileObj,
                                     NAtoZero = TRUE,
                                     verbose = FALSE) {
-  if (!requireNamespace("chromVAR", quietly = TRUE)) {
-    stop(
-      "Package 'chromVAR' is required for combineSampleTileMatrix. ",
-      "Please install 'chromVAR' to proceed."
-    )
-  }
   CellTypes <- FragNumber <- NULL
 
   genome <- S4Vectors::metadata(SampleTileObj)$Genome
@@ -108,9 +101,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   # Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting.
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
-  for (i in names(assays)) {
-    GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
-  }
 
   newMetadata <- S4Vectors::metadata(SampleTileObj)
   newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", utils::packageVersion("MOCHA")))

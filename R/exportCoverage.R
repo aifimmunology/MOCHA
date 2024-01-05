@@ -4,14 +4,14 @@
 #'   BigWig files, either as sample-specific or sample-averaged files, for
 #'   visualization in genome browsers.
 #'
-#' @param SampleTileObj The SummarizedExperiment object output from
+#' @param SampleTileObject The SummarizedExperiment object output from
 #'   getSampleTileMatrix
 #' @param dir string. Directory to save files to.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
-#'   the SampleTileObj.  Optional, if cellPopulations='ALL', then peak calling
+#'   the SampleTileObject.  Optional, if cellPopulations='ALL', then peak calling
 #'   is done on all cell populations. Default is 'ALL'.
-#' @param type Boolean. Default is true, and exports Coverage. If set to FALSE,
+#' @param type Boolean. Default is TRUE, and exports Coverage. If set to FALSE,
 #'   exports Insertions.
 #' @param groupColumn Optional, the column containing sample group labels for
 #'   returning coverage within sample groups. Default is NULL, all samples will
@@ -22,7 +22,7 @@
 #' @param sampleSpecific If TRUE, a BigWig will export for each sample-cell type
 #'   combination.
 #' @param saveFile Boolean. If TRUE, it will save to a BigWig. If FALSE, it will
-#'   return the GRangesList.
+#'   return the GRangesList without writing a BigWig.
 #' @param numCores integer. Number of cores to parallelize peak-calling across
 #'   multiple cell populations
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
@@ -33,7 +33,7 @@
 #' @examples
 #' \dontrun{
 #' MOCHA::exportCoverage(
-#'   SampleTileObj = SampleTileMatrices,
+#'   SampleTileObject = SampleTileMatrices,
 #'   cellPopulations = "ALL",
 #'   numCores = 30,
 #'   sampleSpecific = FALSE
@@ -41,9 +41,9 @@
 #' }
 #'
 #' @export
-#' 
+#'
 
-exportCoverage <- function(SampleTileObj,
+exportCoverage <- function(SampleTileObject,
                            dir = getwd(),
                            type = TRUE,
                            cellPopulations = "ALL",
@@ -55,16 +55,16 @@ exportCoverage <- function(SampleTileObj,
                            verbose = FALSE) {
   . <- idx <- score <- NULL
 
-  cellNames <- names(SummarizedExperiment::assays(SampleTileObj))
-  metaFile <- SummarizedExperiment::colData(SampleTileObj)
-  outDir <- SampleTileObj@metadata$Directory
+  cellNames <- names(SummarizedExperiment::assays(SampleTileObject))
+  metaFile <- SummarizedExperiment::colData(SampleTileObject)
+  outDir <- SampleTileObject@metadata$Directory
 
   if (is.na(outDir)) {
-    stop("Missing coverage file directory. SampleTileObj$metadata must contain 'Directory'.")
+    stop("Missing coverage file directory. SampleTileObject$metadata must contain 'Directory'.")
   }
 
   if (!file.exists(outDir)) {
-    stop("Directory given by SampleTileObj@metadata$Directory does not exist.")
+    stop("Directory given by SampleTileObject@metadata$Directory does not exist.")
   }
 
   if (all(toupper(cellPopulations) == "ALL")) {
@@ -100,52 +100,94 @@ exportCoverage <- function(SampleTileObj,
     library(GenomicRanges)
   })
   # Pull up the cell types of interest, and filter for samples and subset down to region of interest
-  GRangesList1 <- NULL
+  allCellPopCoverage <- NULL
   for (x in cellPopulations) {
-    # MOCHA::getCoverage outputs a single list with two named items: "Accessibility" 
-    # and "Insertions". 
+    # MOCHA::getCoverage outputs a single list with two named items: "Accessibility"
+    # and "Insertions".
     # This is saved to *_CoverageFiles.RDS in MOCHA::callOpenTiles
     if (type) { # Accessibility
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Accessibility
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+      # For backwards compatibility, only use "Accessibility" if it exists.
+      if ("Accessibility" %in% names(originalCovGRanges)) {
+        originalCovGRanges <- originalCovGRanges$Accessibility
+      }
     } else { # Insertions
-      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))$Insertions
+      originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+      # For backwards compatibility, only use "Insertions" if it exists.
+      if ("Insertions" %in% names(originalCovGRanges)) {
+        originalCovGRanges <- originalCovGRanges$Insertions
+      } else {
+        # Check for a separate "Insertions" file
+        originalCovGRanges <- readRDS(paste(outDir, "/", x, "_InsertionFiles.RDS", sep = ""))
+      }
     }
 
     if (verbose) {
-      message(stringr::str_interp("Extracting coverage from {x}."))
+      message(stringr::str_interp("Extracting coverage for cell population ${x}."))
     }
 
     iterList <- lapply(subSamples, function(y) {
       originalCovGRanges[y]
     })
+    
+    # Check for and remove null elements from iterlist
+    # Covers edge case where coverage files do not contain all samples
+    missingSamples <- lapply(seq_along(iterList), function(x) {
+      groupIterList <- iterList[[x]]
+      groupSubSamples <- subSamples[[x]]
+      groupSubSamples[lengths(groupIterList) == 0]
+    })
+    missingSamples <- unique(unlist(missingSamples))
+    
+    if (length(missingSamples) > 0) {
+      if(verbose) { 
+        warning(
+          "The following samples have no saved coverage and will be skipped: ",
+          paste0(missingSamples, collapse = ", ")
+        ) 
+      }
+      iterList <- lapply(iterList, function(x) {
+        x[lengths(x) != 0]
+      })
+    }
+    
     # If not sample specific, take the average coverage across samples.
     # if it is sample specific, just subset down the coverage to the region of interest.
     if (!sampleSpecific) {
       cellPopSubsampleCov <- pbapply::pblapply(cl = cl, X = iterList, averageCoverage)
       names(cellPopSubsampleCov) <- subGroups
-    } else {
+    } else { # sample specific
       names(iterList) <- subGroups
       cellPopSubsampleCov <- unlist(iterList, recursive = FALSE)
       names(cellPopSubsampleCov) <- gsub("\\.", "__", names(cellPopSubsampleCov))
     }
 
-    for (i in 1:length(cellPopSubsampleCov)) {
-      fileName <- gsub(" ", "__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
-      if (!type) {
-        fileName <- paste(fileName, "__Insertions", sep = "")
+    if (saveFile) {
+      # Export bigwig
+      for (i in 1:length(cellPopSubsampleCov)) {
+        fileName <- gsub(" ", "__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
+        if (!type) {
+          fileName <- paste(fileName, "__Insertions", sep = "")
+        }
+        # Edge case where there was only 1 sample to be averaged if !sampleSpecific
+        if (class(cellPopSubsampleCov[[i]]) == "list"){
+          if (length(cellPopSubsampleCov[[i]]) == 1) {
+            cellPopSubsampleCov[[i]] <- cellPopSubsampleCov[[i]][[1]]
+          }
+        }
+        if (verbose) {
+          message("Exporting: ", paste(dir, "/", fileName, ".bw", sep = ""))
+        }
+        plyranges::write_bigwig(cellPopSubsampleCov[[i]], paste(dir, "/", fileName, ".bw", sep = ""))
       }
-      fileToWrite <- plyranges::filter(cellPopSubsampleCov[[i]], score != 0)
-      plyranges::write_bigwig(fileToWrite, paste(dir, "/", fileName, ".bw", sep = ""))
     }
 
-    if (saveFile) {
-      names(cellPopSubsampleCov) <- x
-      GRangesList1 <- append(GRangesList1, cellPopSubsampleCov)
-    }
-      
+    names(cellPopSubsampleCov) <- x
+    allCellPopCoverage <- append(allCellPopCoverage, cellPopSubsampleCov)
+
   }
 
-  return(GRangesList1)
+  return(allCellPopCoverage)
 }
 
 
@@ -173,11 +215,13 @@ averageCoverage <- function(coverageList) {
 #'
 #' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
-#' @param DifferentialsGRList The GRangesList output from
+#' @param DifferentialsGRList GRangesList output from
 #'   \code{getDifferentialAccessibleTiles}
 #' @param outDir Desired output directory where bigBed files will be saved
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
+#' @return outList A List of output filepaths
+#' 
 #' @examples
 #' \dontrun{
 #' MOCHA::exportDifferentials(
@@ -194,24 +238,48 @@ exportDifferentials <- function(SampleTileObject,
                                 DifferentialsGRList,
                                 outDir,
                                 verbose = FALSE) {
+
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop(
+      "Package 'rtracklayer' is required for exportDifferentials. ",
+      "Please install 'rtracklayer' to proceed."
+    )
+  }
   genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
-  
+  outList <- list()
+
   for (i in seq_along(DifferentialsGRList)) {
     comparison_name <- names(DifferentialsGRList)[[i]]
+    if (is.null(comparison_name)) {
+      comparison_name <- "Differentials"
+    }
     DiffPeaksGR <- DifferentialsGRList[[i]]
-
+    
+    # Remove NA metadata
+    # causes error: In isSingleString(path) : Unknown type 'NA'
+    GenomicRanges::mcols(DiffPeaksGR) <- NULL
+    
     # Set score and seqinfo for bigBed
     DiffPeaksGR$score <- 1
-    GenomeInfoDb::seqinfo(DiffPeaksGR) <- GenomeInfoDb::seqinfo(genome)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(DiffPeaksGR))]
+
+    GenomicRanges::seqinfo(DiffPeaksGR) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(DiffPeaksGR))]
 
     outFile <- file.path(outDir, paste(comparison_name, sep = "__"))
+    outFile <- paste0(outFile, ".bigBed")
     if (verbose) {
       message("Exporting: ", outFile)
     }
-
+    
     # Output to bigbed
-    rtracklayer::export.bb(DiffPeaksGR, paste0(outFile, ".bigBed"))
+    rtracklayer::export.bb(GenomicRanges::GRanges(DiffPeaksGR), outFile)
+    
+    # Check for success
+    if (!file.exists(outFile)) {
+      stop("Silent error in rtracklayer::export.bb")
+    }
+    outList <- append(outList, outFile)
   }
+  outList
 }
 
 #' @title \code{exportOpenTiles}
@@ -225,10 +293,12 @@ exportDifferentials <- function(SampleTileObject,
 #' @param outDir Desired output directory where bigBed files will be saved
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
+#' @return outList A List of output filepaths
+#' 
 #' @examples
 #' \dontrun{
 #' MOCHA::exportOpenTiles(
-#'   SampleTileObj = SampleTileObject,
+#'   SampleTileObject = SampleTileObject,
 #'   cellPopulation,
 #'   outDir = tempdir(),
 #'   verbose = TRUE
@@ -241,8 +311,16 @@ exportOpenTiles <- function(SampleTileObject,
                             cellPopulation,
                             outDir,
                             verbose = FALSE) {
-    
+
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop(
+      "Package 'rtracklayer' is required for exportOpenTiles. ",
+      "Please install 'rtracklayer' to proceed."
+    )
+  }
   genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
+
+  outList <- list()
 
   for (cellPopulation in names(SummarizedExperiment::assays(SampleTileObject))) {
     cellPopMatrix <- MOCHA::getCellPopMatrix(
@@ -259,19 +337,25 @@ exportOpenTiles <- function(SampleTileObject,
 
       # Set score and seqinfo for bigBed
       samplePeaksGR$score <- 1
-      GenomeInfoDb::seqinfo(samplePeaksGR) <- GenomeInfoDb::seqinfo(genome)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(samplePeaksGR))]
+
+      GenomicRanges::seqinfo(samplePeaksGR) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(samplePeaksGR))]
+
 
       sampleRow <- SummarizedExperiment::colData(SampleTileObject)[sample, ]
       pbmc_sample_id <- sampleRow[["Sample"]] # Enforced colname in callOpenTiles
       outFile <- file.path(outDir, paste(cellPopulation, pbmc_sample_id, sep = "__"))
+      outFile <- paste0(outFile, ".bigBed")
       if (verbose) {
         message("Exporting: ", outFile)
       }
 
       # Output to bigbed
-      rtracklayer::export.bb(samplePeaksGR, paste0(outFile, ".bigBed"))
+      rtracklayer::export.bb(samplePeaksGR, outFile)
+      
+      outList <- append(outList, outFile)
     }
   }
+  outList
 }
 
 #' @title \code{exportMotifs}
@@ -279,7 +363,7 @@ exportOpenTiles <- function(SampleTileObject,
 #' @description \code{exportMotifs} exports a motif set GRanges from running
 #'    \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
 #'    in genome browsers.
-#'
+#'    
 #' @param SampleTileObject The SummarizedExperiment object output from
 #'   \code{getSampleTileMatrix}
 #' @param motifsGRanges A GRanges containing motif annotations, typically from
@@ -291,11 +375,13 @@ exportOpenTiles <- function(SampleTileObject,
 #' @param motifSetName Optional, a name indicating the motif set. Used to name
 #'   files in the specified \code{outdir}. Default is "motifs".
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
-#'
+#' 
+#' @return outList A List of output filepaths
+#' 
 #' @examples
 #' \dontrun{
 #' MOCHA::exportMotifs(
-#'   SampleTileObj = SampleTileMatrices,
+#'   SampleTileObject = SampleTileMatrices,
 #'   motifsGRanges,
 #'   motifSetName = "CISBP",
 #'   filterByOpenTiles = FALSE,
@@ -312,20 +398,36 @@ exportMotifs <- function(SampleTileObject,
                          filterByOpenTiles = FALSE,
                          outDir,
                          verbose = FALSE) {
-
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop(
+      "Package 'rtracklayer' is required for exportMotifs. ",
+      "Please install 'rtracklayer' to proceed."
+    )
+  }
+  
+  if (class(motifsGRanges) != "GRanges") {
+    if (class(motifsGRanges) == "CompressedGRangesList") {
+      motifsGRanges <- unlist(motifsGRanges)
+    } else {
+      stop("`motifsGRanges` is an unrecognized type. `motifsGRanges` must
+           be either 'GRanges' or 'CompressedGRangesList'.")
+    }
+  }
+  
   # Map over the seqinfo from our genome to the motifsGRanges
-  # Required for bigBed export
-  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
-  GenomeInfoDb::seqinfo(motifsGRanges) <- GenomeInfoDb::seqinfo(genome)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(motifsGRanges))]
 
+  # Required for bigBed export 
+  genome <- BSgenome::getBSgenome(S4Vectors::metadata(SampleTileObject)$Genome)
+  GenomicRanges::seqinfo(motifsGRanges) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(motifsGRanges))]
+  
   # # Truncate trailing zeroes from score https://www.biostars.org/p/235193/
   # # (Error : Trailing characters parsing integer in field 4 line 1 of text, got 10.3405262378482)
   motifsGRanges$score <- floor(motifsGRanges$score)
-
+  
   # Filter out negative scores https://github.com/jhkorhonen/MOODS/issues/12
   motifsGRanges <- motifsGRanges[motifsGRanges$score > 0]
 
-
+  outList <- list()
   if (filterByOpenTiles) {
     # Split motifsGRangesFiltered by cell population, filtered to open tiles in cell population
     allPeaks <- SummarizedExperiment::rowRanges(SampleTileObject)
@@ -341,6 +443,7 @@ exportMotifs <- function(SampleTileObject,
       }
       # Output to bigbed
       rtracklayer::export.bb(cellTypePeakMotifs, outFile)
+      outList <- append(outList, outFile)
     }
   } else {
     outFile <- file.path(outDir, paste(motifSetName, "motifset.bigBed", sep = "__"))
@@ -349,5 +452,7 @@ exportMotifs <- function(SampleTileObject,
     }
     # Output to bigbed
     rtracklayer::export.bb(motifsGRanges, outFile)
+    outList <- append(outList, outFile)
   }
+  outList
 }

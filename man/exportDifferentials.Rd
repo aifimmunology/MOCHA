@@ -15,12 +15,15 @@ exportDifferentials(
 \item{SampleTileObject}{The SummarizedExperiment object output from
 \code{getSampleTileMatrix}}
 
-\item{DifferentialsGRList}{The GRangesList output from
+\item{DifferentialsGRList}{GRangesList output from
 \code{getDifferentialAccessibleTiles}}
 
 \item{outDir}{Desired output directory where bigBed files will be saved}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
+}
+\value{
+outList A List of output filepaths
 }
 \description{
 \code{exportDifferentials} exports the differential peaks

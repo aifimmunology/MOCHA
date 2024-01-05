@@ -6,18 +6,18 @@
 \usage{
 pilotLMEM(
   ExperimentObj,
-  assayName = NULL,
-  modelFormula = NULL,
+  assayName,
+  modelFormula,
   pilotIndices = 1:10,
   verbose = FALSE
 )
 }
 \arguments{
 \item{ExperimentObj}{A SummarizedExperiment-type object generated from
-chromVAR, makePseudobulkRNA, or other. Objects from getSampleTileMatrix can work, 
+chromVAR, makePseudobulkRNA, or other. Objects from getSampleTileMatrix can work,
 but we recommend runZIGLMM for those objects, not runLMEM>}
 
-\item{assayName}{a character string, matching the name of an assay within the SummarizedExperiment. 
+\item{assayName}{a character string, matching the name of an assay within the SummarizedExperiment.
 The assay named will be used for modeling.}
 
 \item{modelFormula}{The formula to use with lmerTest::lmer, in the
@@ -33,6 +33,9 @@ the ExperimentObj matrix. Default is 1:10.}
 modelList a list of outputs from lmerTest::lmer
 }
 \description{
-\code{pilotLMEM} Runs linear mixed-effects modeling for
+`r lifecycle::badge("deprecated")`
+  This function is deprecated - improved modeling functions can be found in 
+  the package "ChAI" at https://github.com/aifimmunology/ChAI
+  \code{pilotLMEM} Runs linear mixed-effects modeling for
   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 }

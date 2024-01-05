@@ -11,7 +11,7 @@ plotRegion(
   counts_color = NULL,
   range_label_size = 2,
   legend.position = NULL,
-  legendRatio = 0.05,
+  legendRatio = 0.25,
   facet_label_side = "top",
   counts_color_var = "Groups",
   counts_group_colors = NULL,

@@ -18,13 +18,18 @@ varZIGLMM(
 \item{TSAM_Object}{A SummarizedExperiment object generated from
 getSampleTileMatrix.}
 
-\item{cellPopulation}{Name of a cell type. Should match up exactly with the assay name within SummarizedExperiment.}
+\item{cellPopulation}{Name of a cell type(s), or 'all'. The function will
+combine the cell types mentioned into one matrix before running the model.}
 
-\item{continuousRandom}{Random effects to test in the continuous portion. All factors must be found in column names
-of the TSAM_Object metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.}
+\item{continuousRandom}{Random effects to test in the continuous portion. All
+factors must be found in column names of the TSAM_Object metadata, except
+for FragNumber and CellCount, which will be extracted from the
+TSAM_Object's metadata.}
 
-\item{ziRandom}{Random effects to test in the zero-inflated portion. All factors must be found in column names
-of the TSAM_Object colData metadata, except for FragNumber and CellCount, which will be extracted from the TSAM_Object's metadata.}
+\item{ziRandom}{Random effects to test in the zero-inflated portion. All
+factors must be found in column names of the TSAM_Object colData metadata,
+except for FragNumber and CellCount, which will be extracted from the
+TSAM_Object's metadata.}
 
 \item{zi_threshold}{Zero-inflated threshold ( range = 0-1), representing the
 fraction of samples with zeros. When the percentage of zeros in the tile is
@@ -37,20 +42,26 @@ continous formula is used. Use this parameter at your own risk. Default is
 \item{numCores}{integer. Number of cores to parallelize across.}
 }
 \value{
-results a SummarizedExperiment containing results from ZIGLMM (Fixed effect estiamtes, P-values, and Std Error)
+results a SummarizedExperiment containing results from ZIGLMM (Fixed
+  effect estiamtes, P-values, and Std Error)
 }
 \description{
-\code{varZIGLMM} Identified variance decomposition on a given cell type across both zero-inflated and continous
- space using a zero-inflated general linear mixed model \code{\link[glmmTMB]{glmmTMB}}
+`r lifecycle::badge("deprecated")`
+  This function is deprecated - improved modeling functions can be found in 
+  the package "ChAI" at https://github.com/aifimmunology/ChAI
+  \code{varZIGLMM} Identified variance decomposition on a given
+  cell type across both zero-inflated and continuous space using a
+  zero-inflated general linear mixed model \code{\link[glmmTMB]{glmmTMB}}
 }
 \examples{
 \dontrun{
-  modelList <- runZIGLMM(STM[c(1:1000),], 
-                 cellTypeName = 'CD16 Mono',
-                 continuousRandom = c('Age', 'Sex', 'Days'),
-                 ziRandom = c('FragNumber', 'Days'),
-                 verbose = TRUE, 
-                 numCores = 35 )
+modelList <- runZIGLMM(STM[c(1:1000), ],
+  cellPopulation = "CD16 Mono",
+  continuousRandom = c("Age", "Sex", "Days"),
+  ziRandom = c("FragNumber", "Days"),
+  verbose = TRUE,
+  numCores = 35
+)
 }
 
 }

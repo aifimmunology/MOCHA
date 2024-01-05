@@ -16,6 +16,9 @@ exportOpenTiles(SampleTileObject, cellPopulation, outDir, verbose = FALSE)
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
+\value{
+outList A List of output filepaths
+}
 \description{
 \code{exportOpenTiles} exports the open tiles of a given cell
  population to bigBed file for visualization in genome browsers.
@@ -23,7 +26,7 @@ exportOpenTiles(SampleTileObject, cellPopulation, outDir, verbose = FALSE)
 \examples{
 \dontrun{
 MOCHA::exportOpenTiles(
-  SampleTileObj = SampleTileObject,
+  SampleTileObject = SampleTileObject,
   cellPopulation,
   outDir = tempdir(),
   verbose = TRUE

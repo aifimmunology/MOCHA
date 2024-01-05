@@ -108,25 +108,23 @@ annotateTiles <- function(Obj,
 #' @description \code{getPromoterGenes} Takes a rowRanges from annotateTiles and extracts a unique list of genes.
 #'
 #' @param GRangesObj a GRanges object with a metadata column for tileType and Gene.
-#' @return vector of strings with gene names. 
+#' @return vector of strings with gene names.
 #'
 #' @export
-#' 
-
-getPromoterGenes <- function(GRangesObj){
-
-  if(class(GRangesObj)[1] != 'GRanges'){
-    stop('Object provided is not a GRanges object.')
+#'
+getPromoterGenes <- function(GRangesObj) {
+  tileType <- NULL
+  if (class(GRangesObj)[1] != "GRanges") {
+    stop("Object provided is not a GRanges object.")
   }
 
-  if(!all(c('tileType', 'Gene') %in% colnames(GenomicRanges::mcols(GRangesObj)))){
-    stop('GRanges object does not contain tileType or Gene column. Run annotateTiles on this GRanges object and try again.')
+  if (!all(c("tileType", "Gene") %in% colnames(GenomicRanges::mcols(GRangesObj)))) {
+    stop("GRanges object does not contain tileType or Gene column. Run annotateTiles on this GRanges object and try again.")
   }
 
-  promoterTiles <- plyranges::filter(GRangesObj, tileType == 'Promoter')
-  geneString <- paste0(unlist(GenomicRanges::mcols(promoterTiles)$Gene), collapse = ", ") 
-  genes <- unique(unlist(stringr::str_split(geneString, pattern = ', '), recursive =TRUE))
+  promoterTiles <- plyranges::filter(GRangesObj, tileType == "Promoter")
+  geneString <- paste0(unlist(GenomicRanges::mcols(promoterTiles)$Gene), collapse = ", ")
+  genes <- unique(unlist(stringr::str_split(geneString, pattern = ", "), recursive = TRUE))
 
   return(genes)
-
 }

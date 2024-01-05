@@ -20,6 +20,5 @@ TileCorr A data.table correlation matrix
 \description{
 \code{combineSampleTileMatrix} combines all celltypes in a
   SampleTileMatrix object into a SummarizedExperiment with one single matrix
-  across all cell types and samples, annotating GC bias using
-  chromVAR.
+  across all cell types and samples,
 }

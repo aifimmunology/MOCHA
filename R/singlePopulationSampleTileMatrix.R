@@ -62,8 +62,7 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
 #'   a set of tile intensities into peak X sample matrix for a custom set of tiles
 #'
 #'
-#' @param x ref a list of data on one specific cell type (RaggedExperiment) and all tiles that were called across that given population.
-
+#' @param ref a list of data on one specific cell type (RaggedExperiment) and all tiles that were called across that given population.
 #' @return sampleTileIntensityMat a sample X peak matrix containing observed
 #'   measurements for each sample at each peak.
 #'
@@ -72,8 +71,7 @@ singlePopulationSampleTileMatrix <- function(peaksExperiment,
 #' @references XX
 #'
 #' @keywords internal
-#'
-
+#' @noRd
 simplifiedSampleTile <- function(ref) {
   experiments <- ref[[1]]
   allTiles <- ref[[2]]

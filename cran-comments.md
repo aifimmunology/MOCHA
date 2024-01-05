@@ -1,5 +1,4 @@
-This is a resubmission. To reduce runtime of tests, skip_on_cran() statements 
-were added to all tests that are dependent on external test data.
+This is a resubmission addressing check errors in the 'donttest' examples.
 
 ## R CMD check results
 

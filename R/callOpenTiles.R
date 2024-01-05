@@ -58,7 +58,6 @@
 #'
 #' @return tileResults A MultiAssayExperiment object containing ranged data for
 #'   each tile
-#'
 #' @examples
 #' \dontrun{
 #' # Starting from an ArchR Project:
@@ -384,9 +383,14 @@ setMethod(
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
   # Make a copy to preserve original columns.
+
+  # This filtering introduced a bug where a cell population was only present
+  # in one sample - resulted in entire samples being dropped from
+  # summarizedData.
   # cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData),
   # !!as.name(cellPopLabel) %in% cellPopulations))
   cellColDataCopy <- copy(cellColData)
+
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
     utils::type.convert(as.character(x), as.is = TRUE)
   })
@@ -467,12 +471,14 @@ setMethod(
       study_prefactor <- 3668 / studySignal # Training median
     }
   } else {
-    if (generalizeStudySignal) { 
-      if (verbose) { message(
-        "Ignoring provided studySignal since `generalizeStudySignal` = TRUE. ",
-        "Calculating study signal on cellColData as the mean of the mean ",
-        "and median nFrags of individual samples within each cell population."
-      ) }
+    if (generalizeStudySignal) {
+      if (verbose) {
+        message(
+          "Ignoring provided studySignal since `generalizeStudySignal` = TRUE. ",
+          "Calculating study signal on cellColData as the mean of the mean ",
+          "and median nFrags of individual samples within each cell population."
+        )
+      }
       study_prefactor <- NULL
     } else {
       # Use user-provided studySignal
@@ -558,7 +564,6 @@ setMethod(
       rm(covFiles)
     }
 
-
     if (is.null(study_prefactor)) {
       if (verbose) {
         ("Calculating generalized study signal...")
@@ -574,7 +579,7 @@ setMethod(
         fragsdf <- as.data.frame(frags[[sample]])
         cellFragsTable <- table(fragsdf[[cellCol]]) # default cellCol is "RG"
         allmeans <- append(allmeans, mean(cellFragsTable))
-        allmedians <- append(allmedians, median(cellFragsTable))
+        allmedians <- append(allmedians, stats::median(cellFragsTable))
       }
       # average across all samples
       mean_nfrags <- mean(unlist(allmeans))
@@ -599,7 +604,9 @@ setMethod(
     iterList <- lapply(seq_along(frags), function(x) {
       list(blackList, frags[[x]], cellCol, verbose, study_prefactor)
     })
+
     # cl <- parallel::makeCluster(numCores)
+
     tilesGRangesList <- pbapply::pblapply(
       cl = cl,
       X = iterList,
@@ -633,7 +640,7 @@ setMethod(
         warning(
           "The following samples have too few cells (<5) of this celltype (",
           cellPop,
-          ") and will be ignored: ", 
+          ") and will be ignored: ",
           paste(names(tilesGRangesList)[emptyGroups], collapse = ", ")
         )
       }
@@ -685,7 +692,7 @@ setMethod(
   for (i in seq_along(sumDataAssayList)) {
     assayName <- names(sumDataAssayList[i])
     assay <- sumDataAssayList[[i]]
-    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop=FALSE])
+    sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop = FALSE])
   }
 
   sampleData <- dplyr::arrange(
@@ -721,20 +728,7 @@ setMethod(
       )
     }
   }
-
-  summarizedData <- SummarizedExperiment::SummarizedExperiment(
-    append(
-      list(
-        "CellCounts" = allCellCounts[
-            match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),],
-        "FragmentCounts" = allFragmentCounts[
-            match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),]
-      ),
-      additionalMetaData
-    ),
-    colData = sampleData
-  )
-
+  
   # Match cell populations in allCellCounts/allFragmentCounts to those
   # in additionalMetaData, in case of NA cell populations
   if (length(additionalMetaData) >= 1) {
@@ -743,14 +737,25 @@ setMethod(
       ,
       drop = FALSE
     ]
-
+    
     allFragmentCounts <- allFragmentCounts[
       match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
       ,
       drop = FALSE
     ]
   }
-
+  
+  summarizedData <- SummarizedExperiment::SummarizedExperiment(
+    append(
+      list(
+        "CellCounts" = allCellCounts,
+        "FragmentCounts" = allFragmentCounts
+      ),
+      additionalMetaData
+    ),
+    colData = sampleData
+  )
+ 
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
@@ -767,4 +772,3 @@ setMethod(
   )
   return(tileResults)
 }
-
