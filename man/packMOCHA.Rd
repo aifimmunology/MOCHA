@@ -25,7 +25,9 @@ zipfile Path to zip archive.
   \link[MOCHA]{unpackMOCHA}
 }
 \examples{
-\donttest{
+\dontrun{
+# Depends on and manipulates files on filesystem
+myOutputDir <- "/home/documents/MOCHA_out"
 zipPath <- MOCHA::packMOCHA(
   tileResults, zipfile = file.path(myOutputDir, "testzip.zip")
 )

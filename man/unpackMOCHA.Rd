@@ -22,7 +22,8 @@ MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)
   directory path to the new location. See also: \link[MOCHA]{packMOCHA}
 }
 \examples{
-\donttest{
+\dontrun{
+# Depends on files existing on your system
 MOCHA::unpackMOCHA(zipfile = "./mochaobj.zip", exdir = "./newMOCHAdir")
 }
 }

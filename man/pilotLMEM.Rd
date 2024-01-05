@@ -33,6 +33,9 @@ the ExperimentObj matrix. Default is 1:10.}
 modelList a list of outputs from lmerTest::lmer
 }
 \description{
-\code{pilotLMEM} Runs linear mixed-effects modeling for
+`r lifecycle::badge("deprecated")`
+  This function is deprecated - improved modeling functions can be found in 
+  the package "ChAI" at https://github.com/aifimmunology/ChAI
+  \code{pilotLMEM} Runs linear mixed-effects modeling for
   continuous, non-zero inflated data using \code{\link[lmerTest]{lmer}}
 }

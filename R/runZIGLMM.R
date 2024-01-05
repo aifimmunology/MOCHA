@@ -61,7 +61,7 @@ runZIGLMM <- function(TSAM_Object,
   lifecycle::deprecate_warn(
     when="1.1.0", 
     what="runZIGLMM()", 
-    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
   
   Sample <- NULL
@@ -266,7 +266,7 @@ individualZIGLMM <- function(iterList) {
   lifecycle::deprecate_soft(
     when="1.1.0", 
     what="individualZIGLMM()", 
-    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
   x <- iterList[[1]]
   continuousFormula <- iterList[[2]]
@@ -366,7 +366,7 @@ pilotZIGLMM <- function(TSAM_Object,
   lifecycle::deprecate_warn(
     when="1.1.0", 
     what="pilotZIGLMM()", 
-    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
   Sample <- NULL
   if (any(c(class(continuousFormula), class(ziformula)) != "formula")) {
@@ -486,7 +486,7 @@ getModelValues <- function(object, specificVariable) {
   lifecycle::deprecate_warn(
     when="1.1.0", 
     what="getModelValues()", 
-    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
   slopes <- SummarizedExperiment::assays(object)[["Slopes"]]
   significance <- SummarizedExperiment::assays(object)[["Significance"]]

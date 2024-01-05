@@ -15,7 +15,10 @@ getModelValues(object, specificVariable)
 A data.frame of slopes, significance, and standard error for one factor.
 }
 \description{
-\code{getModelValues} Pull out a data.frame of model values (slope, significance, and std.error) for a given factor from the SummarizedExperiment output of runZIGLMM.
+`r lifecycle::badge("deprecated")`
+  This function is deprecated - improved modeling functions can be found in 
+  the package "ChAI" at https://github.com/aifimmunology/ChAI
+  \code{getModelValues} Pull out a data.frame of model values (slope, significance, and std.error) for a given factor from the SummarizedExperiment output of runZIGLMM.
 }
 \examples{
 \dontrun{

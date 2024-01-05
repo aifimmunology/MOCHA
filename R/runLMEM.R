@@ -50,7 +50,7 @@ runLMEM <- function(ExperimentObj,
   lifecycle::deprecate_warn(
     when="1.1.0", 
     what="runLMEM()", 
-    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
   Sample <- NULL
 
@@ -318,7 +318,7 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
   lifecycle::deprecate_warn(
     when="1.1.0", 
     what="processModelOutputs()", 
-    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
   coeffNames <- rownames(nullDFList$Coeff)
   newColumnNames <- gsub("Pr\\(>\\|.\\|)", "p_value", gsub(" |\\. ", "_", colnames(nullDFList$Coeff)))
@@ -417,7 +417,7 @@ pilotLMEM <- function(ExperimentObj,
   lifecycle::deprecate_warn(
     when="1.1.0", 
     what="pilotLMEM()", 
-    details = "Please use improved modeling functions in the package "ChAI" at https://github.com/aifimmunology/ChAI"
+    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
   )
   Sample <- NULL
   if (length(assayName) > 1) {

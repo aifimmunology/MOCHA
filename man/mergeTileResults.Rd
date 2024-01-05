@@ -28,7 +28,7 @@ tileResults a single MultiAssayExperiment containing a sample-tile
   that are created with the same TxDb, OrgDb, and Genome assembly.
 }
 \examples{
-mergeTileResults(
+MOCHA::mergeTileResults(
   list(MOCHA:::testTileResults, MOCHA:::testTileResultsMultisample)
 )
 
