@@ -108,12 +108,12 @@ StringsToGRanges <- function(regionString) {
   #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
   # }
   . <- NULL
-  regionString <- gsub(",","",regionString)
+  regionString <- gsub(",", "", regionString)
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
-    gsub("-.*|−.*", "", .) %>%
+    gsub("-.*|-.*", "", .) %>%
     as.numeric()
-  endSite <- gsub(".*-|.*−", "", regionString) %>% as.numeric()
+  endSite <- gsub(".*-|.*-", "", regionString) %>% as.numeric()
 
   if (any(startSite >= endSite)) {
     stop("Error in region string: Make sure the start of the genomic range occurs before the end")
@@ -299,7 +299,7 @@ getSampleCellTypeMetadata <- function(object) {
 #' @export
 plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE) {
   Values <- NULL
-  if (!requireNamespace("Biobase", quietly = TRUE)){
+  if (!requireNamespace("Biobase", quietly = TRUE)) {
     stop("Package 'Biobase' is not installed. 'Biobase' is required for `plotIntensityDistribution`.")
   }
   mat <- unlist(Biobase::rowMedians(log2(getCellPopMatrix(TSAM_object, cellPopulation) + 1)))
@@ -320,4 +320,3 @@ plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FA
 
   return(p1)
 }
-
