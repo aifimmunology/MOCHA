@@ -14,7 +14,9 @@
 #'
 #' 
 getIntensityThreshold <- function(TSAM, cellPopulations = 'all', type = 'mean', returnPlots = TRUE, verbose = FALSE){
-
+    if(!requireNamespace("mixtools", quietly = TRUE)){
+      stop("Package `mixtools` not found. Please install `mixtools` to use MOCHA::getIntensityThreshold")
+    }
 
     allMat <- SummarizedExperiment::assays(TSAM)
 

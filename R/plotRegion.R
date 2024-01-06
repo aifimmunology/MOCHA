@@ -145,6 +145,9 @@ plotRegion <- function(countSE,
                        # Combined Tracks
                        relativeHeights = c(`Chr` = 0.9, `Normalized Counts` = 7, `Links` = 1.5, `Genes` = 2, `AdditionalGRanges` = 4.5),
                        verbose = FALSE) {
+  if(!requireNamespace("cowplot", quietly = TRUE)){
+    stop("Package `cowplot` not found. Please install `cowplot` to use MOCHA::plotRegion.")
+  }
   # Validate input
   supported_tracks <- c("Chr", "Normalized Counts", "Genes", "Links", "AdditionalGRanges")
   if (length(setdiff(names(relativeHeights), supported_tracks)) > 0) {
