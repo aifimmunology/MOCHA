@@ -103,7 +103,7 @@ countdf_to_region <- function(countdf) {
 #'
 #' @noRd
 
-.getTrackLabels <- function(TrackDF, groupVar = tx_name, nameFeat = GeneName){
+.getTrackLabels <- function(TrackDF, groupVar, nameFeat = GeneName){
     
   start <- end <- Spacing <- minStart <- maxEnd <- GeneName <- NULL
   ## Identified overlaps

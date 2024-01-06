@@ -145,7 +145,7 @@ getSequencingBias <- function(SampleTileObj, cellPopulations = 'all',
     # nFrags <- SampleTileObj@metadata$summarizedData$FragmentCounts
     nFrags <- SummarizedExperiment::assays(SampleTileObj@metadata$summarizedData)$FragmentCounts
 
-    medianList <- c(median(nFrags[foreground_samples,cellPopulations]), median(nFrags[background_samples,cellPopulations]))
+    medianList <- c(stats::median(nFrags[foreground_samples,cellPopulations]), stats::median(nFrags[background_samples,cellPopulations]))
 
     return(min(medianList)/max(medianList))
 
