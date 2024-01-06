@@ -142,7 +142,8 @@ getSequencingBias <- function(SampleTileObj, cellPopulations = 'all',
     foreground_samples <- metaFile[metaFile[, groupColumn] == foreground, "Sample"]
     background_samples <- metaFile[metaFile[, groupColumn] == background, "Sample"]
 
-    nFrags <- TSAM@metadata$fragmentTable
+    # nFrags <- SampleTileObj@metadata$summarizedData$FragmentCounts
+    nFrags <- SummarizedExperiment::assays(SampleTileObj@metadata$summarizedData)$FragmentCounts
 
     medianList <- c(median(nFrags[foreground_samples,cellPopulations]), median(nFrags[background_samples,cellPopulations]))
 
