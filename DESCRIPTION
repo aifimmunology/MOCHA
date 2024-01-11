@@ -44,6 +44,8 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
+URL: https://aifimmunology.github.io/MOCHA/, https://github.com/aifimmunology/MOCHA
+BugReports: https://github.com/aifimmunology/MOCHA/issues
 Depends: R (>= 4.1.0)
 biocViews:
 Imports:
