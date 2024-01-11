@@ -107,7 +107,7 @@ experiments <- MultiAssayExperiment::experiments(testTileResultsMultisample)
 for (x in 1:length(experiments)) {
   print(x)
   exp <- testTileResultsMultisample[[x]]
-  randIdx <- sort(sample(1:length(exp), 50000, replace = FALSE))
+  randIdx <- base::sort(sample(1:length(exp), 50000, replace = FALSE))
 
   testTileResultsMultisample[[x]] <- exp[randIdx]
 }
