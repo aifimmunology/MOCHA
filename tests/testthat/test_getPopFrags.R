@@ -36,14 +36,14 @@ if (dir.exists(ArchRProjDir) &&
       )
 
       # Test population+sample names are as expected
-      populations <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
+      populations <- base::sort(unique(getCellColData(testProj)[[cellPopLabel]]))
 
       samples <- unique(testProj$Sample)
       combinations <- purrr::cross2(populations, samples) %>% purrr::map(purrr::lift(paste))
       expected_names <- gsub(" ", "#", combinations)
 
       sampleNames <- names(popFrags)
-      actual_names <- sort(gsub("__.*", "", sampleNames))
+      actual_names <- base::sort(gsub("__.*", "", sampleNames))
 
       expect_equal(actual_names, expected_names)
 
@@ -79,8 +79,8 @@ if (dir.exists(ArchRProjDir) &&
   #       )
 
   #       # Test population names are as expected
-  #       actual_names <- sort(gsub("__.*", "", names(popFrags)))
-  #       expected_names <- sort(unique(getCellColData(testProj)[[cellPopLabel]]))
+  #       actual_names <- base::sort(gsub("__.*", "", names(popFrags)))
+  #       expected_names <- base::sort(unique(getCellColData(testProj)[[cellPopLabel]]))
   #       expect_equal(actual_names, expected_names)
   #     }
   #   )
