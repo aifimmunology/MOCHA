@@ -25,7 +25,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   # Extract all the Sample-Tile Matrices for each cell type
   assays <- SummarizedExperiment::assays(SampleTileObj)
 
-  coldata <- SummarizedExperiment::colData(SampleTileObj)
+  coldata <- SampleTileObj@colData
 
   # Let's generate a new assay, that will contain the
   # the intensity for a given cell, as well as the

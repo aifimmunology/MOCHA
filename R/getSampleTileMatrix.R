@@ -109,7 +109,7 @@ getSampleTileMatrix <- function(tileResults,
       paste(names(errorMessages)[!is.na(errorMessages)], collapse = ", ")
     )
   }
-  allTiles <- sort(unique(do.call("c", tilesByCellPop)))
+  allTiles <- base::sort(unique(do.call("c", tilesByCellPop)))
   if (verbose) {
     message(stringr::str_interp("Generating sample-tile matrix across all populations."))
   }

@@ -25,7 +25,7 @@
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   Freq <- NULL
   # Test for duplicate sample names
-  sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(SummarizedExperiment::colData(x))))
+  sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(x@colData)))
   if (any(duplicated(sampleTest))) {
     stop(
       "Sample names are duplicated in your list of tileResults.",
@@ -103,7 +103,7 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
 
   # Merged sample and other metadata information.
   allSampleData <- do.call(eval(parse(text = "dplyr::bind_rows")), lapply(tileResultsList, function(x) {
-    as.data.frame(SummarizedExperiment::colData(x))
+    as.data.frame(x@colData)
   }))
 
   # This is complicated, let's merge the summarizedData.

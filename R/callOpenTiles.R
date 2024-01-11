@@ -627,7 +627,7 @@ setMethod(
       tilesGRangesList <- append(tilesGRangesList, emptyGRanges)
     }
 
-    tilesGRangesList <- tilesGRangesList[sort(names(tilesGRangesList))]
+    tilesGRangesList <- tilesGRangesList[base::sort(names(tilesGRangesList))]
 
     # Cannot make peak calls with < 5 cells (see make_prediction.R)
     # so NULL will occur for those samples. We need to fill in

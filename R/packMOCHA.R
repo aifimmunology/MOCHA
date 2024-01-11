@@ -34,7 +34,7 @@ packMOCHA <- function(MOCHAObj,
     )
   }
   
-  if (class(zipfile) != "character" || !grepl("\\.zip$", zipfile)) {
+  if (!methods::is(zipfile, "character") || !grepl("\\.zip$", zipfile)) {
     stop("`zipfile` must be a character string ending in .zip")
   }
 

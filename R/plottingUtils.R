@@ -278,7 +278,7 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
   
   totalLength = GenomicRanges::width(regionGRanges)
     
-  allGenes <- sort(c(GenomicFeatures::intronicParts(TxDb, linked.to.single.gene.only = TRUE),
+  allGenes <- base::sort(c(GenomicFeatures::intronicParts(TxDb, linked.to.single.gene.only = TRUE),
                   GenomicFeatures::exonicParts(TxDb, linked.to.single.gene.only = TRUE)))
     
   geneTrackDF <- as.data.frame(
@@ -680,7 +680,7 @@ breaks_to_scaledbreaks <- function(breaks, x) {
 }
 
 cleanup_breaks <- function(breaks, x) {
-  breaks <- sort(breaks)
+  breaks <- base::sort(breaks)
   n_lower <- sum(breaks < min(x))
   while (n_lower > 1) {
     breaks <- breaks[-1]

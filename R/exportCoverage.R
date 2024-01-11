@@ -170,7 +170,7 @@ exportCoverage <- function(SampleTileObject,
           fileName <- paste(fileName, "__Insertions", sep = "")
         }
         # Edge case where there was only 1 sample to be averaged if !sampleSpecific
-        if (class(cellPopSubsampleCov[[i]]) == "list"){
+        if (methods::is(cellPopSubsampleCov[[i]], "list")){
           if (length(cellPopSubsampleCov[[i]]) == 1) {
             cellPopSubsampleCov[[i]] <- cellPopSubsampleCov[[i]][[1]]
           }
@@ -405,8 +405,8 @@ exportMotifs <- function(SampleTileObject,
     )
   }
   
-  if (class(motifsGRanges) != "GRanges") {
-    if (class(motifsGRanges) == "CompressedGRangesList") {
+  if (!methods::is(motifsGRanges, "GRanges")) {
+    if (methods::is(motifsGRanges, "CompressedGRangesList")) {
       motifsGRanges <- unlist(motifsGRanges)
     } else {
       stop("`motifsGRanges` is an unrecognized type. `motifsGRanges` must
