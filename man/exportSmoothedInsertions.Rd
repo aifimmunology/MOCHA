@@ -20,29 +20,30 @@ from MOCHA}
 
 \item{cellPopulation}{A string denoting the cell population of interest}
 
-\item{outDir}{Directory to write output bigwig files. Default is NULL, 
-where the directory in `SampleTileObj@metadata$Directory` will be used.}
+\item{outDir}{Directory to write output bigwig files. Default is NULL, where
+the directory in `SampleTileObj@metadata$Directory` will be used.}
+
+\item{sumWidth}{Window size for rolling sum in basepairs. Default is 10.}
+
+\item{medianWidth}{Window size for rolling median in basepairs. Must be odd.
+Default is 11.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{sum_k}{Window size for rolling sum in basepairs. Default is 10.}
-
-\item{median_k}{Window size for rolling median in basepairs. Must be odd. Default is 11.}
 }
 \value{
 outPaths List of paths of exported insertion files
 }
 \description{
-\code{exportSmoothedInsertions} Takes a SampleTileMatrix with 
-linked insertion files and applies a smoothing filter (a rolling sum then 
-rolling median) to the insertions, finally exporting the smoothed insertion 
-files to bigwig format.
+\code{exportSmoothedInsertions} Takes a SampleTileMatrix with
+  linked insertion files and applies a smoothing filter (a rolling sum then
+  rolling median) to the insertions, finally exporting the smoothed insertion
+  files to bigwig format.
 }
 \examples{
 \dontrun{
 # Depends on and manipulates files on filesystem
 outPath <- MOCHA::exportSmoothedInsertions(
-  SampleTileObj, 
+  SampleTileObj,
   cellPopulation = "CD4 Naive", sumWidth = 10, medianWidth = 11, verbose = FALSE
 )
 }

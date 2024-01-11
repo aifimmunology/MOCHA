@@ -1,33 +1,34 @@
 #' @title \code{exportSmoothedInsertions}
 #'
-#' @description \code{exportSmoothedInsertions} Takes a SampleTileMatrix with 
-#' linked insertion files and applies a smoothing filter (a rolling sum then 
-#' rolling median) to the insertions, finally exporting the smoothed insertion 
-#' files to bigwig format.
+#' @description \code{exportSmoothedInsertions} Takes a SampleTileMatrix with
+#'   linked insertion files and applies a smoothing filter (a rolling sum then
+#'   rolling median) to the insertions, finally exporting the smoothed insertion
+#'   files to bigwig format.
 #'
 #' @param SampleTileObj A MultiAssayExperiment or RangedSummarizedExperiment
-#' from MOCHA
+#'   from MOCHA
 #' @param cellPopulation A string denoting the cell population of interest
-#' @param sum_k Window size for rolling sum in basepairs. Default is 10.
-#' @param outDir Directory to write output bigwig files. Default is NULL, 
-#' where the directory in `SampleTileObj@metadata$Directory` will be used.
-#' @param median_k Window size for rolling median in basepairs. Must be odd. Default is 11.
+#' @param outDir Directory to write output bigwig files. Default is NULL, where
+#'   the directory in `SampleTileObj@metadata$Directory` will be used.
+#' @param sumWidth Window size for rolling sum in basepairs. Default is 10.
+#' @param medianWidth Window size for rolling median in basepairs. Must be odd.
+#'   Default is 11.
 #' @param verbose Set TRUE to overwrite existing files. Default is FALSE.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return outPaths List of paths of exported insertion files
-#' 
-#' @examples 
+#'
+#' @examples
 #' \dontrun{
 #' # Depends on and manipulates files on filesystem
 #' outPath <- MOCHA::exportSmoothedInsertions(
-#'   SampleTileObj, 
+#'   SampleTileObj,
 #'   cellPopulation = "CD4 Naive", sumWidth = 10, medianWidth = 11, verbose = FALSE
 #' )
 #' }
 #'
 #' @export
-#'
+#' 
 exportSmoothedInsertions <- function(SampleTileObj,
                                      cellPopulation,
                                      outDir = NULL,
