@@ -126,7 +126,7 @@ getSequencingBias <- function(SampleTileObj, cellPopulations = 'all',
         stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
     }
 
-    metaFile <- SummarizedExperiment::colData(SampleTileObj)
+    metaFile <- SampleTileObj@colData
 
     if (!(groupColumn %in% colnames(metaFile))) {
         stop(stringr::str_interp("Provided groupCol '{groupColumn}' not found in the provided SampleTileObj"))

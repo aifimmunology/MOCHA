@@ -67,7 +67,7 @@ getSampleTileMatrix <- function(tileResults,
   }
   # Any column can be used to group samples
   # Note that these are case-sensitive
-  sampleData <- SummarizedExperiment::colData(tileResults)
+  sampleData <- tileResults@colData
   validGroups <- colnames(sampleData)
   if (!is.null(groupColumn)) {
     if (!(groupColumn %in% validGroups)) {

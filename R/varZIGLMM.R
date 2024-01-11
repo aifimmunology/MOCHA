@@ -78,7 +78,7 @@ varZIGLMM <- function(TSAM_Object,
 
 
   modelingData <- log2(SummarizedExperiment::assays(newObj)[["counts"]] + 1)
-  MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
+  MetaDF <- as.data.frame(newObj@colData)
 
   if (!all(continuousRandom %in% c("exp", colnames(MetaDF)))) {
     stop("Random continuous effects are not found in metadata.")

@@ -30,6 +30,6 @@ test_that("getSampleTileMatrices works on a 1 sample test dataset", {
   )
 
   expect_snapshot_output(
-    SummarizedExperiment::colData(tilemat)
+    tilemat@colData
   )
 })

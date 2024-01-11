@@ -262,7 +262,7 @@ getCellTypeTiles <- function(object, cellType) {
 getSampleCellTypeMetadata <- function(object) {
   # Check if the object has Sample-CellType-level metadata stored in the metadata slot.
   if (all(c("FragmentCounts", "CellCounts") %in% names(object@metadata))) {
-    sampleData <- SummarizedExperiment::colData(object)
+    sampleData <- @colDataobject@colData
 
     fragCounts <- object@metadata$FragmentCounts
     fragMat <- as.matrix(t(fragCounts[match(rownames(sampleData), rownames(fragCounts)), ]))
