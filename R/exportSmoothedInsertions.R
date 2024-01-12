@@ -13,7 +13,7 @@
 #' @param sumWidth Window size for rolling sum in basepairs. Default is 10.
 #' @param medianWidth Window size for rolling median in basepairs. Must be odd.
 #'   Default is 11.
-#' @param verbose Set TRUE to overwrite existing files. Default is FALSE.
+#' @param force Set TRUE to overwrite existing files. Default is FALSE.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return outPaths List of paths of exported insertion files
@@ -37,7 +37,13 @@ exportSmoothedInsertions <- function(SampleTileObj,
                                      force=FALSE,
                                      verbose=FALSE
                                     ){
-    
+    if (!requireNamespace("zoo", quietly = TRUE)) {
+      stop(
+        "Package 'zoo' is required for exportSmoothedInsertions. ",
+        "Please install 'zoo' to proceed."
+      )
+    }
+    score <- start <- seqnames <- NULL
     if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
         stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
     }
@@ -87,18 +93,18 @@ exportSmoothedInsertions <- function(SampleTileObj,
         filtIns <- plyranges::filter(InsertionsGRanges, score!=0)
         
         # Operate one chromosome at a time to avoid R object size limits
-        allChrGR <- GRanges()
+        allChrGR <- GenomicRanges::GRanges()
         i = 0
-        pb <- txtProgressBar(min = i, max = length(levels(seqnames(filtIns))), style = 3)
-        for (chr in levels(seqnames(filtIns))) { # RAM usage maxes at 24GB
+        pb <- utils::txtProgressBar(min = i, max = length(levels(GenomicRanges::seqnames(filtIns))), style = 3)
+        for (chr in levels(GenomicRanges::seqnames(filtIns))) { # RAM usage maxes at 24GB
             i = i+1
-            setTxtProgressBar(pb, value = i, title = NULL, label = NULL)
+            utils::setTxtProgressBar(pb, value = i, title = NULL, label = NULL)
 
 
             chrIns <- plyranges::filter(filtIns, seqnames==chr)
 
             gpos <- GenomicRanges::GPos(chrIns)
-            x <- rep(score(chrIns), width(chrIns))
+            x <- rep(GenomicRanges::score(chrIns), GenomicRanges::width(chrIns))
             gpos$score <- x
 
             ######## Expand insertions to selectively keep zeroes ########
@@ -120,7 +126,7 @@ exportSmoothedInsertions <- function(SampleTileObj,
 
             # Transform back to GPos for smoothing filter
             gpos <- GenomicRanges::GPos(joinedGR)
-            x <- rep(score(joinedGR), width(joinedGR))
+            x <- rep(GenomicRanges::score(joinedGR), GenomicRanges::width(joinedGR))
             gpos$score <- x
 
             rm(joinedGR)
@@ -133,7 +139,7 @@ exportSmoothedInsertions <- function(SampleTileObj,
             gpos$score <- newx
 
             # Append to allChrGR
-            allChrGR <- c(allChrGR, GRanges(gpos))
+            allChrGR <- c(allChrGR, GenomicRanges::GRanges(gpos))
 
             rm(gpos)
             end <- Sys.time()
