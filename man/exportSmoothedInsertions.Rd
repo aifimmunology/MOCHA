@@ -28,6 +28,8 @@ the directory in `SampleTileObj@metadata$Directory` will be used.}
 \item{medianWidth}{Window size for rolling median in basepairs. Must be odd.
 Default is 11.}
 
+\item{force}{Set TRUE to overwrite existing files. Default is FALSE.}
+
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
