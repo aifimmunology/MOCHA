@@ -17,9 +17,12 @@
 #'   tileResultsList.
 #'
 #' @examples
+#' \dontrun{
+#' # Depends on local MOCHA tileResults
 #' MOCHA::mergeTileResults(
-#'   list(MOCHA:::testTileResults, MOCHA:::testTileResultsMultisample)
+#'   list(tileResultsCelltypesABC, tileResultsCelltypesBCD)
 #' )
+#' }
 #'
 #' @export
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {

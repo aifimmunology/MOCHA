@@ -28,8 +28,11 @@ tileResults a single MultiAssayExperiment containing a sample-tile
   that are created with the same TxDb, OrgDb, and Genome assembly.
 }
 \examples{
+\dontrun{
+# Depends on local MOCHA tileResults
 MOCHA::mergeTileResults(
-  list(MOCHA:::testTileResults, MOCHA:::testTileResultsMultisample)
+  list(tileResultsCelltypesABC, tileResultsCelltypesBCD)
 )
+}
 
 }
