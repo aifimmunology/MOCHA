@@ -88,7 +88,7 @@ runZIGLMM <- function(TSAM_Object,
   }
 
   modelingData <- log2(SummarizedExperiment::assays(newObj)[["counts"]] + 1)
-  MetaDF <- as.data.frame(newObj@colData)
+  MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
   if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF)))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")
@@ -395,7 +395,7 @@ pilotZIGLMM <- function(TSAM_Object,
 
 
   modelingData <- log2(SummarizedExperiment::assays(newObj)[["counts"]] + 1)
-  MetaDF <- as.data.frame(newObj@colData)
+  MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
 
   if (!all(all.vars(continuousFormula) %in% c("exp", colnames(MetaDF), "FragNumber", "CellCount", "CellType"))) {
     stop("Model formula is not in the correct format (exp ~ factors) or model factors are not found in column names of metadata within the TSAM_Object.")

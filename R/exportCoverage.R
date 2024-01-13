@@ -56,7 +56,7 @@ exportCoverage <- function(SampleTileObject,
   . <- idx <- score <- NULL
 
   cellNames <- names(SummarizedExperiment::assays(SampleTileObject))
-  metaFile <- SampleTileObject@colData
+  metaFile <- SummarizedExperiment::colData(SampleTileObject)
   outDir <- SampleTileObject@metadata$Directory
 
   if (is.na(outDir)) {
@@ -341,7 +341,7 @@ exportOpenTiles <- function(SampleTileObject,
       GenomicRanges::seqinfo(samplePeaksGR) <- GenomicRanges::seqinfo(genome)[GenomicRanges::seqnames(GenomicRanges::seqinfo(samplePeaksGR))]
 
 
-      sampleRow <- SampleTileObject@colData[sample, ]
+      sampleRow <- SummarizedExperiment::colData(SampleTileObject)[sample, ]
       pbmc_sample_id <- sampleRow[["Sample"]] # Enforced colname in callOpenTiles
       outFile <- file.path(outDir, paste(cellPopulation, pbmc_sample_id, sep = "__"))
       outFile <- paste0(outFile, ".bigBed")

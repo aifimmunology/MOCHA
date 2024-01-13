@@ -39,7 +39,7 @@ plotConsensus <- function(tileObject,
     }
   }
 
-  sampleData <- tileObject@colData
+  sampleData <- SummarizedExperiment::colData(tileObject)
 
 
   iterList <- lapply(names(subTileResults), function(x) {

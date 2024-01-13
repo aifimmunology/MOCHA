@@ -34,7 +34,7 @@ addAccessibilityShift <- function(CountSE,
     assayName <- paste("Delta:", foreground, "-", background, sep = "")
   }
 
-  metaFile <- CountSE@colData
+  metaFile <- SummarizedExperiment::colData(CountSE)
   outDir <- CountSE@metadata$Directory
 
   if (is.na(outDir)) {

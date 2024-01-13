@@ -72,7 +72,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     }
   }
 
-  metaFile <- SampleTileObj@colData
+  metaFile <- SummarizedExperiment::colData(SampleTileObj)
 
   if (!(groupColumn %in% colnames(metaFile))) {
     stop(stringr::str_interp("Provided groupCol '{groupColumn}' not found in the provided SampleTileObj"))

@@ -74,7 +74,7 @@ runLMEM <- function(ExperimentObj,
   modelingData <- as.data.frame(
     SummarizedExperiment::assays(ExperimentObj)[[assayName]]
   )
-  MetaDF <- as.data.frame(ExperimentObj@colData)
+  MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
 
 
   if (!methods::is(modelFormula, "character")) {
@@ -346,7 +346,7 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
   )
   rownames(residual_tmp) <- rownames(vcov_tmp) <- rownamesList
 
-  residual_tmp <- residual_tmp[, match(rownames(SummarizedExperimentObj@colData), colnames(residual_tmp))]
+  residual_tmp <- residual_tmp[, match(rownames(SummarizedExperiment::colData(SummarizedExperimentObj)), colnames(residual_tmp))]
 
   if (returnList) {
     return(list("output" = output_list, "Resid" = residual_tmp, "Variance" = vcov_tmp))
@@ -355,14 +355,14 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
   if (ranged) {
     ResidualSE <- SummarizedExperiment::SummarizedExperiment(
       list("Residual" = residual_tmp),
-      colData = SummarizedExperimentObj@colData,
+      colData = SummarizedExperiment::colData(SummarizedExperimentObj),
       rowRanges = SummarizedExperiment::rowRanges(SummarizedExperimentObj),
       metadata = S4Vectors::metadata(SummarizedExperimentObj)
     )
   } else {
     ResidualSE <- SummarizedExperiment::SummarizedExperiment(
       list("Residual" = residual_tmp),
-      colData = SummarizedExperimentObj@colData,
+      colData = SummarizedExperiment::colData(SummarizedExperimentObj),
       rowData = SummarizedExperiment::rowData(SummarizedExperimentObj),
       metadata = S4Vectors::metadata(SummarizedExperimentObj)
     )
@@ -434,7 +434,7 @@ pilotLMEM <- function(ExperimentObj,
   }
 
   modelingData <- SummarizedExperiment::assays(ExperimentObj)[[assayName]]
-  MetaDF <- as.data.frame(ExperimentObj@colData)
+  MetaDF <- as.data.frame(SummarizedExperiment::colData(ExperimentObj))
 
   if (!methods::is(modelFormula, "formula") & !methods::is(modelFormula, "character")) {
     stop(

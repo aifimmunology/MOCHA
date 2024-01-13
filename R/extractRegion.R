@@ -64,7 +64,7 @@ extractRegion <- function(SampleTileObj,
   . <- idx <- score <- NULL
 
   cellNames <- names(SummarizedExperiment::assays(SampleTileObj))
-  metaFile <- SampleTileObj@colData
+  metaFile <- SummarizedExperiment::colData(SampleTileObj)
   outDir <- SampleTileObj@metadata$Directory
 
   if (is.na(outDir)) {

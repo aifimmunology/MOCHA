@@ -27,7 +27,7 @@ subsetMOCHAObject <- function(Object,
                               subsetPeaks = TRUE,
                               verbose = FALSE) {
   summarizedData <- S4Vectors::metadata(Object)$summarizedData
-  sampleData <- Object@colData
+  sampleData <- SummarizedExperiment::colData(Object)
 
   if (!(subsetBy %in% colnames(sampleData)) & !grepl("celltype", tolower(subsetBy))) {
     stop(

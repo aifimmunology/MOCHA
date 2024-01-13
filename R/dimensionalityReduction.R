@@ -84,7 +84,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     DimReducObj <- SummarizedExperiment::SummarizedExperiment(
       assayList1,
       metadata = newMetadata,
-      colData = fullObj@colData
+      colData = SummarizedExperiment::colData(fullObj)
     )
   } else if (tolower(method) == "pca") {
 
@@ -115,7 +115,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
       assayList1,
       rowData = t(loadings),
       metadata = newMetadata,
-      colData = fullObj@colData
+      colData = SummarizedExperiment::colData(fullObj)
     )
   } else {
     stop("Method not recognized. Must be LSI or PCA.")
@@ -183,7 +183,7 @@ bulkUMAP <- function(SEObj,
 
     fullUMAP <- dplyr::left_join(
       subUMAP,
-      as.data.frame(SEObj@colData),
+      as.data.frame(SummarizedExperiment::colData(SEObj)),
       by = "Sample"
     )
 
@@ -196,7 +196,7 @@ bulkUMAP <- function(SEObj,
 
     fullUMAP <- dplyr::left_join(
       subUMAP,
-      as.data.frame(SEObj@colData),
+      as.data.frame(SummarizedExperiment::colData(SEObj)),
       by = "Sample"
     )
 
