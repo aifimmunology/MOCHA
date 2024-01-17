@@ -41,7 +41,7 @@ test_that("FindCoAccessibleLinks works on a 3 sample test dataset", {
 
   cellPopulation <- "C2"
   regions <- MOCHA::StringsToGRanges(c(
-    "chr1:101775000-101775499"
+    "chr1:10009500-10009999"
   ))
   links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
     cellPopulation,
@@ -73,7 +73,7 @@ test_that("FindCoAccessibleLinks errors with regions that are not valid tiles", 
   cellPopulation <- "C2"
   regions <- MOCHA::StringsToGRanges(c(
     "chr1:102368000-102368499", # does not exist
-    "chr1:101873000-101873499", # valid
+    "chr1:10003000-10003499", # valid
     "chr3:102368000-102368499" # does not exist
   ))
   expect_error(

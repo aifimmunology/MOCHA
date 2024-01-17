@@ -8,7 +8,7 @@ library(org.Hs.eg.db)
 ArchR::getTestProject()
 testProj <- ArchR::loadArchRProject("PBMCSmall")
 
-TxDb <- "TxDb.Hsapiens.UCSC.hg38.refGene" # should be hg19 - for future update
+TxDb <- "TxDb.Hsapiens.UCSC.hg19.knownGene"
 Org <- "org.Hs.eg.db"
 
 testTileResults <- MOCHA::callOpenTiles(
@@ -23,20 +23,17 @@ testTileResults <- MOCHA::callOpenTiles(
 
 exampleFragments <- MOCHA::getPopFrags(
   ArchRProj = testProj,
-  metaColumn = "Clusters",
+  cellPopLabel = "Clusters",
   cellSubsets = c("C2", "C5"),
-  region = NULL,
-  numCores = 10,
-  sampleSpecific = TRUE,
-  NormMethod = "nfrags",
-  blackList = NULL,
-  overlapList = 50
+  numCores = 10
 )
 
 exampleCellColData <- ArchR::getCellColData(testProj)
-exampleCellColData <- cellColData[c("Sample", "nFrags", "Clusters")]
+exampleCellColData <- exampleCellColData[c("Sample", "nFrags", "Clusters")]
 
 exampleBlackList <- ArchR::getBlacklist(testProj)
+
+########## External data ##########
 
 usethis::use_data(
   exampleFragments,
@@ -55,8 +52,8 @@ inputFiles <- ArchR::getTutorialData("Hematopoiesis")
 addArchRGenome("hg19")
 
 # Uncomment if HemeFragments is already downloaded
-# inputFiles <- c(scATAC_BMMC_R1="HemeFragments/scATAC_BMMC_R1.fragments.tsv.gz", 
-#                 scATAC_PBMC_R1="HemeFragments/scATAC_PBMC_R1.fragments.tsv.gz", 
+# inputFiles <- c(scATAC_BMMC_R1="HemeFragments/scATAC_BMMC_R1.fragments.tsv.gz",
+#                 scATAC_PBMC_R1="HemeFragments/scATAC_PBMC_R1.fragments.tsv.gz",
 #                 scATAC_CD34_BMMC_R1="HemeFragments/scATAC_CD34_BMMC_R1.fragments.tsv.gz")
 
 ArrowFiles <- ArchR::createArrowFiles(
@@ -104,6 +101,7 @@ testTileResultsMultisample <- MOCHA::callOpenTiles(
 )
 experiments <- MultiAssayExperiment::experiments(testTileResultsMultisample)
 
+# Take a random sample of tiles to reduce size of object
 for (x in 1:length(experiments)) {
   print(x)
   exp <- testTileResultsMultisample[[x]]
@@ -113,10 +111,9 @@ for (x in 1:length(experiments)) {
 }
 
 # Motif list for MotifEnrichment
-requireNamespace("chromVAR", quietly = TRUE)
-requireNamespace("chromVARmotifs", quietly = TRUE)
-requireNamespace("motifmatchr", quietly = TRUE)
-requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)
+requireNamespace("chromVARmotifs", quietly = FALSE)
+requireNamespace("motifmatchr", quietly = FALSE)
+requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = FALSE)
 library(BSgenome.Hsapiens.UCSC.hg19)
 
 testSampleTileMatrix <- MOCHA::getSampleTileMatrix(
@@ -126,9 +123,8 @@ testSampleTileMatrix <- MOCHA::getSampleTileMatrix(
 )
 
 STM <- MOCHA::addMotifSet(
-  testSampleTileMatrix,
-  chromVARmotifs::human_pwms_v2,
-  genome = BSgenome.Hsapiens.UCSC.hg19,
+  SampleTileObj = testSampleTileMatrix,
+  motifPWMs = chromVARmotifs::human_pwms_v2,
   motifSetName = 'CISBP'
 )
 posList <- STM@metadata$CISBP
@@ -152,13 +148,12 @@ testPosList <- smallPosList
 
 # Uncomment to preserve current versions of test data
 # while adding new metadata
-newmeta1 <- testTileResults@metadata
-testTileResults <- MOCHA:::testTileResults
-metadata(testTileResults) <- newmeta1
-
-newmeta2 <- testTileResultsMultisample@metadata
-testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
-metadata(testTileResultsMultisample) <- newmeta2
+# newmeta1 <- testTileResults@metadata 
+# testTileResults <- MOCHA:::testTileResults
+# metadata(testTileResults) <- newmeta1
+# newmeta2 <- testTileResultsMultisample@metadata
+# testTileResultsMultisample <- MOCHA:::testTileResultsMultisample
+# metadata(testTileResultsMultisample) <- newmeta2
 
 testPeaks <- MOCHA:::testPeaks
 testPosList <- MOCHA:::testPosList

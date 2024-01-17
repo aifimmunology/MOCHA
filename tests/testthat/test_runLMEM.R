@@ -88,7 +88,7 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       assayName = "C2",
       pilotIndices = c(1:5),
       modelFormula = "exp ~ Sample + PassQC"
-    ), "0")
+    ), "No random effects terms specified in formula")
   })
 
   test_that("runLMEM errors with invalid formula", {
@@ -152,6 +152,6 @@ if (requireNamespace("lmerTest", quietly = TRUE)) {
       ExperimentObj,
       modelFormula = "exp ~ PassQC+Sample",
       assayName = "C2",
-    ), "0")
+    ), "No random effects terms specified in formula")
   })
 }
