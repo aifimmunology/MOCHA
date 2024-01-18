@@ -50,8 +50,12 @@ foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
   for that correlation compared to the background
 }
 \description{
-\code{testCoAccessibilityChromVar} takes an input set of tile
+`r lifecycle::badge("deprecated")`
+  This function is deprecated due as we no longer recommend using a chromVAR 
+  background set.
+  \code{testCoAccessibilityChromVar} takes an input set of tile
   pairs and tests whether they are significantly different compared to a
   background set found via ChromVAR
 }
-\keyword{downstream}
+\keyword{downstream,}
+\keyword{internal}

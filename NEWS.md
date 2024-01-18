@@ -1,3 +1,39 @@
+# MOCHA 1.1.0
+* New Functions:
+  - Sharing MOCHA objects between file systems
+    - packMOCHA
+    - unpackMOCHA
+  - Exporting for genome browsers (bigwig, bigbed)
+    - exportCoverage
+    - exportDifferentials
+    - exportMotifs
+    - exportOpenTiles
+    - exportSmoothedInsertions
+  - Getters 
+    - getCellTypeTiles
+    - getCellTypes
+    - getPromoterGenes
+    - getSampleCellTypeMetadata
+  - Other
+    - mergeTileResults
+    - plotIntensityDistribution
+    - renameCellTypes
+
+* Deprecated Functions:
+  - runLMEM, pilotLMEM, runZIGLMM, pilotZIGLMM, IndividualZIGLMM, getModelValues, varZIGLMM, processModelOutputs
+  
+* Updates test data to consistently use TxDb hg19 references.
+
+* Various minor bug and documentation fixes.
+
+# MOCHA 1.0.2
+* Addressed check errors in "donttest" examples.
+
+# MOCHA 1.0.1
+
+* Deprecates `testCoAccessibilityChromVAR()` and `testCoAccessibilityRandom()` in favor of `testCoAccessibility()`
+* Updates maintainer email
+
 # MOCHA 1.0.0
 
 * Adopting semantic versioning starting with this version, versioning reflects breaking changes compared to previous CRAN release.

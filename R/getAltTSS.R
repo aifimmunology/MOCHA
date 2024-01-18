@@ -111,7 +111,7 @@ getAltTSS <- function(completeDAPs,
       )
     ) %>%
     plyranges::ungroup() %>%
-    sort()
+    base::sort()
 
   if (nuancedTSS) {
     suppressWarnings(

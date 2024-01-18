@@ -52,7 +52,10 @@ continous formula is used. Use this parameter at your own risk. Default is
 results a SummarizedExperiment containing LMEM results
 }
 \description{
-\code{runZIGLMM} Runs linear mixed-effects modeling for
+`r lifecycle::badge("deprecated")`
+  This function is deprecated - improved modeling functions can be found in 
+  the package "ChAI" at https://github.com/aifimmunology/ChAI
+  \code{runZIGLMM} Runs linear mixed-effects modeling for
   zero-inflated data using \code{\link[glmmTMB]{glmmTMB}}.
 }
 \examples{

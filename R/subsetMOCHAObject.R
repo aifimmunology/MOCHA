@@ -1,6 +1,6 @@
 #' @title Subset a tileResults object by metadata
 #'
-#' @description \code{subsetObject} subsets a tileResults-type object (from
+#' @description \code{subsetMOCHAObject} subsets a tileResults-type object (from
 #'   callOpenTiles), or a SummarizedExperiment-type object (from
 #'   getSampleTileMatrix), either by cell type or sample metadata.
 #'
@@ -73,7 +73,7 @@ subsetMOCHAObject <- function(Object,
 
       keepIdx <- which(names(SummarizedExperiment::assays(Object)) %in% groupList)
       SummarizedExperiment::assays(Object) <- SummarizedExperiment::assays(Object)[keepIdx]
-      Object@metadata$summarizedData <- summarizedData[keepIdx, ]
+      Object@metadata$summarizedData <- summarizedData[groupList, ]
 
       # Subset peaks
       if (subsetPeaks) {
@@ -111,5 +111,56 @@ subsetMOCHAObject <- function(Object,
     Object <- Object[, keepSamples]
     Object@metadata$summarizedData <- summarizedData[, keepSamples]
     return(Object)
+  } else {
+    stop("subsetBy not recognized.")
+  }
+}
+
+#' @title \code{renameCellTypes}
+#'
+#' @description \code{renameCellTypes} Allows you to modify the cell type names for a MOCHA SampleTileObject, from
+#'                    the assay names, GRanges column names, and summarizedData (within the metadata), all at once.
+#'
+#' @param MOCHAObject A  RangedSummarizedExperiment,
+#' @param oldNames A list of cell type names that you want to change.
+#' @param newNames A list of new cell type names to replace the old names with.
+#' @return A MOCHA SampleTile object with new cell types.
+#'
+#' @export
+renameCellTypes <- function(MOCHAObject,
+                            oldNames,
+                            newNames) {
+  if (methods::is(MOCHAObject, "SummarizedExperiment")) {
+    if (!any(grepl("getSampleTileMatrix", unlist(MOCHAObject@metadata$History)))) {
+      stop("MOCHAObject is not an SampleTile object from MOCHA.")
+    }
+
+    if (!all(oldNames %in% names(SummarizedExperiment::assays(MOCHAObject)))) {
+      stop("Not all of the provided oldNames exist in the current MOCHAObject")
+    }
+
+    if (length(oldNames) != length(newNames)) {
+      stop("oldNames and newNames are different lengths.")
+    }
+
+    # assay names edits
+    assayNames <- names(SummarizedExperiment::assays(MOCHAObject))
+    assayNames[match(oldNames, assayNames)] <- newNames
+    names(SummarizedExperiment::assays(MOCHAObject)) <- assayNames
+
+    # rowRanges edits
+    mColData <- GenomicRanges::mcols(SummarizedExperiment::rowRanges(MOCHAObject))
+    colnames(mColData)[match(oldNames, colnames(mColData))] <- newNames
+    GenomicRanges::mcols(SummarizedExperiment::rowRanges(MOCHAObject)) <- mColData
+
+    # summarized cell type metadata edits
+    oldSumData <- rownames(MOCHAObject@metadata$summarizedData)
+    oldSumData[match(oldNames, oldSumData)] <- newNames
+
+    rownames(MOCHAObject@metadata$summarizedData) <- oldSumData
+
+    return(MOCHAObject)
+  } else {
+    stop("MOCHAObject is not an SampleTile object from MOCHA.")
   }
 }

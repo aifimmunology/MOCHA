@@ -35,7 +35,7 @@ Object the input Object, filtered down to either the cell type or
   samples desired.
 }
 \description{
-\code{subsetObject} subsets a tileResults-type object (from
+\code{subsetMOCHAObject} subsets a tileResults-type object (from
   callOpenTiles), or a SummarizedExperiment-type object (from
   getSampleTileMatrix), either by cell type or sample metadata.
 }

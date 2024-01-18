@@ -1,6 +1,3 @@
-This is a resubmission. To reduce runtime of tests, skip_on_cran() statements 
-were added to all tests that are dependent on external test data.
-
 ## R CMD check results
 
 There were no ERRORs or WARNINGs. 

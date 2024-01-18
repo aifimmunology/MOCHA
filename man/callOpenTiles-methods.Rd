@@ -21,6 +21,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  generalizeStudySignal = FALSE,
   cellCol = "RG",
   TxDb,
   OrgDb,
@@ -38,6 +39,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  generalizeStudySignal = FALSE,
   cellCol = "RG",
   TxDb,
   OrgDb,
@@ -55,6 +57,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  generalizeStudySignal = FALSE,
   cellCol = "RG",
   TxDb,
   OrgDb,
@@ -72,6 +75,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  generalizeStudySignal = FALSE,
   cellCol = "RG",
   TxDb,
   OrgDb,
@@ -86,6 +90,7 @@ callOpenTiles(
   cellPopLabel,
   cellPopulations = "ALL",
   studySignal = NULL,
+  generalizeStudySignal = FALSE,
   TxDb,
   OrgDb,
   outDir = NULL,
@@ -105,10 +110,10 @@ specified by 'cellPopLabel'.}
 
 \item{blackList}{A GRanges of blacklisted regions}
 
-\item{genome}{A BSgenome object, or the full name of an installed
-BSgenome data package, or a short string specifying the name of an NCBI
-assembly (e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38",
-"bosTau9", "galGal6", "ce11", etc...). The supplied short string must refer
+\item{genome}{A BSgenome object, or the full name of an installed BSgenome
+data package, or a short string specifying the name of an NCBI assembly
+(e.g. "GRCh38", "TAIR10.1", etc...) or UCSC genome (e.g. "hg38", "bosTau9",
+"galGal6", "ce11", etc...). The supplied short string must refer
 unambiguously to an installed BSgenome data package. See
 \link[BSgenome]{getBSgenome}.}
 
@@ -125,6 +130,12 @@ Default is 'ALL'.}
 not set, this will be calculated using the input ArchR project but relies
 on the assumption that the ArchR project encompasses your whole study (i.e.
 is not a subset).}
+
+\item{generalizeStudySignal}{If `studySignal` is not provided, calculate the
+signal as the mean of the mean & median number of fragments for of
+individual samples within each cell population. This may improve MOCHA's
+ability to generalize to datasets with XXXXXX #TODO. Default is FALSE, use
+the median number of fragments.}
 
 \item{cellCol}{The column in cellColData specifying unique cell ids or
 barcodes. Default is "RG", the unique cell identifier used by ArchR.}

@@ -49,6 +49,8 @@ if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
 
 
   test_that("annotateTiles works on a GRanges", {
+    require(TxDb.Hsapiens.UCSC.hg38.refGene)
+    require(org.Hs.eg.db)
     cellPopulations <- c("C2", "C3")
     capture.output(
       SampleTileMatrix <- MOCHA::getSampleTileMatrix(
