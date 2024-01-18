@@ -41,7 +41,7 @@
 #' }
 #'
 #' @export
-#'
+#' @keywords exporting
 
 exportCoverage <- function(SampleTileObject,
                            dir = getwd(),
@@ -233,7 +233,7 @@ averageCoverage <- function(coverageList) {
 #' }
 #'
 #' @export
-#'
+#' @keywords exporting
 exportDifferentials <- function(SampleTileObject,
                                 DifferentialsGRList,
                                 outDir,
@@ -307,6 +307,7 @@ exportDifferentials <- function(SampleTileObject,
 #'
 #' @export
 #'
+#' @keywords exporting
 exportOpenTiles <- function(SampleTileObject,
                             cellPopulation,
                             outDir,
@@ -391,7 +392,7 @@ exportOpenTiles <- function(SampleTileObject,
 #' }
 #'
 #' @export
-#'
+#' @keywords exporting
 exportMotifs <- function(SampleTileObject,
                          motifsGRanges,
                          motifSetName = "motifs",

@@ -20,3 +20,4 @@ A MOCHA SampleTile object with new cell types.
 \code{renameCellTypes} Allows you to modify the cell type names for a MOCHA SampleTileObject, from
                    the assay names, GRanges column names, and summarizedData (within the metadata), all at once.
 }
+\keyword{utils}

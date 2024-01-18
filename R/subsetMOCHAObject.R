@@ -127,6 +127,7 @@ subsetMOCHAObject <- function(Object,
 #' @return A MOCHA SampleTile object with new cell types.
 #'
 #' @export
+#' @keywords utils
 renameCellTypes <- function(MOCHAObject,
                             oldNames,
                             newNames) {

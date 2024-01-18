@@ -13,5 +13,6 @@ getPromoterGenes(GRangesObj)
 vector of strings with gene names.
 }
 \description{
-\code{getPromoterGenes} Takes a rowRanges from annotateTiles and extracts a unique list of genes.
+\code{getPromoterGenes} Takes rowRanges from annotateTiles and extracts a unique list of genes.
 }
+\keyword{utils}

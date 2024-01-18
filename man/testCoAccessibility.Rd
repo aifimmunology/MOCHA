@@ -51,3 +51,4 @@ foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
   pairs and tests whether they are significantly different compared to
   random, non-overlapping background set.
 }
+\keyword{downstream}

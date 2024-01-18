@@ -15,3 +15,4 @@ a SummarizedExperiment where each assay is a different type of metadata.
 \description{
 \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and
 }
+\keyword{utils}

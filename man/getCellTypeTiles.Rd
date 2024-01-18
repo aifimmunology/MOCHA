@@ -17,3 +17,4 @@ a vector of cell type names.
 \description{
 \code{getCellTypeTiles} Returns a GRanges object of all tiles called for a certain cell type
 }
+\keyword{utils}

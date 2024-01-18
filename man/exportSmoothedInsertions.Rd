@@ -51,3 +51,4 @@ outPath <- MOCHA::exportSmoothedInsertions(
 }
 
 }
+\keyword{exporting}

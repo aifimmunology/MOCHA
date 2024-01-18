@@ -28,7 +28,7 @@
 #' }
 #'
 #' @export
-#' 
+#' @keywords exporting
 exportSmoothedInsertions <- function(SampleTileObj,
                                      cellPopulation,
                                      outDir = NULL,
@@ -115,7 +115,7 @@ exportSmoothedInsertions <- function(SampleTileObj,
             windowsGR <- joinedGR %>% plyranges::stretch(extend = 2*max(sumWidth, medianWidth)) %>%
                             plyranges::reduce_ranges()
 
-            # Create GRanges of zeroes back zeroes
+            # Create GRanges of zeroes
             zeroesGR <- plyranges::compute_coverage(joinedGR) %>% plyranges::filter(score==0)
 
             # Filter zeroesGR to just zeroes in the windows

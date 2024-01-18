@@ -18,3 +18,4 @@ the loaded Annotation database object.#' @noRd
 \description{
 See \link[BSgenome]{getBSgenome}
 }
+\keyword{internal}

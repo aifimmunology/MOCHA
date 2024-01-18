@@ -52,3 +52,4 @@ MOCHA::exportMotifs(
 }
 
 }
+\keyword{exporting}

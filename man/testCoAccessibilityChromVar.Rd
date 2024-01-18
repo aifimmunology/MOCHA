@@ -57,5 +57,4 @@ foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
   pairs and tests whether they are significantly different compared to a
   background set found via ChromVAR
 }
-\keyword{downstream,}
-\keyword{internal}
+\keyword{downstream}

@@ -31,3 +31,4 @@ plot object
   callOpenTiles and creates sample-tile matrices containing the signal
   intensity at each tile.
 }
+\keyword{internal}

@@ -32,7 +32,7 @@
 #'   for that correlation compared to the background
 #'
 #' @export
-#' @keywords downstream, internal
+#' @keywords downstream
 testCoAccessibilityChromVar <- function(SampleTileObj,
                                         tile1,
                                         tile2,
@@ -311,7 +311,7 @@ testCoAccessibilityRandom <- function(SampleTileObj,
 #'   for that correlation compared to the background
 #'
 #' @export
-#'
+#' @keywords downstream
 testCoAccessibility <- function(SampleTileObj,
                                 tile1,
                                 tile2,

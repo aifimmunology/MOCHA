@@ -15,3 +15,4 @@ a vector of cell type names.
 \description{
 \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
 }
+\keyword{utils}

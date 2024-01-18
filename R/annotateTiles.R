@@ -106,13 +106,13 @@ annotateTiles <- function(Obj,
 
 #' @title \code{getPromoterGenes}
 #'
-#' @description \code{getPromoterGenes} Takes a rowRanges from annotateTiles and extracts a unique list of genes.
+#' @description \code{getPromoterGenes} Takes rowRanges from annotateTiles and extracts a unique list of genes.
 #'
 #' @param GRangesObj a GRanges object with a metadata column for tileType and Gene.
 #' @return vector of strings with gene names.
 #'
 #' @export
-#'
+#' @keywords utils
 getPromoterGenes <- function(GRangesObj) {
   tileType <- NULL
   if (class(GRangesObj)[1] != "GRanges") {

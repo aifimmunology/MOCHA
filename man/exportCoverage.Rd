@@ -70,3 +70,4 @@ MOCHA::exportCoverage(
 }
 
 }
+\keyword{exporting}

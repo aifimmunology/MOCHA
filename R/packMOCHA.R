@@ -23,7 +23,7 @@
 #' }
 #'
 #' @export
-#'
+#' @keywords exporting
 packMOCHA <- function(MOCHAObj,
                       zipfile,
                       verbose = FALSE) {
@@ -67,7 +67,7 @@ packMOCHA <- function(MOCHAObj,
 #' MOCHA::unpackMOCHA(zipfile = "./mochaobj.zip", exdir = "./newMOCHAdir")
 #' }
 #' @export
-#'
+#' @keywords exporting
 unpackMOCHA <- function(zipfile,
                         exdir,
                         verbose = FALSE) {

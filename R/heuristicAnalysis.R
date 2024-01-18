@@ -12,7 +12,7 @@
 #'
 #' @return plot object
 #'
-#' 
+#' @keywords internal
 getIntensityThreshold <- function(TSAM, cellPopulations = 'all', type = 'mean', returnPlots = TRUE, verbose = FALSE){
     if(!requireNamespace("mixtools", quietly = TRUE)){
       stop("Package `mixtools` not found. Please install `mixtools` to use MOCHA::getIntensityThreshold")
@@ -72,15 +72,15 @@ getIntensityThreshold <- function(TSAM, cellPopulations = 'all', type = 'mean', 
 
 
 #' @title \code{plotIntensityDistribution}
-#' @description \code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a give cell type
+#' @description \code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a given cell population
 #'
 #' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
-#' @param cellPopulation Cell type names (assay name) within the TSAM_object
+#' @param cellPopulation Cell population names (assay name) within the TSAM_object
 #' @param returnDF Boolean. Determines whether or not to return a DataFrame instead of a plot. 
 #' @return data.frame or ggplot histogram. 
 #'
 #' @export
-
+#' @keywords plotting
 plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE){
 
      values <- NULL
@@ -114,7 +114,7 @@ plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FA
 #'
 #' @return plot object
 #'
-#' 
+#' @keywords internal
 getSequencingBias <- function(SampleTileObj, cellPopulations = 'all',
                                            cellPopulation,
                                            groupColumn,

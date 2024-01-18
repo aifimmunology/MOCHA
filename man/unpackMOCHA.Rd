@@ -27,3 +27,4 @@ MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)
 MOCHA::unpackMOCHA(zipfile = "./mochaobj.zip", exdir = "./newMOCHAdir")
 }
 }
+\keyword{exporting}

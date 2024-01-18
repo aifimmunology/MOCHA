@@ -43,7 +43,7 @@
 #' }
 #'
 #' @export
-#' 
+#' @keywords downstream
 varZIGLMM <- function(TSAM_Object,
                       cellPopulation = NULL,
                       continuousRandom = NULL,

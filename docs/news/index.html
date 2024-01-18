@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,6 +51,50 @@
       <small>Source: <a href="https://github.com/aifimmunology/MOCHA/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.0" id="mocha-110">MOCHA 1.1.0<a class="anchor" aria-label="anchor" href="#mocha-110"></a></h2>
+<ul><li>
+<p>New Functions:</p>
+<ul><li>Sharing MOCHA objects between file systems
+<ul><li>packMOCHA</li>
+<li>unpackMOCHA</li>
+</ul></li>
+<li>Exporting for genome browsers (bigwig, bigbed)
+<ul><li>exportCoverage</li>
+<li>exportDifferentials</li>
+<li>exportMotifs</li>
+<li>exportOpenTiles</li>
+<li>exportSmoothedInsertions</li>
+</ul></li>
+<li>Getters
+<ul><li>getCellTypeTiles</li>
+<li>getCellTypes</li>
+<li>getPromoterGenes</li>
+<li>getSampleCellTypeMetadata</li>
+</ul></li>
+<li>Other
+<ul><li>mergeTileResults</li>
+<li>plotIntensityDistribution</li>
+<li>renameCellTypes</li>
+</ul></li>
+</ul></li>
+<li>
+<p>Deprecated Functions:</p>
+<ul><li>runLMEM, pilotLMEM, runZIGLMM, pilotZIGLMM, IndividualZIGLMM, getModelValues, varZIGLMM, processModelOutputs</li>
+</ul></li>
+<li><p>Updates test data to consistently use TxDb hg19 references.</p></li>
+<li><p>Various minor bug and documentation fixes.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.2" id="mocha-102">MOCHA 1.0.2<a class="anchor" aria-label="anchor" href="#mocha-102"></a></h2><p class="text-muted">CRAN release: 2023-12-21</p>
+<ul><li>Addressed check errors in “donttest” examples.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.1" id="mocha-101">MOCHA 1.0.1<a class="anchor" aria-label="anchor" href="#mocha-101"></a></h2><p class="text-muted">CRAN release: 2023-11-14</p>
+<ul><li>Deprecates <code>testCoAccessibilityChromVAR()</code> and <code><a href="../reference/testCoAccessibilityRandom.html">testCoAccessibilityRandom()</a></code> in favor of <code><a href="../reference/testCoAccessibility.html">testCoAccessibility()</a></code>
+</li>
+<li>Updates maintainer email</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="mocha-100">MOCHA 1.0.0<a class="anchor" aria-label="anchor" href="#mocha-100"></a></h2><p class="text-muted">CRAN release: 2023-06-12</p>
 <ul><li>Adopting semantic versioning starting with this version, versioning reflects breaking changes compared to previous CRAN release.</li>

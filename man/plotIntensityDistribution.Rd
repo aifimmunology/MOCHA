@@ -33,7 +33,8 @@ data.frame or ggplot histogram.
 data.frame or ggplot histogram.
 }
 \description{
-\code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a give cell type
+\code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a given cell population
 
 \code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a give cell type
 }
+\keyword{plotting}

@@ -21,6 +21,9 @@ reference:
 - title: "Downstream Analyses"
 - contents:
   - has_keyword("downstream")
+- title: "Exporting/Sharing"
+- contents:
+  - has_keyword("exporting")
 - title: "Utilities"
 - contents:
   - has_keyword("utils")

@@ -25,6 +25,7 @@
 #' }
 #'
 #' @export
+#' @keywords utils
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   Freq <- NULL
   # Test for duplicate sample names

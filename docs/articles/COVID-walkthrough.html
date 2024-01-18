@@ -27,7 +27,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,7 +103,7 @@
 <span></span>
 <span><span class="va">ArchRProj</span> <span class="op">&lt;-</span> <span class="fu">ArchR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ArchR/man/loadArchRProject.html" class="external-link">loadArchRProject</a></span><span class="op">(</span><span class="st">"/home/jupyter/FullCovid"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="fu">ArchR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ArchR/man/getCellColData.html" class="external-link">getCellColData</a></span><span class="op">(</span><span class="va">ArchRProj</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="fu">ArchR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ArchR/man/getCellColData.html" class="external-link">getCellColData</a></span><span class="op">(</span><span class="va">ArchRProj</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">studySignal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">metadata</span><span class="op">$</span><span class="va">nFrags</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Get metadata information at the sample level</span></span>
@@ -267,6 +267,7 @@ stage.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">regionToPlot</span> <span class="op">=</span> <span class="st">"chr4:XXX-XXXX"</span></span>
 <span></span>
+<span><span class="co">## Extract the counts for each group, or sets of samples</span></span>
 <span><span class="va">countSE</span> <span class="op">&lt;-</span> <span class="fu">MOCHA</span><span class="fu">::</span><span class="fu"><a href="../reference/extractRegion.html">extractRegion</a></span><span class="op">(</span></span>
 <span>  SampleTileObj <span class="op">=</span> <span class="va">SampleTileMatrices</span>, </span>
 <span>  cellPopulations <span class="op">=</span> <span class="st">"CD16 Mono"</span>, </span>
@@ -275,7 +276,14 @@ stage.</p>
 <span>  numCores <span class="op">=</span> <span class="va">numCores</span>, </span>
 <span>  sampleSpecific <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## If you want to look at the data, you can access it by:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">countSE</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">## You should see a column for chromosome, a column for position, and column for accessibility, and for group.</span></span>
+<span><span class="co">## If you want, you can generate your own visualizations from here, or you can move to use MOCHA's plotting features.</span></span>
+<span></span>
+<span><span class="co"># Let's now plot the results using MOCHA's plotRegion function.</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/grDevices/pdf.html" class="external-link">pdf</a></span><span class="op">(</span><span class="st">"ExamplePlot.pdf"</span><span class="op">)</span></span>
 <span><span class="co"># Note that to show specific genes with the option' whichGene'</span></span>
 <span><span class="co"># you must have the package RMariaDB installed </span></span>

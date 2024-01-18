@@ -173,6 +173,7 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
 #' @param type Expected class of the annotation data package, must be
 #'   either "OrgDb" or "TxDb".
 #' @return the loaded Annotation database object.#' @noRd
+#' @keywords internal
 getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   if (!methods::is(dbName, "character")) {
     stop(
@@ -213,8 +214,9 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
 #'
 #' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
 #' @return a vector of cell type names.
-#'
+#' 
 #' @export
+#' @keywords utils
 getCellTypes <- function(object) {
   if (class(object)[1] == "MultiAssayExperiment") {
     return(names(object))
@@ -235,6 +237,7 @@ getCellTypes <- function(object) {
 #' @return a vector of cell type names.
 #'
 #' @export
+#' @keywords utils
 getCellTypeTiles <- function(object, cellType) {
   if (class(object)[1] == "MultiAssayExperiment") {
     stop("This is a MultiAssayExperiment, and thus like a tileResults object. Please provide a SampleTileMatrix object.")
@@ -261,6 +264,7 @@ getCellTypeTiles <- function(object, cellType) {
 #' @return a SummarizedExperiment where each assay is a different type of metadata.
 #'
 #' @export
+#' @keywords utils
 getSampleCellTypeMetadata <- function(object) {
   # Check if the object has Sample-CellType-level metadata stored in the metadata slot.
   if (all(c("FragmentCounts", "CellCounts") %in% names(object@metadata))) {
@@ -300,6 +304,7 @@ getSampleCellTypeMetadata <- function(object) {
 #' @return data.frame or ggplot histogram.
 #'
 #' @export
+#' @keywords plotting
 plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE) {
   Values <- NULL
   if (!requireNamespace("Biobase", quietly = TRUE)) {

@@ -6,14 +6,14 @@
   your counts SummarizedExperiment. A basic plot can be rendered with just a
   counts SummarizedExperiment, but additional formatting arguments allow for
   further customization. Note that to show specific genes with the option
-  'whichGene' the RMariaDB package must be installed."><title>Plot a given region summarized across all cell groupings — plotRegion • MOCHA</title><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.1.0/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.1.0/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Plot a given region summarized across all cell groupings — plotRegion"><meta property="og:description" content="plotRegion Plots the region that you've summarized across
+  'whichGenes' the RMariaDB package must be installed."><title>Plot a given region summarized across all cell groupings — plotRegion • MOCHA</title><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.1.0/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.1.0/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet"><meta property="og:title" content="Plot a given region summarized across all cell groupings — plotRegion"><meta property="og:description" content="plotRegion Plots the region that you've summarized across
   all cell groupings (groups=initial getPopFrags() split) with optional motif
   overlay, chromosome position ideogram, and additional GRanges tracks. If
   plotting motif overlay, ensure that motif annotations have been added to
   your counts SummarizedExperiment. A basic plot can be rendered with just a
   counts SummarizedExperiment, but additional formatting arguments allow for
   further customization. Note that to show specific genes with the option
-  'whichGene' the RMariaDB package must be installed."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
+  'whichGenes' the RMariaDB package must be installed."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body>
@@ -24,7 +24,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MOCHA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,7 @@
   your counts SummarizedExperiment. A basic plot can be rendered with just a
   counts SummarizedExperiment, but additional formatting arguments allow for
   further customization. Note that to show specific genes with the option
-  'whichGene' the <span class="pkg">RMariaDB</span> package must be installed.</p>
+  'whichGenes' the <span class="pkg">RMariaDB</span> package must be installed.</p>
     </div>
 
     <div class="section level2">
@@ -86,6 +86,7 @@
 <span>  counts_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  range_label_size <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  legend.position <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  legendRatio <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  facet_label_side <span class="op">=</span> <span class="st">"top"</span>,</span>
 <span>  counts_color_var <span class="op">=</span> <span class="st">"Groups"</span>,</span>
 <span>  counts_group_colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -101,9 +102,10 @@
 <span>  motif_line_alpha <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  motif_line_size <span class="op">=</span> <span class="fl">0.75</span>,</span>
 <span>  showGene <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  whichGene <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  whichGenes <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  monotoneGenes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  db_id_col <span class="op">=</span> <span class="st">"REFSEQ"</span>,</span>
-<span>  collapseGenes <span class="op">=</span> <span class="st">"None"</span>,</span>
+<span>  collapseGenes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  gene_theme_ls <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  additionalGRangesTrack <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  linkdf <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -148,6 +150,10 @@ range label</p></dd>
 <dd><p>Any acceptable `legend.position` argument to theme().
 Default NULL will place legend for overlaid plots at (0.8,0.8), or to the
 "right" for faceted plots.</p></dd>
+
+
+<dt>legendRatio</dt>
+<dd><p>Ratio of width or height of the main plot to the legend. Useful if the legend is to large. If only used when legend.position is set to top, bottom, left, or right.</p></dd>
 
 
 <dt>facet_label_side</dt>
@@ -227,13 +233,17 @@ color value.</p></dd>
 should be plotted.</p></dd>
 
 
-<dt>whichGene</dt>
+<dt>whichGenes</dt>
 <dd><p>Name of gene for plotting this specific gene in region.</p></dd>
+
+
+<dt>monotoneGenes</dt>
+<dd><p>Boolean. Determines whether to color-code genes by gene name, or to set them all to dark gray.</p></dd>
 
 
 <dt>db_id_col</dt>
 <dd><p>Character value. Column in `OrgDb` containing the output id
-for `whichGene` plotting. Default "REFSEQ".</p></dd>
+for `whichGenes` plotting. Default "REFSEQ".</p></dd>
 
 
 <dt>collapseGenes</dt>

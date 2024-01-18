@@ -34,3 +34,4 @@ zipPath <- MOCHA::packMOCHA(
 }
 
 }
+\keyword{exporting}

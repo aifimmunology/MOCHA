@@ -73,6 +73,21 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/exampleFragments.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/exportCoverage.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/exportDifferentials.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/exportMotifs.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/exportOpenTiles.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/exportSmoothedInsertions.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/extractErrorFromConsensusTiles.html</loc>
   </url>
   <url>
@@ -88,7 +103,16 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/getAltTSS.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getAnnotationDbFromInstalledPkgname.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/getCellPopMatrix.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getCellTypeTiles.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getCellTypes.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/getCoAccessibleLinks.html</loc>
@@ -100,16 +124,34 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/getDifferentialAccessibleTiles.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getIntensityThreshold.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/getModelValues.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/getPopFrags.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getPromoterGenes.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getSampleCellTypeMetadata.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/getSampleTileMatrix.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/getSequencingBias.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/mergeTileResults.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/packMOCHA.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/pilotLMEM.html</loc>
@@ -121,7 +163,13 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/plotConsensus.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/plotIntensityDistribution.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/plotRegion.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/renameCellTypes.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/runLMEM.html</loc>
@@ -145,10 +193,19 @@
     <loc>https://aifimmunology.github.io/MOCHA/reference/subsetMOCHAObject.html</loc>
   </url>
   <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/testCoAccessibility.html</loc>
+  </url>
+  <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/testCoAccessibilityChromVar.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/testCoAccessibilityRandom.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/unpackMOCHA.html</loc>
+  </url>
+  <url>
+    <loc>https://aifimmunology.github.io/MOCHA/reference/varZIGLMM.html</loc>
   </url>
   <url>
     <loc>https://aifimmunology.github.io/MOCHA/reference/youden_threshold.html</loc>
