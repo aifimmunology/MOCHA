@@ -438,7 +438,7 @@ setMethod(
         
       #Remove any columns with missing labels
       cellTypeList <- summarizedData[[cellPopLabel]]
-      summarizedData <- summarizedData[!is.na(cellTypeList),]
+      summarizedData <- summarizedData[!is.na(cellTypeList),,drop=FALSE]
       cellTypeList <- cellTypeList[!is.na(cellTypeList)]
       rownames(summarizedData) <- summarizedData[[cellPopLabel]]
       summarizedData <- summarizedData[, -1, drop = FALSE]
