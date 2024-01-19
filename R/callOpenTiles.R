@@ -386,6 +386,14 @@ setMethod(
     )
       
   }
+      
+  if(any(is.na(cellColData[[cellPopLabel]]))){
+  
+      warning(
+          stringr::str_interp("Some cells within the column ${cellPopLabel} are labeled as NA. Those cells will be ignored.")
+        )
+      
+  }
 
   # For additional metadata:
   # Some numeric columns may be stored as character - convert these to numeric
@@ -397,14 +405,6 @@ setMethod(
   # cellColDataCopy <- as.data.frame(dplyr::filter(data.frame(cellColData),
   # !!as.name(cellPopLabel) %in% cellPopulations))
   cellColDataCopy <- copy(cellColData)
-    
-  if(any(is.na(cellColDataCopy[[cellPopLabel]]))){
-  
-      warning(
-          stringr::str_interp("Some cells within the column ${cellPopLabel} are labeled as NA. Those cells will be ignored.")
-        )
-      
-  }
 
   cellColDataCopy[] <- lapply(cellColDataCopy, function(x) {
     utils::type.convert(as.character(x), as.is = TRUE)
