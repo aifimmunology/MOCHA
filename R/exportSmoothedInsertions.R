@@ -14,6 +14,9 @@
 #' @param medianWidth Window size for rolling median in basepairs. Must be odd.
 #'   Default is 11.
 #' @param force Set TRUE to overwrite existing files. Default is FALSE.
+#' @param slow Set TRUE to bypass optimisations and compute smoothing filter
+#'   directly on the whole genome. May run slower and consume more RAM. Default
+#'   is FALSE.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return outPaths List of paths of exported insertion files
@@ -35,6 +38,7 @@ exportSmoothedInsertions <- function(SampleTileObj,
                                      sumWidth=10, 
                                      medianWidth=11,
                                      force=FALSE,
+                                     slow=FALSE,
                                      verbose=FALSE
                                     ){
     if (!requireNamespace("zoo", quietly = TRUE)) {
@@ -105,35 +109,38 @@ exportSmoothedInsertions <- function(SampleTileObj,
 
             gpos <- GenomicRanges::GPos(chrIns)
             x <- rep(GenomicRanges::score(chrIns), GenomicRanges::width(chrIns))
-            gpos$score <- x
+            
+            if (!slow) { # slow=FALSE by default to use these optimizations below
 
-            ######## Expand insertions to selectively keep zeroes ########
-
-            joinedGR <- GenomicRanges::GRanges(gpos)
-
-            # Create GRanges of windows where insertions are <10bp apart
-            windowsGR <- joinedGR %>% plyranges::stretch(extend = 2*max(sumWidth, medianWidth)) %>%
-                            plyranges::reduce_ranges()
-
-            # Create GRanges of zeroes back zeroes
-            zeroesGR <- plyranges::compute_coverage(joinedGR) %>% plyranges::filter(score==0)
-
-            # Filter zeroesGR to just zeroes in the windows
-            zeroesGR <- plyranges::join_overlap_intersect(zeroesGR, windowsGR)
-
-            # Merge the insertion GRanges with the filtered zeroes, and sort by start pos
-            joinedGR <- plyranges::bind_ranges(joinedGR, zeroesGR) %>% plyranges::arrange(start)
-
-            # Transform back to GPos for smoothing filter
-            gpos <- GenomicRanges::GPos(joinedGR)
-            x <- rep(GenomicRanges::score(joinedGR), GenomicRanges::width(joinedGR))
-            gpos$score <- x
-
-            rm(joinedGR)
+              ######## Expand insertions to selectively keep zeroes ########
+              gpos$score <- x
+  
+              joinedGR <- GenomicRanges::GRanges(gpos)
+  
+              # Create GRanges of windows where insertions are <10bp apart
+              windowsGR <- joinedGR %>% plyranges::stretch(extend = 2*max(sumWidth, medianWidth)) %>%
+                              plyranges::reduce_ranges()
+  
+              # Create GRanges of zeroes back zeroes
+              zeroesGR <- plyranges::compute_coverage(joinedGR) %>% plyranges::filter(score==0)
+  
+              # Filter zeroesGR to just zeroes in the windows
+              zeroesGR <- plyranges::join_overlap_intersect(zeroesGR, windowsGR)
+  
+              # Merge the insertion GRanges with the filtered zeroes, and sort by start pos
+              joinedGR <- plyranges::bind_ranges(joinedGR, zeroesGR) %>% plyranges::arrange(start)
+  
+              # Transform back to GPos for smoothing filter
+              gpos <- GenomicRanges::GPos(joinedGR)
+              x <- rep(GenomicRanges::score(joinedGR), GenomicRanges::width(joinedGR))
+              gpos$score <- x
+  
+              rm(joinedGR)
+              
+            }
 
             ######## Transform with smoothing filter ######## 
 
-            x <- gpos$score
             newx <- zoo::rollsum(x, k=sumWidth, align = 'center', fill = 0)
             newx <- zoo::rollmedian(newx, k=medianWidth, align = 'center', fill = 0)
             gpos$score <- newx
