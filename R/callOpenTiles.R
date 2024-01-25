@@ -347,9 +347,30 @@ setMethod(
   OrgDbName <- OrgDb
   TxDb <- getAnnotationDbFromInstalledPkgname(dbName = TxDb, type = "TxDb")
   OrgDb <- getAnnotationDbFromInstalledPkgname(dbName = OrgDb, type = "OrgDb")
+  
+  if (any(is.na(cellColData[[cellPopLabel]]))){
+    
+    warning(
+      stringr::str_interp("Some cells within the column ${cellPopLabel} are labeled as NA. Those cells will be ignored.")
+    )
+    
+  }
 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
+  
+  if (!all(cellPopulations %in%  unique(cellTypeLabelList))) {
+    missingCellPopulations <- cellPopulations[
+      !cellPopulations %in%  unique(cellTypeLabelList)
+    ]
+    stop(
+      stringr::str_interp(paste0(
+        "Some or all of the cell populations provided were not found in the ",
+        "cellColData column '${cellPopLabel}'. Missing cell populations: "
+      )),
+      paste0(missingCellPopulations, collapse=", "), "."
+    )
+  }
 
   #################
   # Begin constructing the additional metadata SummarizedExperiment
@@ -376,9 +397,16 @@ setMethod(
   # of interest
   if (all(cellPopulations == "ALL")) {
     cellPopulations <- colnames(allCellCounts)
-  } else {
+  } else if(any(rownames(allCellCounts) %in% cellPopulations)){
     allCellCounts <- allCellCounts[rownames(allCellCounts) %in% cellPopulations, , drop = FALSE]
     allFragmentCounts <- allFragmentCounts[rownames(allFragmentCounts) %in% cellPopulations, , drop = FALSE]
+  } else{
+  
+    stop(
+      stringr::str_interp("Some or all of the cell populations provided were not found in the cellColData column ${cellPopLabel}. 
+        These cell populations include ${cellPopulations}.")
+    )
+      
   }
 
   # For additional metadata:
@@ -399,7 +427,7 @@ setMethod(
   # Assume all numeric columns are to be saved as additionalCellData
   isNumericCol <- unlist(lapply(cellColDataCopy, function(x) is.numeric(x)))
   additionalCellData <- colnames(cellColDataCopy)[isNumericCol]
-
+                                
   # Group by Sample (rows) and cellPop (columns)
   if (!is.null(additionalCellData)) {
     if (verbose) {
@@ -421,6 +449,10 @@ setMethod(
       )
 
       summarizedData <- as.data.frame(summarizedData)
+        
+      #Remove any columns with missing labels
+      cellTypeList <- summarizedData[[cellPopLabel]]
+      summarizedData <- summarizedData[!is.na(cellTypeList),,drop=FALSE]
       rownames(summarizedData) <- summarizedData[[cellPopLabel]]
       summarizedData <- summarizedData[, -1, drop = FALSE]
 

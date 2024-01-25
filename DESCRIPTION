@@ -85,6 +85,7 @@ Suggests:
     motifmatchr,
     BiocManager,
     TxDb.Hsapiens.UCSC.hg38.refGene,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
     org.Hs.eg.db,
     BSgenome.Hsapiens.UCSC.hg19,
     withr,
