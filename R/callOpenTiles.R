@@ -346,9 +346,30 @@ setMethod(
   OrgDbName <- OrgDb
   TxDb <- getAnnotationDbFromInstalledPkgname(dbName = TxDb, type = "TxDb")
   OrgDb <- getAnnotationDbFromInstalledPkgname(dbName = OrgDb, type = "OrgDb")
+  
+  if (any(is.na(cellColData[[cellPopLabel]]))){
+    
+    warning(
+      stringr::str_interp("Some cells within the column ${cellPopLabel} are labeled as NA. Those cells will be ignored.")
+    )
+    
+  }
 
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
+  
+  if (!all(cellPopulations %in%  unique(cellTypeLabelList))) {
+    missingCellPopulations <- cellPopulations[
+      !cellPopulations %in%  unique(cellTypeLabelList)
+    ]
+    stop(
+      stringr::str_interp(paste0(
+        "Some or all of the cell populations provided were not found in the ",
+        "cellColData column '${cellPopLabel}'. Missing cell populations: "
+      )),
+      paste0(missingCellPopulations, collapse=", "), "."
+    )
+  }
 
   #################
   # Begin constructing the additional metadata SummarizedExperiment
@@ -381,17 +402,9 @@ setMethod(
   } else{
   
     stop(
-      stringr::str_interp("Some or all of the cell populations provided were not found in the metadata column ${cellPopLabel}. 
+      stringr::str_interp("Some or all of the cell populations provided were not found in the cellColData column ${cellPopLabel}. 
         These cell populations include ${cellPopulations}.")
     )
-      
-  }
-      
-  if(any(is.na(cellColData[[cellPopLabel]]))){
-  
-      warning(
-          stringr::str_interp("Some cells within the column ${cellPopLabel} are labeled as NA. Those cells will be ignored.")
-        )
       
   }
 
