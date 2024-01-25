@@ -11,6 +11,7 @@ exportSmoothedInsertions(
   sumWidth = 10,
   medianWidth = 11,
   force = FALSE,
+  slow = FALSE,
   verbose = FALSE
 )
 }
@@ -29,6 +30,10 @@ the directory in `SampleTileObj@metadata$Directory` will be used.}
 Default is 11.}
 
 \item{force}{Set TRUE to overwrite existing files. Default is FALSE.}
+
+\item{slow}{Set TRUE to bypass optimisations and compute smoothing filter
+directly on the whole genome. May run slower and consume more RAM. Default
+is FALSE.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
