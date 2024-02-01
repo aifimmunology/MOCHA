@@ -45,7 +45,23 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     stop("cellType not found. SampleTileObj must contain the given cellType.")
   }
 
+ browser()
   countMat[is.na(countMat)] <- 0
+    
+  #Check for empty columns. 
+  colSumVec <- colSums(countMat)
+  #Pull out sample metadata
+  sampleMeta <- SummarizedExperiment::colData(fullObj)
+  if(any(colSumVec == 0)){
+      
+      
+    countMat <- countMat[,colSumVec!=0]
+    totalRemoved <- sum(colSumVec == 0)
+    warning(stringr::str_interp(" ${totalRemoved} Columns were empty and removed."))
+      
+    sampleMeta2 <- sampleMeta[colSumVec!=0,]
+      
+   }
 
   if (tolower(method) == "lsi") {
     if (!requireNamespace("irlba", quietly = TRUE)) {
@@ -84,8 +100,9 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     DimReducObj <- SummarizedExperiment::SummarizedExperiment(
       assayList1,
       metadata = newMetadata,
-      colData = SummarizedExperiment::colData(fullObj)
+      colData =sampleMeta
     )
+      
   } else if (tolower(method) == "pca") {
 
     # SVD step, using 30 components
@@ -115,7 +132,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
       assayList1,
       rowData = t(loadings),
       metadata = newMetadata,
-      colData = SummarizedExperiment::colData(fullObj)
+      colData = sampleMeta
     )
   } else {
     stop("Method not recognized. Must be LSI or PCA.")
@@ -158,12 +175,52 @@ bulkUMAP <- function(SEObj,
       "Please install 'uwot' to proceed."
     )
   }
-
+ browser()
   set.seed(seed)
-  if (!any(names(SummarizedExperiment::assays(SEObj)) == assay)) {
-    stop("Assay was not represented in the SEObj. ")
+
+    
+  allCellTypes <- names(SummarizedExperiment::assays(SEObj))
+  if(assay %in% c("LSI","PCA")){
+    countMat <- t(SummarizedExperiment::assays(SEObj)[[assay]])
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
+  }else if (all(tolower(assay) == "all")) {
+    fullObj <- combineSampleTileMatrix(SEObj)
+    countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+  } else if (all(assay %in% allCellTypes)) {
+    newTSAM <- subsetMOCHAObject(SEObj,
+      subsetBy = "celltype",
+      groupList = assay, subsetPeaks = TRUE,
+      verbose = verbose
+    )
+    fullObj <- combineSampleTileMatrix(newTSAM)
+    countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+      
+  } else {
+    stop("Assay was not represented in the SEObj.")
   }
-  countMat <- t(SummarizedExperiment::assays(SEObj)[[assay]])
+    
+  if(!assay %in% c('LSI', 'PCA')){
+  
+      countMat[is.na(countMat)] <- 0
+      
+      #Check for empty columns. 
+      colSumVec <- colSums(countMat)
+      #Pull out sample metadata
+      sampleMeta <- SummarizedExperiment::colData(fullObj)
+      if(any(colSumVec == 0)){
+
+
+        countMat <- countMat[,colSumVec!=0]
+        totalRemoved <- sum(colSumVec == 0)
+        warning(stringr::str_interp(" ${totalRemoved} Columns were empty and removed."))
+
+        sampleMeta <- sampleMeta[colSumVec!=0,]
+       }
+      components = dim(countMat)[2]
+
+      
+  }
+ 
 
   if (any(is.na(countMat))) {
     stop("The given matrix contains NA. Remove and try again.")
