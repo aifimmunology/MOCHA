@@ -49,7 +49,11 @@ ExperimentObj matrix. Default is 1:10.}
 modelList a list of outputs from glmmTMB::glmmTMB
 }
 \description{
-\code{pilotLMEM} Runs linear mixed-effects modeling for zero
+`r lifecycle::badge("deprecated")`
+  This function is deprecated - improved modeling functions can be found in 
+  the package "ChAI" at https://github.com/aifimmunology/ChAI
+  \code{pilotLMEM} Runs linear mixed-effects modeling for zero
   inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch
   errors, and return the error and dataframe for troubleshooting.
 }
+\keyword{downstream}

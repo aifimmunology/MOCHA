@@ -1,4 +1,4 @@
-#' @title Get sample-specific coverage files for each sample-cell population.
+#' @title Get sample-specific coverage files for each sample-cell population
 #'
 #' @description getCoverage takes the output of MOCHA::getPopFrags and returns
 #'  a GRanges of singe-basepair resolution coverage.
@@ -16,6 +16,7 @@
 #'
 #' @return popCounts A GRangesList of coverage for each sample and cell population
 #' @export
+#' @keywords utils
 getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {
@@ -32,17 +33,25 @@ getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, ver
     list(popFrags[[x]], normFactor[[x]], filterEmpty)
   })
 
+
   # Summarize the coverage over the region window at a single basepair resolution
   popCounts <- pbapply::pblapply(popFragList, calculateCoverage, cl = cl)
+  # Summarize the coverage over the region window at a single basepair resolution
+  insertCounts <- pbapply::pblapply(popFragList, calculateInsertionCoverage, cl = cl)
 
   popCounts <- lapply(popCounts, function(x) {
     GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
     x
   })
-
   names(popCounts) <- names(popFrags)
 
-  return(popCounts)
+  insertCounts <- lapply(insertCounts, function(x) {
+    GenomeInfoDb::seqinfo(x) <- GenomeInfoDb::seqinfo(TxDb)[GenomicRanges::seqnames(GenomeInfoDb::seqinfo(x))]
+    x
+  })
+  names(insertCounts) <- names(popFrags)
+
+  return(list("Accessibility" = popCounts, "Insertions" = insertCounts))
 }
 
 #' @title Take in a GRanges object and generates coverage GRanges.
@@ -80,4 +89,31 @@ getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
   }, mc.cores = numCores)
 
   return(counts)
+}
+
+
+# helper function that takes in a GRanges fragment object and generates coverage GRanges for insertions.
+calculateInsertionCoverage <- function(ref) {
+  score <- NULL
+  popFrags <- ref[[1]]
+  Num <- ref[[2]]
+  filterEmpty <- ref[[3]]
+
+  cutstart <- GenomicRanges::GRanges(
+    seqnames = methods::as(GenomicRanges::seqnames(popFrags), "vector"),
+    ranges = IRanges::IRanges(start = IRanges::start(popFrags), width = 1), strand = "*"
+  )
+  cutend <- GenomicRanges::GRanges(
+    seqnames = methods::as(GenomicRanges::seqnames(popFrags), "vector"),
+    ranges = IRanges::IRanges(start = IRanges::end(popFrags), width = 1), strand = "*"
+  )
+
+  counts_gr <- plyranges::compute_coverage(plyranges::bind_ranges(cutstart, cutend))
+  counts_gr <- plyranges::mutate(counts_gr, score = score / Num)
+
+  if (filterEmpty) {
+    plyranges::filter(counts_gr, score > 0)
+  } else {
+    counts_gr
+  }
 }

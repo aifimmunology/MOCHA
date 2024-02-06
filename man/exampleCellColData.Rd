@@ -16,4 +16,4 @@ consisting of 2k cells and spanning chr1 and 2 (~2-300MB).
 The data is publicly available with the ArchR package at
 <https://www.archrproject.com/reference/getTestProject.html>
 }
-\keyword{datasets}
+\keyword{internal}

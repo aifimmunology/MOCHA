@@ -100,7 +100,7 @@
       
       $History
       $History[[1]]
-      [1] "callOpenTiles 1.0.2"
+      [1] "callOpenTiles 1.1.0"
       
       
 

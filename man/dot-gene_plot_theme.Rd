@@ -3,7 +3,8 @@
 \docType{data}
 \name{.gene_plot_theme}
 \alias{.gene_plot_theme}
-\title{Common theme for gene plots}
+\title{Common theme for gene plots
+noRd}
 \format{
 An object of class \code{list} of length 5.
 }
@@ -12,5 +13,6 @@ An object of class \code{list} of length 5.
 }
 \description{
 Common theme for gene plots
+noRd
 }
-\keyword{datasets}
+\keyword{internal}

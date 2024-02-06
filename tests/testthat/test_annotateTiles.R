@@ -1,5 +1,6 @@
 if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
-  requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE)) {
+  requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
+  requireNamespace("TxDb.Hsapiens.UCSC.hg19.knownGene", quietly = TRUE)) {
   test_that("annotateTiles works on a 1 sample test dataset", {
     cellPopulations <- c("C2", "C5")
     capture.output(
@@ -49,6 +50,8 @@ if (requireNamespace("org.Hs.eg.db", quietly = TRUE) &&
 
 
   test_that("annotateTiles works on a GRanges", {
+    require(TxDb.Hsapiens.UCSC.hg38.refGene)
+    require(org.Hs.eg.db)
     cellPopulations <- c("C2", "C3")
     capture.output(
       SampleTileMatrix <- MOCHA::getSampleTileMatrix(

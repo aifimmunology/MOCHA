@@ -2,7 +2,7 @@
 % Please edit documentation in R/testCoAccessibility.R
 \name{testCoAccessibilityChromVar}
 \alias{testCoAccessibilityChromVar}
-\title{\code{testCoAccessibilityChromVar}}
+\title{Test input tile pairs against a ChromVAR background}
 \usage{
 testCoAccessibilityChromVar(
   SampleTileObj,
@@ -57,4 +57,4 @@ foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
   pairs and tests whether they are significantly different compared to a
   background set found via ChromVAR
 }
-\keyword{internal}
+\keyword{downstream}

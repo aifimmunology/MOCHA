@@ -7,6 +7,7 @@
 #' \item{Loess}{LOESS model}
 #' \item{Linear}{Linear model}
 #' }
+#' @keywords internal
 "finalModelObject"
 
 #' youden_threshold
@@ -21,7 +22,7 @@
 #' Residual Standard Error: 0.02121
 #'
 #' @format A list of 18 regression variables
-#'
+#' @keywords internal
 "youden_threshold"
 
 #' exampleFragments
@@ -33,7 +34,7 @@
 #' <https://www.archrproject.com/reference/getTestProject.html>
 #'
 #' @format A list of 2 GRanges objects
-#'
+#' @keywords internal
 "exampleFragments"
 
 #' exampleCellColData
@@ -43,7 +44,7 @@
 #' The data is publicly available with the ArchR package at
 #' <https://www.archrproject.com/reference/getTestProject.html>
 #' @format A DataFrame with 2217 rows and 3 columns
-#'
+#' @keywords internal
 "exampleCellColData"
 
 #' exampleBlackList
@@ -53,5 +54,5 @@
 #' The data is publicly available with the ArchR package at
 #' <https://www.archrproject.com/reference/getTestProject.html>
 #' @format A GRanges object with 210 ranges and 2 metadata columns
-#'
+#' @keywords internal
 "exampleBlackList"

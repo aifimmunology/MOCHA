@@ -1,4 +1,4 @@
-#' @title \code{callTilesBySample}
+#' @title Call tiles by sample
 #'
 #' @description \code{callTilesBySample} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
@@ -25,7 +25,6 @@
 #'
 #' @noRd
 #'
-
 callTilesBySample <- function(blackList,
                               returnAllTiles = FALSE,
                               totalFrags,

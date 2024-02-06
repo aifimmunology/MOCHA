@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotateTiles.R
 \name{annotateTiles}
 \alias{annotateTiles}
-\title{\code{annotateTiles}}
+\title{Annotate tiles with gene annotations}
 \usage{
 annotateTiles(Obj, TxDb = NULL, Org = NULL, promoterRegion = c(2000, 100))
 }
@@ -41,3 +41,4 @@ SampleTileMatricesAnnotated <- MOCHA::annotateTiles(
 }
 
 }
+\keyword{utils}
