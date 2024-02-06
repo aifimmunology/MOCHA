@@ -2,7 +2,8 @@
 % Please edit documentation in R/exportCoverage.R
 \name{exportMotifs}
 \alias{exportMotifs}
-\title{\code{exportMotifs}}
+\title{Export motif annotations from \code{addMotifSet()}
+  to BigBed format for visualization in genome browsers.}
 \usage{
 exportMotifs(
   SampleTileObject,
@@ -15,10 +16,10 @@ exportMotifs(
 }
 \arguments{
 \item{SampleTileObject}{The SummarizedExperiment object output from
-\code{getSampleTileMatrix}}
+\code{getSampleTileMatrix()}}
 
 \item{motifsGRanges}{A GRanges containing motif annotations, typically from
-\code{addMotifSet(returnSTM=FALSE)}}
+\code{addMotifSet()} (with `returnSTM=FALSE`)}
 
 \item{motifSetName}{Optional, a name indicating the motif set. Used to name
 files in the specified \code{outdir}. Default is "motifs".}
@@ -36,7 +37,7 @@ outList A List of output filepaths
 }
 \description{
 \code{exportMotifs} exports a motif set GRanges from running
-   \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
+   \code{addMotifSet()} (with `returnSTM=FALSE`) to bigBed file files for visualization
    in genome browsers.
 }
 \examples{

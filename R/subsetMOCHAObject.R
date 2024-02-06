@@ -11,8 +11,8 @@
 #'   should be used to subset the Object
 #' @param removeNA If TRUE, removes groups in groupList that are NA. If FALSE,
 #'   keep groups that are NA.
-#' @param subsetPeaks If `subsetBy` = 'celltype', subset the tile
-#'   set to tiles only called in those cell types. Default is TRUE.
+#' @param subsetPeaks If `subsetBy` = 'celltype', subset the tile set to tiles
+#'   only called in those cell types. Default is TRUE.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return Object the input Object, filtered down to either the cell type or
@@ -116,10 +116,12 @@ subsetMOCHAObject <- function(Object,
   }
 }
 
-#' @title \code{renameCellTypes}
+#' @title Modify the cell population names in a Sample-Tile Object from
+#'   \code{getSampleTileMatrix()}
 #'
-#' @description \code{renameCellTypes} Allows you to modify the cell type names for a MOCHA SampleTileObject, from
-#'                    the assay names, GRanges column names, and summarizedData (within the metadata), all at once.
+#' @description \code{renameCellTypes} Allows you to modify the cell type names
+#'   for a MOCHA SampleTileObject, from the assay names, GRanges column names,
+#'   and summarizedData (within the metadata), all at once.
 #'
 #' @param MOCHAObject A  RangedSummarizedExperiment,
 #' @param oldNames A list of cell type names that you want to change.

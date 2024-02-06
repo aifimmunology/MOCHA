@@ -2,17 +2,20 @@
 % Please edit documentation in R/annotateTiles.R
 \name{getPromoterGenes}
 \alias{getPromoterGenes}
-\title{\code{getPromoterGenes}}
+\title{Extract the list of promoter genes from a GRanges annotated with
+  \code{annotateTiles()}}
 \usage{
 getPromoterGenes(GRangesObj)
 }
 \arguments{
-\item{GRangesObj}{a GRanges object with a metadata column for tileType and Gene.}
+\item{GRangesObj}{a GRanges object with a metadata column for tileType and
+Gene.}
 }
 \value{
 vector of strings with gene names.
 }
 \description{
-\code{getPromoterGenes} Takes rowRanges from annotateTiles and extracts a unique list of genes.
+\code{getPromoterGenes} Takes rowRanges from annotateTiles and
+  extracts a unique list of genes.
 }
 \keyword{utils}

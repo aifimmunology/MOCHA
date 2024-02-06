@@ -12,7 +12,7 @@
 #' 						If set to false, then it plots the data.frame instead of returning it.
 #' @param numCores Number of cores to multithread over.
 #'
-#' @return SampleTileObj the input data structure with added gene annotations.
+#' @return A data.frame of reproducibility, or plots
 #'
 #'
 #' @export

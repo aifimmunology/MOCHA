@@ -2,7 +2,8 @@
 % Please edit documentation in R/mergeTileResults.R
 \name{mergeTileResults}
 \alias{mergeTileResults}
-\title{\code{mergeTileResults}}
+\title{Merge tileResults from \code{callOpenTiles()} that share cell
+  populations into a single object containing all samples}
 \usage{
 mergeTileResults(tileResultsList, numCores = 1, verbose = TRUE)
 }
@@ -21,11 +22,11 @@ tileResults a single MultiAssayExperiment containing a sample-tile
   tileResultsList.
 }
 \description{
-\code{mergeTileResults} merges a list of tileResults that
-  each contain unique samples into a single object encompassing all samples.
-  Only cell populations shared among all input tileResults will be retained.
-  This function can merge MultiAssayExperiment objects from callOpenTiles
-  that are created with the same TxDb, OrgDb, and Genome assembly.
+\code{mergeTileResults} merges a list of tileResults that each
+  contain unique samples into a single object encompassing all samples. Only
+  cell populations shared among all input tileResults will be retained. This
+  function can merge MultiAssayExperiment objects from callOpenTiles that are
+  created with the same TxDb, OrgDb, and Genome assembly.
 }
 \examples{
 \dontrun{

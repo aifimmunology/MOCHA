@@ -2,14 +2,16 @@
 % Please edit documentation in R/packMOCHA.R
 \name{unpackMOCHA}
 \alias{unpackMOCHA}
-\title{\code{unpackMOCHA}}
+\title{Unzip a MOCHA object and its linked files created by \code{packMOCHA()}
+  for portability between file systems}
 \usage{
 unpackMOCHA(zipfile, exdir, verbose = FALSE)
 }
 \arguments{
 \item{zipfile}{Filepath to the packed MOCHA object.}
 
-\item{exdir}{The path to the external directory where you want to unpack the MOCHA object.}
+\item{exdir}{The path to the external directory where you want to unpack the
+MOCHA object.}
 
 \item{verbose}{Display additional messages. Default is FALSE.}
 }

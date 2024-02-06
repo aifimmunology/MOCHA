@@ -2,7 +2,8 @@
 % Please edit documentation in R/exportCoverage.R
 \name{exportCoverage}
 \alias{exportCoverage}
-\title{\code{exportCoverage}}
+\title{Export normalized coverage files to per-sample or sample-averaged (per
+  cell population) BigWig files.}
 \usage{
 exportCoverage(
   SampleTileObject,
@@ -28,8 +29,8 @@ exports Insertions.}
 
 \item{cellPopulations}{vector of strings. Cell subsets for which to call
 peaks. This list of group names must be identical to names that appear in
-the SampleTileObject.  Optional, if cellPopulations='ALL', then peak calling
-is done on all cell populations. Default is 'ALL'.}
+the SampleTileObject.  Optional, if cellPopulations='ALL', then peak
+calling is done on all cell populations. Default is 'ALL'.}
 
 \item{groupColumn}{Optional, the column containing sample group labels for
 returning coverage within sample groups. Default is NULL, all samples will

@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   COVID-walkthrough: COVID-walkthrough.html
   ImportingFromOtherSources: ImportingFromOtherSources.html
-last_built: 2024-01-18T23:04Z
+last_built: 2024-01-30T01:34Z
 urls:
   reference: https://aifimmunology.github.io/MOCHA/reference
   article: https://aifimmunology.github.io/MOCHA/articles

@@ -2,7 +2,8 @@
 % Please edit documentation in R/testCoAccessibility.R
 \name{testCoAccessibility}
 \alias{testCoAccessibility}
-\title{\code{testCoAccessibility}}
+\title{Test if tile pairs are significantly different against a
+  random, non-overlapping background set}
 \usage{
 testCoAccessibility(
   SampleTileObj,

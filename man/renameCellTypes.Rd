@@ -2,7 +2,8 @@
 % Please edit documentation in R/subsetMOCHAObject.R
 \name{renameCellTypes}
 \alias{renameCellTypes}
-\title{\code{renameCellTypes}}
+\title{Modify the cell population names in a Sample-Tile Object from
+  \code{getSampleTileMatrix()}}
 \usage{
 renameCellTypes(MOCHAObject, oldNames, newNames)
 }
@@ -17,7 +18,8 @@ renameCellTypes(MOCHAObject, oldNames, newNames)
 A MOCHA SampleTile object with new cell types.
 }
 \description{
-\code{renameCellTypes} Allows you to modify the cell type names for a MOCHA SampleTileObject, from
-                   the assay names, GRanges column names, and summarizedData (within the metadata), all at once.
+\code{renameCellTypes} Allows you to modify the cell type names
+  for a MOCHA SampleTileObject, from the assay names, GRanges column names,
+  and summarizedData (within the metadata), all at once.
 }
 \keyword{utils}

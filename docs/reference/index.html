@@ -90,9 +90,10 @@
         <dd>Plot to determine the reproducibility threshold</dd>
       </dl><dl><dt>
           
-          <code><a href="plotIntensityDistribution.html">plotIntensityDistribution()</a></code> <code><a href="plotIntensityDistribution.html">plotIntensityDistribution()</a></code> 
+          <code><a href="plotIntensityDistribution.html">plotIntensityDistribution()</a></code> 
         </dt>
-        <dd><code>plotIntensityDistribution</code></dd>
+        <dd>Plots the distribution of sample-tile intensities for a given cell
+  population</dd>
       </dl><dl><dt>
           
           <code><a href="plotRegion.html">plotRegion()</a></code> 
@@ -182,7 +183,8 @@
           
           <code><a href="testCoAccessibility.html">testCoAccessibility()</a></code> 
         </dt>
-        <dd><code>testCoAccessibility</code></dd>
+        <dd>Test if tile pairs are significantly different against a
+  random, non-overlapping background set</dd>
       </dl><dl><dt>
           
           <code><a href="testCoAccessibilityChromVar.html">testCoAccessibilityChromVar()</a></code> 
@@ -213,37 +215,44 @@
           
           <code><a href="exportCoverage.html">exportCoverage()</a></code> 
         </dt>
-        <dd><code>exportCoverage</code></dd>
+        <dd>Export normalized coverage files to per-sample or sample-averaged (per
+  cell population) BigWig files.</dd>
       </dl><dl><dt>
           
           <code><a href="exportDifferentials.html">exportDifferentials()</a></code> 
         </dt>
-        <dd><code>exportDifferentials</code></dd>
+        <dd>Export differential peaks from <code><a href="../reference/getDifferentialAccessibleTiles.html">getDifferentialAccessibleTiles()</a></code>
+ to BigBed format for visualization in genome browsers.</dd>
       </dl><dl><dt>
           
           <code><a href="exportMotifs.html">exportMotifs()</a></code> 
         </dt>
-        <dd><code>exportMotifs</code></dd>
+        <dd>Export motif annotations from <code><a href="../reference/addMotifSet.html">addMotifSet()</a></code>
+  to BigBed format for visualization in genome browsers.</dd>
       </dl><dl><dt>
           
           <code><a href="exportOpenTiles.html">exportOpenTiles()</a></code> 
         </dt>
-        <dd><code>exportOpenTiles</code></dd>
+        <dd>Export open tiles of a given cell population to BigBed format for
+  visualization in genome browsers.</dd>
       </dl><dl><dt>
           
           <code><a href="exportSmoothedInsertions.html">exportSmoothedInsertions()</a></code> 
         </dt>
-        <dd><code>exportSmoothedInsertions</code></dd>
+        <dd>Export insertion counts to per-sample BigWig files after applying
+  a rolling sum and rolling median smoothing filter.</dd>
       </dl><dl><dt>
           
           <code><a href="packMOCHA.html">packMOCHA()</a></code> 
         </dt>
-        <dd><code>packMOCHA</code></dd>
+        <dd>Zip up a MOCHA object and its linked files for portability between 
+  file systems</dd>
       </dl><dl><dt>
           
           <code><a href="unpackMOCHA.html">unpackMOCHA()</a></code> 
         </dt>
-        <dd><code>unpackMOCHA</code></dd>
+        <dd>Unzip a MOCHA object and its linked files created by <code><a href="../reference/packMOCHA.html">packMOCHA()</a></code>
+  for portability between file systems</dd>
       </dl></div><div class="section level2">
       <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
       
@@ -299,12 +308,12 @@
           
           <code><a href="getCellTypeTiles.html">getCellTypeTiles()</a></code> 
         </dt>
-        <dd><code>getCellTypeTiles</code> Extract the GRanges for a particular cell type</dd>
+        <dd>Extract the GRanges for a particular cell population</dd>
       </dl><dl><dt>
           
           <code><a href="getCellTypes.html">getCellTypes()</a></code> 
         </dt>
-        <dd><code>getCellTypes</code> Extract cell type names from a Tile Results or Sample Tile object.</dd>
+        <dd>Extract cell population names from a Tile Results or Sample Tile object.</dd>
       </dl><dl><dt>
           
           <code><a href="getCoverage.html">getCoverage()</a></code> 
@@ -324,22 +333,25 @@
           
           <code><a href="getPromoterGenes.html">getPromoterGenes()</a></code> 
         </dt>
-        <dd><code>getPromoterGenes</code></dd>
+        <dd>Extract the list of promoter genes from a GRanges annotated with
+  <code><a href="../reference/annotateTiles.html">annotateTiles()</a></code></dd>
       </dl><dl><dt>
           
           <code><a href="getSampleCellTypeMetadata.html">getSampleCellTypeMetadata()</a></code> 
         </dt>
-        <dd><code>getSampleCellTypeMetadata</code> Extract Sample-celltype specific metadata</dd>
+        <dd>Extract Sample-celltype specific metadata</dd>
       </dl><dl><dt>
           
           <code><a href="mergeTileResults.html">mergeTileResults()</a></code> 
         </dt>
-        <dd><code>mergeTileResults</code></dd>
+        <dd>Merge tileResults from <code><a href="../reference/callOpenTiles-methods.html">callOpenTiles()</a></code> that share cell
+  populations into a single object containing all samples</dd>
       </dl><dl><dt>
           
           <code><a href="renameCellTypes.html">renameCellTypes()</a></code> 
         </dt>
-        <dd><code>renameCellTypes</code></dd>
+        <dd>Modify the cell population names in a Sample-Tile Object from
+  <code><a href="../reference/getSampleTileMatrix.html">getSampleTileMatrix()</a></code></dd>
       </dl><dl><dt>
           
           <code><a href="subsetMOCHAObject.html">subsetMOCHAObject()</a></code> 

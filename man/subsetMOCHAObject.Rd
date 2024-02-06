@@ -25,8 +25,8 @@ should be used to subset the Object}
 \item{removeNA}{If TRUE, removes groups in groupList that are NA. If FALSE,
 keep groups that are NA.}
 
-\item{subsetPeaks}{If `subsetBy` = 'celltype', subset the tile
-set to tiles only called in those cell types. Default is TRUE.}
+\item{subsetPeaks}{If `subsetBy` = 'celltype', subset the tile set to tiles
+only called in those cell types. Default is TRUE.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }

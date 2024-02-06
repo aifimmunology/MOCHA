@@ -2,13 +2,14 @@
 % Please edit documentation in R/exportCoverage.R
 \name{exportOpenTiles}
 \alias{exportOpenTiles}
-\title{\code{exportOpenTiles}}
+\title{Export open tiles of a given cell population to BigBed format for
+  visualization in genome browsers.}
 \usage{
 exportOpenTiles(SampleTileObject, cellPopulation, outDir, verbose = FALSE)
 }
 \arguments{
 \item{SampleTileObject}{The SummarizedExperiment object output from
-\code{getSampleTileMatrix}}
+\code{getSampleTileMatrix()}}
 
 \item{cellPopulation}{The name of the cell population to export}
 
@@ -21,7 +22,7 @@ outList A List of output filepaths
 }
 \description{
 \code{exportOpenTiles} exports the open tiles of a given cell
- population to bigBed file for visualization in genome browsers.
+  population to bigBed file for visualization in genome browsers.
 }
 \examples{
 \dontrun{

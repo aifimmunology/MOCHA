@@ -1,4 +1,5 @@
-#' @title \code{exportSmoothedInsertions}
+#' @title Export insertion counts to per-sample BigWig files after applying
+#'   a rolling sum and rolling median smoothing filter.
 #'
 #' @description \code{exportSmoothedInsertions} Takes a SampleTileMatrix with
 #'   linked insertion files and applies a smoothing filter (a rolling sum then

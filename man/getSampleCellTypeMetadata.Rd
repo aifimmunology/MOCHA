@@ -2,17 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{getSampleCellTypeMetadata}
 \alias{getSampleCellTypeMetadata}
-\title{\code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata}
+\title{Extract Sample-celltype specific metadata}
 \usage{
 getSampleCellTypeMetadata(object)
 }
 \arguments{
-\item{object}{tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix}
+\item{object}{tileResults object from callOpenTiles or SummarizedExperiment
+from getSampleTileMatrix}
 }
 \value{
-a SummarizedExperiment where each assay is a different type of metadata.
+a SummarizedExperiment where each assay is a different type of
+  metadata.
 }
 \description{
-\code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and
+\code{getSampleCellTypeMetadata} Extract Sample-celltype
+  specific metadata like fragment and cell counts
 }
 \keyword{utils}

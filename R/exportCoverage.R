@@ -1,4 +1,5 @@
-#' @title \code{exportCoverage}
+#' @title Export normalized coverage files to per-sample or sample-averaged (per
+#'   cell population) BigWig files.
 #'
 #' @description \code{exportCoverage} will export normalized coverage files to
 #'   BigWig files, either as sample-specific or sample-averaged files, for
@@ -9,8 +10,8 @@
 #' @param dir string. Directory to save files to.
 #' @param cellPopulations vector of strings. Cell subsets for which to call
 #'   peaks. This list of group names must be identical to names that appear in
-#'   the SampleTileObject.  Optional, if cellPopulations='ALL', then peak calling
-#'   is done on all cell populations. Default is 'ALL'.
+#'   the SampleTileObject.  Optional, if cellPopulations='ALL', then peak
+#'   calling is done on all cell populations. Default is 'ALL'.
 #' @param type Boolean. Default is TRUE, and exports Coverage. If set to FALSE,
 #'   exports Insertions.
 #' @param groupColumn Optional, the column containing sample group labels for
@@ -207,16 +208,17 @@ averageCoverage <- function(coverageList) {
 }
 
 
-#' @title \code{exportDifferentials}
+#' @title Export differential peaks from \code{getDifferentialAccessibleTiles()}
+#'  to BigBed format for visualization in genome browsers.
 #'
 #' @description \code{exportDifferentials} exports the differential peaks
-#'  output GRangesList output from \code{getDifferentialAccessibleTiles} to
+#'  output GRangesList output from \code{getDifferentialAccessibleTiles()} to
 #'  bigBed format for visualization in genome browsers.
 #'
 #' @param SampleTileObject The SummarizedExperiment object output from
-#'   \code{getSampleTileMatrix}
+#'   \code{getSampleTileMatrix()}
 #' @param DifferentialsGRList GRangesList output from
-#'   \code{getDifferentialAccessibleTiles}
+#'   \code{getDifferentialAccessibleTiles()}
 #' @param outDir Desired output directory where bigBed files will be saved
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
@@ -282,19 +284,20 @@ exportDifferentials <- function(SampleTileObject,
   outList
 }
 
-#' @title \code{exportOpenTiles}
+#' @title Export open tiles of a given cell population to BigBed format for
+#'   visualization in genome browsers.
 #'
 #' @description \code{exportOpenTiles} exports the open tiles of a given cell
-#'  population to bigBed file for visualization in genome browsers.
+#'   population to bigBed file for visualization in genome browsers.
 #'
 #' @param SampleTileObject The SummarizedExperiment object output from
-#'   \code{getSampleTileMatrix}
+#'   \code{getSampleTileMatrix()}
 #' @param cellPopulation The name of the cell population to export
 #' @param outDir Desired output directory where bigBed files will be saved
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return outList A List of output filepaths
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' MOCHA::exportOpenTiles(
@@ -359,16 +362,17 @@ exportOpenTiles <- function(SampleTileObject,
   outList
 }
 
-#' @title \code{exportMotifs}
+#' @title Export motif annotations from \code{addMotifSet()}
+#'   to BigBed format for visualization in genome browsers.
 #'
 #' @description \code{exportMotifs} exports a motif set GRanges from running
-#'    \code{addMotifSet(returnSTM=FALSE)} to bigBed file files for visualization
+#'    \code{addMotifSet()} (with `returnSTM=FALSE`) to bigBed file files for visualization
 #'    in genome browsers.
 #'    
 #' @param SampleTileObject The SummarizedExperiment object output from
-#'   \code{getSampleTileMatrix}
+#'   \code{getSampleTileMatrix()}
 #' @param motifsGRanges A GRanges containing motif annotations, typically from
-#'   \code{addMotifSet(returnSTM=FALSE)}
+#'   \code{addMotifSet()} (with `returnSTM=FALSE`)
 #' @param filterByOpenTiles Boolean. If TRUE, a bigBed file will be exported
 #'   for each cell population with motifs filtered to those occurring
 #'   only in open tiles.

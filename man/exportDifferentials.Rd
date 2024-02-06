@@ -2,7 +2,8 @@
 % Please edit documentation in R/exportCoverage.R
 \name{exportDifferentials}
 \alias{exportDifferentials}
-\title{\code{exportDifferentials}}
+\title{Export differential peaks from \code{getDifferentialAccessibleTiles()}
+ to BigBed format for visualization in genome browsers.}
 \usage{
 exportDifferentials(
   SampleTileObject,
@@ -13,10 +14,10 @@ exportDifferentials(
 }
 \arguments{
 \item{SampleTileObject}{The SummarizedExperiment object output from
-\code{getSampleTileMatrix}}
+\code{getSampleTileMatrix()}}
 
 \item{DifferentialsGRList}{GRangesList output from
-\code{getDifferentialAccessibleTiles}}
+\code{getDifferentialAccessibleTiles()}}
 
 \item{outDir}{Desired output directory where bigBed files will be saved}
 
@@ -27,7 +28,7 @@ outList A List of output filepaths
 }
 \description{
 \code{exportDifferentials} exports the differential peaks
- output GRangesList output from \code{getDifferentialAccessibleTiles} to
+ output GRangesList output from \code{getDifferentialAccessibleTiles()} to
  bigBed format for visualization in genome browsers.
 }
 \examples{

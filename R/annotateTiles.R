@@ -104,11 +104,14 @@ annotateTiles <- function(Obj,
   }
 }
 
-#' @title \code{getPromoterGenes}
+#' @title Extract the list of promoter genes from a GRanges annotated with
+#'   \code{annotateTiles()}
 #'
-#' @description \code{getPromoterGenes} Takes rowRanges from annotateTiles and extracts a unique list of genes.
+#' @description \code{getPromoterGenes} Takes rowRanges from annotateTiles and
+#'   extracts a unique list of genes.
 #'
-#' @param GRangesObj a GRanges object with a metadata column for tileType and Gene.
+#' @param GRangesObj a GRanges object with a metadata column for tileType and
+#'   Gene.
 #' @return vector of strings with gene names.
 #'
 #' @export

@@ -208,7 +208,8 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   db
 }
 
-#' @title \code{getCellTypes} Extract cell type names from a Tile Results or Sample Tile object.
+
+#' @title Extract cell population names from a Tile Results or Sample Tile object.
 #'
 #' @description \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
 #'
@@ -228,7 +229,7 @@ getCellTypes <- function(object) {
 }
 
 
-#' @title \code{getCellTypeTiles} Extract the GRanges for a particular cell type
+#' @title Extract the GRanges for a particular cell population
 #'
 #' @description \code{getCellTypeTiles} Returns a GRanges object of all tiles called for a certain cell type
 #'
@@ -257,11 +258,14 @@ getCellTypeTiles <- function(object, cellType) {
 }
 
 
-#' @title \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata
-#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and
+#' @title Extract Sample-celltype specific metadata
+#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype
+#'   specific metadata like fragment and cell counts
 #'
-#' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
-#' @return a SummarizedExperiment where each assay is a different type of metadata.
+#' @param object tileResults object from callOpenTiles or SummarizedExperiment
+#'   from getSampleTileMatrix
+#' @return a SummarizedExperiment where each assay is a different type of
+#'   metadata.
 #'
 #' @export
 #' @keywords utils
@@ -294,13 +298,17 @@ getSampleCellTypeMetadata <- function(object) {
 }
 
 
-#' @title \code{plotIntensityDistribution}
-#' @description \code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a give cell type
+#' @title Plots the distribution of sample-tile intensities for a given cell
+#'   population
+#' @description \code{plotIntensityDistribution}  Plots the distribution of
+#'   sample-tile intensities for a give cell population.
 #'
 #' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
 #' @param cellPopulation Cell type names (assay name) within the TSAM_object
-#' @param density Boolean to determine whether to plot density or histogram. Default is TRUE (plots density).
-#' @param returnDF If TRUE, return the data frame without plotting. Default is FALSE.
+#' @param density Boolean to determine whether to plot density or histogram.
+#'   Default is TRUE (plots density).
+#' @param returnDF If TRUE, return the data frame without plotting. Default is
+#'   FALSE.
 #' @return data.frame or ggplot histogram.
 #'
 #' @export

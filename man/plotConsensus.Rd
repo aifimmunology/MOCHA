@@ -29,7 +29,7 @@ If set to false, then it plots the data.frame instead of returning it.}
 \item{numCores}{Number of cores to multithread over.}
 }
 \value{
-SampleTileObj the input data structure with added gene annotations.
+A data.frame of reproducibility, or plots
 }
 \description{
 \code{plotConsensus} Extracts the peak reproducibility and generates a

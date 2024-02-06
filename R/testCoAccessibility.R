@@ -283,7 +283,8 @@ testCoAccessibilityRandom <- function(SampleTileObj,
                       verbose)
 }
 
-#' @title \code{testCoAccessibility}
+#' @title Test if tile pairs are significantly different against a
+#'   random, non-overlapping background set
 #'
 #' @description 
 #'   \code{testCoAccessibility} takes an input set of tile

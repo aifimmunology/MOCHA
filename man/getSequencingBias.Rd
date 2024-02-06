@@ -34,7 +34,7 @@ plot object
 }
 \description{
 \code{getSequencingBias} takes the output of peak calling with
-  callOpenTiles and creates sample-tile matrices containing the signal
+  \code{callOpenTiles()} and creates sample-tile matrices containing the signal
   intensity at each tile.
 }
 \keyword{internal}
