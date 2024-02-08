@@ -2,7 +2,7 @@
 % Please edit documentation in R/getCoAccessibleLinks.R
 \name{getCoAccessibleLinks}
 \alias{getCoAccessibleLinks}
-\title{\code{getCoAccessibleLinks}}
+\title{Find co-accessible neighboring regions}
 \usage{
 getCoAccessibleLinks(
   SampleTileObj,
@@ -53,3 +53,4 @@ The technical details of the zero-inflated correlation can be
          while the implementation (scHOT R package), can be found here:
               http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
 }
+\keyword{downstream}

@@ -1,4 +1,4 @@
-#' @title \code{determine_dynamic_range}
+#' @title Determine regions used for peak calling
 #'
 #' @description \code{determine_dynamic_range} is an R helper function, part of the single-cell peak calling
 #' algorithm MOCHA by (Zaim, Pebworth, et. al. 2022) that determines which genomic regions, or bins,

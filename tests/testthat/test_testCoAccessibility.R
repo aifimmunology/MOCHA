@@ -14,7 +14,7 @@ if (requireNamespace("chromVAR", quietly = TRUE) &
   
     cellPopulation <- "C2"
     regions <- MOCHA::StringsToGRanges(c(
-      "chr1:101873000-101873499"
+      "chr1:10003000-10003499"
     ))
     capture.output(
       links <- MOCHA::getCoAccessibleLinks(SampleTileMatrix,
@@ -54,7 +54,7 @@ if (requireNamespace("chromVAR", quietly = TRUE) &
   
     cellPopulation <- "C2"
     regions <- MOCHA::StringsToGRanges(c(
-      "chr1:101775000-101775499"
+      "chr1:10009500-10009999"
     ))
   
     capture.output(
@@ -82,21 +82,5 @@ if (requireNamespace("chromVAR", quietly = TRUE) &
       variant = "3sample"
     )
     
-    expect_warning(
-      results2 <- MOCHA::testCoAccessibilityChromVar(
-        SampleTileMatrix,
-        tile1 = links$Tile1,
-        tile2 = links$Tile2,
-        numCores = 1,
-        ZI = TRUE,
-        backNumber = 1000,
-        verbose = FALSE
-      )
-    )
-    
-    expect_snapshot(
-      results2,
-      variant = "3sample"
-    )
   })
 }

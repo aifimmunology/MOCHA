@@ -7,7 +7,7 @@
 #' threshold.
 #'
 #'
-#' @param X an intensityMatrix output from \code{calculate_intensities}
+#' @param X an intensityMatrix output from \code{calculate_intensities()}
 #' @param finalModel is a matrix with coefficients and an index indicating
 #'        the number of cell used to train that model
 #'

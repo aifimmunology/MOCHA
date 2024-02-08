@@ -1,4 +1,4 @@
-#' @title \code{testCoAccessibilityChromVar}
+#' @title Test input tile pairs against a ChromVAR background
 #'
 #' @description
 #'   `r lifecycle::badge("deprecated")`
@@ -32,7 +32,7 @@
 #'   for that correlation compared to the background
 #'
 #' @export
-#' @keywords internal
+#' @keywords downstream
 testCoAccessibilityChromVar <- function(SampleTileObj,
                                         tile1,
                                         tile2,
@@ -225,7 +225,7 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
   }
 }
 
-#' @title \code{testCoAccessibilityRandom}
+#' @title Test input tile pairs against a random background
 #'
 #' @description 
 #'   `r lifecycle::badge("deprecated")`
@@ -258,7 +258,7 @@ testCoAccessibilityChromVar <- function(SampleTileObj,
 #'
 #' @keywords internal
 #' @export
-#'
+#' @keywords downstream
 testCoAccessibilityRandom <- function(SampleTileObj,
                                       tile1,
                                       tile2,
@@ -283,7 +283,8 @@ testCoAccessibilityRandom <- function(SampleTileObj,
                       verbose)
 }
 
-#' @title \code{testCoAccessibility}
+#' @title Test if tile pairs are significantly different against a
+#'   random, non-overlapping background set
 #'
 #' @description 
 #'   \code{testCoAccessibility} takes an input set of tile
@@ -311,7 +312,7 @@ testCoAccessibilityRandom <- function(SampleTileObj,
 #'   for that correlation compared to the background
 #'
 #' @export
-#'
+#' @keywords downstream
 testCoAccessibility <- function(SampleTileObj,
                                 tile1,
                                 tile2,

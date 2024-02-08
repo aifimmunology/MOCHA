@@ -24,9 +24,9 @@ if (file.exists(motifEnrichmentTestDataFP) &&
   test_that("MotifSetEnrichmentAnalysis works on three different orderings of input ligands", {
     ligandsv1 <- expectedResults$ligand
     ligandsv2 <- colnames(filteredligandTFMatrix)[colSums(filteredligandTFMatrix) > 0]
-    ligandsv3 <- sort(ligandsv2)
+    ligandsv3 <- base::sort(ligandsv2)
 
-    expect_true(identical(sort(ligandsv1), ligandsv3))
+    expect_true(identical(base::sort(ligandsv1), ligandsv3))
 
     for (ligands in list(ligandsv1, ligandsv2, ligandsv3)) {
       results <- MOCHA::MotifSetEnrichmentAnalysis(

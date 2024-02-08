@@ -1,4 +1,4 @@
-#' @title \code{MotifEnrichment}
+#' @title Test for enrichment of motifs against a background
 #'
 #' @description Test for enrichment of motifs within Group1 against a background
 #'   Group2 using a hypergeometric t-test.
@@ -16,7 +16,7 @@
 #' @return A data.frame containing enrichment for each group
 #'
 #' @export
-#'
+#' @keywords downstream
 MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
   allEnrichmentList <- pbapply::pblapply(motifPosList, function(x) {
     EnrichedRanges(
@@ -56,7 +56,7 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
 #' @return A data.frame table of enrichment
 #'
 #' @noRd
-#'
+#' @keywords internal
 EnrichedRanges <- function(Group1,
                            Group2,
                            Category,

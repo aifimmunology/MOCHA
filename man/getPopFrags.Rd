@@ -37,3 +37,4 @@ A list of GRanges containing fragments. Each GRanges corresponds to a
 \description{
 \code{getPopFrags} returns a list of sample-specific fragments per cell population as a GRangesList.
 }
+\keyword{utils}

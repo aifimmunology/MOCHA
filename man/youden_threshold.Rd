@@ -21,4 +21,4 @@ Number of Observations: 27
 Equivalent Number of Parameters: 5.98
 Residual Standard Error: 0.02121
 }
-\keyword{datasets}
+\keyword{internal}

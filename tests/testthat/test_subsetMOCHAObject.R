@@ -1,6 +1,6 @@
 test_that("We can subset a tileResults object by celltypes", {
   capture.output(
-    obj <- subsetMOCHAObject(
+    obj <- MOCHA::subsetMOCHAObject(
       MOCHA:::testTileResultsMultisample,
       subsetBy = "celltypes",
       groupList = c("C3"),
@@ -24,7 +24,7 @@ test_that("We can subset a tileResults object by celltypes", {
 test_that("We can subset a tileResults object by Sample grouping", {
   skip_on_cran() # Unreproducible <RaggedExperiment>[,j] index out of bounds error
   capture.output(
-    obj <- subsetMOCHAObject(
+    obj <- MOCHA::subsetMOCHAObject(
       MOCHA:::testTileResultsMultisample,
       subsetBy = "Sample",
       groupList = c("scATAC_CD34_BMMC_R1"),
@@ -54,7 +54,7 @@ test_that("We can subset a sampleTileMatrix object by celltypes", {
   )
 
   capture.output(
-    obj <- subsetMOCHAObject(
+    obj <- MOCHA::subsetMOCHAObject(
       SampleTileMatrix,
       subsetBy = "celltypes",
       groupList = c("C3"),
@@ -84,7 +84,7 @@ test_that("We can subset a sampleTileMatrix object by Sample", {
   )
 
   capture.output(
-    obj <- subsetMOCHAObject(
+    obj <- MOCHA::subsetMOCHAObject(
       SampleTileMatrix,
       subsetBy = "Sample",
       groupList = c("scATAC_CD34_BMMC_R1"),
@@ -114,7 +114,7 @@ test_that("We can subset a sampleTileMatrix object - and peaks - by celltypes", 
   )
 
   capture.output(
-    obj <- subsetMOCHAObject(
+    obj <- MOCHA::subsetMOCHAObject(
       SampleTileMatrix,
       subsetBy = "celltypes",
       groupList = c("C3"),

@@ -89,15 +89,16 @@ validRegionString <- function(regionString) {
   return(TRUE)
 }
 
-#' @title \code{StringsToGRanges}
+#' @title Convert a list of strings in the format "chr1:100-200" into a GRanges
 #'
-#' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
-#'   into a GRanges object
+#' @description \code{StringsToGRanges} Turns a list of strings defining genomic 
+#'  regions in the format chr1:100-200 into a GRanges object
 #'
 #' @param regionString A string or list of strings each in the format chr1:100-200
 #' @return a GRanges object with ranges representing the input string(s)
 #'
 #' @export
+#' @keywords utils
 StringsToGRanges <- function(regionString) {
   # if (length(regionString)>1){
   #   boolList <- lapply(regionString, function(x){validRegionString(x)})
@@ -108,11 +109,12 @@ StringsToGRanges <- function(regionString) {
   #   stop("Region must be a string matching format 'seqname:start-end', where start<end e.g. chr1:123000-123500")
   # }
   . <- NULL
+  regionString <- gsub(",", "", regionString)
   chrom <- gsub(":.*", "", regionString)
   startSite <- gsub(".*:", "", regionString) %>%
-    gsub("-.*", "", .) %>%
+    gsub("-.*|-.*", "", .) %>%
     as.numeric()
-  endSite <- gsub(".*-", "", regionString) %>% as.numeric()
+  endSite <- gsub(".*-|.*-", "", regionString) %>% as.numeric()
 
   if (any(startSite >= endSite)) {
     stop("Error in region string: Make sure the start of the genomic range occurs before the end")
@@ -121,7 +123,7 @@ StringsToGRanges <- function(regionString) {
   return(regionGRanges)
 }
 
-#' @title \code{GRangesToString} Converts a GRanges object to a string in the format 'chr1:100-200'
+#' @title Convert a GRanges object to a string in the format 'chr1:100-200'
 #'
 #' @description \code{GRangesToString} Turns a GRanges Object into
 #'  a list of strings in the format chr1:100-200
@@ -131,19 +133,20 @@ StringsToGRanges <- function(regionString) {
 #'  ranges in the input GRanges
 #'
 #' @export
+#' @keywords utils
 GRangesToString <- function(GR_obj) {
   paste(GenomicRanges::seqnames(GR_obj), ":", GenomicRanges::start(GR_obj), "-", GenomicRanges::end(GR_obj), sep = "")
 }
 
-#' @title \code{differentialsToGRanges} Converts a data.frame matrix to a GRanges,
-#'   preserving additional columns as GRanges metadata
-#'
+#' @title Convert a data.frame or matrix to a GRanges
+#'   
 #' @param differentials a matrix/data.frame with a column tileColumn containing
 #'   region strings in the format "chr:start-end"
 #' @param tileColumn name of column containing region strings. Default is "Tile".
 #'
 #' @return a GRanges containing all original information
 #' @export
+#' @keywords utils
 differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   regions <- MOCHA::StringsToGRanges(differentials[[tileColumn]])
   GenomicRanges::mcols(regions) <- differentials
@@ -161,16 +164,16 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   substr(x, 1L, nchar(.ORGDB_PREFIX)) == .ORGDB_PREFIX
 }
 
-#' @title \code{getAnnotationDbFromInstalledPkgname} Loads and attaches an installed TxDb or
-#'   OrgDb-class Annotation database package.
+
+#' @title Loads and attaches an installed TxDb or OrgDb-class Annotation database package.
 #'
 #' @description See \link[BSgenome]{getBSgenome}
 #'
 #' @param dbName Exact name of installed annotation data package.
 #' @param type Expected class of the annotation data package, must be
 #'   either "OrgDb" or "TxDb".
-#' @return the loaded Annotation database object.
-#' @noRd
+#' @return the loaded Annotation database object.#' @noRd
+#' @keywords internal
 getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   if (!methods::is(dbName, "character")) {
     stop(
@@ -203,4 +206,133 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
     stop(dbName, " doesn't look like a valid ", type, " data package")
   }
   db
+}
+
+
+#' @title Extract cell population names from a Tile Results or Sample Tile object.
+#'
+#' @description \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
+#'
+#' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
+#' @return a vector of cell type names.
+#' 
+#' @export
+#' @keywords utils
+getCellTypes <- function(object) {
+  if (class(object)[1] == "MultiAssayExperiment") {
+    return(names(object))
+  } else if (class(object)[1] == "RangedSummarizedExperiment") {
+    return(names(SummarizedExperiment::assays(object)))
+  } else {
+    stop("Object not recognized. Please provide an object from callOpenTiles or getSampleTileMatrix.")
+  }
+}
+
+
+#' @title Extract the GRanges for a particular cell population
+#'
+#' @description \code{getCellTypeTiles} Returns a GRanges object of all tiles called for a certain cell type
+#'
+#' @param object A SampleTileObject.
+#' @param cellType A string describing one cell type.
+#' @return a vector of cell type names.
+#'
+#' @export
+#' @keywords utils
+getCellTypeTiles <- function(object, cellType) {
+  if (class(object)[1] == "MultiAssayExperiment") {
+    stop("This is a MultiAssayExperiment, and thus like a tileResults object. Please provide a SampleTileMatrix object.")
+  } else if (class(object)[1] == "RangedSummarizedExperiment") {
+    all_ranges <- SummarizedExperiment::rowRanges(object)
+
+    if (sum(cellType == names(SummarizedExperiment::assays(object))) != 1) {
+      stop("Please provide a single cell type, which must be present in the SampleTileObject. cellType is either not found, or is a list of multiple cell types.")
+    } else {
+      subRange <- all_ranges[unlist(GenomicRanges::mcols(all_ranges)[, cellType])]
+    }
+
+    return(subRange)
+  } else {
+    stop("Object not recognized. Please provide a SampleTileMatrix object (SummarizedExperiment).")
+  }
+}
+
+
+#' @title Extract Sample-celltype specific metadata
+#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype
+#'   specific metadata like fragment and cell counts
+#'
+#' @param object tileResults object from callOpenTiles or SummarizedExperiment
+#'   from getSampleTileMatrix
+#' @return a SummarizedExperiment where each assay is a different type of
+#'   metadata.
+#'
+#' @export
+#' @keywords utils
+getSampleCellTypeMetadata <- function(object) {
+  # Check if the object has Sample-CellType-level metadata stored in the metadata slot.
+  if (all(c("FragmentCounts", "CellCounts") %in% names(object@metadata))) {
+
+    sampleData <- SummarizedExperiment::colData(object)
+
+    fragCounts <- object@metadata$FragmentCounts
+    fragMat <- as.matrix(t(fragCounts[match(rownames(sampleData), rownames(fragCounts)), ]))
+    rownames(fragMat) <- colnames(fragCounts)
+
+    cellCounts <- object@metadata$CellCounts
+    cellMat <- as.matrix(t(cellCounts[match(rownames(sampleData), rownames(cellCounts)), ]))
+    rownames(cellMat) <- colnames(cellMat)
+
+    if (any(!dim(cellMat) %in% dim(cellCounts))) {
+      stop("Error in processing Sample-Cell type metadata. Some Samples may be missing. Please correct Sample-Cell type metadata manually or regenerate the object.")
+    }
+
+    metaList <- list(fragMat, cellMat)
+    names(metaList) <- c("FragmentCounts", "CellCounts")
+
+    SE <- SummarizedExperiment::SummarizedExperiment(metaList, colData = sampleData)
+    return(SE)
+  } else {
+    stop("Object does not appear to have Sample-Celltype metadata.")
+  }
+}
+
+
+#' @title Plots the distribution of sample-tile intensities for a given cell
+#'   population
+#' @description \code{plotIntensityDistribution}  Plots the distribution of
+#'   sample-tile intensities for a give cell population.
+#'
+#' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
+#' @param cellPopulation Cell type names (assay name) within the TSAM_object
+#' @param density Boolean to determine whether to plot density or histogram.
+#'   Default is TRUE (plots density).
+#' @param returnDF If TRUE, return the data frame without plotting. Default is
+#'   FALSE.
+#' @return data.frame or ggplot histogram.
+#'
+#' @export
+#' @keywords plotting
+plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE) {
+  Values <- NULL
+  if (!requireNamespace("Biobase", quietly = TRUE)) {
+    stop("Package 'Biobase' is not installed. 'Biobase' is required for `plotIntensityDistribution`.")
+  }
+  mat <- unlist(Biobase::rowMedians(log2(getCellPopMatrix(TSAM_object, cellPopulation) + 1)))
+  plotMat <- data.frame(Values = mat)
+
+  if (returnDF) {
+    return(plotMat)
+  }
+  if (density) {
+    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) +
+      ggplot2::geom_density() +
+      ggplot2::theme_bw()
+  } else {
+    p1 <- ggplot2::ggplot(plotMat, ggplot2::aes(x = Values)) +
+      ggplot2::geom_histogram() +
+      ggplot2::theme_bw()
+  }
+
+  return(p1)
 }

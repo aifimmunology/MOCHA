@@ -23,7 +23,7 @@
     
     $TxDb
     $TxDb$pkgname
-    [1] "TxDb.Hsapiens.UCSC.hg38.refGene"
+    [1] "TxDb.Hsapiens.UCSC.hg19.knownGene"
     
     $TxDb$metadata
                                            name
@@ -34,36 +34,38 @@
     5                                  Organism
     6                               Taxonomy ID
     7                                UCSC Table
-    8                                UCSC Track
-    9                              Resource URL
-    10                          Type of Gene ID
-    11                             Full dataset
-    12                         miRBase build ID
-    13                        Nb of transcripts
-    14                            Db created by
-    15                            Creation time
-    16 GenomicFeatures version at creation time
-    17         RSQLite version at creation time
-    18                          DBSCHEMAVERSION
+    8                              Resource URL
+    9                           Type of Gene ID
+    10                             Full dataset
+    11                         miRBase build ID
+    12                          transcript_nrow
+    13                                exon_nrow
+    14                                 cds_nrow
+    15                            Db created by
+    16                            Creation time
+    17 GenomicFeatures version at creation time
+    18         RSQLite version at creation time
+    19                          DBSCHEMAVERSION
                                               value
     1                                          TxDb
     2                               GenomicFeatures
     3                                          UCSC
-    4                                          hg38
+    4                                          hg19
     5                                  Homo sapiens
     6                                          9606
-    7                                       refGene
-    8                                   NCBI RefSeq
-    9                       http://genome.ucsc.edu/
-    10                               Entrez Gene ID
-    11                                          yes
-    12                                         <NA>
-    13                                        88816
-    14    GenomicFeatures package from Bioconductor
-    15 2021-04-28 16:30:46 +0000 (Wed, 28 Apr 2021)
-    16                                       1.41.3
-    17                                        2.2.6
-    18                                          1.2
+    7                                     knownGene
+    8                       http://genome.ucsc.edu/
+    9                                Entrez Gene ID
+    10                                          yes
+    11                                       GRCh37
+    12                                        82960
+    13                                       289969
+    14                                       237533
+    15    GenomicFeatures package from Bioconductor
+    16 2015-10-07 18:11:28 +0000 (Wed, 07 Oct 2015)
+    17                                      1.21.30
+    18                                        1.0.0
+    19                                          1.1
     
     
     $OrgDb
@@ -108,7 +110,7 @@
     
     $History
     $History[[1]]
-    [1] "callOpenTiles 1.0.0"
+    [1] "callOpenTiles 1.0.2"
     
     $History[[2]]
     [1] "getSampleTileMatrix 1.0.2"

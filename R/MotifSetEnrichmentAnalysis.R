@@ -128,12 +128,13 @@ PHyperLigandTF <- function(ligandTFMatrix,
 }
 
 
-#' @title \code{MotifSetEnrichmentAnalysis}
+#' @title Test the enrichment of a given TF
+#'   motif set against a motif set downstream of multiple ligands
 #'
 #' @description This analogous to Gene Set
 #'   Enrichment Analysis. Instead of testing for enrichment of a geneset with a
 #'   given gene set in a pathway, we are testing the enrichment of a given TF
-#'   motif set against a motif set downstream of a multiple ligands. If there is
+#'   motif set against a motif set downstream of multiple ligands. If there is
 #'   enrichment, it's a sign that that ligand could drive that set of motifs.
 #'
 #'
@@ -159,6 +160,7 @@ PHyperLigandTF <- function(ligandTFMatrix,
 #' @return specDF A dataframe containing enrichment analysis results
 #'
 #' @export
+#' @keywords downstream
 #'
 MotifSetEnrichmentAnalysis <- function(ligandTFMatrix,
                                        motifEnrichmentDF,

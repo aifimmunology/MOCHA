@@ -1,4 +1,4 @@
-#' @title \code{getSampleTileMatrix}
+#' @title Get consensus sample-tile matrices containing the signal intensity at each tile
 #'
 #' @description \code{getSampleTileMatrix} takes the output of peak calling with
 #'   callOpenTiles and creates sample-tile matrices containing the signal
@@ -56,6 +56,7 @@
 #' }
 #'
 #' @export
+#' @keywords core
 getSampleTileMatrix <- function(tileResults,
                                 cellPopulations = "ALL",
                                 groupColumn = NULL,
@@ -109,7 +110,7 @@ getSampleTileMatrix <- function(tileResults,
       paste(names(errorMessages)[!is.na(errorMessages)], collapse = ", ")
     )
   }
-  allTiles <- sort(unique(do.call("c", tilesByCellPop)))
+  allTiles <- base::sort(unique(do.call("c", tilesByCellPop)))
   if (verbose) {
     message(stringr::str_interp("Generating sample-tile matrix across all populations."))
   }

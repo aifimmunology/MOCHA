@@ -2,8 +2,8 @@
 % Please edit documentation in R/getAltTSS.R
 \name{getAltTSS}
 \alias{getAltTSS}
-\title{Annotate Peaks falling in Transcription Start Sites
-  (TSS) and identify alternatively regulated TSSs for each gene.}
+\title{Annotate peaks falling in Transcription Start Sites
+  (TSSs) and identify alternatively regulated TSSs for each gene}
 \usage{
 getAltTSS(
   completeDAPs,
@@ -53,7 +53,7 @@ Bioconductor AnnotationData Packages}}
 tpeaks A GRanges containing annotated peaks falling in TSS
 }
 \description{
-\code{getAltTSS} Pulls out all peaks that fall in TSS,
+\code{getAltTSS} Pulls out all peaks that fall in TSSs,
   annotates them with the name of gene, and identifies genes that have
   evidence for alternatively regulated TSSs, including both type i (only some
   of the open TSSs for a gene are significantly more (or less) accessible),
@@ -62,3 +62,4 @@ tpeaks A GRanges containing annotated peaks falling in TSS
   open TSSs with differential measurements if the returnAllTSS flag is set to
   TRUE.
 }
+\keyword{downstream}

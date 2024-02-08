@@ -1,4 +1,4 @@
-#' @title \code{dynamic_bins}
+#' @title Determine bins for regions used for peak-calling
 #'
 #' @description \code{dynamic_bins} is an R helper function, part of the single-cell peak calling
 #' algorithm MOCHA by (Zaim, Pebworth, et. al. 2022) that determines which genomic regions, or bins,
@@ -20,8 +20,6 @@
 #'
 #' @noRd
 #'
-
-
 dynamic_bins <- function(AllFragmentsList, GeneralWindowSize, WindowSizeRange, doBin) {
   counts <- partition <- width <- NULL
   AllFragsList <- plyranges::reduce_ranges(

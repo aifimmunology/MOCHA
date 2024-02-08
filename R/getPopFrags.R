@@ -17,6 +17,7 @@
 #'   population defined by cellSubsets and sample.
 #'
 #' @export
+#' @keywords utils
 
 getPopFrags <- function(ArchRProj,
                         cellPopLabel,
