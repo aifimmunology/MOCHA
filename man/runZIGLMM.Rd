@@ -70,3 +70,4 @@ modelList <- runZIGLMM(STM[c(1:1000), ],
 }
 
 }
+\keyword{downstream}

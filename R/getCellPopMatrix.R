@@ -1,4 +1,4 @@
-#' @title \code{getCellPopMatrix}
+#' @title Get the SampleTileMatrix of the given cell population
 #'
 #' @description \code{getCellPopMatrix} pulls out the SampleTileMatrix of tiles
 #'   called in one given cell population.
@@ -15,6 +15,7 @@
 #'   population.
 #'
 #' @export
+#' @keywords utils
 getCellPopMatrix <- function(SampleTileObj,
                              cellPopulation,
                              dropSamples = TRUE,

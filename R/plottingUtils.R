@@ -433,6 +433,8 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
                                     
                                         
 #' Default ggplot theme for counts plot
+#' @keywords internal
+#' @noRd
 .counts_plot_default_theme <- list(
   panel.grid.major.y = ggplot2::element_blank(),
   panel.grid.minor.y = ggplot2::element_blank(),
@@ -923,6 +925,8 @@ counts_plot_motif_overlay <- function(p1,
 }
 
 #' Common theme for gene plots
+#' noRd
+#' @keywords internal
 .gene_plot_theme <- list(
   axis.text.y = ggplot2::element_blank(),
   axis.ticks.y  = ggplot2::element_blank(),

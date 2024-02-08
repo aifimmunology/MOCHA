@@ -1,7 +1,7 @@
-#' @title Annotate Peaks falling in Transcription Start Sites
-#'   (TSS) and identify alternatively regulated TSSs for each gene.
+#' @title Annotate peaks falling in Transcription Start Sites
+#'   (TSSs) and identify alternatively regulated TSSs for each gene
 #'
-#' @description \code{getAltTSS} Pulls out all peaks that fall in TSS,
+#' @description \code{getAltTSS} Pulls out all peaks that fall in TSSs,
 #'   annotates them with the name of gene, and identifies genes that have
 #'   evidence for alternatively regulated TSSs, including both type i (only some
 #'   of the open TSSs for a gene are significantly more (or less) accessible),
@@ -40,7 +40,7 @@
 #' @return tpeaks A GRanges containing annotated peaks falling in TSS
 #'
 #' @export
-#'
+#' @keywords downstream
 getAltTSS <- function(completeDAPs,
                       returnAllTSS = FALSE,
                       nuancedTSS = TRUE,

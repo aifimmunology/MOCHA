@@ -1,5 +1,5 @@
-#' @title \code{callOpenTiles} Perform peak-calling on a set of fragments or an
-#'   ArchR Project.
+#' @title Perform peak-calling on a set of fragments or an 
+#'   ArchR Project
 #'
 #' @description \code{callOpenTiles} is the main peak-calling function in MOCHA
 #'   that serves as a wrapper function to call peaks provided a set of fragment
@@ -71,11 +71,11 @@
 #' )
 #' }
 #' \donttest{
-#' # Starting from GRangesList
+#' # Starting from GRangesList:
 #' if (
 #'   requireNamespace("BSgenome.Hsapiens.UCSC.hg19") &&
-#'     requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
-#'     requireNamespace("org.Hs.eg.db")
+#'   requireNamespace("TxDb.Hsapiens.UCSC.hg38.refGene") &&
+#'   requireNamespace("org.Hs.eg.db")
 #' ) {
 #'   tiles <- MOCHA::callOpenTiles(
 #'     ATACFragments = MOCHA::exampleFragments,
@@ -95,6 +95,7 @@
 #' @export
 #' @docType methods
 #' @rdname callOpenTiles-methods
+#' @keywords core
 setGeneric(
   "callOpenTiles",
   function(ATACFragments,
@@ -117,7 +118,8 @@ setGeneric(
   signature = "ATACFragments"
 )
 
-
+#' @rdname callOpenTiles-methods
+#' @aliases callOpenTiles, GRangesList-method
 .callOpenTiles_default <- function(ATACFragments,
                                    cellColData,
                                    blackList,
@@ -316,7 +318,6 @@ setMethod(
     useArchR = TRUE
   )
 }
-
 setMethod(
   "callOpenTiles",
   signature(ATACFragments = "ArchRProject"),

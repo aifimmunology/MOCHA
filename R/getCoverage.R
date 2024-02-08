@@ -1,4 +1,4 @@
-#' @title Get sample-specific coverage files for each sample-cell population.
+#' @title Get sample-specific coverage files for each sample-cell population
 #'
 #' @description getCoverage takes the output of MOCHA::getPopFrags and returns
 #'  a GRanges of singe-basepair resolution coverage.
@@ -16,6 +16,7 @@
 #'
 #' @return popCounts A GRangesList of coverage for each sample and cell population
 #' @export
+#' @keywords utils
 getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, verbose = FALSE) {
   score <- NULL
   if (length(normFactor) == 1) {

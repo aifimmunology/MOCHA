@@ -89,15 +89,16 @@ validRegionString <- function(regionString) {
   return(TRUE)
 }
 
-#' @title \code{StringsToGRanges}
+#' @title Convert a list of strings in the format "chr1:100-200" into a GRanges
 #'
-#' @description \code{StringsToGRanges} Turns a list of strings in the format chr1:100-200
-#'   into a GRanges object
+#' @description \code{StringsToGRanges} Turns a list of strings defining genomic 
+#'  regions in the format chr1:100-200 into a GRanges object
 #'
 #' @param regionString A string or list of strings each in the format chr1:100-200
 #' @return a GRanges object with ranges representing the input string(s)
 #'
 #' @export
+#' @keywords utils
 StringsToGRanges <- function(regionString) {
   # if (length(regionString)>1){
   #   boolList <- lapply(regionString, function(x){validRegionString(x)})
@@ -122,7 +123,7 @@ StringsToGRanges <- function(regionString) {
   return(regionGRanges)
 }
 
-#' @title \code{GRangesToString} Converts a GRanges object to a string in the format 'chr1:100-200'
+#' @title Convert a GRanges object to a string in the format 'chr1:100-200'
 #'
 #' @description \code{GRangesToString} Turns a GRanges Object into
 #'  a list of strings in the format chr1:100-200
@@ -132,19 +133,20 @@ StringsToGRanges <- function(regionString) {
 #'  ranges in the input GRanges
 #'
 #' @export
+#' @keywords utils
 GRangesToString <- function(GR_obj) {
   paste(GenomicRanges::seqnames(GR_obj), ":", GenomicRanges::start(GR_obj), "-", GenomicRanges::end(GR_obj), sep = "")
 }
 
-#' @title \code{differentialsToGRanges} Converts a data.frame matrix to a GRanges,
-#'   preserving additional columns as GRanges metadata
-#'
+#' @title Convert a data.frame or matrix to a GRanges
+#'   
 #' @param differentials a matrix/data.frame with a column tileColumn containing
 #'   region strings in the format "chr:start-end"
 #' @param tileColumn name of column containing region strings. Default is "Tile".
 #'
 #' @return a GRanges containing all original information
 #' @export
+#' @keywords utils
 differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   regions <- MOCHA::StringsToGRanges(differentials[[tileColumn]])
   GenomicRanges::mcols(regions) <- differentials
@@ -162,8 +164,8 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   substr(x, 1L, nchar(.ORGDB_PREFIX)) == .ORGDB_PREFIX
 }
 
-#' @title \code{getAnnotationDbFromInstalledPkgname} Loads and attaches an installed TxDb or
-#'   OrgDb-class Annotation database package.
+
+#' @title Loads and attaches an installed TxDb or OrgDb-class Annotation database package.
 #'
 #' @description See \link[BSgenome]{getBSgenome}
 #'
@@ -171,6 +173,7 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
 #' @param type Expected class of the annotation data package, must be
 #'   either "OrgDb" or "TxDb".
 #' @return the loaded Annotation database object.#' @noRd
+#' @keywords internal
 getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   if (!methods::is(dbName, "character")) {
     stop(
@@ -205,14 +208,16 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   db
 }
 
-#' @title \code{getCellTypes} Extract cell type names from a Tile Results or Sample Tile object.
+
+#' @title Extract cell population names from a Tile Results or Sample Tile object.
 #'
 #' @description \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
 #'
 #' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
 #' @return a vector of cell type names.
-#'
+#' 
 #' @export
+#' @keywords utils
 getCellTypes <- function(object) {
   if (class(object)[1] == "MultiAssayExperiment") {
     return(names(object))
@@ -224,7 +229,7 @@ getCellTypes <- function(object) {
 }
 
 
-#' @title \code{getCellTypeTiles} Extract the GRanges for a particular cell type
+#' @title Extract the GRanges for a particular cell population
 #'
 #' @description \code{getCellTypeTiles} Returns a GRanges object of all tiles called for a certain cell type
 #'
@@ -233,6 +238,7 @@ getCellTypes <- function(object) {
 #' @return a vector of cell type names.
 #'
 #' @export
+#' @keywords utils
 getCellTypeTiles <- function(object, cellType) {
   if (class(object)[1] == "MultiAssayExperiment") {
     stop("This is a MultiAssayExperiment, and thus like a tileResults object. Please provide a SampleTileMatrix object.")
@@ -252,13 +258,17 @@ getCellTypeTiles <- function(object, cellType) {
 }
 
 
-#' @title \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata
-#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype specific metadata like fragment number, cell counts, and
+#' @title Extract Sample-celltype specific metadata
+#' @description \code{getSampleCellTypeMetadata} Extract Sample-celltype
+#'   specific metadata like fragment and cell counts
 #'
-#' @param object tileResults object from callOpenTiles or SummarizedExperiment from getSampleTileMatrix
-#' @return a SummarizedExperiment where each assay is a different type of metadata.
+#' @param object tileResults object from callOpenTiles or SummarizedExperiment
+#'   from getSampleTileMatrix
+#' @return a SummarizedExperiment where each assay is a different type of
+#'   metadata.
 #'
 #' @export
+#' @keywords utils
 getSampleCellTypeMetadata <- function(object) {
   # Check if the object has Sample-CellType-level metadata stored in the metadata slot.
   if (all(c("FragmentCounts", "CellCounts") %in% names(object@metadata))) {
@@ -288,16 +298,21 @@ getSampleCellTypeMetadata <- function(object) {
 }
 
 
-#' @title \code{plotIntensityDistribution}
-#' @description \code{plotIntensityDistribution}  Plots the distribution of sample-tile intensities for a give cell type
+#' @title Plots the distribution of sample-tile intensities for a given cell
+#'   population
+#' @description \code{plotIntensityDistribution}  Plots the distribution of
+#'   sample-tile intensities for a give cell population.
 #'
 #' @param TSAM_object  SummarizedExperiment from getSampleTileMatrix
 #' @param cellPopulation Cell type names (assay name) within the TSAM_object
-#' @param density Boolean to determine whether to plot density or histogram. Default is TRUE (plots density).
-#' @param returnDF If TRUE, return the data frame without plotting. Default is FALSE.
+#' @param density Boolean to determine whether to plot density or histogram.
+#'   Default is TRUE (plots density).
+#' @param returnDF If TRUE, return the data frame without plotting. Default is
+#'   FALSE.
 #' @return data.frame or ggplot histogram.
 #'
 #' @export
+#' @keywords plotting
 plotIntensityDistribution <- function(TSAM_object, cellPopulation, returnDF = FALSE, density = TRUE) {
   Values <- NULL
   if (!requireNamespace("Biobase", quietly = TRUE)) {

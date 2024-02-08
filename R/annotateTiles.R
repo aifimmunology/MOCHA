@@ -1,4 +1,4 @@
-#' @title \code{annotateTiles}
+#' @title Annotate tiles with gene annotations
 #'
 #' @description \code{annotateTiles} annotates a set of sample-tile matrices
 #'   given with gene annotations. Details on TxDb and Org annotation packages
@@ -32,6 +32,7 @@
 #' }
 #'
 #' @export
+#' @keywords utils
 annotateTiles <- function(Obj,
                           TxDb = NULL,
                           Org = NULL,
@@ -103,15 +104,18 @@ annotateTiles <- function(Obj,
   }
 }
 
-#' @title \code{getPromoterGenes}
+#' @title Extract the list of promoter genes from a GRanges annotated with
+#'   \code{annotateTiles()}
 #'
-#' @description \code{getPromoterGenes} Takes a rowRanges from annotateTiles and extracts a unique list of genes.
+#' @description \code{getPromoterGenes} Takes rowRanges from annotateTiles and
+#'   extracts a unique list of genes.
 #'
-#' @param GRangesObj a GRanges object with a metadata column for tileType and Gene.
+#' @param GRangesObj a GRanges object with a metadata column for tileType and
+#'   Gene.
 #' @return vector of strings with gene names.
 #'
 #' @export
-#'
+#' @keywords utils
 getPromoterGenes <- function(GRangesObj) {
   tileType <- NULL
   if (class(GRangesObj)[1] != "GRanges") {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{getCellTypes}
 \alias{getCellTypes}
-\title{\code{getCellTypes} Extract cell type names from a Tile Results or Sample Tile object.}
+\title{Extract cell population names from a Tile Results or Sample Tile object.}
 \usage{
 getCellTypes(object)
 }
@@ -15,3 +15,4 @@ a vector of cell type names.
 \description{
 \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
 }
+\keyword{utils}

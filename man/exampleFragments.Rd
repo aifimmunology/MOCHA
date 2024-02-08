@@ -17,4 +17,4 @@ This subset consists of two cell populations: Clusters C2 and C5.
 The data is publicly available with the ArchR package at
 <https://www.archrproject.com/reference/getTestProject.html>
 }
-\keyword{datasets}
+\keyword{internal}

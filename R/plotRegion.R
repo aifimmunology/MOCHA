@@ -1,4 +1,4 @@
-#' @title \code{plotRegion}
+#' @title Plot a given region summarized across all cell groupings
 #'
 #' @description \code{plotRegion} Plots the region that you've summarized across
 #'   all cell groupings (groups=initial getPopFrags() split) with optional motif
@@ -104,6 +104,7 @@
 #' }
 #'
 #' @export
+#' @keywords plotting
 
 plotRegion <- function(countSE,
                        # base count plot args

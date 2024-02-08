@@ -1,6 +1,6 @@
-#' @title \code{bulkDimReduction}
+#' @title Run PCA or LSI dimensionality reduction on tiles
 #'
-#' @description \code{bulkDimReduction} runs dimensionality reduction (either PCA or LSI). We adapt Signac's
+#' @description \code{bulkDimReduction} runs dimensionality reduction (either PCA or LSI)
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from getSampleTileMatrix
 #' @param cellType vector of strings. Cell subsets for which to call
@@ -20,8 +20,7 @@
 #' LSIObj <- MOCHA::bulkDimReduction(SampleTileObj, cellType = "CD16_Mono")
 #' }
 #' @export
-#'
-#'
+#' @keywords downstream
 bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 30, method = "LSI", verbose = FALSE) {
   if (!requireNamespace("irlba", quietly = TRUE)) {
     stop(
@@ -141,12 +140,12 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
   return(DimReducObj)
 }
 
-#' @title \code{bulkUMAP}
+#' @title Generate UMAP from pseudobulk LSI results
 #'
-#' @description \code{bulkUMAP} generates UMAP from pseudobulk LSIObj object, and merges in metadata.
+#' @description \code{bulkUMAP} generates UMAP from pseudobulk LSIObj object from \link[MOCHA]{bulkDimReduction}
 #'
-#' @param SEObj The SummarizedExperiment object output from bulkDimReduction, or an STM, subsetted down to just one cell type.
-#' @param assay A string, describing the name of the assay within SEObj to run UMAP ('PCA', 'LSI', or 'counts').
+#' @param SEObj The SummarizedExperiment object output from bulkDimReduction, or an STM, subset to just one cell type.  
+#' @param assay A string, describing the name of the assay within SEObj to run UMAP ('PCA', 'LSI', or 'counts'). 
 #' @param components A vector of integers. Number of components to include in LSI (1:30 typically).
 #' @param seed an integer. Represents the random seed to pass to the UMAP. Default seed is 1.
 #' @param returnModel A boolean. Default is FALSE. If set to true, it will return a list, where the first is the UMAP coordinates with metadata for plotting, and the second is the full UMAP model so further projection can occur.
@@ -161,7 +160,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
 #' UMAPvalues <- MOCHA::bulkUMAP(LSIObj)
 #' }
 #' @export
-#'
+#' @keywords downstream
 bulkUMAP <- function(SEObj,
                      assay = "LSI",
                      components = c(1:30),

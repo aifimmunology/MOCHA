@@ -2,7 +2,8 @@
 % Please edit documentation in R/exportSmoothedInsertions.R
 \name{exportSmoothedInsertions}
 \alias{exportSmoothedInsertions}
-\title{\code{exportSmoothedInsertions}}
+\title{Export insertion counts to per-sample BigWig files after applying
+  a rolling sum and rolling median smoothing filter.}
 \usage{
 exportSmoothedInsertions(
   SampleTileObj,
@@ -56,3 +57,4 @@ outPath <- MOCHA::exportSmoothedInsertions(
 }
 
 }
+\keyword{exporting}

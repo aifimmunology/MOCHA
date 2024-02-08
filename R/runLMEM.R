@@ -41,6 +41,7 @@
 #' }
 #'
 #' @export
+#' @keywords downstream
 runLMEM <- function(ExperimentObj,
                     assayName,
                     modelFormula,
@@ -409,6 +410,7 @@ processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, range
 #'
 #'
 #' @export
+#' @keywords downstream
 pilotLMEM <- function(ExperimentObj,
                       assayName,
                       modelFormula,

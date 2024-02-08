@@ -2,7 +2,7 @@
 % Please edit documentation in R/getCoverage.R
 \name{getCoverage}
 \alias{getCoverage}
-\title{Get sample-specific coverage files for each sample-cell population.}
+\title{Get sample-specific coverage files for each sample-cell population}
 \usage{
 getCoverage(
   popFrags,
@@ -37,3 +37,4 @@ popCounts A GRangesList of coverage for each sample and cell population
 getCoverage takes the output of MOCHA::getPopFrags and returns
  a GRanges of singe-basepair resolution coverage.
 }
+\keyword{utils}

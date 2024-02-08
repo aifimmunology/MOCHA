@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsetMOCHAObject.R
 \name{subsetMOCHAObject}
 \alias{subsetMOCHAObject}
-\title{\code{subsetMOCHAObject}}
+\title{Subset a tileResults object by metadata}
 \usage{
 subsetMOCHAObject(
   Object,
@@ -25,8 +25,8 @@ should be used to subset the Object}
 \item{removeNA}{If TRUE, removes groups in groupList that are NA. If FALSE,
 keep groups that are NA.}
 
-\item{subsetPeaks}{If `subsetBy` = 'celltype', subset the tile
-set to tiles only called in those cell types. Default is TRUE.}
+\item{subsetPeaks}{If `subsetBy` = 'celltype', subset the tile set to tiles
+only called in those cell types. Default is TRUE.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
@@ -39,3 +39,4 @@ Object the input Object, filtered down to either the cell type or
   callOpenTiles), or a SummarizedExperiment-type object (from
   getSampleTileMatrix), either by cell type or sample metadata.
 }
+\keyword{utils}

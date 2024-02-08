@@ -2,7 +2,7 @@
 % Please edit documentation in R/addAccessibilityShift.R
 \name{addAccessibilityShift}
 \alias{addAccessibilityShift}
-\title{\code{addAccessibilityShift}}
+\title{Add difference in accessibility between two conditions}
 \usage{
 addAccessibilityShift(CountSE, foreground, background, assayName = NULL)
 }
@@ -33,3 +33,4 @@ countSE <- MOCHA::addAccessibilityShift(
 )
 }
 }
+\keyword{downstream}

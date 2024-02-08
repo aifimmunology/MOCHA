@@ -2,7 +2,7 @@
 % Please edit documentation in R/combineSampleTileMatrix.R
 \name{combineSampleTileMatrix}
 \alias{combineSampleTileMatrix}
-\title{\code{combineSampleTileMatrix}}
+\title{Merge the TSAM from multiple cell populations into a single matrix}
 \usage{
 combineSampleTileMatrix(SampleTileObj, NAtoZero = TRUE, verbose = FALSE)
 }
@@ -22,3 +22,4 @@ TileCorr A data.table correlation matrix
   SampleTileMatrix object into a SummarizedExperiment with one single matrix
   across all cell types and samples,
 }
+\keyword{utils}

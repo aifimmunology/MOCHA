@@ -1,4 +1,4 @@
-#' @title \code{extractRegion}
+#' @title Get coverage for a given region
 #'
 #' @description \code{extractRegion} will extract the coverage files created by
 #'   callOpenTiles and return a specific region's coverage
@@ -47,7 +47,7 @@
 #' }
 #'
 #' @export
-#'
+#' @keywords utils
 
 extractRegion <- function(SampleTileObj,
                           type = TRUE,

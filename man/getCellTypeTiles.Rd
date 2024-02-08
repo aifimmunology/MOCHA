@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{getCellTypeTiles}
 \alias{getCellTypeTiles}
-\title{\code{getCellTypeTiles} Extract the GRanges for a particular cell type}
+\title{Extract the GRanges for a particular cell population}
 \usage{
 getCellTypeTiles(object, cellType)
 }
@@ -17,3 +17,4 @@ a vector of cell type names.
 \description{
 \code{getCellTypeTiles} Returns a GRanges object of all tiles called for a certain cell type
 }
+\keyword{utils}

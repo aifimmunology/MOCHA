@@ -1,4 +1,5 @@
-#' @title \code{packMOCHA}
+#' @title Zip up a MOCHA object and its linked files for portability between 
+#'   file systems
 #'
 #' @description \code{packMOCHA} combines a MOCHA object (Sample-Tile
 #'   Matrix or tileResults) with its saved coverage tracks into a single zip
@@ -23,7 +24,7 @@
 #' }
 #'
 #' @export
-#'
+#' @keywords exporting
 packMOCHA <- function(MOCHAObj,
                       zipfile,
                       verbose = FALSE) {
@@ -49,14 +50,16 @@ packMOCHA <- function(MOCHAObj,
 }
 
 
-#' @title \code{unpackMOCHA}
+#' @title Unzip a MOCHA object and its linked files created by \code{packMOCHA()}
+#'   for portability between file systems
 #'
 #' @description \code{unpackMOCHA} will unpack a zip archive created by
 #'   \link[MOCHA]{unpackMOCHA}, setting the stored MOCHA object's stored
 #'   directory path to the new location. See also: \link[MOCHA]{packMOCHA}
 #'
 #' @param zipfile Filepath to the packed MOCHA object.
-#' @param exdir The path to the external directory where you want to unpack the MOCHA object.
+#' @param exdir The path to the external directory where you want to unpack the
+#'   MOCHA object.
 #' @param verbose Display additional messages. Default is FALSE.
 #'
 #' @return MOCHAObj the MOCHA object (tileResults or Sample-Tile Matrix)
@@ -67,7 +70,7 @@ packMOCHA <- function(MOCHAObj,
 #' MOCHA::unpackMOCHA(zipfile = "./mochaobj.zip", exdir = "./newMOCHAdir")
 #' }
 #' @export
-#'
+#' @keywords exporting
 unpackMOCHA <- function(zipfile,
                         exdir,
                         verbose = FALSE) {

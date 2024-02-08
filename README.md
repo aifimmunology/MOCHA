@@ -1,38 +1,46 @@
-# MOCHA: Model-based single cell Open CHromatin Analysis
+# MOCHA: Model-based single-cell Open Chromatin Analysis
+
+
+MOCHA is an R package meant to enable robust sample-specific scATAC analysis by providing a novel single-cell peak-calling algorithm and leveraging the latest in zero-inflated statistical methods. We hope this package will enable translational research on scATAC datasets by addressing statistical issues around peak calling, differential accessibility, co-accessibility, and repeated measures. Our goal is to enable intuitive and robust identification of open chromatin, differential accessibility, and co-accessibility so that biomedical researchers can leverage scATAC datasets to identify the therapeutic targets. 
+
+Find out more by visiting the [MOCHA website](https://aifimmunology.github.io/MOCHA/).
+
 ------------------------------------------------------------------------
 
-## Table of Contents
+### Table of Contents
 
--   [Introduction](#introduction)
--   [Installation](#library)
--   [Usage: Package Vignette on COVID PASC dataset](#vignette)
--   [Tips: Result formats](#results)
+-   [Installation](#installation)
+-   [Overview](#overview)
 -   [Contact](#contact)
--   [License](#license)
 
-------------------------------------------------------------------------
 
-# <a name="introduction"></a> Introduction
+-----------------------------------------------------------------------
 
-MOCHA is an R package containing a novel single-cell peak-calling algorithm that leverages single-cell information to determine whether a particular genomic region is open by calculating two measures of intensities, and using these to call peaks via a hierarchical model.
 
-# <a name="library"></a> Install package and load library
-You can install MOCHA directly from CRAN using the following command. 
+
+## <a name="installation"></a> Installation
+Install from binaries (stable release on CRAN):
   
- ``` r
- install.packages('MOCHA')
- ```
+    install.packages("MOCHA")
+    
+Install from source:
 
-# <a name="vignette"></a> Usage
+    devtools::install_github("aifimmunology/MOCHA")
+
+Install a specific development branch from source:
+
+    devtools::install_github("aifimmunology/MOCHA", ref = "your_branch_name")
+
+## <a name="overview"></a> Usage Overview
 
 Please view the example usage found in the vignette found under
 `vignettes/COVID-walkthrough.html`.
 
 The example usage demonstrates this workflow: 
 
-![Workflow](inst/extData/workflow_diagram_v3_website.png)
+![Workflow](man/figures/workflow_diagram_v3_website.png)
 
-# <a name="results"></a> Tips: Result formats
+## <a name="contact"></a> Contact
 
 While the pipeline can be run function-to-function, you may wish to inspect intermediate results or use end results for your own custom analyses. All MOCHA outputs use common Bioconductor data structures. We also provide some getters for accessing specific results.
 

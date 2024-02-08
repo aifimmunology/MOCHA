@@ -2,8 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{getAnnotationDbFromInstalledPkgname}
 \alias{getAnnotationDbFromInstalledPkgname}
-\title{\code{getAnnotationDbFromInstalledPkgname} Loads and attaches an installed TxDb or
-  OrgDb-class Annotation database package.}
+\title{Loads and attaches an installed TxDb or OrgDb-class Annotation database package.}
 \usage{
 getAnnotationDbFromInstalledPkgname(dbName, type)
 }
@@ -19,3 +18,4 @@ the loaded Annotation database object.#' @noRd
 \description{
 See \link[BSgenome]{getBSgenome}
 }
+\keyword{internal}

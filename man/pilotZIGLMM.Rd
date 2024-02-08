@@ -56,3 +56,4 @@ modelList a list of outputs from glmmTMB::glmmTMB
   inflated data using \code{\link[glmmTMB]{glmmTMB}}. TryCatch will catch
   errors, and return the error and dataframe for troubleshooting.
 }
+\keyword{downstream}

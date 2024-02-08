@@ -1,4 +1,5 @@
-#' @title \code{exportSmoothedInsertions}
+#' @title Export insertion counts to per-sample BigWig files after applying
+#'   a rolling sum and rolling median smoothing filter.
 #'
 #' @description \code{exportSmoothedInsertions} Takes a SampleTileMatrix with
 #'   linked insertion files and applies a smoothing filter (a rolling sum then
@@ -31,7 +32,7 @@
 #' }
 #'
 #' @export
-#' 
+#' @keywords exporting
 exportSmoothedInsertions <- function(SampleTileObj,
                                      cellPopulation,
                                      outDir = NULL,
@@ -112,6 +113,7 @@ exportSmoothedInsertions <- function(SampleTileObj,
             
             if (!slow) { # slow=FALSE by default to use these optimizations below
 
+
               ######## Expand insertions to selectively keep zeroes ########
               gpos$score <- x
   
@@ -138,6 +140,7 @@ exportSmoothedInsertions <- function(SampleTileObj,
               rm(joinedGR)
               
             }
+
 
             ######## Transform with smoothing filter ######## 
 

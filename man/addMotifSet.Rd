@@ -2,7 +2,7 @@
 % Please edit documentation in R/addMotifSet.R
 \name{addMotifSet}
 \alias{addMotifSet}
-\title{\code{addMotifSet}}
+\title{Identify motifs within a peakset}
 \usage{
 addMotifSet(
   SampleTileObj,
@@ -47,3 +47,4 @@ SE_with_motifs <- addMotifSet(
 }
 
 }
+\keyword{utils}

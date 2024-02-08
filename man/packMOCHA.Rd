@@ -2,7 +2,8 @@
 % Please edit documentation in R/packMOCHA.R
 \name{packMOCHA}
 \alias{packMOCHA}
-\title{\code{packMOCHA}}
+\title{Zip up a MOCHA object and its linked files for portability between 
+  file systems}
 \usage{
 packMOCHA(MOCHAObj, zipfile, verbose = FALSE)
 }
@@ -34,3 +35,4 @@ zipPath <- MOCHA::packMOCHA(
 }
 
 }
+\keyword{exporting}

@@ -110,3 +110,5 @@ Suggests:
 Additional_repositories: https://imran-aifi.github.io/drat
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+URL: https://aifimmunology.github.io/MOCHA/, https://github.com/aifimmunology/MOCHA
+BugReports: https://github.com/aifimmunology/MOCHA/issues

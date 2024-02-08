@@ -50,7 +50,7 @@
 # MOCHA 0.2.4
 
 * Fixes bug in callOpenTiles where "Clusters" was hardcoded in the step computing fragment counts table.
-* Parallelization overhaul to address memory leaks when using parLapply. parLapply is now passed a helper function directly and a single object input to that function, where the input object is a list containing all variables needed in the helper function.
+* Parallelization overhaul to address memory leaks when using parLapply. ParLapply is now passed a helper function directly and a single object input to that function, where the input object is a list containing all variables needed in the helper function.
 
 # MOCHA 0.2.3
 

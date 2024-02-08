@@ -1,10 +1,11 @@
-#' @title \code{mergeTileResults}
+#' @title Merge tileResults from \code{callOpenTiles()} that share cell
+#'   populations into a single object containing all samples
 #'
-#' @description \code{mergeTileResults} merges a list of tileResults that
-#'   each contain unique samples into a single object encompassing all samples.
-#'   Only cell populations shared among all input tileResults will be retained.
-#'   This function can merge MultiAssayExperiment objects from callOpenTiles
-#'   that are created with the same TxDb, OrgDb, and Genome assembly.
+#' @description \code{mergeTileResults} merges a list of tileResults that each
+#'   contain unique samples into a single object encompassing all samples. Only
+#'   cell populations shared among all input tileResults will be retained. This
+#'   function can merge MultiAssayExperiment objects from callOpenTiles that are
+#'   created with the same TxDb, OrgDb, and Genome assembly.
 #'
 #' @param tileResultsList List of MultiAssayExperiments objects returned by
 #'   callOpenTiles containing containing peak calling results.
@@ -25,6 +26,7 @@
 #' }
 #'
 #' @export
+#' @keywords utils
 mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   Freq <- NULL
   # Test for duplicate sample names
