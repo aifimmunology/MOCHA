@@ -33,7 +33,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
   if (all(tolower(cellType) == "all")) {
     fullObj <- combineSampleTileMatrix(SampleTileObj)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
-  } else if (all(cellType %in% allCellTypes)) {
+  } else if (all(cellType %in% allCellTypes) & cellType != 'counts') {
     newTSAM <- subsetMOCHAObject(SampleTileObj,
       subsetBy = "celltype",
       groupList = cellType, subsetPeaks = TRUE,
@@ -41,7 +41,11 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     )
     fullObj <- combineSampleTileMatrix(newTSAM)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
-  } else {
+  } else if(all(cellType %in% allCellTypes) & cellType == 'counts'){
+      fullObj <- SampleTileObj
+       countMat <- SummarizedExperiment::assays(SampleTileObj)[[1]]
+      
+    }else {
     stop("cellType not found. SampleTileObj must contain the given cellType.")
   }
 
@@ -189,6 +193,7 @@ bulkUMAP <- function(SEObj,
 
     return(fullUMAP)
   } else {
+      
     umapOut <- uwot::umap(countMat[, components], n_neighbors = nNeighbors, ret_model = TRUE, batch = TRUE, ...)
     subUMAP <- as.data.frame(umapOut$embedding)
     colnames(subUMAP) <- c("UMAP1", "UMAP2")

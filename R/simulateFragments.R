@@ -95,7 +95,8 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     ## the fragment length distribution matching the expectations. 
 
     ## Generate unique CellIDs
-    allCellNames <- unlist(lapply(1:nCells, function(x){ paste(sample(LETTERS, 20 , replace= TRUE), collapse = '')}))
+    allCellNames <- unlist(lapply(1:nCells, function(x){ paste(sample(LETTERS, 20 , replace= TRUE), 
+                                                               collapse = '')}))
     peakWeight <- runif(n = peakNumber, min = 1, max = 8)
 
     message('Generating fragment lengths across theoretical cells.')
@@ -224,9 +225,14 @@ simulateFragments <- function(nCells = 500, meanFragsPerCell = 5000, fragThresho
     }else{
         allFrags <- GenomicRanges::makeGRangesFromDataFrame(peakFrags, keep.extra.columns= TRUE)
     }
-
+                                   
     #Add Genome info and trim
-    suppressWarnings(GenomicRanges::seqinfo(allFrags) <- GenomicRanges::seqinfo(allLocationsGR))
+    if(is.null(GenomicRanges::seqinfo(allFrags))){
+        newSeq <- GenomicRanges::seqinfo(allLocationsGR)
+        GenomicRanges::seqlevels(GenomicRanges::seqinfo(allFrags)) <- 
+            GenomicRanges::seqlevels(newSeq)
+        suppressWarnings(GenomicRanges::seqinfo(allFrags) <-newSeq)
+    }
     allFrags <- GenomicRanges::trim(allFrags)
 
     allFrags$nCells = nCells
