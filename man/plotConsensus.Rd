@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotConsensus.R
 \name{plotConsensus}
 \alias{plotConsensus}
-\title{\code{plotConsensus}}
+\title{Plot to determine the reproducibility threshold}
 \usage{
 plotConsensus(
   tileObject,
@@ -29,10 +29,11 @@ If set to false, then it plots the data.frame instead of returning it.}
 \item{numCores}{Number of cores to multithread over.}
 }
 \value{
-SampleTileObj the input data structure with added gene annotations.
+A data.frame of reproducibility, or plots
 }
 \description{
 \code{plotConsensus} Extracts the peak reproducibility and generates a
 					heuristic plots that can be used to determine the reproducibility threshold
 					used within getSampleTileMatrix.
 }
+\keyword{plotting}

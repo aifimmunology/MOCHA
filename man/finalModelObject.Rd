@@ -17,4 +17,4 @@ finalModelObject
 \description{
 Trained MOCHA models - LOESS and linear regression
 }
-\keyword{datasets}
+\keyword{internal}

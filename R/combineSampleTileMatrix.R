@@ -1,10 +1,9 @@
 
-#' @title \code{combineSampleTileMatrix}
+#' @title Merge the TSAM from multiple cell populations into a single matrix
 #'
 #' @description \code{combineSampleTileMatrix} combines all celltypes in a
 #'   SampleTileMatrix object into a SummarizedExperiment with one single matrix
-#'   across all cell types and samples, annotating GC bias using
-#'   chromVAR.
+#'   across all cell types and samples,
 #'
 #' @param SampleTileObj The SummarizedExperiment object output from
 #'   getSampleTileMatrix containing your sample-tile matrices
@@ -14,15 +13,10 @@
 #'
 #'
 #' @export
+#' @keywords utils
 combineSampleTileMatrix <- function(SampleTileObj,
                                     NAtoZero = TRUE,
                                     verbose = FALSE) {
-  if (!requireNamespace("chromVAR", quietly = TRUE)) {
-    stop(
-      "Package 'chromVAR' is required for combineSampleTileMatrix. ",
-      "Please install 'chromVAR' to proceed."
-    )
-  }
   CellTypes <- FragNumber <- NULL
 
   genome <- S4Vectors::metadata(SampleTileObj)$Genome
@@ -32,7 +26,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
   # Extract all the Sample-Tile Matrices for each cell type
   assays <- SummarizedExperiment::assays(SampleTileObj)
 
-  coldata <- SummarizedExperiment::colData(SampleTileObj)
+  coldata <- SampleTileObj@colData
 
   # Let's generate a new assay, that will contain the
   # the intensity for a given cell, as well as the
@@ -63,6 +57,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   # This is where cell counts and fragments counts are pivoted into a long format and merged (left-Joined) into the new allSampleData
   cellTypeLabelList <- Var1 <- NULL
+
   summarizedData <- S4Vectors::metadata(SampleTileObj)$summarizedData
   cellCounts <- as.data.frame(
     SummarizedExperiment::assays(summarizedData)[["CellCounts"]]
@@ -107,9 +102,6 @@ combineSampleTileMatrix <- function(SampleTileObj,
 
   # Artificially set all the cell type columns in rowRanges to TRUE, incase of later subsetting.
   allRanges <- SummarizedExperiment::rowRanges(SampleTileObj)
-  for (i in names(assays)) {
-    GenomicRanges::mcols(allRanges)[, i] <- rep(TRUE, length(allRanges))
-  }
 
   newMetadata <- S4Vectors::metadata(SampleTileObj)
   newMetadata$History <- append(newMetadata$History, paste("combineSampleTileMatrix", utils::packageVersion("MOCHA")))
@@ -120,18 +112,5 @@ combineSampleTileMatrix <- function(SampleTileObj,
     rowRanges = allRanges,
     metadata = newMetadata
   )
-
-  newObj <- chromVAR::addGCBias(newObj, genome = genome)
-
-  if (any(is.na(SummarizedExperiment::rowData(newObj)$bias))) {
-    naList <- is.na(SummarizedExperiment::rowData(newObj)$bias)
-
-    if (verbose) {
-      warning(paste(sum(naList), "NaNs found within GC Bias", sep = " "))
-    }
-
-    SummarizedExperiment::rowData(newObj)$bias[which(naList)] <- mean(SummarizedExperiment::rowData(newObj)$bias, na.rm = TRUE)
-  }
-
   return(newObj)
 }

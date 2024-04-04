@@ -1,4 +1,33 @@
+# MOCHA 1.1.0
+* New Functions:
+  - Sharing MOCHA objects between file systems
+    - packMOCHA
+    - unpackMOCHA
+  - Exporting for genome browsers (bigwig, bigbed)
+    - exportCoverage
+    - exportDifferentials
+    - exportMotifs
+    - exportOpenTiles
+    - exportSmoothedInsertions
+  - Getters 
+    - getCellTypeTiles
+    - getCellTypes
+    - getPromoterGenes
+    - getSampleCellTypeMetadata
+  - Other
+    - mergeTileResults
+    - plotIntensityDistribution
+    - renameCellTypes
+
+* Deprecated Functions:
+  - runLMEM, pilotLMEM, runZIGLMM, pilotZIGLMM, IndividualZIGLMM, getModelValues, varZIGLMM, processModelOutputs
+  
+* Updates test data to consistently use TxDb hg19 references.
+
+* Various minor bug and documentation fixes.
+
 # MOCHA 1.0.2
+* Addressed check errors in "donttest" examples.
 
 # MOCHA 1.0.1
 
@@ -21,7 +50,7 @@
 # MOCHA 0.2.4
 
 * Fixes bug in callOpenTiles where "Clusters" was hardcoded in the step computing fragment counts table.
-* Parallelization overhaul to address memory leaks when using parLapply. parLapply is now passed a helper function directly and a single object input to that function, where the input object is a list containing all variables needed in the helper function.
+* Parallelization overhaul to address memory leaks when using parLapply. ParLapply is now passed a helper function directly and a single object input to that function, where the input object is a list containing all variables needed in the helper function.
 
 # MOCHA 0.2.3
 

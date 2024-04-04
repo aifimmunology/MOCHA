@@ -2,7 +2,7 @@
 % Please edit documentation in R/filterCoAccessibleLinks.R
 \name{filterCoAccessibleLinks}
 \alias{filterCoAccessibleLinks}
-\title{\code{filterCoAccessibleLinks}}
+\title{Filter links by correlation strength}
 \usage{
 filterCoAccessibleLinks(TileCorr, threshold = 0.5)
 }
@@ -29,3 +29,4 @@ MOCHA::filterCoAccessibleLinks(links, threshold = 0.5)
 }
 
 }
+\keyword{downstream}

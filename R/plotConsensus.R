@@ -1,4 +1,4 @@
-#' @title \code{plotConsensus}
+#' @title Plot to determine the reproducibility threshold
 #'
 #' @description \code{plotConsensus} Extracts the peak reproducibility and generates a
 #' 					heuristic plots that can be used to determine the reproducibility threshold
@@ -12,10 +12,11 @@
 #' 						If set to false, then it plots the data.frame instead of returning it.
 #' @param numCores Number of cores to multithread over.
 #'
-#' @return SampleTileObj the input data structure with added gene annotations.
+#' @return A data.frame of reproducibility, or plots
 #'
 #'
 #' @export
+#' @keywords plotting
 
 plotConsensus <- function(tileObject,
                           cellPopulations = "All",
@@ -39,7 +40,7 @@ plotConsensus <- function(tileObject,
     }
   }
 
-  sampleData <- MultiAssayExperiment::colData(tileObject)
+  sampleData <- SummarizedExperiment::colData(tileObject)
 
 
   iterList <- lapply(names(subTileResults), function(x) {

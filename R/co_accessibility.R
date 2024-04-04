@@ -1,8 +1,7 @@
-#' @title \code{co_accessibility}
+#' @title Test for co-accessibility with ZI Spearman correlation
 #'
 #' @description \code{co_accessibility} allows you to determine whether 2 tiles
 #'              are co-accessible using a zero-inflated Spearman correlation.
-#'
 #'
 #' @param subMat sample-tile matrix with regions to analyze
 #' @param filterPairs list of passed tile-pairs that have been tested. Used to remove already tested pairs.
@@ -24,11 +23,8 @@
 #'          while the implementation (scHOT R package), can be found here:
 #'               http://www.bioconductor.org/packages/release/bioc/html/scHOT.html
 #'
-#'
 #' @noRd
 #'
-#'
-
 co_accessibility <- function(subMat, filterPairs, index, numCores = 40, ZI = TRUE, verbose = FALSE) {
   regionOfInterest <- rownames(subMat)[index]
   allOtherRegions <- rownames(subMat)[-index]

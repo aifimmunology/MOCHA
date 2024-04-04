@@ -2,7 +2,7 @@
 % Please edit documentation in R/testCoAccessibility.R
 \name{testCoAccessibilityRandom}
 \alias{testCoAccessibilityRandom}
-\title{\code{testCoAccessibilityRandom}}
+\title{Test input tile pairs against a random background}
 \usage{
 testCoAccessibilityRandom(
   SampleTileObj,
@@ -55,4 +55,5 @@ foreGround A data.frame with Tile1, Tile2, Correlation, and p-value
   pairs and tests whether they are significantly different compared to
   random, non-overlapping background set.
 }
+\keyword{downstream}
 \keyword{internal}

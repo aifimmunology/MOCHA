@@ -1,4 +1,4 @@
-#' @title \code{addMotifSet}
+#' @title Identify motifs within a peakset
 #'
 #' @description \code{addMotifSet} Identify motifs within your peakset.
 #'
@@ -9,7 +9,7 @@
 #' @param w Parameter for motifmatchr controlling size in basepairs of window for filtration.
 #'   Default is 7.
 #' @param returnSTM If TRUE, return the modified SampleTileObj with motif set
-#'   added to metadata (default). If FALSE, return just the motifs from motifmatchr.
+#'   added to metadata (default). If FALSE, return the motifs from motifmatchr as a GRanges.
 #' @param motifSetName Name to give motifList in the SampleTileObj's metadata
 #'   if `returnSTM=TRUE`. Default is 'Motifs'.
 #'
@@ -30,6 +30,7 @@
 #' }
 #'
 #' @export
+#' @keywords utils
 #'
 addMotifSet <- function(SampleTileObj,
                         motifPWMs,

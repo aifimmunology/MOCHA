@@ -1,4 +1,4 @@
-#' @title \code{estimate_differential_accessibility}
+#' @title Run differential accessibility on a set of tiles
 #'
 #' @description \code{estimate_differential_accessibility} internal function for computing differential accessibility on a set of tiles
 #'
@@ -24,7 +24,6 @@
 #' @references XX
 #'
 #' @noRd
-
 estimate_differential_accessibility <- function(tile_values, group,
                                                 providePermutation = FALSE) {
   data_vec <- as.numeric(tile_values)

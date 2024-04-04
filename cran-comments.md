@@ -1,5 +1,3 @@
-This is a resubmission addressing check errors in the 'donttest' examples.
-
 ## R CMD check results
 
 There were no ERRORs or WARNINGs. 

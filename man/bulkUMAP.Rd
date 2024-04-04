@@ -2,7 +2,7 @@
 % Please edit documentation in R/dimensionalityReduction.R
 \name{bulkUMAP}
 \alias{bulkUMAP}
-\title{\code{bulkUMAP}}
+\title{Generate UMAP from pseudobulk LSI results}
 \usage{
 bulkUMAP(
   SEObj,
@@ -15,7 +15,7 @@ bulkUMAP(
 )
 }
 \arguments{
-\item{SEObj}{The SummarizedExperiment object output from bulkDimReduction, or an STM, subsetted down to just one cell type.}
+\item{SEObj}{The SummarizedExperiment object output from bulkDimReduction, or an STM, subset to just one cell type.}
 
 \item{assay}{A string, describing the name of the assay within SEObj to run UMAP ('PCA', 'LSI', or 'counts').}
 
@@ -34,10 +34,11 @@ neighboring sample points) used for manifold approximation. Default is 15.}
 fullUMAP data.frame of UMAP values with metadata attached.
 }
 \description{
-\code{bulkUMAP} generates UMAP from pseudobulk LSIObj object, and merges in metadata.
+\code{bulkUMAP} generates UMAP from pseudobulk LSIObj object from \link[MOCHA]{bulkDimReduction}
 }
 \examples{
 \dontrun{
 UMAPvalues <- MOCHA::bulkUMAP(LSIObj)
 }
 }
+\keyword{downstream}

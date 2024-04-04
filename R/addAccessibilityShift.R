@@ -1,4 +1,4 @@
-#' @title \code{addAccessibilityShift}
+#' @title Add difference in accessibility between two conditions
 #'
 #' @description \code{addAccessibilityShift} will add a new condition to the SummarizedExperiment output of extractRegion,
 #' 								which will contain the difference in accessibility between two conditions
@@ -21,7 +21,7 @@
 #' )
 #' }
 #' @export
-#'
+#' @keywords downstream
 
 addAccessibilityShift <- function(CountSE,
                                   foreground,

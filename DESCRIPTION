@@ -1,7 +1,7 @@
 Package: MOCHA
 Type: Package
 Title: Modeling for Single-Cell Open Chromatin Analysis
-Version: 1.0.2
+Version: 1.1.0
 Authors@R: 
     c(person(given = "Samir",
            family = "Rachid Zaim",
@@ -66,10 +66,8 @@ Imports:
     GenomeInfoDb,
     GenomicFeatures,
     IRanges,
-    OrganismDbi,
     S4Vectors,
     assertthat,
-    biovizBase,
     ensembldb,
     ggplot2,
     ggrepel,
@@ -89,6 +87,7 @@ Suggests:
     motifmatchr,
     BiocManager,
     TxDb.Hsapiens.UCSC.hg38.refGene,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
     org.Hs.eg.db,
     BSgenome.Hsapiens.UCSC.hg19,
     withr,
@@ -100,8 +99,18 @@ Suggests:
     irlba,
     glmmTMB,
     Matrix,
+    waldo,
     purrr,
-    lmerTest
+    lmerTest,
+    Biobase,
+    lme4,
+    zip,
+    rtracklayer,
+    cowplot,
+    mixtools,
+    zoo
 Additional_repositories: https://imran-aifi.github.io/drat
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+URL: https://aifimmunology.github.io/MOCHA/, https://github.com/aifimmunology/MOCHA
+BugReports: https://github.com/aifimmunology/MOCHA/issues
