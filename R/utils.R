@@ -209,7 +209,7 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
 }
 
 
-#' @title Extract cell population names from a Tile Results or Sample Tile object.
+#' @title Extract cell population names from a Tile Results object.
 #'
 #' @description \code{getCellTypes} Returns a vector of cell names from a Tile Results or Sample Tile object.
 #'
