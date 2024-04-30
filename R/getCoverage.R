@@ -33,7 +33,6 @@ getCoverage <- function(popFrags, normFactor, TxDb, cl, filterEmpty = FALSE, ver
     list(popFrags[[x]], normFactor[[x]], filterEmpty)
   })
 
-
   # Summarize the coverage over the region window at a single basepair resolution
   popCounts <- pbapply::pblapply(popFragList, calculateCoverage, cl = cl)
   # Summarize the coverage over the region window at a single basepair resolution
@@ -94,11 +93,17 @@ getSpecificCoverage <- function(covFiles, regions, numCores = 1) {
 
 # helper function that takes in a GRanges fragment object and generates coverage GRanges for insertions.
 calculateInsertionCoverage <- function(ref) {
+  
   score <- NULL
   popFrags <- ref[[1]]
   Num <- ref[[2]]
   filterEmpty <- ref[[3]]
 
+  if(length(popFrags)== 0){
+  
+      return(popFrags)
+  }
+    
   cutstart <- GenomicRanges::GRanges(
     seqnames = methods::as(GenomicRanges::seqnames(popFrags), "vector"),
     ranges = IRanges::IRanges(start = IRanges::start(popFrags), width = 1), strand = "*"
