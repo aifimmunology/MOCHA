@@ -11,6 +11,7 @@
 #'   the given cellPopLabel metadata column of the ArchR Project.
 #' @param poolSamples Set TRUE to pool sample-specific fragments by cell population. By default this is FALSE and sample-specific fragments are returned.
 #' @param numCores Number of cores to use.
+#' @param returnGRangesList Set FALSE to return as a list of GRanges. Default, TRUE, returns a GRangesList
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return A list of GRanges containing fragments. Each GRanges corresponds to a
@@ -24,6 +25,7 @@ getPopFrags <- function(ArchRProj,
                         cellSubsets = "ALL",
                         poolSamples = FALSE,
                         numCores = 1,
+                        returnGRangesList = TRUE,
                         verbose = FALSE) {
   nFrags <- NULL
   # Turn off ArchR logging messages
@@ -187,8 +189,12 @@ getPopFrags <- function(ArchRProj,
   }
 
   rm(tmp_fragList)
-
-  return(GenomicRanges::GRangesList(popFrags))
+    
+  if (returnGRangesList){
+    return(GenomicRanges::GRangesList(popFrags))
+  } else {
+    return(popFrags)
+  }
 }
 
 #' Extract fragments from an arrow file based on one variable
