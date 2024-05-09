@@ -17,6 +17,9 @@
 #'  require to keep tiles for differential testing. Default is 0.5 (50\%).
 #' @param fdrToDisplay False-discovery rate used only for standard
 #'  output messaging. Default is 0.2.
+#' @param qValueMethod String describing qvalue method. Can be 'standard', or 'experimental'. 
+#'           See methods in the MOCHA manuscript for description of the experimental. 
+#'           Otherwise, 'standard' applies standard q value. 
 #' @param outputGRanges Outputs a GRanges if TRUE and a data.frame if
 #'  FALSE. Default is TRUE.
 #' @param numCores The number of cores to use with multiprocessing.
@@ -60,6 +63,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
                                            signalThreshold = 12,
                                            minZeroDiff = 0.5,
                                            fdrToDisplay = 0.2,
+                                           qValueMethod = 'standard',
                                            outputGRanges = TRUE,
                                            numCores = 1,
                                            verbose = FALSE) {
@@ -73,6 +77,11 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
     }
   }
 
+  if(!qValueMethod %in% c('standard', 'experimental')){
+  
+      stop("qValueMethod must either be set to 'standard' or 'experimental'")     
+  }
+    
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
 
   if (!(groupColumn %in% colnames(metaFile))) {
@@ -96,7 +105,8 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   # Enforce that the samples included are in foreground and background groups -
   # this can onl be an A vs B comparison, i.e. this ignores other groups in groupCol
 
-  sampleTileMatrix <- sampleTileMatrix[, colnames(sampleTileMatrix) %in% c(foreground_samples, background_samples), drop = FALSE]
+  sampleTileMatrix <- sampleTileMatrix[, colnames(sampleTileMatrix) %in%
+                                       c(foreground_samples, background_samples), drop = FALSE]
 
 
   group <- as.numeric(colnames(sampleTileMatrix) %in% foreground_samples)
@@ -108,9 +118,12 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   # (input must not be log2 transformed prior to this)
   sampleTileMatrix <- log2(sampleTileMatrix + 1)
 
-  medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1), drop = FALSE], na.rm = T)
-  medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0), drop = FALSE], na.rm = T)
-
+  medians_a <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 1), drop = FALSE], 
+                                       na.rm = TRUE)
+  medians_b <- matrixStats::rowMedians(sampleTileMatrix[, which(group == 0), drop = FALSE], 
+                                       na.rm = TRUE)
+  #medians_a[is.na(medians_a)] = 0
+  #medians_b[is.na(medians_b)] = 0
   # Set NAs to zero
   sampleTileMatrix[is.na(sampleTileMatrix)] <- 0
 
@@ -120,35 +133,37 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   diff0s <- abs(zero_A - zero_B)
 
   log2FC_filter <- signalThreshold
-  idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)
+  idx <- which(medians_a > log2FC_filter | medians_b > log2FC_filter | diff0s >= minZeroDiff)    
 
   ############################################################################
   # Estimate differential accessibility
-
-  res_pvals <- parallel::mclapply(
-    rownames(sampleTileMatrix),
-    function(x) {
-      if (which(rownames(sampleTileMatrix) == x) %in% idx) {
-        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group, F))
-      } else {
-        data.frame(
-          Tile = x,
-          P_value = NA,
-          TestStatistic = NA,
-          Log2FC_C = NA,
-          MeanDiff = NA,
-          Case_mu = NA,
-          Case_rho = NA,
-          Control_mu = NA,
-          Control_rho = NA
+  
+  ## Let's create a matrix to iterate over. 
+  cl <- parallel::makeCluster(numCores)
+  res_pvals <- pbapply::pbapply(cl = cl, sampleTileMatrix[idx,], 
+                            MARGIN = 1, estimate_differential_accessibility,
+                                group = group)
+  parallel::stopCluster(cl)
+  res_pvals <- do.call(rbind, res_pvals)               
+  ##Add back in other untested tiles for visibility.
+  removedTiles = which(!rownames(sampleTileMatrix) %in% names(idx))
+  filteredTiles = data.frame( P_value = rep(NA, length(removedTiles)),
+          TestStatistic =  rep(NA,length(removedTiles)),
+          Log2FC_C = rep(NA, length(removedTiles)),
+          MeanDiff = rep(NA, length(removedTiles)),
+          Case_mu =  rep(NA, length(removedTiles)),
+          Case_rho =  rep(NA, length(removedTiles)),
+          Control_mu =  rep(NA,length(removedTiles)),
+          Control_rho =  rep(NA, length(removedTiles))
         )
-      }
-    },
-    mc.cores = numCores
-  )
-
-  # Combine results into single objects
-  res_pvals <- do.call(rbind, res_pvals)
+  rownames(filteredTiles) = rownames(sampleTileMatrix)[removedTiles]
+    
+  ## Bind both together and reorder to match original order.
+  res_pvals = rbind(res_pvals, filteredTiles)
+  res_pvals = res_pvals[rownames(sampleTileMatrix),] 
+  res_pvals = cbind(data.frame(Tile = rownames(res_pvals)), 
+                    res_pvals)
+ 
 
   #############################################################################
   # Apply FDR on filtered regions
@@ -156,12 +171,18 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   filtered_res <- res_pvals[idx, ]
 
   if (!all(is.na(filtered_res$P_value[filtered_res$P_value <= 0.95]))) {
-    pi0_reduced <- qvalue::pi0est(filtered_res$P_value[filtered_res$P_value <= 0.95],
-      pi0.method = "bootstrap",
-      lambda = seq(0, 0.6, .05)
-    )
+      
+    if(qValueMethod == 'experimental'){
+        pi0_reduced <- qvalue::pi0est(filtered_res$P_value[filtered_res$P_value <= 0.95],
+          pi0.method = "bootstrap",
+          lambda = seq(0, 0.6, .05)
+        )
 
-    filtered_res$FDR <- qvalue::qvalue(filtered_res$P_value, pi0 = pi0_reduced$pi0)$qvalues
+        filtered_res$FDR <- qvalue::qvalue(filtered_res$P_value, pi0 = pi0_reduced$pi0)$qvalues
+    }else{
+        
+        filtered_res$FDR <- qvalue::qvalue(filtered_res$P_value)$qvalues
+    }
   } else {
     filtered_res$FDR <- NA # TODO Handle appropriately
   }
@@ -211,4 +232,10 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   }
 
   full_results
+}
+
+
+
+parallelDifferential <- function(rowVals, group){
+        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group, F))
 }

@@ -28,11 +28,12 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
       "Please install 'irlba' to proceed."
     )
   }
+
   allCellTypes <- names(SummarizedExperiment::assays(SampleTileObj))
   if (all(tolower(cellType) == "all")) {
     fullObj <- combineSampleTileMatrix(SampleTileObj)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
-  } else if (all(cellType %in% allCellTypes)) {
+  } else if (all(cellType %in% allCellTypes) & cellType != 'counts') {
     newTSAM <- subsetMOCHAObject(SampleTileObj,
       subsetBy = "celltype",
       groupList = cellType, subsetPeaks = TRUE,
@@ -40,11 +41,15 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     )
     fullObj <- combineSampleTileMatrix(newTSAM)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+  } else if (all(cellType %in% allCellTypes) & cellType == 'counts') {
+
+    fullObj <- SampleTileObj
+    countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+      
   } else {
     stop("cellType not found. SampleTileObj must contain the given cellType.")
   }
 
- browser()
   countMat[is.na(countMat)] <- 0
     
   #Check for empty columns. 
@@ -174,10 +179,9 @@ bulkUMAP <- function(SEObj,
       "Please install 'uwot' to proceed."
     )
   }
- browser()
+
   set.seed(seed)
 
-    
   allCellTypes <- names(SummarizedExperiment::assays(SEObj))
   if(assay %in% c("LSI","PCA")){
     countMat <- t(SummarizedExperiment::assays(SEObj)[[assay]])
@@ -185,7 +189,8 @@ bulkUMAP <- function(SEObj,
   }else if (all(tolower(assay) == "all")) {
     fullObj <- combineSampleTileMatrix(SEObj)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
-  } else if (all(assay %in% allCellTypes)) {
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
+  } else if (all(assay %in% allCellTypes) & assay != 'counts') {
     newTSAM <- subsetMOCHAObject(SEObj,
       subsetBy = "celltype",
       groupList = assay, subsetPeaks = TRUE,
@@ -193,7 +198,12 @@ bulkUMAP <- function(SEObj,
     )
     fullObj <- combineSampleTileMatrix(newTSAM)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
       
+  }else if(all(assay %in% allCellTypes) & assay == 'counts'){
+     fullObj <- SEObj
+     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
   } else {
     stop("Assay was not represented in the SEObj.")
   }
@@ -204,8 +214,6 @@ bulkUMAP <- function(SEObj,
       
       #Check for empty columns. 
       colSumVec <- colSums(countMat)
-      #Pull out sample metadata
-      sampleMeta <- SummarizedExperiment::colData(fullObj)
       if(any(colSumVec == 0)){
 
 
@@ -215,11 +223,10 @@ bulkUMAP <- function(SEObj,
 
         sampleMeta <- sampleMeta[colSumVec!=0,]
        }
-      components = dim(countMat)[2]
+      countMat <- t(countMat)
+      components = c(1:dim(countMat)[2])
 
-      
-  }
- 
+   }
 
   if (any(is.na(countMat))) {
     stop("The given matrix contains NA. Remove and try again.")
@@ -252,7 +259,7 @@ bulkUMAP <- function(SEObj,
 
     fullUMAP <- dplyr::left_join(
       subUMAP,
-      as.data.frame(SummarizedExperiment::colData(SEObj)),
+      as.data.frame(sampleMeta),
       by = "Sample"
     )
 
