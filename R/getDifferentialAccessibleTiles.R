@@ -237,5 +237,5 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
 
 parallelDifferential <- function(rowVals, group){
-        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group, F))
+        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group))
 }
