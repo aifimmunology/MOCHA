@@ -264,7 +264,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
 
 parallelDifferential <- function(rowVals, group){
-        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group, F))
+        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group))
 }
 
 
@@ -297,7 +297,7 @@ calculateSignificantTiles <- function(diffDF,
                                 quantileNum, minZeroDiff = 0.5){
 
     diff0s = diffDF$Pct0_Case - diffDF$Pct0_Control
-    newThresh <- quantile(c(diffDF$Avg_Intensity_Case,
+    newThresh <- stats::quantile(c(diffDF$Avg_Intensity_Case, na.rm = TRUE,
                             diffDF$Avg_Intensity_Control), probs = quantileNum)
     
     filtList = list()
@@ -320,3 +320,5 @@ calculateSignificantTiles <- function(diffDF,
     }
     return(filtList)
 }
+                                    
+Test_Statistic <- sampleTileMatrix <- NULL

@@ -10,9 +10,10 @@ getDifferentialAccessibleTiles(
   groupColumn,
   foreground,
   background,
-  signalThreshold = 12,
   minZeroDiff = 0.5,
-  fdrToDisplay = 0.2,
+  qValueMethod = "experimental",
+  signalThreshold = NULL,
+  qValueThreshold = 0.2,
   outputGRanges = TRUE,
   numCores = 1,
   verbose = FALSE
@@ -30,15 +31,17 @@ getSampleTileMatrix}
 
 \item{background}{The background group of samples for differential comparison}
 
-\item{signalThreshold}{Minimum median intensity required to keep tiles for
-differential testing to increase statistical power in small sample cohorts.
-Default is 12.}
-
 \item{minZeroDiff}{Minimum difference in average dropout rates across groups
 require to keep tiles for differential testing. Default is 0.5 (50\%).}
 
-\item{fdrToDisplay}{False-discovery rate used only for standard
-output messaging. Default is 0.2.}
+\item{qValueMethod}{String describing qvalue method. Can be 'standard', or 'experimental'. 
+See methods in the MOCHA manuscript for description of the experimental. 
+Otherwise, 'standard' applies standard q value.}
+
+\item{signalThreshold}{Optional value. 
+This is Minimum median intensity required to keep tiles for
+differential testing to increase statistical power in small sample cohorts.
+Default is NULL, at which point the optimal threshold will be found.}
 
 \item{outputGRanges}{Outputs a GRanges if TRUE and a data.frame if
 FALSE. Default is TRUE.}
@@ -47,6 +50,9 @@ FALSE. Default is TRUE.}
 Default is 1.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
+
+\item{fdrToDisplay}{False-discovery rate used only for standard
+output messaging. Default is 0.2.}
 }
 \value{
 full_results The differential accessibility results as a GRanges or
