@@ -542,6 +542,7 @@ setMethod(
         cellPopLabel = cellPopLabel,
         cellSubsets = cellPop,
         numCores = cl,
+        returnGRangesList = FALSE,
         verbose = verbose
       )
     } else {

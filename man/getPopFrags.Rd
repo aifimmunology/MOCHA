@@ -10,6 +10,7 @@ getPopFrags(
   cellSubsets = "ALL",
   poolSamples = FALSE,
   numCores = 1,
+  returnGRangesList = TRUE,
   verbose = FALSE
 )
 }
@@ -27,6 +28,8 @@ the given cellPopLabel metadata column of the ArchR Project.}
 \item{poolSamples}{Set TRUE to pool sample-specific fragments by cell population. By default this is FALSE and sample-specific fragments are returned.}
 
 \item{numCores}{Number of cores to use.}
+
+\item{returnGRangesList}{Set FALSE to return as a list of GRanges. Default, TRUE, returns a GRangesList}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
