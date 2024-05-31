@@ -53,11 +53,11 @@
       10                               Entrez Gene ID
       11                                          yes
       12                                         <NA>
-      13                                        88816
+      13                                        88819
       14    GenomicFeatures package from Bioconductor
-      15 2021-04-28 16:30:46 +0000 (Wed, 28 Apr 2021)
-      16                                       1.41.3
-      17                                        2.2.6
+      15 2023-09-20 17:26:31 +0000 (Wed, 20 Sep 2023)
+      16                                       1.53.2
+      17                                        2.3.1
       18                                          1.2
       
       
@@ -73,15 +73,15 @@
       4            DBSCHEMA                                              HUMAN_DB
       5            ORGANISM                                          Homo sapiens
       6             SPECIES                                                 Human
-      7        EGSOURCEDATE                                            2021-Sep13
+      7        EGSOURCEDATE                                            2023-Sep11
       8        EGSOURCENAME                                           Entrez Gene
       9         EGSOURCEURL                  ftp://ftp.ncbi.nlm.nih.gov/gene/DATA
       10          CENTRALID                                                    EG
       11              TAXID                                                  9606
       12       GOSOURCENAME                                         Gene Ontology
       13        GOSOURCEURL http://current.geneontology.org/ontology/go-basic.obo
-      14       GOSOURCEDATE                                            2021-09-01
-      15     GOEGSOURCEDATE                                            2021-Sep13
+      14       GOSOURCEDATE                                            2023-07-27
+      15     GOEGSOURCEDATE                                            2023-Sep11
       16     GOEGSOURCENAME                                           Entrez Gene
       17      GOEGSOURCEURL                  ftp://ftp.ncbi.nlm.nih.gov/gene/DATA
       18     KEGGSOURCENAME                                           KEGG GENOME
@@ -89,13 +89,13 @@
       20     KEGGSOURCEDATE                                            2011-Mar15
       21       GPSOURCENAME             UCSC Genome Bioinformatics (Homo sapiens)
       22        GPSOURCEURL                                                      
-      23       GPSOURCEDATE                                            2021-Jul20
-      24       ENSOURCEDATE                                            2021-Apr13
+      23       GPSOURCEDATE                                            2023-Aug20
+      24       ENSOURCEDATE                                            2023-May10
       25       ENSOURCENAME                                               Ensembl
       26        ENSOURCEURL               ftp://ftp.ensembl.org/pub/current_fasta
       27       UPSOURCENAME                                               Uniprot
       28        UPSOURCEURL                               http://www.UniProt.org/
-      29       UPSOURCEDATE                              Wed Sep 15 18:21:59 2021
+      29       UPSOURCEDATE                              Mon Sep 18 16:12:39 2023
       
       
       $History

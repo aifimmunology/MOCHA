@@ -161,7 +161,7 @@ setGeneric(
       "Invalid blackList. blackList must be a GRanges"
     )
   }
-  if (!(s %in% colnames(cellColData))) {
+  if (!(sampleColumn %in% colnames(cellColData))) {
     stop("Invalid cellColData. sampleColumn must be found within cellColData.")
   }
   if (!(cellPopLabel %in% colnames(cellColData))) {
@@ -217,7 +217,7 @@ setGeneric(
       " Names of ATACFragments must be in format `CellPopulation#Sample`"
     )
   }
-  if (!all(sampleList %in% cellColData[[s]])) {
+  if (!all(sampleList %in% cellColData[[sampleColumn]])) {
     stop(
       "Sample names in names of ATACFragments do not match those in cellPopData.",
       " Names of ATACFragments must be in format `CellPopulation#Sample`"
