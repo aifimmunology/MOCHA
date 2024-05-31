@@ -19,6 +19,7 @@
 #' @param cellColData A DataFrame containing cell-level metadata. This must
 #'   contain both a column 'Sample' with unique sample IDs and the column
 #'   specified by 'cellPopLabel'.
+#' @param sampleColumn The name of the metadata column with biological sample names. Standard is 'Sample', as fixed by ArchR
 #' @param blackList A GRanges of blacklisted regions
 #' @param genome A BSgenome object, or the full name of an installed BSgenome
 #'   data package, or a short string specifying the name of an NCBI assembly
@@ -104,6 +105,7 @@ setGeneric(
            genome,
            cellPopLabel,
            cellPopulations = "ALL",
+           sampleColumn = 'Sample',
            studySignal = NULL,
            generalizeStudySignal = FALSE,
            cellCol = "RG",
@@ -126,6 +128,7 @@ setGeneric(
                                    genome,
                                    cellPopLabel,
                                    cellPopulations = "ALL",
+                                   sampleColumn = 'Sample',
                                    studySignal = NULL,
                                    generalizeStudySignal = FALSE,
                                    cellCol = "RG",
@@ -158,8 +161,8 @@ setGeneric(
       "Invalid blackList. blackList must be a GRanges"
     )
   }
-  if (!("Sample" %in% colnames(cellColData))) {
-    stop("Invalid cellColData. cellColData must contain column 'Sample'.")
+  if (!(sampleColumn %in% colnames(cellColData))) {
+    stop("Invalid cellColData. sampleColumn must be found within cellColData.")
   }
   if (!(cellPopLabel %in% colnames(cellColData))) {
     stop(
@@ -214,7 +217,7 @@ setGeneric(
       " Names of ATACFragments must be in format `CellPopulation#Sample`"
     )
   }
-  if (!all(sampleList %in% cellColData[["Sample"]])) {
+  if (!all(sampleList %in% cellColData[[sampleColumn]])) {
     stop(
       "Sample names in names of ATACFragments do not match those in cellPopData.",
       " Names of ATACFragments must be in format `CellPopulation#Sample`"
@@ -228,6 +231,7 @@ setGeneric(
     genome,
     cellPopLabel,
     cellPopulations,
+    sampleColumn,
     studySignal,
     generalizeStudySignal,
     cellCol,
@@ -261,6 +265,7 @@ setMethod(
 .callOpenTiles_ArchR <- function(ATACFragments,
                                  cellPopLabel,
                                  cellPopulations = "ALL",
+                                 sampleColumn = 'Sample',
                                  studySignal = NULL,
                                  generalizeStudySignal = FALSE,
                                  TxDb,
@@ -306,6 +311,7 @@ setMethod(
     genome,
     cellPopLabel,
     cellPopulations,
+    sampleColumn,
     studySignal,
     generalizeStudySignal,
     cellCol = "RG",
@@ -331,6 +337,7 @@ setMethod(
                            genome,
                            cellPopLabel,
                            cellPopulations,
+                           sampleColumn,
                            studySignal,
                            generalizeStudySignal,
                            cellCol,
@@ -377,12 +384,12 @@ setMethod(
   # Done prior to the expensive computation so there's no heartbreak if this
   # step fails.
 
-  cellCounts <- as.data.frame(table(cellColData[, "Sample"], cellTypeLabelList))
-  names(cellCounts) <- c("Sample", "CellPop", "CellCount")
+  cellCounts <- as.data.frame(table(cellColData[, sampleColumn], cellTypeLabelList))
+  names(cellCounts) <- c(sampleColumn, "CellPop", "CellCount")
   cellCounts <- tidyr::pivot_wider(
     cellCounts,
     id_cols = "CellPop",
-    names_from = "Sample",
+    names_from = sampleColumn,
     values_from = "CellCount"
   )
   allCellCounts <- as.data.frame(cellCounts[, -1])
@@ -424,7 +431,7 @@ setMethod(
     utils::type.convert(as.character(x), as.is = TRUE)
   })
 
-  # Assume all numeric columns are to be saved as additionalCellData
+  # Assume all numeric columns are to be saved as additionalCellData, unless it's unique to a sample. 
   isNumericCol <- unlist(lapply(cellColDataCopy, function(x) is.numeric(x)))
   additionalCellData <- colnames(cellColDataCopy)[isNumericCol]
                                 
@@ -439,11 +446,11 @@ setMethod(
     additionalMetaData <- lapply(additionalCellData, function(x) {
       suppressMessages(
         summarizedData <- as.data.frame(cellColDataCopy) %>%
-          dplyr::group_by(!!as.name(cellPopLabel), Sample) %>%
+          dplyr::group_by(!!as.name(cellPopLabel), !!as.name(sampleColumn)) %>%
           dplyr::summarize(meanValues = mean(!!as.name(x), .groups = "drop")) %>%
           tidyr::pivot_wider(
             id_cols = tidyselect::all_of(cellPopLabel),
-            names_from = Sample,
+            names_from = !!as.name(sampleColumn),
             values_from = meanValues
           )
       )
@@ -566,7 +573,24 @@ setMethod(
     # E.g. C1#PBMCSmall__0.527239 becomes PBMCSmall
     sampleNames <- gsub("__.*", "", gsub(".*#", "", names(frags)))
     names(frags) <- sampleNames
+      
+    ##Check whether fragments lists are hashed or not. 
+    ##If fragments are hashed, and the user is using ArchR, then dehash them by true sample here. 
+    ## If ArchR is not being used, the user is expected to do this themselves. 
+    if(all(!sampleNames %in% unique(cellColData[,sampleColumn])) & useArchR){
+        frags <- dehashArchR(frags, cellColData, sampleColumn, cl = cl)
+        
+        ## Check if any samples are now empty of fragments for a given cell type.
+        ## Remove that index from the list, and then update the sample names for this cell type.
+        if(any(lengths(frags) == 0)){
+    
+            frags <- frags[lengths(frags) != 0]
 
+        }
+        
+        sampleNames = names(frags)
+    }
+      
     # Calculate normalization factors as the number of fragments for
     # each celltype_sample
     normalization_factors <- as.integer(lengths(frags))
@@ -577,6 +601,7 @@ setMethod(
     # save coverage files to folder.
     # This doesn't include empty samples and might break. We may need to
     # reconsider how getCoverage works and add empty samples before this step.
+    ### yep, it broke. An attempt to fix it is included. 
     if (!file.exists(
       paste(outDir, "/", cellPop, "_CoverageFiles.RDS", sep = "")
     ) || force) {
@@ -588,7 +613,7 @@ setMethod(
       covFiles <- getCoverage(
         popFrags = frags,
         normFactor = normalization_factors / 10^6,
-        filterEmpty = FALSE,
+        filterEmpty = TRUE,
         cl = cl, TxDb = TxDb
       )
       saveRDS(
@@ -647,6 +672,7 @@ setMethod(
       FUN = simplifiedTilesBySample
     )
     parallel::stopCluster(cl)
+      gc()
     names(tilesGRangesList) <- names(frags)
 
     # Where samples have no cells, add an empty GRanges placeholder
@@ -708,7 +734,7 @@ setMethod(
   # We are assuming samples are synonymous to wells
   # (If hashed, samples were un-hashed during ArchR project generation)
   sampleData <- suppressWarnings(
-    sampleDataFromCellColData(cellColData, sampleLabel = "Sample")
+    sampleDataFromCellColData(cellColData, sampleLabel = sampleColumn)
   )
 
   sumDataAssayList <- append(
@@ -728,11 +754,17 @@ setMethod(
     assay <- sumDataAssayList[[i]]
     sumDataAssayList[assayName] <- list(assay[rowOrder, colOrder, drop = FALSE])
   }
+                                
+  if(sampleColumn != 'Sample'){
+  
+    sampleData$Sample = sampleData[,sampleColumn]
+      
+  }
 
   sampleData <- dplyr::arrange(
     sampleData, factor(Sample, levels = colOrder)
   )
-  rownames(sampleData) <- sampleData[, "Sample"]
+  rownames(sampleData) <- sampleData[, sampleColumn]
 
   # Validate Row and Column orders
   if (verbose) {
