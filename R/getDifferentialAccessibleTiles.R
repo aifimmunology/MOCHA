@@ -240,7 +240,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
      
   }
   
-  if(is.null(signalThreshold)){
+  if(is.null(signalThreshold) & !all(is.na(unlist(lapply(DAT_list, function(XX) XX$FDR))))){
       message('Optimizing thresholds')
       cl <- parallel::makeCluster(numCores)
       DAT_list <- pbapply::pblapply(cl = cl, DAT_list, optimizeThreshold,

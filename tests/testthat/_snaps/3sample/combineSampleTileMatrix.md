@@ -9,5 +9,5 @@
     rowData names(2): C2 C3
     colnames(6): C2__scATAC_BMMC_R1 C2__scATAC_CD34_BMMC_R1 ...
       C3__scATAC_CD34_BMMC_R1 C3__scATAC_PBMC_R1
-    colData names(5): Sample PassQC CellType Freq FragNumber
+    colData names(5): Sample PassQC CellType CellCounts FragmentCounts
 
