@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/393137290.svg)](https://zenodo.org/doi/10.5281/zenodo.11459041)
 # MOCHA: Model-based single-cell Open Chromatin Analysis
 
 
