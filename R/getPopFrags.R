@@ -57,14 +57,14 @@ getPopFrags <- function(ArchRProj,
     if (any(is.na(cellCounts))) {
       stop(paste(
         "Some cell populations have NA cell counts.",
-        "Please verify that all given cellSubsets exist for the given cellPopLabel.",
-        stringr::str_interp("cellSubsets with NA cell counts: ${cellPopulations[is.na(names(cellCounts))]}")
+        "Please verify that all given cell populations (cellSubsets/cellPopulations) exist for the given cellPopLabel.",
+        stringr::str_interp("Cell populations with NA cell counts: ${cellPopulations[is.na(names(cellCounts))]}")
       ))
     }
   }
 
   if (length(cellCounts) == 0) {
-    stop("No cells were found for the given cellSubsets and/or cellPopLabel.")
+    stop("No cells were found for the given cellSubsets, cellPopulations, and/or cellPopLabel.")
   }
 
   cellNames <- rownames(metadf)[metadf[, cellPopLabel] %in% cellPopulations]
@@ -82,7 +82,7 @@ getPopFrags <- function(ArchRProj,
   if (length(arrows) == 0) {
     stop(paste(
       "Found no arrows containing samples from your selected cell subset(s).",
-      "Check cellSubsets or the input ArchR Project."
+      "Check cellSubsets, cellPopulations or the input ArchR Project."
     ))
   }
 
