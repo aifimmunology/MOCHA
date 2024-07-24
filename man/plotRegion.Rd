@@ -128,7 +128,7 @@ Default 'None' will plot the expanded view of the reference genes,
 gene plot. Default NULL will use `.gene_plot_theme`}
 
 \item{additionalGRangesTrack}{A GRanges object containing additional track
-plot data}
+plot data. For color-coding and naming purposes, please include a metadata column called 'name', which will hold the name you want associated with each range within the GRanges.}
 
 \item{linkdf}{A dataframe with co-accessible links to display as an
 additional track}

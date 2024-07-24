@@ -43,6 +43,7 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
 #' @param STM A Sample-Tile Object from MOCHA
 #' @param cellPopulation The name of a cell type within MOCHA
 #' @param MotifSetName The name of the total motif set, saved as metadata within the MOCHA object
+#' @param specMotif Name of a specific motif or sets of motif that you wish to pull out. Default is NULL, with returns all motifs. 
 #' @param asGRangesList Default is FALSE. If TRUE, then converts list of GRanges to GRangesList, which takes quite a while. 
 #' 
 #'
@@ -50,11 +51,26 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
 #'
 #' @export
 #' @keywords downstream
-getCellTypeMotifs <- function(STM, cellPopulation, MotifSetName = 'Motifs', asGRangesList = TRUE) {
+getCellTypeMotifs <- function(STM, cellPopulation, MotifSetName = 'Motifs', specMotif = NULL, 
+                              asGRangesList = TRUE) {
   if(!MotifSetName %in% names(STM@metadata)){
     stop('MotifSetName not found within STM Object.')
   }
   allMotifs <- STM@metadata[[MotifSetName]]
+    
+  if(!is.null(specMotif)){
+      if(all(specMotif %in% names(allMotifs))){
+          
+          allMotifs <- allMotifs[names(allMotifs) %in% specMotif]
+          
+      }else{
+      
+          stop('specMotif not found within motif names. Make sure you have an exact match to the motif name')
+          
+      }
+    }
+      
+    
   #Pull out background tiles. 
   backgroundTiles = getCellTypeTiles(STM, cellPopulation)
   minWidth = min(unlist(lapply(allMotifs, GenomicRanges::width)))

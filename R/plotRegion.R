@@ -68,7 +68,7 @@
 #' @param gene_theme_ls Named list of parameters passed to `theme()` for the
 #'   gene plot. Default NULL will use `.gene_plot_theme`
 #' @param additionalGRangesTrack A GRanges object containing additional track
-#'   plot data
+#'   plot data. For color-coding and naming purposes, please include a metadata column called 'name', which will hold the name you want associated with each range within the GRanges. 
 #' @param linkdf A dataframe with co-accessible links to display as an
 #'   additional track
 #' @param showIdeogram Logical value, default TRUE. If TRUE plots the chromosome
@@ -206,6 +206,16 @@ plotRegion <- function(countSE,
       legend.position = 'none'
       
   }
+      
+  if(S4Vectors::metadata(countSE)[['Type']] == 'InsertionFootprint'){
+      
+      dataType = 'Binding Footprints'
+
+  }else{
+  
+      dataType = 'Normalized Coverage'
+      
+  }
 
   p1 <- verbf(
     counts_plot_samples(countdf,
@@ -217,6 +227,7 @@ plotRegion <- function(countSE,
       legend.position = legend.position,
       facet_label_side = facet_label_side,
       counts_group_colors = counts_group_colors,
+      dataType = dataType,
       theme_ls = counts_theme_ls
     )
   )
@@ -254,10 +265,9 @@ plotRegion <- function(countSE,
       p1 + ggplot2::xlim(min(countdf$Locus), max(countdf$Locus))
     )
   }
-
   # Build P2, Ref Genes track
   if (showGene) {
-
+    
     p2 <- get_gene_plot(
           regionGRanges = regionGRanges,
           TxDb = TxDb,
@@ -277,21 +287,29 @@ plotRegion <- function(countSE,
  
   if (!is.null(additionalGRangesTrack)) {
 
+    overlapGRanges <- verbf(plyranges::join_overlap_intersect(
+          additionalGRangesTrack, regionGRanges))
+      
+    xlim = c(GenomicRanges::start(regionGRanges), 
+              GenomicRanges::end(regionGRanges))
+      
     # Check for name metadata column
     if ("name" %in% colnames(GenomicRanges::mcols(additionalGRangesTrack))) {
       # Only plot the overlap of this region and the additional GRanges Track
-      overlapGRanges <- verbf(plyranges::join_overlap_intersect(additionalGRangesTrack, regionGRanges))
-
-     
       if (length(overlapGRanges) > 0) {
         # Use the subset within our region as the track we want to plot
-        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = FALSE, type = 'Tracks')
+        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges,
+                                        theme_ls = gene_theme_ls, empty = FALSE, 
+                                        type = 'Tracks', xlim1 = xlim)
 
       } else {
-        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = TRUE, type = 'Tracks')
+        p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, 
+                                        theme_ls = gene_theme_ls, empty = TRUE, 
+                                        type = 'Tracks', xlim1 = xlim)
       }
     } else {
-      p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, gene_theme_ls, empty = TRUE, type = 'Tracks')
+      p4 <-additionalGRangesTrack <- .plot_GRanges(overlapGRanges, theme_ls = gene_theme_ls, 
+                                         empty = TRUE, type = 'Tracks', xlim1 = xlim)
     }
   }
 
@@ -333,6 +351,7 @@ plotRegion <- function(countSE,
                     plot.margin = grid::unit(c(0, 0, 0, 0), "cm")) + 
       ggplot2::xlab(NULL)
     # Counts
+      
     track_list <- c(track_list, list("Normalized Counts" = p1))
 
     track_list <- c(track_list, list("Genes" = p2))
@@ -348,8 +367,6 @@ plotRegion <- function(countSE,
   if (!is.null(linkdf)) {
     track_list <- c(track_list, list("Links" = p5))
   }
-
- 
 
 
   # Additional Ranges
@@ -417,7 +434,6 @@ plotRegion <- function(countSE,
     
 
   }
-
 
   return(g_tracks)
 }

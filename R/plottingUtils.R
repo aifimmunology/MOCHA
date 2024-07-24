@@ -65,7 +65,7 @@ countdf_to_region <- function(countdf) {
 }
 
 
-#' Get a spacing between overlapping genes or other genomic ranges. 
+#' Get a spacing between sping genes or other genomic ranges. 
 #'
 #' Used in `plotRegion()`
 #; 
@@ -78,7 +78,7 @@ countdf_to_region <- function(countdf) {
 .getSpacing <- function(GRangesObj, overlapFeat = tx_name){
 
   ## Identified overlaps
-  Features <- tx_name <- NULL
+  Features <- NULL
   reduceRanges1 <- plyranges::reduce_ranges(GRangesObj, Features = unique({{ overlapFeat }}))
   geneSpacing = do.call('rbind', lapply(reduceRanges1$Features, function(XX) {
 
@@ -86,9 +86,13 @@ countdf_to_region <- function(countdf) {
           data.frame(tx_name = tx_list_tmp,
                       Spacing = seq(0, length(tx_list_tmp)-1, by =1))
           }))
-  newGR <- GenomicRanges::makeGRangesFromDataFrame(dplyr::full_join(as.data.frame(GRangesObj), geneSpacing, by = 'tx_name'),
+  specColName = as.character(rlang::ensyms(overlapFeat)[[1]])
+  namingVec = as.vector(c('tx_name'))
+  names(namingVec) = specColName
+  newGR <- GenomicRanges::makeGRangesFromDataFrame(dplyr::full_join(
+      as.data.frame(GRangesObj), geneSpacing, by = namingVec),
               keep.extra.columns = TRUE)
-
+    
   return(newGR)
 
 }
@@ -192,12 +196,14 @@ countdf_to_region <- function(countdf) {
 #' @param regionGRanges regionGRanges A region Granges object to retrieve gene bodies for. For example, the output of countdf_to_region.
 #' @param empty A boolean. If the visualized regions should be set to empty. 
 #' @param type A string, describing what the track should visualize. Default is genes
+#' @param xlim1 A vector of two numbers, setting the xlimits for the resulting plot. 
 #'
 #' @noRd
 
-.plot_GRanges <- function(regionGRanges, theme_ls = .gene_plot_theme, empty = TRUE, type = 'Genes'){
-
-    start <- end <- Spacing <- label.x <- NULL
+.plot_GRanges <- function(regionGRanges, theme_ls = .gene_plot_theme, empty = TRUE, type = 'Genes', xlim1){
+    
+   start <- end <- Spacing <- label.x <- NULL
+    
    if(empty){
 
       p <- ggplot2::ggplot(as.data.frame(regionGRanges)) + 
@@ -225,7 +231,8 @@ countdf_to_region <- function(countdf) {
               y = Spacing,
               xend = end, 
               yend = Spacing,
-              color = name
+              color = name,
+              linewidth = 5
             ),
             show.legend = FALSE) +
           #gene names
@@ -236,11 +243,15 @@ countdf_to_region <- function(countdf) {
           ) 
 
     }
-            
+  
+    if(all(is.null(theme_ls))){
+        theme_ls = list()
+        p <- p + ggplot2::theme_minimal()
+    }
     p <- p +
          ggplot2::theme_minimal() +
           ggplot2::ylab(type) + 
-          ggplot2::xlim(c(GenomicRanges::start(regionGRanges),GenomicRanges::end(regionGRanges))) +
+          ggplot2::xlim(xlim1) +
           ggplot2::xlab(label = paste0(unique(GenomicRanges::seqnames(regionGRanges)), " Loci (bp)"))  +
           do.call(ggplot2::theme, theme_ls)
 
@@ -291,9 +302,24 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
                            empty = TRUE, type = 'Genes')
         return(p)
     }
-                                  
-  if(!collapseGenes){
-      geneTrackDF$tx_name = unlist(lapply(geneTrackDF$tx_name, function(ZZ) paste0(ZZ, collapse = ', ')))
+                   
+  if(collapseGenes & 
+     length(unique(unlist(geneTrackDF$tx_name))) > 1){
+      #Just choose the first one. You only need one to get the gene symbol. 
+
+       geneTrackDF$tx_name = unlist(lapply(geneTrackDF$tx_name, function(ZZ) paste0(ZZ, collapse = ', ')))
+      geneTrackDF <- tidyr::separate_longer_delim(geneTrackDF, 
+                          cols = c('tx_name'), delim = ", ")
+      geneTrackDF$GeneName <- AnnotationDbi::mapIds(
+                    OrgDb,
+                    keys = unlist(geneTrackDF$tx_name),
+                    column = "SYMBOL",
+                    keytype = db_id_col)
+      geneTrackDF$tx_name = geneTrackDF$GeneName
+
+  }else{
+      
+       geneTrackDF$tx_name = unlist(lapply(geneTrackDF$tx_name, function(ZZ) paste0(ZZ, collapse = ', ')))
       geneTrackDF <- tidyr::separate_longer_delim(geneTrackDF, 
                           cols = c('tx_name'), delim = ", ")
       geneTrackDF$GeneName <- AnnotationDbi::mapIds(
@@ -302,17 +328,7 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
                     column = "SYMBOL",
                     keytype = db_id_col)
 
-  }else{
-      #Just choose the first one. You only need one to get the gene symbol. 
-
-      geneTrackDF$tx_name = unlist(lapply(geneTrackDF$tx_name, function(ZZ) ZZ[[1]]))
-      geneTrackDF$GeneName <- AnnotationDbi::mapIds(
-                    OrgDb,
-                    keys = unlist(geneTrackDF$tx_name),
-                    column = "SYMBOL",
-                    keytype = db_id_col)
-      geneTrackDF$tx_name = geneTrackDF$GeneName
-
+      
   }
                                           
   if(!is.null(whichGenes)){
@@ -329,7 +345,8 @@ get_gene_plot <- function(regionGRanges,  TxDb, OrgDb,
                                       
   ##reduced ranges to identify overlapping genes
   geneTrackGRanges <- GenomicRanges::makeGRangesFromDataFrame(geneTrackDF, keep.extra.columns = TRUE)  
-
+  #geneTrackGRanges <- plyranges::reduce_ranges(
+                                           
   #Figure out spacing between genes
   tx_name <- NULL
   geneTrackGRanges <- .getSpacing(geneTrackGRanges, overlapFeat = tx_name)    
@@ -481,6 +498,7 @@ counts_plot_samples <- function(countdf,
                                 facet_label_side = "top",
                                 counts_group_colors = NULL,
                                 counts_color_var = "Groups",
+                                dataType ='Normalized Coverage',
                                 theme_ls = .counts_plot_default_theme) {
   assertthat::assert_that("Counts" %in% names(countdf))
   assertthat::assert_that("Locus" %in% names(countdf))
@@ -526,7 +544,7 @@ counts_plot_samples <- function(countdf,
     # Base Plot
     p1 <- p1 +
       ggplot2::geom_line(ggplot2::aes(color = !!as.name(counts_color_var)), alpha = 0.75, size = 1.5) +
-      ggplot2::ylab('Normalized Coverage') +
+      ggplot2::ylab(dataType) +
       ggplot2::labs(Groups = "Groups") +
       #ggplot2::coord_cartesian(clip = "off") +
       ggplot2::geom_text(
@@ -567,7 +585,7 @@ counts_plot_samples <- function(countdf,
 
     # Base Plot, common elements
     p1 <- p1 +
-      ggplot2::ylab('Normalized Coverage') +
+      ggplot2::ylab(dataType) +
       ggplot2::facet_wrap(dplyr::vars(Groups), ncol = 1, strip.position = facet_label_side) +
       ggplot2::geom_text(
         data = df_range,
@@ -609,7 +627,7 @@ counts_plot_samples <- function(countdf,
 
     # Base Plot, common elements
     p1 <- p1 +
-      ggplot2::ylab('Normalized Coverage') +
+      ggplot2::ylab(dataType) +
       ggplot2::facet_wrap(dplyr::vars(Groups), ncol = 1, strip.position = facet_label_side) +
       ggplot2::geom_text(
         data = df_range,
@@ -646,7 +664,7 @@ counts_plot_samples <- function(countdf,
         ),
         alpha = 0.25
       ) +
-      ggplot2::ylab('Normalized Coverage') +
+      ggplot2::ylab(dataType) +
       ggplot2::scale_y_continuous(
         breaks = c(1:length(countdf_tmp$Var1)),
         label = countdf_tmp$Var1

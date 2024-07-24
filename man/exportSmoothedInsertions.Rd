@@ -11,6 +11,7 @@ exportSmoothedInsertions(
   outDir = NULL,
   sumWidth = 10,
   medianWidth = 11,
+  normTn5 = TRUE,
   force = FALSE,
   slow = FALSE,
   verbose = FALSE
@@ -29,6 +30,8 @@ the directory in `SampleTileObj@metadata$Directory` will be used.}
 
 \item{medianWidth}{Window size for rolling median in basepairs. Must be odd.
 Default is 11.}
+
+\item{normTn5}{A boolean for whether to normalize by Tn5 insertion bias.}
 
 \item{force}{Set TRUE to overwrite existing files. Default is FALSE.}
 
