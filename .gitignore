@@ -49,5 +49,3 @@ rsconnect/
 /*_files/
 # End of https://www.toptal.com/developers/gitignore/api/r,jupyternotebooks
 inst/doc
-# Files generated from pkgdown::build* functions
-^docs$
