@@ -361,15 +361,18 @@ plotMotifs <- function(motifSE,
                     data.table::data.table(Insertions = tmpMat, Sample = Sample, Position = as.numeric(Position), Footprint = XX)
             }))
         ## Process single location data as well
-        fullDT = data.table::rbindlist(lapply(footprint, function(XX){
+        dt1 = data.table::rbindlist(lapply(footprint, function(XX){
                     tmpMat = SummarizedExperiment::assays(motifSE)[[XX]]
                     tmpMat2 = as.data.table(tmpMat)
                     tmpMat2$Location = rownames(tmpMat)
-                    dt1 = data.table::melt(tmpMat2,
+                    dt2 = data.table::melt(tmpMat2,
                                         id.vars = 'Location',
                                         measureVar = colnames(tmpMat),
                                            variable.name = 'Index',
                                            value.name = 'Insertions')
+                    dt2$Footprint = XX
+                    dt2
+                
             }))
         
     }else{
@@ -471,7 +474,7 @@ plotMotifs <- function(motifSE,
             ggplot2::theme(axis.text.x = ggplot2::element_blank(),
                  axis.ticks.x = ggplot2::element_blank())
     p2 = ggplot2::ggplot(singleDT, ggplot2::aes(x = Position, fill = Insertions, y = Location)) + 
-            ggplot2::geom_tile() +
+            ggrastr::geom_tile_rast() +
             ggplot2::xlim( -maxPos, maxPos) +
             ggplot2::theme_bw() + 
             ggplot2::scale_x_continuous(expand=c(0,0)) + 
