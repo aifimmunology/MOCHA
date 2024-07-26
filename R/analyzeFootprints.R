@@ -52,7 +52,7 @@ motifStats <- function(motifSE, footprint = NULL,
         motif_spec <- do.call('rbind', lapply(footprint, function(XX){
                     tmpMat = colMeans(SummarizedExperiment::assays(motifSE)[[XX]])
                     Sample= gsub('__-[0-9].*|__[0-9].*', '' ,names(tmpMat))
-                    Position = gsub('__', '', gsub(paste0(unique(Sample), collapse='|'), '', names(tmpMat)))
+                    Position = as.numeric(gsub('__', '', gsub(paste0(unique(Sample), collapse='|'), '', names(tmpMat))))
                     data.table::data.table(Insertions = tmpMat, Sample = Sample, Position = as.numeric(Position), Footprint = XX)
             }))
         
@@ -60,7 +60,7 @@ motifStats <- function(motifSE, footprint = NULL,
         
         tmpMat = colMeans(SummarizedExperiment::assays(motifSE)[[footprint]])
         Sample= gsub('__-[0-9].*|__[0-9].*', '' ,names(tmpMat))
-        Position = gsub('__', '', gsub(paste0(unique(Sample), collapse='|'), '', names(tmpMat)))
+        Position = as.numeric(gsub('__', '', gsub(paste0(unique(Sample), collapse='|'), '', names(tmpMat))))
         motif_spec <- data.table::data.table(Insertions = tmpMat, Sample = Sample, Position = Position, Footprint = footprint)
     }    
     
@@ -81,10 +81,11 @@ motifStats <- function(motifSE, footprint = NULL,
             tryCatch({
                 initFit = summary(stats::lm(data = hs, formula = Insertions ~ pos + pos_squared))
                 quadFit = as.data.frame(initFit$coefficients)
-                Height = quadFit$Estimate[2]*peakWidth + 
-                            quadFit$Estimate[3]*peakWidth^2 +
-                            quadFit$Estimate[1]
                 Radius = -quadFit$Estimate[2]/(2*quadFit$Estimate[3])
+                Height = quadFit$Estimate[2]*Radius + 
+                            quadFit$Estimate[3]*Radius^2 +
+                            quadFit$Estimate[1]
+
                 R_squared = initFit$r.squared
                 Footprint_pvalue = pf(initFit$fstatistic[1], initFit$fstatistic[2], 
                                       initFit$fstatistic[3], lower.tail = FALSE)
