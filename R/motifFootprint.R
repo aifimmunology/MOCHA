@@ -135,6 +135,8 @@ motifFootprint <- function(SampleTileObj,
       
       genome <- getAnnotationDbFromInstalledPkgname(dbName = genome_db, type = 'BSgenome')
       insertBias = SampleTileObj@metadata$InsertionBias
+      #Remove any NAs that might be there
+      insertBias = insertBias[!is.na(insertBias[,'Norm']),]
       
   }else if(normTn5 & !any(grepl('InsertionBias', names(SampleTileObj@metadata)))){
       
@@ -189,20 +191,31 @@ motifFootprint <- function(SampleTileObj,
     ### iterate over each motif, and subsample down to those regions. 
     for(YY in names(motifs)){
         
+            ## Some motifs can be directly overlapping for hundreds of basepairs. 
+            ## These motif matches are unlikely to yield useful results because a 
+            ## transcription factor can't possible be bound at all of these sites at once, so then
+            ## a motif footprint at these sites looses values, and becomes irrelevant (i.e. no footprint around motif)
+            ## So we'll reduce out motifs to find these overlapping regions, and remove anything with more than
+            ## windowSize/10 bps. 
+        
+            subMotifs = plyranges::filter(plyranges::reduce_ranges(motifs[[YY]]), width <= windowSize/10)
+        
             if (verbose) {
               message(stringr::str_interp("Processing motif footprint for ${YY}."))
             }
-
+        
             cl <- parallel::makeCluster(numCores)  
             stretchMotifs = plyranges::stretch(plyranges::anchor_center(
-                                plyranges::reduce_ranges(motifs[[YY]])), extend = windowSize*1.25)
+                                plyranges::reduce_ranges(subMotifs)), extend = windowSize*1.10)
             
             if(normTn5){
                 
                 newList =  lapply(names(originalInsertions), function(XX){ 
                     list(plyranges::filter_by_overlaps(originalInsertions[[XX]],  stretchMotifs), 
-                         motifs[[YY]], windowSize,                                               
+                         subMotifs, windowSize,                                               
                          insertBias[,'Norm', drop =FALSE], genome_db, smoothTn5, XX)})
+                rm(stretchMotifs)
+                rm(subMotifs)
                  allNorms <- pbapply::pblapply(cl = cl, X = newList, normMotifs2)
                 
             }else{
@@ -210,9 +223,11 @@ motifFootprint <- function(SampleTileObj,
                
                 newList = lapply(names(originalInsertions), function(XX){ 
                     list(plyranges::filter_by_overlaps(originalInsertions[[XX]],  stretchMotifs),
-                         motifs[[YY]], windowSize, smoothTn5, XX)})
+                         subMotifs, windowSize, smoothTn5, XX)})
+                rm(stretchMotifs)
+                rm(subMotifs)
                 allNorms <- pbapply::pblapply(cl = cl, X = newList, normMotifs)
-
+                
                 
             }
         
@@ -222,9 +237,7 @@ motifFootprint <- function(SampleTileObj,
             #Clean up
             rm(newList)
             gc()
-
-            allNorms = data.table::as.data.table(do.call('rbind', allNorms))
-            allNorms = allNorms[abs(Position) <= windowSize/2,]
+            allNorms = data.table::rbindlist(allNorms)
         
             if (!sampleSpecific) {
                 names(subSamples) = subGroups
@@ -237,11 +250,13 @@ motifFootprint <- function(SampleTileObj,
                 allNorms = allNorms[,.(score = mean(score, na.rm = TRUE)), by = .(Group, Position, Location)]
                 setnames(allNorms, 'Group', 'Sample')            
             }
-        
-            allNorms[,Index := paste(Sample, Position, sep="__")]
-            colData2 = unique(allNorms[, c('Index', 'Sample', 'Position'), with = FALSE])
-            matrix1 = data.table::dcast(allNorms[, c('score', 'Location', 'Index'), with = FALSE],
-                                              Location ~ Index, fun.aggregate = sum, value.var = 'score')
+            colData2 = unique(allNorms[, c('Sample', 'Position'), with = FALSE])[
+                            , Index := paste(Sample, Position, sep='__')]
+            
+            matrix1 = data.table::dcast(allNorms[, c('Sample', 'Position', 'score', 'Location'), with = FALSE],
+                                              Location ~ Sample + Position, fun.aggregate = sum, 
+                                                value.var = 'score', sep = "__")
+            rm(allNorms)
             matrix2 = as(matrix1[,!'Location'], 'matrix')
             rownames(matrix2) = matrix1[,Location]
             rm(matrix1)
@@ -259,13 +274,13 @@ motifFootprint <- function(SampleTileObj,
             }
             
             rm(matrix2)
-            rm(allNorms)
+
     }    
     rm(originalInsertions)
     gc()
     
+    
   }
-
   newMetadata <- SampleTileObj@metadata
   newMetadata$History <- append(newMetadata$History, paste("motifFootprint", utils::packageVersion("MOCHA")))
                          
@@ -336,7 +351,7 @@ addInsertionBias <- function(SampleTileObj, numCores = 1, verbose = TRUE){
                         }else {NULL}
                     }else{NULL}
             })
-        rm(originalInsertions)
+         rm(originalInsertions)
 
          cl = parallel::makeCluster(numCores)
          sequencesTmp = pbapply::pblapply(cl = cl, X = insertList, getBias)
@@ -389,9 +404,8 @@ addInsertionBias <- function(SampleTileObj, numCores = 1, verbose = TRUE){
         tmpMat = do.call('cbind', lapply(colnames(biasMat), function(XX){ rep(0, length(missingMers)) }))
         rownames(tmpMat) = missingMers
         biasMat = rbind(biasMat, tmpMat)
-        
     }
-    
+
    if (verbose) {
       message(stringr::str_interp("Normalizing hexamer bias across all celltypes'"))
     }
@@ -425,10 +439,13 @@ normMotifs <- function(list1){
     #Add the middle position
     motifPos$Mid = round(c(GenomicRanges::end(motifPos) - GenomicRanges::start(motifPos))/2) +
                             GenomicRanges::start(motifPos)
+    GenomicRanges::start(motifPos) = motifPos$Mid
+    GenomicRanges::end(motifPos) = motifPos$Mid
     
     ##Generate the 500 bp window around the center of the motif
     windows1 = plyranges::anchor_center(motifPos)
     windows1 = plyranges::stretch(windows1, windowSize)
+    rm(motifPos)
     
     ##Filter the insertions
     subInsert = plyranges::filter_by_overlaps(insertList, windows1)
@@ -439,33 +456,46 @@ normMotifs <- function(list1){
     if(!is.null(smoothWindow)){
         ## If we want to smoothen things: 
         ## Define smoothening function
+         ## Define smoothening function
         smoothRegions <- function(insertGR, windowsGR, windowSize){
-        
+                data.table::setDTthreads(threads = 1)
                 partition <- score <- NULL
+                ### Let's run a for loop over each chromosome to slow this down and minimize memory usage
                 windowsGR$partition = c(1:length(windowsGR))
                 windowsGR$position = paste(GenomicRanges::seqnames(windowsGR), ":",GenomicRanges::start(windowsGR), sep ='')
-                windowsGR2 = plyranges::stretch(
-                    plyranges::anchor_center(windowsGR), windowSize)
-                ## Join expanded windows and inserts
-                insertDT = as.data.table(plyranges::join_overlap_left(insertGR, windowsGR2))
-                #Use data.table to run the average
-                meanRow = insertDT[,sum(score, na.rm = TRUE),by=list(position, partition)]
-                # Transfer the rolling sum score back to the GR object
-                positionList = paste(GenomicRanges::seqnames(insertGR), ":",GenomicRanges::start(insertGR), sep ='')
-                insertGR$score = meanRow[,V1][match(positionList, meanRow[,position])]
-
-                ## Repeat process for median over the windows
-                insertDT = as.data.table(plyranges::join_overlap_left(insertGR, windowsGR2))
-                meanRow = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
-                ## overwrite previous score with the new one.
-                insertGR$score = meanRow[,V1][match(positionList, meanRow[,position])]
-                return(insertGR)
+                insertList = GenomicRanges::GRanges()
+                for(chr in unique(GenomicRanges::seqnames(windowsGR))){
+                    windowsGR2 = windowsGR[GenomicRanges::seqnames(windowsGR) == chr]
+                    insertGR2 = insertGR[GenomicRanges::seqnames(insertGR) == chr]
+                    windowsGR2 = plyranges::stretch(
+                        plyranges::anchor_center(windowsGR2), windowSize)
+                    ## Join expanded windows and inserts
+                    insertDT = as.data.table(plyranges::join_overlap_left(insertGR2, windowsGR2))
+                    #Use data.table to run the average
+                    meanRow = insertDT[,sum(score, na.rm = TRUE),by=list(position, partition)]
+                    rm(insertDT)
+                    # Transfer the rolling sum score back to the GR object
+                    positionList = paste(GenomicRanges::seqnames(insertGR2), ":",GenomicRanges::start(insertGR2), sep ='')
+                    insertGR2$score = meanRow[,V1][match(positionList, meanRow[,position])]
+                    rm(meanRow)
+                    ## Repeat process for median over the windows
+                    insertDT = as.data.table(plyranges::join_overlap_left(insertGR2, windowsGR2))
+                    meanRow = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
+                    rm(insertDT)
+                    ## overwrite previous score with the new one.
+                    insertGR2$score = meanRow[,V1][match(positionList, meanRow[,position])]
+                    rm(meanRow)
+                    insertList = c(insertList, insertGR2)
+                    rm(InsertGR2)
+                    
+                }
+                return(insertList)
         }
         
         subInsert1 = plyranges::select(subInsert1, !partition)
         subInsert1 = smoothRegions(subInsert1, windowsGR = windows2, windowSize =smoothWindow)
     }
-    
+    rm(windows2)
     ##Remove score column (if present) from motif locations. 
     if(any(colnames(GenomicRanges::mcols(windows1)) == 'score')){
     
@@ -473,6 +503,7 @@ normMotifs <- function(list1){
     }
     
     subInsert1 = plyranges::join_overlap_left(subInsert1,  windows1)
+    rm(windows1)
     
     # Turn it into a data.frame, group it by mid point position, and 
     ## find the average over all positions
@@ -481,10 +512,9 @@ normMotifs <- function(list1){
                   Position = start - Mid,
                   Location = paste(seqnames, ":", Mid, sep = ''), 
                   Sample = sampleName)
-    subInsert1 = subInsert1[, c('Sample', 'Position', 'Location', 'score')]
-    return(subInsert1)
+    subInsert1 = subInsert1[abs(subInsert1$Position) <= windowSize/2, c('Sample', 'Position', 'Location', 'score')]
+    return(as.data.table(subInsert1))
 }
-                                
 
                                 
 #' @title Second internal function for parallelizing motif footprinting over samples
@@ -512,11 +542,14 @@ normMotifs2 <- function(list1){
     #Add the middle position
     motifPos$Mid = round(c(GenomicRanges::end(motifPos) - GenomicRanges::start(motifPos))/2) +
                             GenomicRanges::start(motifPos)
+    GenomicRanges::start(motifPos) = motifPos$Mid
+    GenomicRanges::end(motifPos) = motifPos$Mid
+    
     
     ##Generate the 500 bp window around the center of the motif
     windows1 = plyranges::anchor_center(motifPos)
     windows1 = plyranges::stretch(windows1, windowSize)
-    
+    rm(motifPos)
     ##Filter the insertions
     subInsert = plyranges::filter_by_overlaps(insertList, windows1)
     
@@ -536,6 +569,7 @@ normMotifs2 <- function(list1){
     ## Unknown nucleotides are presented as an N, which we don't have information on. 
     ## When a give 6 bp window has an N, then set the norm value to NA. 
     normValues = rep(NA, times = length(windows2))
+    
     normValues[sequences3 %in% rownames(biasMat)] = 
         biasMat[sequences3[sequences3 %in% rownames(biasMat)], 'Norm']
     
@@ -551,26 +585,38 @@ normMotifs2 <- function(list1){
         
          ## Define smoothening function
         smoothRegions <- function(insertGR, windowsGR, windowSize){
-        
+                data.table::setDTthreads(threads = 1)
                 partition <- score <- NULL
+                ### Let's run a for loop over each chromosome to slow this down and minimize memory usage
                 windowsGR$partition = c(1:length(windowsGR))
                 windowsGR$position = paste(GenomicRanges::seqnames(windowsGR), ":",GenomicRanges::start(windowsGR), sep ='')
-                windowsGR2 = plyranges::stretch(
-                    plyranges::anchor_center(windowsGR), windowSize)
-                ## Join expanded windows and inserts
-                insertDT = as.data.table(plyranges::join_overlap_left(insertGR, windowsGR2))
-                #Use data.table to run the average
-                meanRow = insertDT[,sum(score, na.rm = TRUE),by=list(position, partition)]
-                # Transfer the rolling sum score back to the GR object
-                positionList = paste(GenomicRanges::seqnames(insertGR), ":",GenomicRanges::start(insertGR), sep ='')
-                insertGR$score = meanRow[,V1][match(positionList, meanRow[,position])]
-
-                ## Repeat process for median over the windows
-                insertDT = as.data.table(plyranges::join_overlap_left(insertGR, windowsGR2))
-                meanRow = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
-                ## overwrite previous score with the new one.
-                insertGR$score = meanRow[,V1][match(positionList, meanRow[,position])]
-                return(insertGR)
+                insertList = GenomicRanges::GRanges()
+                for(chr in unique(GenomicRanges::seqnames(windowsGR))){
+                    windowsGR2 = windowsGR[GenomicRanges::seqnames(windowsGR) == chr]
+                    insertGR2 = insertGR[GenomicRanges::seqnames(insertGR) == chr]
+                    windowsGR2 = plyranges::stretch(
+                        plyranges::anchor_center(windowsGR2), windowSize)
+                    ## Join expanded windows and inserts
+                    insertDT = as.data.table(plyranges::join_overlap_left(insertGR2, windowsGR2))
+                    #Use data.table to run the average
+                    meanRow = insertDT[,sum(score, na.rm = TRUE),by=list(position, partition)]
+                    rm(insertDT)
+                    # Transfer the rolling sum score back to the GR object
+                    positionList = paste(GenomicRanges::seqnames(insertGR2), ":",GenomicRanges::start(insertGR2), sep ='')
+                    insertGR2$score = meanRow[,V1][match(positionList, meanRow[,position])]
+                    rm(meanRow)
+                    ## Repeat process for median over the windows
+                    insertDT = as.data.table(plyranges::join_overlap_left(insertGR2, windowsGR2))
+                    meanRow = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
+                    rm(insertDT)
+                    ## overwrite previous score with the new one.
+                    insertGR2$score = meanRow[,V1][match(positionList, meanRow[,position])]
+                    rm(meanRow)
+                    insertList = c(insertList, insertGR2)
+                    rm(InsertGR2)
+                    
+                }
+                return(insertList)
         }
         
         subInsert1 = plyranges::select(subInsert1, !partition)
@@ -592,8 +638,8 @@ normMotifs2 <- function(list1){
                   Position = start - Mid,
                   Location = paste(seqnames, ":", Mid, sep = ''), 
                   Sample = sampleName)
-    subInsert1 = subInsert1[, c('Sample', 'Position', 'Location', 'score')]
-    return(subInsert1)
+    subInsert1 = subInsert1[abs(subInsert1$Position) <= windowSize/2, c('Sample', 'Position', 'Location', 'score')]
+    return(as.data.table(subInsert1))
 }
 
 
@@ -638,279 +684,3 @@ getBias <- function(insertList1){
 }
                                 
                                 
-#' @title Generate motif footprint metrics and/or statistics across samples, cell types, and motifs
-#'
-#' @description Identifies the width and depth of a given motif for a given group & cell type. Requires the output of motifFootprint. If a groupColumn and background is provided, the function will also conduct wilcoxon tests on the motif baseline, depth, and width between groups. 
-#'
-#' @param motifSE A SummarizedExperiment with motif footprinting information, from motifFootprint
-#' @param footprint Optional string, to describe which footprint within the motifSE to analyze. Default is NULL, at which point it will pull from all footprint present. 
-#' @param callFootprint A boolean, to determine whether to call footprints as significant across samples. Requires sample-specific motif footprinting.
-#' @param motifSize A number describing the approximate motif size you want to use, when looking at the insertion rate over the motif core. Default is 6 (3 bp up and 3 bp downstream)
-#' @param searchWidth A number, describing the maximum motif footprint width. The function will look for the maximum insertions within +/- this number of the motif center. Default is 50.  
-#' @param groupColumn An optional string, that will contain the group-level labels for either calling footprints as significant, or for comparing motif footprintings stats betweem groups. Default is null, at which point no wilcoxon tests will be conducted. groupColumn can be a sample-level group from the MOCHA's object colData slot, 'CellType' (if you want to compare across cell types), or 'Motif' if you want to compare across motifs. 
-#' @param background An optional string if you want to compare two different conditions. This string is the background group that you want to use for running wilcoxon tests. 
-#'
-#' @return a data.frame, containing motif footprint stats. 
-#'
-#' @examples
-#' \dontrun{
-#' summaryStats <- MOCHA::motifStats(
-#'   motifSE,
-#'   footprint = "CD4 Naive_ARID5A", groupColumn = 'COVID_status', background = 'Negative')
-#' }
-#'
-#' @export
-#' @keywords exporting
-                                
-
-motifStats <- function(motifSE, footprint = NULL, 
-                       callFootprint = FALSE, groupColumn = NULL,
-                       background = NULL, motifSize = 6, searchWidth = 50){
-    
-        browser()
-    
-    if(is.null(footprint)){
-    
-        footprint = names(SummarizedExperiment::assays(motifSE))
-        
-    }
-    if(!any(names(SummarizedExperiment::assays(motifSE)) %in% footprint)){
-    
-        stop('footprint name was not found within the motifSE object')
-        
-    }
-    if(!methods::is(motifSize, 'numeric') | !methods::is(searchWidth, 'numeric')){
-    
-        stop('motifSize and searchWidth must be numeric')
-        
-    }
-    
-    colData1 = SummarizedExperiment::colData(motifSE)
-
-    ## Pull out footprints across regions before running stats and add the direction feature. 
-    if(length(footprint) > 1){
-        
-        motif_spec <- do.call('rbind', lapply(footprint, function(XX){
-                    tmpMat = colMeans(SummarizedExperiment::assays(motifSE)[[XX]])
-                    Sample= gsub('__-[0-9].*|__[0-9].*', '' ,names(tmpMat))
-                    Position = gsub('__', '', gsub(paste0(unique(Sample), collapse='|'), '', names(tmpMat)))
-                    data.table::data.table(Insertions = tmpMat, Sample = Sample, Position = as.numeric(Position), Footprint = XX)
-            }))
-        
-    }else{
-        
-        tmpMat = colMeans(SummarizedExperiment::assays(motifSE)[[footprint]])
-        Sample= gsub('__-[0-9].*|__[0-9].*', '' ,names(tmpMat))
-        Position = gsub('__', '', gsub(paste0(unique(Sample), collapse='|'), '', names(tmpMat)))
-        motif_spec <- data.table::data.table(Insertions = tmpMat, Sample = Sample, Position = Position, Footprint = footprint)
-    }    
-    
-    motif_spec <- dplyr::mutate( motif_spec,
-                             Direction = ifelse(Position > 0, 'Downstream', 'Upstream'))
-    
-    ## Focus on the 50 basepairs up and downstream to identify the footprint size and depth
-    ## Most footprints are less than 20 bp wide anyways
-    local_motif_spec <- dplyr::mutate(motif_spec[abs(motif_spec$Position) <= searchWidth,], 
-                                       pos = abs(Position), pos_squared = abs(pos)^2)
-    ## Now for each sample/group and Footprint (CellType + Motif combination), split it into a seperate data.frame for 
-    ## the left and right hand side of the motif footprint. 
-    ## Then fit a quadratic model to it, and use that quadratic to fit to identify whether there is evidence for a footprint, 
-    ## as well as what the height and radius of the motif is on that side.  
-    halfSplits <- dplyr::group_split(local_motif_spec, Footprint, Sample, Direction)
-
-    peakSum <- do.call('rbind',lapply(halfSplits, function(hs){
-            tryCatch({
-                initFit = summary(stats::lm(data = hs, formula = Insertions ~ pos + pos_squared))
-                quadFit = as.data.frame(initFit$coefficients)
-                Height = quadFit$Estimate[2]*peakWidth + 
-                            quadFit$Estimate[3]*peakWidth^2 +
-                            quadFit$Estimate[1]
-                Radius = -quadFit$Estimate[2]/(2*quadFit$Estimate[3])
-                R_squared = initFit$r.squared
-                Footprint_pvalue = pf(initFit$fstatistic[1], initFit$fstatistic[2], 
-                                      initFit$fstatistic[3], lower.tail = FALSE)
-                ## If the y-intercept of the model is below the height at the vertex, 
-                ## then the shape is downwards, not upwards.
-                ## In that case, it's not a footprint, so set p-value to 1 and R squared statistic to 0
-                if(quadFit$Estimate[1] > Height){
-                    Footprint_pvalue = 1
-                    R_squared = 0
-                }
-                data.table(
-                    Sample = unique(hs$Sample),
-                    Footprint = unique(hs$Footprint),
-                    Direction = unique(hs$Direction),
-                    Height = Height,
-                    Radius = Radius,
-                    R_squared = R_squared,
-                    PValue = Footprint_pvalue
-                )
-            }, error = function(e){
-                data.table(
-                    Sample = unique(hs$Sample),
-                    Footprint = unique(hs$Footprint),
-                    Direction = unique(hs$Direction),
-                    Radius = NA,
-                    Height = NA,
-                    R_squared = NA,
-                    PValue = NA
-                )
-            })
-        }))
-
-    
-    ### Remaining tests:
-    ##### Test for normality for heigh and Radius (left and Right)
-    ##### Join baseline to existing plot
-    ##### Run statistical tests (left and right) for baseline vs Height. Get joint p-value
-    
-    ## Identify the baseline insertions around the motif center 
-    averageMin =  as.data.table(motif_spec[abs(motif_spec$Position) < motifSize/2,])[ ,
-                        .(Baseline = mean(Insertions, na.rm = TRUE)), by=.(Sample, Footprint)]
-    ## Join the baseline with the other peak metrics. 
-    peakSum <- peakSum[averageMin, on = .(Sample, Footprint),]
-    
-    ## Generate the estimated depth
-    peakSum <- peakSum[, Depth := Height - Baseline]
-    summaryStats <- peakSum[, ':='(CellType = gsub('__.*','', Footprint), 
-                                    Motif = gsub('.*__','', Footprint))]
-    
-    ### Add in sample metadata, if motif footprinting done on the sample level. 
-    if(any(names(motifSE@metadata) == 'metadata')){
-    
-        metadf = as.data.table(motifSE@metadata[['metadata']])
-        
-        if(any(metadf$Sample %in% summaryStats$Samples)){
-            summaryStats <- summaryStats[metadf, on = .(Sample)]
-        }
-    }
-    
-    
-    ## Check if the user wants to run a statistic tests on the motif footprints across samples. 
-    if(!is.null(groupColumn) & !is.null(background)){
-        
-        if(length(groupColumn) + length(background) != 2){
-            
-            stop('More than one value provided to either groupColumn, or background')
-            
-        }
-        
-        if(!any(colnames(summaryStats) %in% groupColumn)){
-        
-            stop('Group column not found in sample metadata')
-        }
-        
-        if(!any(colnames(summaryStats) %in% groupColumn)){
-        
-            stop('Group column not found in sample metadata')
-        }
-            
-        groups = unique(unlist(summaryStats[,groupColumn]))
-                
-        if(!any(groups == background)){
-            
-            stop('Background group not found within groups column')
-        }
-        
-        ## First check if the user wants a differential between motifs or between cell types
-        group_by_cols = c('CellType', 'Motif', 'Direction')
-        if(any(groupColumn %in% c('CellType', 'Motif'))){
-           
-            group_by_cols = group_by_cols[!group_by_cols %in% groupColumn ]
-            
-        }
-        sumValues = c('Height', 'Radius', 'R_squared', 'PValue', 'Baseline', 'Depth')
-        
-        ### Pivot two heights to left and right, and generate a Width parameter for the sum of Radius
-        
-        ## Test whether the radius is significantly different from random. 
-        widthTest = summaryStats[,.(Width_Pvalue = 
-                                wilcox.test(Radius, sample(0, searchWidth, length(Radius)), 
-                                            alternative = 'greater')$p.value), 
-                                    by = .(CellType,Motif,Direction)]
-        summaryStats = summaryStats[widthTest, on = c('CellType','Motif','Direction')]
-        HL summaryStats[,
-        
-        meanSumStats = summaryStats[,lapply(.SD, mean, na.rm = TRUE), by = c(group_by_cols), .SDcols = sumValues]
-        
-        evalStats = meanSumStats[normSumStats, on = group_by_cols]
-        
-        
-        summaryStats2 = suppressMessages(do.call('rbind', 
-            lapply(groups[groups != background], function(GG){
-
-                Baseline = dplyr::summarise(dplyr::group_by_at(summaryStats, dplyr::vars(dplyr::one_of(group_by_cols))),
-                         Metric = 'Baseline',
-                         Foreground = GG,
-                         Background = background,
-                         MeanBackground = mean(Baseline[!!rlang::sym(groupColumn) == background]),
-                         MeanDiff = mean(Baseline[!!rlang::sym(groupColumn) == GG]) - 
-                                        mean(Baseline[!!rlang::sym(groupColumn) == background]),
-                         P_Value = stats::wilcox.test(Baseline[!!rlang::sym(groupColumn) == GG], 
-                                                Baseline[!!rlang::sym(groupColumn) == background], paired=FALSE)$p.value) 
-
-                Width = dplyr::summarise(dplyr::group_by_at(summaryStats, dplyr::vars(dplyr::one_of(group_by_cols))),
-                         Metric = 'Width',
-                         Foreground = GG,
-                         Background = background,
-                         MeanBackground = mean(Width[!!rlang::sym(groupColumn) == background]),
-                         MeanDiff = mean(Width[!!rlang::sym(groupColumn) == GG]) - 
-                                        mean(Width[!!rlang::sym(groupColumn) == background]),
-                         P_Value = stats::wilcox.test(Width[!!rlang::sym(groupColumn) == GG], 
-                                                Width[!!rlang::sym(groupColumn) == background], paired=FALSE)$p.value) 
-
-                 Depth = dplyr::summarise(dplyr::group_by_at(summaryStats, dplyr::vars(dplyr::one_of(group_by_cols))),
-                         Metric = 'Depth',
-                         Foreground = GG,
-                         Background = background,
-                         MeanBackground = mean(Depth[!!rlang::sym(groupColumn) == background]),
-                         MeanDiff = mean(Depth[!!rlang::sym(groupColumn) == GG]) - 
-                                        mean(Depth[!!rlang::sym(groupColumn) == background]),
-                         P_Value = stats::wilcox.test(Depth[!!rlang::sym(groupColumn) == GG], 
-                                                Depth[!!rlang::sym(groupColumn) == background], paired=FALSE)$p.value)
-
-                do.call('rbind', list(Baseline, Width, Depth))
-            })))
-        
-    }else if(!is.null(groupColumn)){
-        
-        ### Summary left and right heigh, turn Radius into Width, and take the min R-squared and max P-value
-        
-        HL = summaryStats[Direction == 'Upstream',][, .(Height_Left = Height), by = .(Sample, CellType, Motif)]
-        HR = summaryStats[Direction == 'Downstream',][, .(Height_Right = Height), by = .(Sample, CellType, Motif)]
-        Width = summaryStats[, .(Width = sum(Radius), PValue = max(PValue), R_squared= min(R_squared)), 
-                                 by = .(Sample, CellType, Motif)]
-        
-        
-        dplyr::summarize(dplyr::group_by(summaryStats, Motif, COVID_status), 
-                         mean(Width), sd(Width), mean(Height), sd(Height))
-        
-        
-    }else if( (!is.null(groupColumn) & !is.null(background)) | 
-             (!is.null(groupColumn) & !is.null(background))){
-    
-        warning('No statistical tests run. You must provide values for both groupColumn and background for statistics')
-        summaryStats2 = summaryStats
-    }
-    
-    return(summaryStats2)
-}
-           
-                                
-                                
-callFootprint <- function(summaryStats, groupColumn = NULL){
-    
-
-    group_by_cols = c('CellType', 'Motif', groupColumn)
-
-    Depth = dplyr::summarise(dplyr::group_by_at(summaryStats, dplyr::vars(dplyr::one_of(group_by_cols))),
-                         Metric = 'Depth',
-                         Foreground = 'Height',
-                         Background = 'Baseline',
-                         MeanBackground = mean(Baseline),
-                         MeanDiff = mean(Depth),
-                         P_Value = stats::wilcox.test(Height, Baseline, paired=TRUE, alternative = 'greater')$p.value)
-    
-    
-}
-

@@ -77,8 +77,8 @@ fixCellTypeNames <- function(cellNames){
     cellNames = gsub(" |-","_", cellNames)
     
     #fix + and - signs
-    cellNames = gsub("+","pos", cellNames)
-    cellNames = gsub("-","neg", cellNames)
+    cellNames = gsub("\\+","pos", cellNames)
+    cellNames = gsub("\\-","neg", cellNames)
     cellNames = gsub("\\\\", "_", cellNames)
 
     return(cellNames)

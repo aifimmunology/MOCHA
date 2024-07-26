@@ -365,7 +365,7 @@ setMethod(
 
   # Get cell populations
   cellPopulations = fixCellTypeNames(cellPopulations)
-  cellColData[, cellPopLabel] <- cellPopulations(cellColData[, cellPopLabel])
+  cellColData[, cellPopLabel] <- fixCellTypeNames(cellColData[, cellPopLabel])
   cellTypeLabelList <- cellColData[, cellPopLabel]
   
   if (!all(cellPopulations %in%  unique(cellTypeLabelList))) {
