@@ -335,8 +335,7 @@ plotMotifs <- function(motifSE,
                        returnDF = FALSE, 
                        returnPlotList = FALSE,
                           relHeights = c(0.3, 0.7)){
-    
-        browser()
+
     if(is.null(footprint)){
     
         footprint = names(SummarizedExperiment::assays(motifSE))
@@ -397,15 +396,17 @@ plotMotifs <- function(motifSE,
     dt1 <- dt1[, ':='(CellType = gsub('__.*','', Footprint), 
                                     Motif = gsub('.*__','', Footprint))]
     ## Now pull out Sample vs Position info
-    dt1 <- dt1[, ':='(Sample = gsub('__-[0-9].*|__[0-9].*', '' , Index), 
-                       Position = as.numeric(gsub('__', '', gsub(paste0(unique(Sample), collapse='|'), '', Index))))]
+    dt1 <- dt1[, Sample := gsub('__-[0-9].*|__[0-9].*', '' , Index)]
+    allSamples = paste0(unique(dt1$Sample), collapse='|')
+    dt1 <- dt1[, Position := as.numeric(gsub('__', '', 
+                            gsub(allSamples, '', Index)))]
     
      ### Add in sample metadata, if motif footprinting done on the sample level. 
     if(any(names(motifSE@metadata) == 'metadata')){
     
         metadf = as.data.table(motifSE@metadata[['metadata']])
         
-        if(any(metadf$Sample %in% summaryStats$Samples)){
+        if(any(metadf$Sample %in% motif_spec$Sample)){
             motifDT <- motif_spec[metadf, on = .(Sample)]
             singleDT <- dt1[metadf, on = .(Sample)]
         }
@@ -413,7 +414,7 @@ plotMotifs <- function(motifSE,
     
     if(!is.null(groupColumn)){
 
-        ## Check that groupColumn only has one value and that it is present in the summaryStats metadata
+        ## Check that groupColumn only has one value and that it is present in the motifDT metadata
         if(length(groupColumn) != 1){
 
             stop('More than one value provided to groupColumn.')
@@ -460,29 +461,30 @@ plotMotifs <- function(motifSE,
     
     maxPos = max(motifDT$Position)
     
-    p1 = ggplot2::ggplot(motifDT, aes(x = Position, y = Insertions, group = PlotGroup, color= PlotGroup)) + 
-            ggplot2::geom_line() + xlab(NULL) + 
-             theme_bw() + ggplot2::theme(legend.position = 'top')+
-            theme(plot.margin = unit(c(0, 0.1, 0, 0.1), "cm")) +
-            xlim(-maxPos, maxPos) + 
-            scale_x_continuous(expand=c(0,0)) + 
-            theme(axis.text.x = ggplot2::element_blank(),
+    p1 = ggplot2::ggplot(motifDT, ggplot2::aes(x = Position, y = Insertions,
+                                               group = PlotGroup, color= PlotGroup)) + 
+            ggplot2::geom_line() + ggplot2::xlab(NULL) + 
+             ggplot2::theme_bw() + ggplot2::theme(legend.position = 'top')+
+            ggplot2::theme(plot.margin = ggplot2::unit(c(0, 0.1, 0, 0.1), "cm")) +
+            ggplot2::xlim(-maxPos, maxPos) + 
+            ggplot2::scale_x_continuous(expand=c(0,0)) + 
+            ggplot2::theme(axis.text.x = ggplot2::element_blank(),
                  axis.ticks.x = ggplot2::element_blank())
-    p2 = ggplot2::ggplot(singleDT, aes(x = Position, fill = Insertions, y = Location)) + 
+    p2 = ggplot2::ggplot(singleDT, ggplot2::aes(x = Position, fill = Insertions, y = Location)) + 
             ggplot2::geom_tile() +
             ggplot2::xlim( -maxPos, maxPos) +
             ggplot2::theme_bw() + 
-            scale_x_continuous(expand=c(0,0)) + 
+            ggplot2::scale_x_continuous(expand=c(0,0)) + 
             ggplot2::facet_wrap(~ PlotGroup, ncol = 1 ) + #, strip.position = 'left') + 
             ggplot2::scale_fill_gradient(transform = 'log1p', low = 'white', high = 'red') + 
             ggplot2::theme(legend.position = 'right', 
                            axis.text.y = ggplot2::element_blank()) +
             ggplot2::theme(strip.background = ggplot2::element_rect(fill="white"),
                           strip.placement = "outside",
-                         strip.text.y.left = element_text(angle = 90, vjust = 1),
-                          plot.background = element_rect(fill = 'white', colour = 'white'))+
+                         strip.text.y.left = ggplot2::element_text(angle = 90, vjust = 1),
+                          plot.background = ggplot2::element_rect(fill = 'white', colour = 'white'))+
             ggplot2::guides(r = ggplot2::guide_axis(angle = 45)) +
-            theme(plot.margin = unit(c(0, 0.1, 0.1, 0.1), "cm"))
+            ggplot2::theme(plot.margin = ggplot2::unit(c(0, 0.1, 0.1, 0.1), "cm"))
     
     returnList = list('MotifAverage' =  p1 , 'LocationSpecific' = p2)
     if(returnPlotList){

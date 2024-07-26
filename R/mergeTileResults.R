@@ -31,11 +31,34 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   Freq <- NULL
   # Test for duplicate sample names
   sampleTest <- unlist(lapply(tileResultsList, function(x) rownames(x@colData)))
-  if (any(duplicated(sampleTest))) {
+
+  sampleFreq = as.data.frame(table(sampleTest))
+  if(any(sampleFreq$Freq != length(tileResultsList))){
+
+    # if all the cell types are duplicated, then we may be merging by cell type
+    mergeByCellType = TRUE
+    ## check if all the cell types are unique
+    cellTypes = unlist(lapply(tileResultsList, function(ZZ) 
+                    names(SummarizedExperiment::assays(ZZ))
+                ))
+    if(any(duplicated(cellTypes))){
+
+        stop(
+          "Duplicated data detected: same sample names and cell types across at least two of your tile results.",
+          " Samples must be unique between tileResults and not duplicated."
+        )
+        
+    }
+                              
+  }else if (any(duplicated(sampleTest))) {
     stop(
       "Sample names are duplicated in your list of tileResults.",
       " Samples must be unique between tileResults and not duplicated."
     )
+  }else{
+
+      mergeByCellType = FALSE
+
   }
 
   # Test whether all the tileResultsList indices are MultiAssayExperiments
@@ -80,20 +103,21 @@ mergeTileResults <- function(tileResultsList, numCores = 1, verbose = TRUE) {
   # Find the subset of cell types that are in common across all tileResults objects. Merge those.
   subCellTypes <- as.character(unlist(dplyr::filter(allCellTypes, Freq == length(tileResultsList))$Var))
 
-  if (length(subCellTypes) == 0) {
-    stop(
-      "Input tileResults in tileResultsList do not share any common cell ",
-      "populations."
-    )
-  }
-  if (verbose) {
-    message(
-      "Cell population(s) ",
-      paste0(subCellTypes, collapse = ", "),
-      " are in present all tileResults objects and will be retained in the merge."
-    )
-  }
-
+  if(!mergeByCellType){
+      if (length(subCellTypes) == 0) {
+        stop(
+          "Input tileResults in tileResultsList do not share any common cell ",
+          "populations."
+        )
+      }
+      if (verbose) {
+        message(
+          "Cell population(s) ",
+          paste0(subCellTypes, collapse = ", "),
+          " are in present all tileResults objects and will be retained in the merge."
+        )
+      }
+    }
   # Iterate across each tileResults object, extracting the RaggedExperiments and turning them back into GRangesList.
   # These GRangesList can then be concatenated easily, and then turned back into RaggedExperiments, and joined into one final tile results object.
   cl <- parallel::makeCluster(numCores)
