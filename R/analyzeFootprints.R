@@ -140,7 +140,7 @@ motifStats <- function(motifSE, footprint = NULL,
     
         metadf = as.data.table(motifSE@metadata[['metadata']])
         
-        if(any(metadf$Sample %in% summaryStats$Samples)){
+        if(any(metadf$Sample %in% summaryStats$Sample)){
             summaryStats <- summaryStats[metadf, on = .(Sample)]
         }
     }
@@ -196,7 +196,7 @@ motifStats <- function(motifSE, footprint = NULL,
                                      by = c('Sample',eachGrouping)]
             ## Now take the average of the width, the max of the footprint P-value and mean of the R_squared within each group
             Width_avg = Width[,.(Width = mean(Width),
-                                    Footprint_PValue = max(Footprint_PValue, 'fdr'), 
+                                    Footprint_PValue = max(Footprint_PValue), 
                                      R_squared= mean(R_squared)), 
                                      by = eachGrouping]
             ## Now test the radius of left and right within each group as compared to random distribution
