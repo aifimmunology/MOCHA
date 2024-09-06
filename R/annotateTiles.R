@@ -48,6 +48,8 @@ annotateTiles <- function(Obj,
     Org <- getAnnotationDbFromInstalledPkgname(objMeta$OrgDb$pkgname, "OrgDb")
   } else if (class(Obj)[[1]] == "GRanges" & !is.null(TxDb) & !is.null(Org)) {
     tileGRanges <- Obj
+  } else if( class(Obj)[1] == "RangedSummarizedExperiment"){
+    tileGRanges <- SummarizedExperiment::rowRanges(Obj)
   } else {
     stop("Error: Invalid inputs. Verify Obj is a RangedSummarizedExperiment and tiles were called from an ArchR project. If Obj is a GRanges, TxDb and Org must be provided.")
   }
