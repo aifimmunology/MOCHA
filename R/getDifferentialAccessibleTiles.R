@@ -100,7 +100,6 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   foreground_samples <- metaFile[metaFile[, groupColumn] == foreground, "Sample"]
   background_samples <- metaFile[metaFile[, groupColumn] == background, "Sample"]
 
-
   #Run a for-loop over all cell populations
   DAT_list = list()
   for(cellPop in cellPopulation){
@@ -114,8 +113,16 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
       sampleTileMatrix <- sampleTileMatrix[, colnames(sampleTileMatrix) %in%
                                            c(foreground_samples, background_samples), drop = FALSE]
 
-
       group <- as.numeric(colnames(sampleTileMatrix) %in% foreground_samples)
+      
+      ## Check if there are at least 3 samples of each group. 
+      sumGroup = as.data.table(table(group))
+      if(dim(sumGroup)[1] != 2 | any(sumGroup[,2] < 3)){
+          message('Less than three samples available per group for this comparison.',
+                  'Please check sample number (within colData slot) or cell counts (see summarizedData within the metadata slot).')
+           next
+          
+      }
 
       #############################################################################
       # Prioritize high-signal tiles
@@ -239,7 +246,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
       DAT_list = append(DAT_list, list(full_results))
      
   }
-  
+
   if(is.null(signalThreshold) & !all(is.na(unlist(lapply(DAT_list, function(XX) XX$FDR))))){
       message('Optimizing thresholds')
       cl <- parallel::makeCluster(numCores)
@@ -252,8 +259,9 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
       warning('No signal threshold optimization was done, because a signalThreshold was given.')
       
   }
-      
+
   full_results <- do.call('rbind', DAT_list)
+  full_results = full_results[!is.na(full_results$Tile),]
   if (outputGRanges) {
     full_results <- MOCHA::differentialsToGRanges(full_results)
   }
