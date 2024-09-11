@@ -34,12 +34,14 @@ packMOCHA <- function(MOCHAObj,
       "Please install 'zip' to proceed."
     )
   }
+    
+  browser()
   
   if (!methods::is(zipfile, "character") || !grepl("\\.zip$", zipfile)) {
     stop("`zipfile` must be a character string ending in .zip")
   }
 
-  saveRDS(MOCHAObj, paste(MOCHAObj@metadata$Directory, "/MOCHA_Object.RDS", sep = ""))
+  alabaster.se::saveRangedSummarizedExperiment(MOCHAObj, paste(MOCHAObj@metadata$Directory, "/MOCHA_Object", sep = ""))
 
   zip::zipr(zipfile, MOCHAObj@metadata$Directory)
   if (verbose) {
@@ -90,7 +92,7 @@ unpackMOCHA <- function(zipfile,
   newDirectory <- sub("\\/$", "", zip::zip_list(zipfile)[1, 1], )
 
   # load MOCHA Object into memory
-  MOCHAObj <- readRDS(paste(exdir, newDirectory, "MOCHA_Object.RDS", sep = "/"))
+  MOCHAObj <- alabaster.se::readObject(paste(exdir, newDirectory, "MOCHA_Object.RDS", sep = "/"))
 
   # Change directory path for the MOCHA object to the new directory
   MOCHAObj@metadata$Directory <- paste(exdir, newDirectory, sep = "/")
