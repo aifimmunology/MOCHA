@@ -4,7 +4,7 @@
 
 MOCHA is an R package meant to enable robust sample-specific scATAC analysis by providing a novel single-cell peak-calling algorithm and leveraging the latest in zero-inflated statistical methods. We hope this package will enable translational research on scATAC datasets by addressing statistical issues around peak calling, differential accessibility, co-accessibility, and repeated measures. Our goal is to enable intuitive and robust identification of open chromatin, differential accessibility, and co-accessibility so that biomedical researchers can leverage scATAC datasets to identify the therapeutic targets. 
 
-Find out more by visiting the [MOCHA website](https://aifimmunology.github.io/MOCHA/).
+Find out more by visiting the [MOCHA website](https://aifimmunology.github.io/MOCHA/), or [publication](https://www.nature.com/articles/s41467-024-50612-6).
 
 ------------------------------------------------------------------------
 
