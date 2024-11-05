@@ -366,17 +366,19 @@ setMethod(
   # Get cell populations
   cellTypeLabelList <- cellColData[, cellPopLabel]
   
-  if (!all(cellPopulations %in%  unique(cellTypeLabelList))) {
-    missingCellPopulations <- cellPopulations[
-      !cellPopulations %in%  unique(cellTypeLabelList)
-    ]
-    stop(
-      stringr::str_interp(paste0(
-        "Some or all of the cell populations provided were not found in the ",
-        "cellColData column '${cellPopLabel}'. Missing cell populations: "
-      )),
-      paste0(missingCellPopulations, collapse=", "), "."
-    )
+  if (!all(tolower(cellPopulations) == "all")) {
+    if (!all(cellPopulations %in%  unique(cellTypeLabelList))) {
+      missingCellPopulations <- cellPopulations[
+        !cellPopulations %in%  unique(cellTypeLabelList)
+      ]
+      stop(
+        stringr::str_interp(paste0(
+          "Some or all of the cell populations provided were not found in the ",
+          "cellColData column '${cellPopLabel}'. Missing cell populations: "
+        )),
+        paste0(missingCellPopulations, collapse=", "), "."
+      )
+    }
   }
 
   #################
@@ -402,8 +404,8 @@ setMethod(
 
   # Filter allCellCounts and allFragmentCounts to just cell populations (rows)
   # of interest
-  if (all(cellPopulations == "ALL")) {
-    cellPopulations <- colnames(allCellCounts)
+  if (all(tolower(cellPopulations) == "all")) {
+    cellPopulations <- rownames(allCellCounts)
   } else if(any(rownames(allCellCounts) %in% cellPopulations)){
     allCellCounts <- allCellCounts[rownames(allCellCounts) %in% cellPopulations, , drop = FALSE]
     allFragmentCounts <- allFragmentCounts[rownames(allFragmentCounts) %in% cellPopulations, , drop = FALSE]
@@ -561,7 +563,7 @@ setMethod(
         stop(
           "Provided ATACFragments does not contain any sample fragments ",
           stringr::str_interp("belonging to cellPopulations: ${cellPop}. "),
-          "ATACFragments must have at lease one sample GRanges for each ",
+          "ATACFragments must have at least one sample GRanges for each ",
           "cell population."
         )
       }
