@@ -198,7 +198,7 @@ motifFootprint <- function(SampleTileObj,
             ## So we'll reduce out motifs to find these overlapping regions, and remove anything with more than
             ## windowSize/10 bps. 
         
-            subMotifs = plyranges::filter(plyranges::reduce_ranges(motifs[[YY]]), width <= windowSize/10)
+            subMotifs = plyranges::filter(plyranges::reduce_ranges(motifs[[YY]]), width <= windowSize/2)
         
             if (verbose) {
               message(stringr::str_interp("Processing motif footprint for ${YY}."))
@@ -683,4 +683,300 @@ getBias <- function(insertList1){
     return(seq_table)
 }
                                 
-                                
+#' @title \code{findFootprints}
+#'
+#' @description Test for footprints at motif positions within a given set of regions. 
+#'              This function will basically take a window around a motif site and test if it's
+#'              significantly different from a window around that site across all motif sites within
+#'              a given set of sites across a given set of samples. 
+#'
+#' @param SampleTileObj A Sample-tile object from MOCHA's getSampleTileMatrix()
+#' @param motifName The name of metadata entry with Motif location, added via addMotifSet()
+#' @param specMotif An optional string specifying which motif to analyze. If blank, it will analyze all motifs within a given set of regions. 
+#' @param regions An optional GRanges object or list of strings in the format chr1:100-200, specifiying which specific regions to look at when conducting motif footprinting. 
+#' @param cellPopulations A list of cell populations to conduct motif footprinting on. 
+#' @param subGroups A list of subgroups, if you want to only look at specific groups within the groupColumn. 
+#' @param sampleSpecific A boolean for whether to generate average motif footprints within each group, or to return a data.frame for all samples. 
+#' @param normTn5 A boolean for whether to normalize by Tn5 insertion bias. 
+#' @param smoothTn5 The window size for smoothen Tn5 insertions at each location. Ideal when looking at motif footprints over a smaller number of regions, rarer cell types, or sparse regions, where local noise can make it harder to see the overall pattern. Can be set to 0.
+#' @param footprintSize An estimate of the footprint size that you want to test for. 
+#' @param flankPoint The estimated distance between the motif center and the footprint flank (right and left). A window of equal size to the footprint size will be used to estimate background insertions at a given site. 
+#' @param numCores Number of cores to parallelize over
+#' @param force Boolean. If FALSE, it will through an error if there's an empty sample or not overlap with regions and motifs. If TRUE will ignore these issues and continue (or return NULL)
+#'
+#' @return A SummarizedExperiment containing motif footprinting data 
+#'
+#' @export
+#' @keywords downstream
+findFootprints <- function(SampleTileObj,
+                           motifName = 'Motifs',
+                          regions = NULL,
+                          cellPopulations = "ALL",
+                          specMotif = NULL,
+                          footprintSize = 20,
+                          windowSize = 100,
+                          normTn5 = TRUE,
+                          smoothTn5 = 10,
+                          groupColumn = NULL,
+                          subGroups = NULL,
+                          sampleSpecific = FALSE,
+                          numCores = 1,
+                           force = FALSE,
+                          verbose = FALSE) {
+  . <- idx <- score <- NULL
+  cellNames <- SummarizedExperiment::assayNames(SampleTileObj)
+  metaFile <- SummarizedExperiment::colData(SampleTileObj)
+  outDir <- SampleTileObj@metadata$Directory
+
+  if (is.na(outDir)) {
+    stop("Missing coverage file directory. SampleTileObj$metadata must contain 'Directory'.")
+  }
+    
+  if (!file.exists(outDir)) {
+    stop("Directory given by SampleTileObj@metadata$Directory does not exist.")
+  }
+    
+  if (all(toupper(cellPopulations) == "ALL")) {
+    cellPopulations <- cellNames
+  }
+  if (!all(cellPopulations %in% cellNames)) {
+    stop("Some or all cell populations provided are not found.")
+  }
+    
+  if(!is.null(smoothTn5)){
+    if(smoothTn5 == 0){
+        smoothTn5 = NULL
+    }
+  }
+    
+  if (all(toupper(cellNames) == "COUNTS")) {
+    stop(
+      "The only assay in the SummarizedExperiment is Counts. The names of assays must reflect cell types,",
+      " such as those in the Summarized Experiment output of getSampleTileMatrix."
+    )
+  }
+         
+  # Pull out a list of samples by group.
+  if (!is.null(subGroups) & !is.null(groupColumn)) {
+    # If the user defined a list of subgroup(s) within the groupColumn from the metadata, then it subsets to just those samples
+    subSamples <- lapply(subGroups, function(x) metaFile[metaFile[, groupColumn] %in% x, "Sample"])
+    names(subSamples) <- subGroups
+  } else if (!is.null(groupColumn)) {
+
+    # If no subGroup defined, then it'll form a list of samples across all labels within the groupColumn
+    subGroups <- unique(metaFile[, groupColumn])
+
+    subSamples <- lapply(subGroups, function(x) metaFile[metaFile[, groupColumn] %in% x, "Sample"])
+  } else {
+
+    # If neither groupColumn nor subGroup is defined, then it forms one list of all sample names
+    subGroups <- "All"
+    subSamples <- list("All" = metaFile[, "Sample"])
+  }
+                    
+  ### Verify that they've calculate insertion bias if they want to normalize by Insertion bias
+  ### Calculate bias. 
+  if(normTn5 & any(grepl('InsertionBias', names(SampleTileObj@metadata)))){
+      ## Pull in genome database
+      genome_db = SampleTileObj@metadata$Genome
+      
+      genome <- getAnnotationDbFromInstalledPkgname(dbName = genome_db, type = 'BSgenome')
+      insertBias = SampleTileObj@metadata$InsertionBias
+      #Remove any NAs that might be there
+      insertBias = insertBias[!is.na(insertBias[,'Norm']),]
+      
+  }else if(normTn5 & !any(grepl('InsertionBias', names(SampleTileObj@metadata)))){
+      
+      stop('Attempting to normalize by Tn5 insertion bias, but no bias calculated. Please run addInsertionBias.')
+      
+  }
+                      
+  ## Create experimentList - this will be alist of matrices with insertions for each location/sample across positions.    
+  experimentList1 = list()
+
+  #Pull out sample metadata
+  sampleMetadata = SummarizedExperiment::colData(SampleTileObj)
+                         
+  #Pull up the cell types of interest, and filter for samples and subset down to region of interest  
+  for(x in cellPopulations) {
+
+
+     ## Pull out cell type-specific motif positions, and subset by specific regions and/or to specific motifs.
+     motifs <- getCellTypeMotifs(SampleTileObj, 
+                                  cellPopulation = x,
+                                  specMotif = specMotif,
+                                  MotifSetName = motifName, asGRangesList = FALSE)
+     ## Now filter motifs by regions provided.   
+     if(!is.null(regions)){
+
+      if (is.character(regions)) {
+          
+        # Convert to GRanges
+        regionGRanges <- MOCHA::StringsToGRanges(regions)
+          
+      } else if (class(regions)[1] == "GRanges") {
+          
+        regionGRanges <- regions
+          
+      } else {
+          
+        stop("Wrong regions input type. regions must either be a string, or a GRanges location.")
+          
+      }
+      #Combine nearby tiles
+      regionGRanges2 = plyranges::reduce_ranges(regionGRanges)
+      motifs2 <- lapply(motifs, function(XX){
+                          plyranges::filter_by_overlaps(XX, regionGRanges2)
+                })
+      names(motifs2) = names(motifs)
+      motifs = motifs2
+      rm(motifs2)
+      
+      if(any(lengths(motifs) == 0) & !force){
+          stop('No motif overlaps with open tiles for cell types and regions provided')
+      }else if(all(lengths(motifs) == 0) & force){
+      
+          return(NULL)
+          
+      }else if(any(lengths(motifs) == 0) & force){      
+          motifs = motifs[lengths(motifs) > 0]
+      }
+    }
+      
+    if (verbose) {
+      message(stringr::str_interp("Extracting insertions from cell population '${x}'"))
+    }
+      
+    # Pull up insertions files
+    originalCovGRanges <- readRDS(paste(outDir, "/", x, "_CoverageFiles.RDS", sep = ""))
+    if ('Insertions' %in% names(originalCovGRanges)){
+      originalInsertions <- originalCovGRanges[['Insertions']]
+      rm(originalCovGRanges)
+    }else{
+      stop('Error around reading insertions files. Check that coverage/insertions files are not corrupted.')
+    }
+      
+    # Edge case: One or more samples are missing coverage for this cell population,
+    # e.g. if a cell population only exists in one sample.
+    for(y in seq_along(subSamples)) {
+      if (!all(subSamples[[y]] %in% names(originalInsertions))) {
+        missingSamples <- paste(subSamples[[y]][!subSamples[[y]] %in% 
+                                        names(originalInsertions)], collapse = ", ")
+          
+        if(!force){
+            stop(stringr::str_interp(c(
+              "There is no insertion coverage for cell population '${x}' in the ",
+              "following samples in sample grouping '${names(subSamples)[y]}': ",
+              "${missingSamples}"
+            )))
+        }else{
+            
+            subSamples[[y]] = subSamples[[y]][subSamples[[y]] %in% 
+                                              names(originalInsertions)]
+        }
+      }
+    }
+      
+    ##Subset coverage down to only the relevant samples.
+    originalInsertions =  originalInsertions[unlist(subSamples)]
+
+    ### iterate over each motif, and subsample down to those regions. 
+    for(YY in names(motifs)){
+        
+            ## Some motifs can be directly overlapping for hundreds of basepairs. 
+            ## These motif matches are unlikely to yield useful results because a 
+            ## transcription factor can't possible be bound at all of these sites at once, so then
+            ## a motif footprint at these sites looses values, and becomes irrelevant (i.e. no footprint around motif)
+            ## So we'll reduce out motifs to find these overlapping regions, and remove anything with more than
+            ## windowSize/10 bps. 
+        
+            subMotifs = plyranges::reduce_ranges(motifs[[YY]])
+            
+            if (verbose) {
+              message(stringr::str_interp("Processing motif footprint for ${YY}."))
+            }
+        
+            cl <- parallel::makeCluster(numCores)  
+            stretchMotifs = plyranges::stretch(plyranges::anchor_center(
+                                plyranges::reduce_ranges(subMotifs)), extend = windowSize*1.10)
+            
+            if(normTn5){
+                
+                newList =  lapply(names(originalInsertions), function(XX){ 
+                    list(plyranges::filter_by_overlaps(originalInsertions[[XX]],  stretchMotifs), 
+                         subMotifs, windowSize,                                               
+                         insertBias[,'Norm', drop =FALSE], genome_db, smoothTn5, XX)})
+                rm(stretchMotifs)
+                rm(subMotifs)
+                 allNorms <- pbapply::pblapply(cl = cl, X = newList, normMotifs2)
+                
+            }else{
+                
+               
+                newList = lapply(names(originalInsertions), function(XX){ 
+                    list(plyranges::filter_by_overlaps(originalInsertions[[XX]],  stretchMotifs),
+                         subMotifs, windowSize, smoothTn5, XX)})
+                rm(stretchMotifs)
+                rm(subMotifs)
+                allNorms <- pbapply::pblapply(cl = cl, X = newList, normMotifs)
+                
+                
+            }
+        
+            parallel::stopCluster(cl)
+        
+            names(allNorms) = names(originalInsertions)
+            #Clean up
+            rm(newList)
+            gc()
+            allNorms = data.table::rbindlist(allNorms)
+        
+            if (!sampleSpecific) {
+                names(subSamples) = subGroups
+                allNorms[, Group := ifelse(Sample %in% subSamples[[1]],  names(subSamples)[1], NA)]
+                for(subSample1 in names(subSamples)[2:length(subSamples)]){
+                    allNorms[, Group := ifelse(Sample %in% subSamples[[subSample1]], subSample1, Group)]
+                }
+                
+                ##Now generate the group-level location-specific average
+                allNorms = allNorms[,.(score = mean(score, na.rm = TRUE)), by = .(Group, Position, Location)]
+                setnames(allNorms, 'Group', 'Sample')            
+            }
+           
+            ## Get the wilcoxon test on all centers by sample. 
+            locCore = allNorms[abs(Position) <= footprintSize/2,.(score = mean(score), Region = 'Motif'), 
+                               by = c('Sample', 'Location')]
+            locFlank = allNorms[abs(Position) >= footprintSize/2,.(score = mean(score), Region = 'Flank'), 
+                                by = c('Sample', 'Location')]
+            fullMerge = data.table::dcast(rbind(locCore, locFlank)[, 
+                                    pval := wilcox.test(score ~ Region, .SD)$p.value, Sample],
+                                   Sample + pval ~ Region, fun = list(mean,sd), value.var = "score")
+            fullMerge =  as.data.frame(fullMerge[,pval_adj := p.adjust(pval, method = 'BH')])
+            
+            #CellType_Motif for index name
+            list_index_name = paste(x, YY, sep ='__')
+            # Add motif & cell type info
+            rownames(fullMerge) = fullMerge$Sample
+            fullMerge$CellType = x
+            fullMerge$Motif = YY
+            fullMerge = dplyr::inner_join(fullMerge[rownames(sampleMetadata),], as.data.frame(sampleMetadata), by = 'Sample')
+            
+            experimentList1 = append(experimentList1, list(fullMerge))
+            names(experimentList1)[length(experimentList1)] = list_index_name
+            rm(fullMerge)
+
+    }    
+    rm(originalInsertions)
+    gc()
+    
+    
+  }
+  if(length(experimentList1) > 1){
+      fullMat = do.call('rbind', experimentList1)
+    }else{
+      fullMat = experimentList1[[1]]
+    }
+
+  return(fullMat)
+}
+         
