@@ -15,7 +15,7 @@
 #' @details This is a wrapper for basic SummarizedExperiment-based subsetting. 
 #'
 #'
-#' @export
+#' @noRd
 #' 
 
 runChromVAR <- function(TSAM_Object,
@@ -171,7 +171,7 @@ runChromVAR <- function(TSAM_Object,
 #' @details This is a wrapper for basic SummarizedExperiment-based subsetting. 
 #'
 #'
-#' @export
+#' @noRd
 #' 
 
 subsetDev <- function(Object,
@@ -220,7 +220,7 @@ subsetDev <- function(Object,
 #'
 #' @details relies on lmerTest to run a linear model on each chromVAR result. 
 #'
-#' @export
+#' @noRd
 #' 
 
                   
