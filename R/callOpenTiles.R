@@ -831,7 +831,7 @@ setMethod(
     colData = sampleData,
     metadata = list(
       "summarizedData" = summarizedData,
-      "Genome" = S4Vectors::metadata(genome)$genome,
+      "Genome" = genome@pkgname,
       "TxDb" = list(pkgname = TxDbName, metadata = S4Vectors::metadata(TxDb)),
       "OrgDb" = list(pkgname = OrgDbName, metadata = S4Vectors::metadata(OrgDb)),
       "Directory" = outDir,
