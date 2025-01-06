@@ -17,8 +17,10 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel) {
   cellColDT <- data.table::as.data.table(cellColDataNoNA)
 
   BoolDT <- cellColDT[, lapply(.SD, function(x) {
+      unique(x)
     length(unique(x)) == 1
   }), by = c(sampleLabel)]
+
   trueCols <- apply(BoolDT, 2, all)
   trueCols[[sampleLabel]] <- TRUE
   cellColDF <- as.data.frame(cellColDT)
@@ -29,6 +31,44 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel) {
   rownames(sampleData) <- sampleData[[sampleLabel]]
   return(sampleData)
 }
+
+
+# Function to de-hash a list of fragments files by the true cell type. 
+# The function will identify the true list of samples, 
+# And then iterate over each arrow file and select all the fragments from cells from that sample.
+# And then combine the fragments into a new GRanges list. 
+dehashArchR <- function(frags, cellColData, sampleColumn, cl = cl) {
+
+  ##Identify cells for each true sample
+  trueSamples <- unique(cellColData[,sampleColumn])
+    
+  trueCells <- lapply(trueSamples, function(XX){
+                      trueCells = rownames(cellColData[cellColData[,sampleColumn] == XX,])
+                  })
+    
+  trueFrags <- pbapply::pblapply(cl = cl, X = trueCells, dehashIter, oldfrags = frags)
+  rm(frags)
+    
+  names(trueFrags) = trueSamples
+  return(trueFrags)
+}
+
+
+# To effectively iterate over fragments without without memory leaks,
+# This function is necessary. 
+dehashIter <- function(cellIDs, oldfrags){
+
+    newFrags <- lapply(oldfrags, function(ZZ){
+          
+                  plyranges::filter(ZZ, RG %in% cellIDs)
+          
+          })
+    
+    newFrags <- unlist(as(newFrags, 'GRangesList'))
+
+    return(newFrags)
+}
+
 
 
 # Function to split the output of getPopFrags into a list

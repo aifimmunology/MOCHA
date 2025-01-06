@@ -76,6 +76,7 @@ varZIGLMM <- function(TSAM_Object,
     newObj <- combineSampleTileMatrix(subsetMOCHAObject(TSAM_Object, subsetBy = "celltype", groupList = cellPopulation, subsetPeaks = TRUE))
   }
 
+    browser()
 
   modelingData <- log2(SummarizedExperiment::assays(newObj)[["counts"]] + 1)
   MetaDF <- as.data.frame(SummarizedExperiment::colData(newObj))
@@ -141,71 +142,19 @@ varZIGLMM <- function(TSAM_Object,
     stop("NAs are included in the MetaDF. Please remove them and try again.")
   }
   
-  # Nested internal helper function used in parallelization
-  individualVarZIGLMM <- function(x) {
-    df <- data.frame(
-      exp = as.numeric(modelingData[x, ]),
-      MetaDF, stringsAsFactors = FALSE
-    )
-    
-    output_vector <- tryCatch(
-      {
-        if (all(df$exp != 0, na.rm = T)) {
-          modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
-                                       ziformula = ~0,
-                                       data = df,
-                                       family = stats::gaussian(),
-                                       REML = TRUE
-          )
-        } else if (sum(df$exp == 0, na.rm = T) / length(df$exp) < zi_threshold) {
-          df$exp[df$exp == 0] <- NA
-          modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
-                                       ziformula = ~0,
-                                       data = df,
-                                       family = stats::gaussian(),
-                                       REML = TRUE
-          )
-        } else {
-          modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
-                                       ziformula = stats::as.formula(ziformula),
-                                       data = df,
-                                       family = stats::gaussian(),
-                                       REML = TRUE
-          )
-        }
-        
-        if (!modelRes$sdr$pdHess) {
-          return(nullDF)
-        }
-        
-        cond_other <- unlist(glmmTMB::VarCorr(modelRes)$cond)
-        names(cond_other) <- paste("Cond", names(cond_other), sep = "_")
-        residual <- as.vector(attr(glmmTMB::VarCorr(modelRes)$cond, "sc")^2)
-        names(residual) <- "Residual"
-        
-        if (all(df$exp != 0, na.rm = T)) {
-          subNull <- nullDF[grepl("ZI_", names(nullDF))]
-          zi_other <- rep(0, length(subNull))
-          names(zi_other) <- names(subNull)
-          varcor_df <- c(cond_other, zi_other, residual)
-        } else if (length(all.vars(stats::as.formula(ziformula))) != 0) {
-          zi_other <- unlist(glmmTMB::VarCorr(modelRes)$zi)
-          names(zi_other) <- paste("ZI", names(zi_other), sep = "_")
-          varcor_df <- c(cond_other, zi_other, residual)
-        } else {
-          varcor_df <- c(cond_other, residual)
-        }
-        
-        varDecomp <- varcor_df / sum(varcor_df)
-        return(varDecomp)
-      },
-      error = function(e) {
-        nullDF
-      }
-    )
-    return(output_vector)
-  }
-  
+  modelingList <-  lapply(rownames(modelingData), function(XX){
+      
+          
+            df <- data.frame(
+                    exp = as.numeric(modelingData[XX, ]),
+                    MetaDF, stringsAsFactors = FALSE
+                  )
+      
+              list(df, continuousFormula, ziformula, zi_threshold, nullDF)
+
+      })
+                                    
+
   # Make your clusters for efficient parallelization
   if (numCores > 1) {
     cl <- parallel::makeCluster(numCores)
@@ -213,14 +162,10 @@ varZIGLMM <- function(TSAM_Object,
       library(glmmTMB)
     })
 
-    parallel::clusterExport(
-      cl = cl, varlist = c("continuousFormula", "ziformula", "zi_threshold", "modelingData", "MetaDF", "individualVarZIGLMM", "nullDF"),
-      envir = environment()
-    )
-
-    varDecompList <- pbapply::pblapply(cl = cl, X = rownames(modelingData), individualVarZIGLMM)
+    varDecompList <- pbapply::pblapply(cl = cl, X = modelingList, individualVarZIGLMM)
+      
   } else {
-    varDecompList <- pbapply::pblapply(cl = NULL, X = rownames(modelingData), function(x) {
+    varDecompList <- pbapply::pblapply(cl = NULL, X = modelingList, function(x) {
       individualVarZIGLMM(x)
     })
   }
@@ -237,78 +182,80 @@ varZIGLMM <- function(TSAM_Object,
 }
 
 
-# #' @title \code{individualVarZIGLMM }
-# #' 
-# #' @description \code{individualVarZIGLMM } Runs ZI-GLMM on data provided and returns variance decomposition across random effects. Wirtten for parallelization.
-# #' 
-# #' @param refList. A list where the first index is a data.frame to use for modeling, and the second is the formula for modeling.
-# #' 
-# #' @return A linear model
-# #' @noRd
-# #' 
-# individualVarZIGLMM <- function(x) {
-#   df <- data.frame(
-#     exp = as.numeric(modelingData[x, ]),
-#     MetaDF, stringsAsFactors = FALSE
-#   )
-# 
-# 
-#   output_vector <- tryCatch(
-#     {
-#       if (all(df$exp != 0, na.rm = T)) {
-#         modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
-#           ziformula = ~0,
-#           data = df,
-#           family = stats::gaussian(),
-#           REML = TRUE
-#         )
-#       } else if (sum(df$exp == 0, na.rm = T) / length(df$exp) < zi_threshold) {
-#         df$exp[df$exp == 0] <- NA
-#         modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
-#           ziformula = ~0,
-#           data = df,
-#           family = stats::gaussian(),
-#           REML = TRUE
-#         )
-#       } else {
-#         modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
-#           ziformula = stats::as.formula(ziformula),
-#           data = df,
-#           family = stats::gaussian(),
-#           REML = TRUE
-#         )
-#       }
-# 
-#       if (!modelRes$sdr$pdHess) {
-#         return(nullDF)
-#       }
-# 
-# 
-#       cond_other <- unlist(glmmTMB::VarCorr(modelRes)$cond)
-#       names(cond_other) <- paste("Cond", names(cond_other), sep = "_")
-#       residual <- as.vector(attr(glmmTMB::VarCorr(modelRes)$cond, "sc")^2)
-#       names(residual) <- "Residual"
-# 
-#       if (all(df$exp != 0, na.rm = T)) {
-#         subNull <- nullDF[grepl("ZI_", names(nullDF))]
-#         zi_other <- rep(0, length(subNull))
-#         names(zi_other) <- names(subNull)
-#         varcor_df <- c(cond_other, zi_other, residual)
-#       } else if (length(all.vars(stats::as.formula(ziformula))) != 0) {
-#         zi_other <- unlist(glmmTMB::VarCorr(modelRes)$zi)
-#         names(zi_other) <- paste("ZI", names(zi_other), sep = "_")
-#         varcor_df <- c(cond_other, zi_other, residual)
-#       } else {
-#         varcor_df <- c(cond_other, residual)
-#       }
-# 
-#       varDecomp <- varcor_df / sum(varcor_df)
-#       return(varDecomp)
-#     },
-#     error = function(e) {
-#       nullDF
-#     }
-#   )
-#   return(output_vector)
-# }
+#' @title \code{individualVarZIGLMM }
+#' 
+#' @description \code{individualVarZIGLMM } Runs ZI-GLMM on data provided and returns variance decomposition across random effects. Wirtten for parallelization.
+#' 
+#' @param refList. A list where the first index is a data.frame to use for modeling, and the second is the formula for modeling.
+#' 
+#' @return A linear model
+#' @noRd
+#' 
+individualVarZIGLMM <- function(x) {
+    
+  df <- x[[1]]
+  continuousFormula = x[[2]]
+  ziformula  = x[[3]]
+  zi_threshold = x[[4]]
+  nullDF <- x[[5]]
+    
+  
+  output_vector <- tryCatch(
+    {
+      if (all(df$exp != 0, na.rm = T)) {
+        modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
+          ziformula = ~0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      } else if (sum(df$exp == 0, na.rm = T) / length(df$exp) < zi_threshold) {
+        df$exp[df$exp == 0] <- NA
+        modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
+          ziformula = ~0,
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      } else {
+        modelRes <- glmmTMB::glmmTMB(stats::as.formula(continuousFormula),
+          ziformula = stats::as.formula(ziformula),
+          data = df,
+          family = stats::gaussian(),
+          REML = TRUE
+        )
+      }
+
+      if (!modelRes$sdr$pdHess) {
+        return(nullDF)
+      }
+
+
+      cond_other <- unlist(glmmTMB::VarCorr(modelRes)$cond)
+      names(cond_other) <- paste("Cond", names(cond_other), sep = "_")
+      residual <- as.vector(attr(glmmTMB::VarCorr(modelRes)$cond, "sc")^2)
+      names(residual) <- "Residual"
+
+      if (all(df$exp != 0, na.rm = T)) {
+        subNull <- nullDF[grepl("ZI_", names(nullDF))]
+        zi_other <- rep(0, length(subNull))
+        names(zi_other) <- names(subNull)
+        varcor_df <- c(cond_other, zi_other, residual)
+      } else if (length(all.vars(stats::as.formula(ziformula))) != 0) {
+        zi_other <- unlist(glmmTMB::VarCorr(modelRes)$zi)
+        names(zi_other) <- paste("ZI", names(zi_other), sep = "_")
+        varcor_df <- c(cond_other, zi_other, residual)
+      } else {
+        varcor_df <- c(cond_other, residual)
+      }
+
+      varDecomp <- varcor_df / sum(varcor_df)
+      return(varDecomp)
+    },
+    error = function(e) {
+      nullDF
+    }
+  )
+  return(output_vector)
+}
 

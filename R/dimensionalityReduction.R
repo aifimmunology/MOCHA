@@ -28,11 +28,12 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
       "Please install 'irlba' to proceed."
     )
   }
+
   allCellTypes <- names(SummarizedExperiment::assays(SampleTileObj))
   if (all(tolower(cellType) == "all")) {
     fullObj <- combineSampleTileMatrix(SampleTileObj)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
-  } else if (all(cellType %in% allCellTypes)) {
+  } else if (all(cellType %in% allCellTypes) & cellType != 'counts') {
     newTSAM <- subsetMOCHAObject(SampleTileObj,
       subsetBy = "celltype",
       groupList = cellType, subsetPeaks = TRUE,
@@ -40,11 +41,31 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     )
     fullObj <- combineSampleTileMatrix(newTSAM)
     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+  } else if (all(cellType %in% allCellTypes) & cellType == 'counts') {
+
+    fullObj <- SampleTileObj
+    countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+      
   } else {
     stop("cellType not found. SampleTileObj must contain the given cellType.")
   }
 
   countMat[is.na(countMat)] <- 0
+    
+  #Check for empty columns. 
+  colSumVec <- colSums(countMat)
+  #Pull out sample metadata
+  sampleMeta <- SummarizedExperiment::colData(fullObj)
+  if(any(colSumVec == 0)){
+      
+      
+    countMat <- countMat[,colSumVec!=0]
+    totalRemoved <- sum(colSumVec == 0)
+    warning(stringr::str_interp(" ${totalRemoved} Columns were empty and removed."))
+      
+    sampleMeta2 <- sampleMeta[colSumVec!=0,]
+      
+   }
 
   if (tolower(method) == "lsi") {
     if (!requireNamespace("irlba", quietly = TRUE)) {
@@ -83,8 +104,9 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
     DimReducObj <- SummarizedExperiment::SummarizedExperiment(
       assayList1,
       metadata = newMetadata,
-      colData = SummarizedExperiment::colData(fullObj)
+      colData =sampleMeta
     )
+      
   } else if (tolower(method) == "pca") {
 
     # SVD step, using 30 components
@@ -114,7 +136,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
       assayList1,
       rowData = t(loadings),
       metadata = newMetadata,
-      colData = SummarizedExperiment::colData(fullObj)
+      colData = sampleMeta
     )
   } else {
     stop("Method not recognized. Must be LSI or PCA.")
@@ -159,10 +181,52 @@ bulkUMAP <- function(SEObj,
   }
 
   set.seed(seed)
-  if (!any(names(SummarizedExperiment::assays(SEObj)) == assay)) {
-    stop("Assay was not represented in the SEObj. ")
+
+  allCellTypes <- names(SummarizedExperiment::assays(SEObj))
+  if(assay %in% c("LSI","PCA")){
+    countMat <- t(SummarizedExperiment::assays(SEObj)[[assay]])
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
+  }else if (all(tolower(assay) == "all")) {
+    fullObj <- combineSampleTileMatrix(SEObj)
+    countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
+  } else if (all(assay %in% allCellTypes) & assay != 'counts') {
+    newTSAM <- subsetMOCHAObject(SEObj,
+      subsetBy = "celltype",
+      groupList = assay, subsetPeaks = TRUE,
+      verbose = verbose
+    )
+    fullObj <- combineSampleTileMatrix(newTSAM)
+    countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
+      
+  }else if(all(assay %in% allCellTypes) & assay == 'counts'){
+     fullObj <- SEObj
+     countMat <- SummarizedExperiment::assays(fullObj)[[1]]
+    sampleMeta <- SummarizedExperiment::colData(SEObj)
+  } else {
+    stop("Assay was not represented in the SEObj.")
   }
-  countMat <- t(SummarizedExperiment::assays(SEObj)[[assay]])
+    
+  if(!assay %in% c('LSI', 'PCA')){
+  
+      countMat[is.na(countMat)] <- 0
+      
+      #Check for empty columns. 
+      colSumVec <- colSums(countMat)
+      if(any(colSumVec == 0)){
+
+
+        countMat <- countMat[,colSumVec!=0]
+        totalRemoved <- sum(colSumVec == 0)
+        warning(stringr::str_interp(" ${totalRemoved} Columns were empty and removed."))
+
+        sampleMeta <- sampleMeta[colSumVec!=0,]
+       }
+      countMat <- t(countMat)
+      components = c(1:dim(countMat)[2])
+
+   }
 
   if (any(is.na(countMat))) {
     stop("The given matrix contains NA. Remove and try again.")
@@ -195,7 +259,7 @@ bulkUMAP <- function(SEObj,
 
     fullUMAP <- dplyr::left_join(
       subUMAP,
-      as.data.frame(SummarizedExperiment::colData(SEObj)),
+      as.data.frame(sampleMeta),
       by = "Sample"
     )
 

@@ -185,7 +185,9 @@ plotRegion <- function(countSE,
   }
 
   countdf <- do.call("rbind", as.list(SummarizedExperiment::assays(countSE)))
-
+  # Factor the groups to determine the order when faceting. 
+  countdf$Groups = factor(countdf$Groups, level = SummarizedExperiment::assayNames(countSE))
+  
   # Extract region from region string as granges
   regionGRanges <- countdf_to_region(countdf = countdf)
 

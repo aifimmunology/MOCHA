@@ -1,7 +1,7 @@
 Package: MOCHA
 Type: Package
 Title: Modeling for Single-Cell Open Chromatin Analysis
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: 
     c(person(given = "Samir",
            family = "Rachid Zaim",
@@ -43,7 +43,7 @@ Description: A statistical framework and analysis tool for open chromatin
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Depends: R (>= 4.1.0)
 biocViews:
 Imports:

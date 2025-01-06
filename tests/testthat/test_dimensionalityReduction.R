@@ -31,7 +31,8 @@ if (requireNamespace("irlba", quietly = TRUE) &&
     SummarizedExperiment::assays(SampleTileMatrix)[[2]] <- c3
 
     capture.output(
-      LSIObj <- MOCHA::bulkDimReduction(SampleTileMatrix, cellType = "all", componentNumber = 2)
+      LSIObj <- MOCHA::bulkDimReduction(SampleTileMatrix, cellType = "all", 
+                                        componentNumber = 2)
     )
 
     expect_snapshot(
@@ -52,7 +53,7 @@ if (requireNamespace("irlba", quietly = TRUE) &&
 
     expect_error(
       LSIse <- MOCHA::bulkDimReduction(SampleTileMatrix, cellType = "all", componentNumber = 2),
-      "starting vector near the null space"
+      "invalid class "
     )
   })
 }
