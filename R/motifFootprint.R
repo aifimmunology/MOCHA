@@ -706,7 +706,7 @@ getBias <- function(insertList1){
 #'
 #' @return A SummarizedExperiment containing motif footprinting data 
 #'
-#' @export
+#' @noRd
 #' @keywords downstream
 findFootprints <- function(SampleTileObj,
                            motifName = 'Motifs',
