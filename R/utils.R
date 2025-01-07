@@ -70,6 +70,21 @@ dehashIter <- function(cellIDs, oldfrags){
 }
 
 
+# To fix wierd cell type names within metadata, so that it doesn't break rownames and assay names
+fixCellTypeNames <- function(cellNames){
+
+    ##fix spaces and dashes
+    cellNames = gsub(" |-","_", cellNames)
+    
+    #fix + and - signs
+    cellNames = gsub("\\+","pos", cellNames)
+    cellNames = gsub("\\-","neg", cellNames)
+    cellNames = gsub("\\\\", "_", cellNames)
+
+    return(cellNames)
+}
+
+
 
 # Function to split the output of getPopFrags into a list
 # of lists of GRanges, one named for each celltype.
@@ -218,12 +233,12 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   if (!methods::is(dbName, "character")) {
     stop(
       "dbName must be a character string. ",
-      "Please provide TxDb or OrgDb as a string."
+      "Please provide TxDb, OrgDb, or BSgenome as a string."
     )
   }
 
-  if (!type %in% c("OrgDb", "TxDb")) {
-    stop('Invalid type. Type must be either "OrgDb" or "TxDb".')
+  if (!type %in% c("OrgDb", "TxDb", 'BSgenome')) {
+    stop('Invalid type. Type must be either "OrgDb", "TxDb", or "BSgenome".')
   }
 
   ok <- suppressWarnings(require(dbName,
@@ -245,7 +260,7 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   if (!methods::is(db, type)) {
     stop(dbName, " doesn't look like a valid ", type, " data package")
   }
-  db
+  return(db)
 }
 
 
@@ -285,10 +300,12 @@ getCellTypeTiles <- function(object, cellType) {
   } else if (class(object)[1] == "RangedSummarizedExperiment") {
     all_ranges <- SummarizedExperiment::rowRanges(object)
 
-    if (sum(cellType == names(SummarizedExperiment::assays(object))) != 1) {
-      stop("Please provide a single cell type, which must be present in the SampleTileObject. cellType is either not found, or is a list of multiple cell types.")
+    if (!all(cellType %in% SummarizedExperiment::assayNames(object))) {
+      stop("Please provide cell types that are present in the SampleTileObject.")
     } else {
-      subRange <- all_ranges[unlist(GenomicRanges::mcols(all_ranges)[, cellType])]
+
+      peak_subSet = GenomicRanges::mcols(all_ranges)[, cellType, drop = FALSE]
+      subRange <- all_ranges[apply(peak_subSet,1, any)]
     }
 
     return(subRange)
