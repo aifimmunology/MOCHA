@@ -297,14 +297,29 @@ plotRegion <- function(countSE,
     }
   }
 
+  chromName = as.character( GenomicRanges::seqnames(regionGRanges))
+
   ## Generate Link track
-  if (!is.null(linkdf) &
-    any(linkdf$start + 250 > GenomicRanges::start(regionGRanges) &
-      linkdf$end - 250 < GenomicRanges::end(regionGRanges))) {
-    p5 <- get_link_plot(
-      regionGRanges, legend.position,
-      relativeHeights, linkdf
-    )
+  if (!is.null(linkdf)){
+
+    if(any(linkdf$start1 + 250 >= GenomicRanges::start(regionGRanges) &
+      linkdf$end1 - 250 <= GenomicRanges::end(regionGRanges) & 
+    linkdf$start2 + 250 >= GenomicRanges::start(regionGRanges) &
+      linkdf$end2 - 250 <= GenomicRanges::end(regionGRanges) &
+     linkdf$chr %in% chromName)) {
+      
+        linkdf = dplyr::filter(linkdf, 
+                        start1 + 250 >= GenomicRanges::start(regionGRanges) &
+                              end1 - 250 <= GenomicRanges::end(regionGRanges) & 
+                              start2 + 250 >= GenomicRanges::start(regionGRanges) &
+                              end2 - 250 <= GenomicRanges::end(regionGRanges) &
+                               chr %in% chromName)
+          
+        p5 <- get_link_plot(
+          regionGRanges, legend.position,
+          relativeHeights, linkdf
+        )
+    }
   }
 
   # Combine plots P1...P4
@@ -348,7 +363,21 @@ plotRegion <- function(countSE,
 
   # Links
   if (!is.null(linkdf)) {
-    track_list <- c(track_list, list("Links" = p5))
+
+    if(any(linkdf$start1 + 250 > GenomicRanges::start(regionGRanges) &
+      linkdf$end1 - 250 < GenomicRanges::end(regionGRanges) & 
+      linkdf$start2 + 250 > GenomicRanges::start(regionGRanges) &
+      linkdf$end2 - 250 < GenomicRanges::end(regionGRanges) &
+      linkdf$chr %in% chromName)){
+        
+        track_list <- c(track_list, list("Links" = p5))
+        
+    }else{
+
+        warning('linkdf is provided, but does not overlap with the provided region')
+
+    }
+    
   }
 
  
@@ -411,7 +440,7 @@ plotRegion <- function(countSE,
                                 legend.position = legend.position, legendMerge = TRUE,
                                 relativeRatio = 0.5)
     }
-    
+
     #Add legend and g_tracks together
     g_tracks <- .setUpLegend(g_tracks, legend1, 
             legend.position = legend.position, 

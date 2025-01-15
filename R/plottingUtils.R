@@ -947,7 +947,10 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
                           relativeHeights, linkdf) {
   start <- end <- y <- Correlation <- NULL
 
-  linkdf2 <- dplyr::filter(linkdf, .data$start + 250 > GenomicRanges::start(regionGRanges) & end - 250 < GenomicRanges::end(regionGRanges))
+  linkdf2 <- dplyr::filter(linkdf, start1 + 250 > GenomicRanges::start(regionGRanges) &
+                           end1 - 250 < GenomicRanges::end(regionGRanges) &
+                           start2 + 250 > GenomicRanges::start(regionGRanges) & 
+                           end2 - 250 < GenomicRanges::end(regionGRanges))
 
   ## Set Curvature to fit window
   if (is.null(legend.position) & relativeHeights["Links"] / 3 <= 0.5) {
@@ -959,11 +962,25 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
   } else {
     curveVal <- 0.4
   }
+  ## Set it up so it will work with correlations. 
+  if(!any(colnames(linkdf2) %in% 'Correlation')){
+    linkdf2$Correlation = linkdf2$Estimate
+  }
+  linkdf2$Association = linkdf2$Correlation
+  ## Alter directon so that the curvature is right. 
+  if(any(linkdf2$start1 > linkdf2$end2)){
+      start1_saved = linkdf2$start1
+      end2_saved = linkdf2$end2
+      new_start1 = ifelse(linkdf2$start1 > linkdf2$end2, linkdf2$end2, linkdf2$start1 )
+      new_end2 = ifelse(linkdf2$start1 > linkdf2$end2,linkdf2$start1, linkdf2$end2 )
+      linkdf2$start1 = new_start1
+      linkdf2$end2 = new_end2
+  }
 
   p5 <- ggplot2::ggplot() +
     ggplot2::geom_curve(ggplot2::aes(
-      x = start + 250, xend = end - 250,
-      y = y, yend = y, color = Correlation
+      x = start1 + 250, xend = end2 - 250,
+      y = y, yend = y, color = Association
     ),
     curvature = curveVal,
     data = cbind(linkdf2, y = rep(0, dim(linkdf2)[1]))
@@ -973,16 +990,16 @@ get_link_plot <- function(regionGRanges, legend.position = NULL,
     ggplot2::xlab(NULL) +
     ggplot2::ylim(-1, 0) +
     ggplot2::scale_colour_viridis_c(breaks = c(
-      ceiling(10 * min(linkdf2$Correlation)) / 10,
+      ceiling(10 * min(linkdf2$Association)) / 10,
       0,
-      floor(10 * max(linkdf2$Correlation)) / 10
+      floor(10 * max(linkdf2$Association)) / 10
     )) +
     #ggplot2::coord_cartesian(clip = "off", ylim = c(-0.75, 0)) +
     ggplot2::theme(
       panel.grid = ggplot2::element_blank(), panel.border = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank(),
       axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank()
-    )
+    ) + xlim(as.numeric(GenomicRanges::start(regionGRanges)), as.numeric(GenomicRanges::end(regionGRanges)))
 
   return(p5)
 }

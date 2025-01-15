@@ -1,6 +1,7 @@
 # FindCoAccessibleLinks works on a 3 sample test dataset
 
         Correlation                  Tile1                  Tile2
+             <lgcl>                 <char>                 <char>
      1:          NA chr1:10009500-10009999 chr1:10002500-10002999
      2:          NA chr1:10009500-10009999 chr1:10398000-10398499
      3:          NA chr1:10009500-10009999   chr1:9644500-9644999

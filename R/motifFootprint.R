@@ -263,7 +263,8 @@ motifFootprint <- function(SampleTileObj,
             #CellType_Motif for index name
             list_index_name = paste(x, YY, sep ='__')
             # Add motif & cell type info
-            experimentList1 = append(experimentList1, list(matrix2))
+            #typeCast matrix2 as a sparse matrix
+            experimentList1 = append(experimentList1, list(as(matrix2, 'sparseMatrix')))
             names(experimentList1)[length(experimentList1)] = list_index_name
             
             if(!all(colData2$Index %in% colData1_tmp$Index)){
