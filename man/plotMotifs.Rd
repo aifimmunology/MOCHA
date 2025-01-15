@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyzeFootprints.R
 \name{plotMotifs}
 \alias{plotMotifs}
-\title{Generate motif footprint metrics and/or statistics across samples, cell types, and motifs}
+\title{plotMotifs - plots motif footprints, exported from motifFootprint}
 \usage{
 plotMotifs(
   motifSE,
@@ -10,6 +10,7 @@ plotMotifs(
   groupColumn = NULL,
   returnDF = FALSE,
   returnPlotList = FALSE,
+  topPercentage = 1,
   plotIndividualRegions = TRUE,
   relHeights = c(0.3, 0.7)
 )
@@ -21,25 +22,27 @@ plotMotifs(
 
 \item{groupColumn}{An optional string, that will contain the group-level labels for either calling footprints as significant, or for comparing motif footprintings stats betweem groups. Default is null, at which point no wilcoxon tests will be conducted. groupColumn can be a sample-level group from the MOCHA's object colData slot, 'CellType' (if you want to compare across cell types), or 'Motif' if you want to compare across motifs.}
 
-\item{callFootprint}{A boolean, to determine whether to call footprints as significant across samples. Requires sample-specific motif footprinting.}
+\item{returnDF}{Boolean, default is FALSE, determines whether or not to return a data.frame, rather than plotting.}
 
-\item{motifSize}{A number describing the approximate motif size you want to use, when looking at the insertion rate over the motif core. Default is 6 (3 bp up and 3 bp downstream)}
+\item{returnPlotList}{A boolean, default is false, determines whether to return the full plot, or a list of subplots (ggplot2-based) for custom arrangements.}
 
-\item{searchWidth}{A number, describing the maximum motif footprint width. The function will look for the maximum insertions within +/- this number of the motif center. Default is 50.}
+\item{plotIndividualRegions}{A boolean, default is TRUE, that determines whether to plot the individual motif regions. If FALSE, only the motif footprint will be returned.}
 
-\item{background}{An optional string if you want to compare two different conditions. This string is the background group that you want to use for running wilcoxon tests.}
+\item{relHeights}{A vector of two numbers, describing the relative space in the plot given to the motif summary and individual location plot.}
+
+\item{topPercentages.}{A number 1 or less, that describes the top percent of motif locations to use for plotting. If 0.9, then the top 90% of regions, by total insertions, will be used in the plot. If 0.1, then the top 10% of regions will be used. Default of 1 uses all regions.}
 }
 \value{
 a data.frame, containing motif footprint stats.
 }
 \description{
-Identifies the width and depth of a given motif for a given group & cell type. Requires the output of motifFootprint. If a groupColumn and background is provided, the function will also conduct wilcoxon tests on the motif baseline, depth, and width between groups.
+Generates plot
 }
 \examples{
 \dontrun{
-summaryStats <- MOCHA::motifStats(
+p1 <- MOCHA::plotMotifs(
   motifSE,
-  footprint = "CD4 Naive_ARID5A", groupColumn = 'COVID_status', background = 'Negative')
+  footprint = "CD4_Naive_ARID5A", groupColumn = 'COVID_status', topPercentages = 0.1)
 }
 
 }
