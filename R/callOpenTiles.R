@@ -729,7 +729,7 @@ setMethod(
   }
 
   allFragmentCounts[is.na(allFragmentCounts)] <- 0
-
+                                
   # Create sample metadata from cellColData using util function
   # "Sample" is the enforced col in ArchR containing the
   # sample IDs which correspond to the arrow files.
@@ -739,6 +739,23 @@ setMethod(
     sampleDataFromCellColData(cellColData, sampleLabel = sampleColumn)
   )
 
+ # Match cell populations in allCellCounts/allFragmentCounts to those
+  # in additionalMetaData, in case of NA cell populations
+  if (length(additionalMetaData) >= 1) {
+    allCellCounts <- allCellCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),
+      ,
+      drop = FALSE
+    ]
+    
+    allFragmentCounts <- allFragmentCounts[
+      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
+      ,
+      drop = FALSE
+    ]
+  }
+
+ ### Let's put a full list together, and then order all of the additional metadata the same way.
   sumDataAssayList <- append(
     list(
       "CellCounts" = allCellCounts,
@@ -797,33 +814,11 @@ setMethod(
     }
   }
   
-  # Match cell populations in allCellCounts/allFragmentCounts to those
-  # in additionalMetaData, in case of NA cell populations
-  if (length(additionalMetaData) >= 1) {
-    allCellCounts <- allCellCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allCellCounts)),
-      ,
-      drop = FALSE
-    ]
-    
-    allFragmentCounts <- allFragmentCounts[
-      match(rownames(additionalMetaData[[1]]), rownames(allFragmentCounts)),
-      ,
-      drop = FALSE
-    ]
-  }
-  
   summarizedData <- SummarizedExperiment::SummarizedExperiment(
-    append(
-      list(
-        "CellCounts" = allCellCounts,
-        "FragmentCounts" = allFragmentCounts
-      ),
-      additionalMetaData
-    ),
+   sumDataAssayList,
     colData = sampleData
   )
- 
+
   # Add experimentList to MultiAssayExperiment
   names(experimentList) <- cellPopulations
   tileResults <- MultiAssayExperiment::MultiAssayExperiment(
