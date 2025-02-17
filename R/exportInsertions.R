@@ -47,10 +47,37 @@ exportLocalFootprints <- function(SampleTileObj,
                                     ){
     
     score <- start <- seqnames <- NULL
-    if (!any(names(SummarizedExperiment::assays(SampleTileObj)) %in% cellPopulation)) {
-        stop("cellPopulation was not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
+
+    allCellTypes = names(SummarizedExperiment::assays(SampleTileObj)
+    if(all(tolower(cellPopulation) == 'all')){
+        cellPopulation = allCellTypes
+    }
+    
+    if (!all(cellPopulation %in% allCellTypes))) {
+        stop("cellPopulation(s) was/were not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
     }
 
+    if(length(cellPopulation) > 1){
+        allPaths = lapply(cellPopulation, function(ZZ){
+                    gc()
+                    exportLocalFootprints(SampleTileObj,
+                                     cellPopulation == ZZ,
+                                     outDir,
+                                     windowSize,
+                                     groupColumn ,
+                                     subGroups,
+                                     sampleSpecific,
+                                     normTn5,
+                                     force,
+                                     slow,
+                                     verbose,
+                                     numCores)
+            })
+        gc()
+        names(allPaths) = cellPopulation
+        return(allPaths)
+    }
+        
     sourcedir <- SampleTileObj@metadata$Directory
     metaFile <- SummarizedExperiment::colData(SampleTileObj)
     
