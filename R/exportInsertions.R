@@ -48,12 +48,12 @@ exportLocalFootprints <- function(SampleTileObj,
     
     score <- start <- seqnames <- NULL
 
-    allCellTypes = names(SummarizedExperiment::assays(SampleTileObj)
+    allCellTypes = names(SummarizedExperiment::assays(SampleTileObj))
     if(all(tolower(cellPopulation) == 'all')){
         cellPopulation = allCellTypes
     }
     
-    if (!all(cellPopulation %in% allCellTypes))) {
+    if (!all(cellPopulation %in% allCellTypes)){
         stop("cellPopulation(s) was/were not found within SampleTileObj. Check available cell populations with `colData(SampleTileObj)`.")
     }
 
