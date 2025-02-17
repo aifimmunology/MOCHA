@@ -48,7 +48,8 @@ exportLocalFootprints <- function(SampleTileObj,
     
     score <- start <- seqnames <- NULL
 
-    allCellTypes = names(SummarizedExperiment::assays(SampleTileObj))
+    allCellTypes = SummarizedExperiment::assayNames(SampleTileObj)
+    
     if(all(tolower(cellPopulation) == 'all')){
         cellPopulation = allCellTypes
     }
@@ -61,7 +62,7 @@ exportLocalFootprints <- function(SampleTileObj,
         allPaths = lapply(cellPopulation, function(ZZ){
                     gc()
                     exportLocalFootprints(SampleTileObj,
-                                     cellPopulation == ZZ,
+                                     cellPopulation = ZZ,
                                      outDir,
                                      windowSize,
                                      groupColumn ,
@@ -81,7 +82,6 @@ exportLocalFootprints <- function(SampleTileObj,
     sourcedir <- SampleTileObj@metadata$Directory
     metaFile <- SummarizedExperiment::colData(SampleTileObj)
     
-    
     if(numCores > 6){
     
         warning("You have set the number of cores (numCores) to be greater than 5. Be careful because more parallelization can lead to much higher RAM usage. We recommend less than 5 cores. ")
@@ -90,7 +90,7 @@ exportLocalFootprints <- function(SampleTileObj,
     
     ## Check and set directory for output. 
     if (is.null(outDir)){
-        outdir <- SampleTileObj@metadata$Directory
+        outDir <- SampleTileObj@metadata$Directory
     } else if (!dir.exists(outDir)){
         dir.create(outDir)
     }
@@ -187,7 +187,7 @@ exportLocalFootprints <- function(SampleTileObj,
         
         ##Print out the name of the insertion file. 
         type <- paste0("window", windowSize)
-        outfile <- file.path(outdir, paste0(
+        outfile <- file.path(outDir, paste0(
             cellPopulation, "__", sampleName, "__", type, ".bw"
         ))
         
@@ -253,7 +253,7 @@ exportLocalFootprints <- function(SampleTileObj,
       
       for(one_group in subGroups){
           
-        outfile <- file.path(outdir, paste0(
+        outfile <- file.path(outDir, paste0(
             cellPopulation, "__", groupColumn, "_", one_group, "__", type, ".bw"
         ))
         outfile <- gsub(" |\\.","_", outfile)
