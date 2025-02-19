@@ -120,6 +120,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
       if(dim(sumGroup)[1] != 2 | any(sumGroup[,2] < 3)){
           message('Less than three samples available per group for this comparison.',
                   'Please check sample number (within colData slot) or cell counts (see summarizedData within the metadata slot).')
+          DAT_list = append(DAT_list, list(NULL))
            next
           
       }
