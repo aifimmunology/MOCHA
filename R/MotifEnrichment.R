@@ -79,7 +79,7 @@ getCellTypeMotifs <- function(STM, cellPopulation, MotifSetName = 'Motifs', spec
               # minimum motif size is 6. 
       })
   if(asGRangesList){
-    subMotifs <- as('GRangesList', subMotifs)
+    subMotifs <- methods::as('GRangesList', subMotifs)
   }
   return(subMotifs)
 }

@@ -7,13 +7,16 @@
 #' @param specMotif An optional string specifying which motif to analyze. If blank, it will analyze all motifs. 
 #' @param regions An optional GRanges object or list of strings in the format chr1:100-200, specifiying which specific regions to look at when conducting motif footprinting. 
 #' @param cellPopulations A list of cell populations to conduct motif footprinting on. 
+#' @param windowSize A number, representing the window to analyze around each motif location. Default is 500 bp. 
+#' @param groupColumn A string, corresponding to a metadata column within the SampleTileObj, that describes the groups by which you want to summarize motif footprints. If sampleSpecific = FALSE, then motifFootprint will average insertions across samples within each group. 
 #' @param subGroups A list of subgroups, if you want to only look at specific groups within the groupColumn. 
 #' @param sampleSpecific A boolean for whether to generate average motif footprints within each group, or to return a data.frame for all samples. 
 #' @param normTn5 A boolean for whether to normalize by Tn5 insertion bias. 
 #' @param smoothTn5 The window size for smoothen Tn5 insertions at each location. Ideal when looking at motif footprints over a smaller number of regions, rarer cell types, or sparse regions, where local noise can make it harder to see the overall pattern. Can be set to 0.
 #' @param numCores Number of cores to parallelize over
 #' @param force Boolean. If FALSE, it will through an error if there's an empty sample or not overlap with regions and motifs. If TRUE will ignore these issues and continue (or return NULL)
-#'
+#' @param verbose Boolean. Default is FALSE. Will print more messages if TRUE. 
+#' 
 #' @return A SummarizedExperiment containing motif footprinting data 
 #'
 #' @export
@@ -34,7 +37,7 @@ motifFootprint <- function(SampleTileObj,
                           numCores = 1,
                            force = FALSE,
                           verbose = FALSE) {
-  . <- idx <- score <- NULL
+  . <- idx <- score <- width <- Group <- Sample <- Location <- Index <- NULL
   cellNames <- SummarizedExperiment::assayNames(SampleTileObj)
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
   outDir <- SampleTileObj@metadata$Directory
@@ -257,14 +260,14 @@ motifFootprint <- function(SampleTileObj,
                                               Location ~ Sample + Position, fun.aggregate = sum, 
                                                 value.var = 'score', sep = "__")
             rm(allNorms)
-            matrix2 = as(matrix1[,!'Location'], 'matrix')
+            matrix2 = methods::as(matrix1[,!'Location'], 'matrix')
             rownames(matrix2) = matrix1[,Location]
             rm(matrix1)
             #CellType_Motif for index name
             list_index_name = paste(x, YY, sep ='__')
             # Add motif & cell type info
             #typeCast matrix2 as a sparse matrix
-            experimentList1 = append(experimentList1, list(as(matrix2, 'sparseMatrix')))
+            experimentList1 = append(experimentList1, list(methods::as(matrix2, 'sparseMatrix')))
             names(experimentList1)[length(experimentList1)] = list_index_name
             
             if(!all(colData2$Index %in% colData1_tmp$Index)){
@@ -320,7 +323,16 @@ motifFootprint <- function(SampleTileObj,
         
                    
 addInsertionBias <- function(SampleTileObj, numCores = 1, verbose = TRUE){
+
+
+    if (!requireNamespace("Biostrings", quietly = TRUE)) {
+          stop(
+          "Package 'Biostrings' is required for calculating insertion bias.",
+          "Please install Biostrings from Bioconductor to continue: BiocManager::install('Biostrings')"
+          )
+    }
     
+    . <- Count <- score <- NULL
     ## Pull in Genome database
     genome_db = SampleTileObj@metadata$Genome
     outDir = SampleTileObj@metadata$Directory
@@ -431,6 +443,8 @@ addInsertionBias <- function(SampleTileObj, numCores = 1, verbose = TRUE){
 #' @noRd
       
 normMotifs <- function(list1){
+
+    position <- V1 <- partition <- score <- start <- end <- Mid <- seqnames <- NULL
     insertList = list1[[1]]
     motifPos = list1[[2]]
     windowSize = list1[[3]]
@@ -481,13 +495,13 @@ normMotifs <- function(list1){
                     rm(meanRow)
                     ## Repeat process for median over the windows
                     insertDT = as.data.table(plyranges::join_overlap_left(insertGR2, windowsGR2))
-                    meanRow = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
+                    meanRow = insertDT[,stats::median(score, na.rm = TRUE),by=list(position, partition)]
                     rm(insertDT)
                     ## overwrite previous score with the new one.
                     insertGR2$score = meanRow[,V1][match(positionList, meanRow[,position])]
                     rm(meanRow)
                     insertList = c(insertList, insertGR2)
-                    rm(InsertGR2)
+                    rm(insertGR2)
                     
                 }
                 return(insertList)
@@ -528,6 +542,8 @@ normMotifs <- function(list1){
 #' @noRd
       
 normMotifs2 <- function(list1){
+
+    position <- V1 <- partition <- score <- start <- end <- Mid <- seqnames <- NULL
     
     insertList = list1[[1]]
     motifPos = list1[[2]]
@@ -608,13 +624,13 @@ normMotifs2 <- function(list1){
                     rm(meanRow)
                     ## Repeat process for median over the windows
                     insertDT = as.data.table(plyranges::join_overlap_left(insertGR2, windowsGR2))
-                    meanRow = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
+                    meanRow = insertDT[,stats::median(score, na.rm = TRUE),by=list(position, partition)]
                     rm(insertDT)
                     ## overwrite previous score with the new one.
                     insertGR2$score = meanRow[,V1][match(positionList, meanRow[,position])]
                     rm(meanRow)
                     insertList = c(insertList, insertGR2)
-                    rm(InsertGR2)
+                    rm(insertGR2)
                     
                 }
                 return(insertList)
@@ -656,6 +672,7 @@ normMotifs2 <- function(list1){
 #' @noRd
 
 getBias <- function(insertList1){
+    value <- NULL
     insertions = insertList1[[1]]
     genome_db = insertList1[[2]]
     genome <- getAnnotationDbFromInstalledPkgname(dbName = genome_db, type = "BSgenome")
@@ -724,7 +741,7 @@ findFootprints <- function(SampleTileObj,
                           numCores = 1,
                            force = FALSE,
                           verbose = FALSE) {
-  . <- idx <- score <- NULL
+  . <- idx <- score <- Group <- Sample <- Location <- pval <- pval_adj <- NULL
   cellNames <- SummarizedExperiment::assayNames(SampleTileObj)
   metaFile <- SummarizedExperiment::colData(SampleTileObj)
   outDir <- SampleTileObj@metadata$Directory
@@ -950,9 +967,9 @@ findFootprints <- function(SampleTileObj,
             locFlank = allNorms[abs(Position) >= footprintSize/2,.(score = mean(score), Region = 'Flank'), 
                                 by = c('Sample', 'Location')]
             fullMerge = data.table::dcast(rbind(locCore, locFlank)[, 
-                                    pval := wilcox.test(score ~ Region, .SD)$p.value, Sample],
-                                   Sample + pval ~ Region, fun = list(mean,sd), value.var = "score")
-            fullMerge =  as.data.frame(fullMerge[,pval_adj := p.adjust(pval, method = 'BH')])
+                                    pval := stats::wilcox.test(score ~ Region, .SD)$p.value, Sample],
+                                   Sample + pval ~ Region, fun = list(mean,stats::sd), value.var = "score")
+            fullMerge =  as.data.frame(fullMerge[,pval_adj := stats::p.adjust(pval, method = 'BH')])
             
             #CellType_Motif for index name
             list_index_name = paste(x, YY, sep ='__')

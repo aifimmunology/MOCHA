@@ -146,6 +146,9 @@ plotRegion <- function(countSE,
                        # Combined Tracks
                        relativeHeights = c(`Chr` = 0.9, `Normalized Counts` = 7, `Links` = 1.5, `Genes` = 2, `AdditionalGRanges` = 4.5),
                        verbose = FALSE) {
+
+  start1 <- end1 <- start2 <- end2 <- chr <- NULL
+    
   if(!requireNamespace("cowplot", quietly = TRUE)){
     stop("Package `cowplot` not found. Please install `cowplot` to use MOCHA::plotRegion.")
   }
@@ -186,7 +189,7 @@ plotRegion <- function(countSE,
 
   countdf <- do.call("rbind", as.list(SummarizedExperiment::assays(countSE)))
   # Factor the groups to determine the order when faceting. 
-  countdf$Groups = factor(countdf$Groups, level = SummarizedExperiment::assayNames(countSE))
+  countdf$Groups = factor(countdf$Groups, levels = SummarizedExperiment::assayNames(countSE))
   
   # Extract region from region string as granges
   regionGRanges <- countdf_to_region(countdf = countdf)

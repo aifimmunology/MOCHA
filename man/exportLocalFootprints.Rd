@@ -31,6 +31,12 @@ the directory in `SampleTileObj@metadata$Directory` will be used.}
 
 \item{windowSize}{Window size for rolling sum & median over basepairs. Default is 10.}
 
+\item{groupColumn}{A string, corresponding to a metadata column within the SampleTileObj, that describes the groups by which you want to summarize motif footprints. If sampleSpecific = FALSE, then the function will average insertions across samples within each group.}
+
+\item{subGroups}{A list of subgroups, if you want to only look at specific groups within the groupColumn.}
+
+\item{sampleSpecific}{A boolean for whether to generate average motif footprints within each group, or to return a data.frame for all samples.}
+
 \item{normTn5}{A boolean for whether to normalize by Tn5 insertion bias.}
 
 \item{force}{Set TRUE to overwrite existing files. Default is FALSE.}
@@ -40,6 +46,8 @@ directly on the whole genome. May run slower and consume more RAM. Default
 is FALSE.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
+
+\item{numCores}{Number of cores to parallelize over}
 }
 \value{
 outPaths List of paths of exported insertion files

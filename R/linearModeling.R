@@ -3,12 +3,13 @@
 #' @description \code{linearModeling} Runs linearModeling on MOCHA TSAM
 #'
 #' @param Obj A RangedSummarizedExperment generated from getSampleTileMatrix
-#' @param Donor_col The metadata column with donor information.
-#' @param Time_col The metadata column with longitudinal information
-#' @param Group_col The metadata column with group information. Default is NULL, in which case it will attempt to use celltype as a proxy. Do not run group and cell type at the same time. 
-#' @param returnObj Boolean flag for whether or not you want the full PALMO object. Default is FALSE, in which case it returns the variance decomposition data.frame. 
+#' @param formula Formula used for linear modeling. 
+#' @param CellType The name of the celltype you wish to model. Should align with assayNames of the Obj. 
+#' @param threshold A number greater than 0 and less then or equal to 1. The threshold used to determine whether to model a region or not, based on the fraction of non-zero measurements across samples at that location. 
+#' @param NAtoZero Boolean, whether to convert NA region (no accessibility measurement) to zero. 
+#' @param numCores Number of threads to parallelize modeling over. Default is 1. 
 #'
-#' @return variance decomposition matrix
+#' @return A list of lmer model objects
 #' 
 #' 
 #' @examples
@@ -23,6 +24,7 @@
 
 linearModeling <- function(Obj, formula, CellType, threshold = 0, NAtoZero = FALSE, numCores = 1){
 
+    . <- Sample <- Sample2 <- NULL
     meta1 <- as.data.frame(SummarizedExperiment::colData(Obj))
 
     if(length(CellType) == 1){

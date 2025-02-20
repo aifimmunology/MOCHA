@@ -16,16 +16,18 @@ linearModeling(
 \arguments{
 \item{Obj}{A RangedSummarizedExperment generated from getSampleTileMatrix}
 
-\item{Donor_col}{The metadata column with donor information.}
+\item{formula}{Formula used for linear modeling.}
 
-\item{Time_col}{The metadata column with longitudinal information}
+\item{CellType}{The name of the celltype you wish to model. Should align with assayNames of the Obj.}
 
-\item{Group_col}{The metadata column with group information. Default is NULL, in which case it will attempt to use celltype as a proxy. Do not run group and cell type at the same time.}
+\item{threshold}{A number greater than 0 and less then or equal to 1. The threshold used to determine whether to model a region or not, based on the fraction of non-zero measurements across samples at that location.}
 
-\item{returnObj}{Boolean flag for whether or not you want the full PALMO object. Default is FALSE, in which case it returns the variance decomposition data.frame.}
+\item{NAtoZero}{Boolean, whether to convert NA region (no accessibility measurement) to zero.}
+
+\item{numCores}{Number of threads to parallelize modeling over. Default is 1.}
 }
 \value{
-variance decomposition matrix
+A list of lmer model objects
 }
 \description{
 \code{linearModeling} Runs linearModeling on MOCHA TSAM

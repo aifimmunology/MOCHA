@@ -26,17 +26,17 @@ plotMotifs(
 
 \item{returnPlotList}{A boolean, default is false, determines whether to return the full plot, or a list of subplots (ggplot2-based) for custom arrangements.}
 
-\item{plotIndividualRegions}{A boolean, default is TRUE, that determines whether to plot the individual motif regions. If FALSE, only the motif footprint will be returned.}
+\item{topPercentage}{A number 1 or less, that describes the top percent of motif locations to use for plotting. If 0.9, then the top 90 percent of regions, by total insertions, will be used in the plot. If 0.1, then the top 10 percent of regions will be used. Default of 1 uses all regions.}
+
+\item{plotIndividualRegions}{A Boolean that determines whether to plot the individual motif regions. If FALSE, only the motif footprint will be returned. Default is TRUE.}
 
 \item{relHeights}{A vector of two numbers, describing the relative space in the plot given to the motif summary and individual location plot.}
-
-\item{topPercentages.}{A number 1 or less, that describes the top percent of motif locations to use for plotting. If 0.9, then the top 90% of regions, by total insertions, will be used in the plot. If 0.1, then the top 10% of regions will be used. Default of 1 uses all regions.}
 }
 \value{
 a data.frame, containing motif footprint stats.
 }
 \description{
-Generates plot
+\code{plotMotifs} Generates plot of motif footprints
 }
 \examples{
 \dontrun{

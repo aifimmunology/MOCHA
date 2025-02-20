@@ -12,12 +12,16 @@
 #' @param outDir Directory to write output bigwig files. Default is NULL, where
 #'   the directory in `SampleTileObj@metadata$Directory` will be used.
 #' @param windowSize Window size for rolling sum & median over basepairs. Default is 10.
+#' @param groupColumn A string, corresponding to a metadata column within the SampleTileObj, that describes the groups by which you want to summarize motif footprints. If sampleSpecific = FALSE, then the function will average insertions across samples within each group. 
+#' @param subGroups A list of subgroups, if you want to only look at specific groups within the groupColumn. 
+#' @param sampleSpecific A boolean for whether to generate average motif footprints within each group, or to return a data.frame for all samples. 
 #' @param normTn5 A boolean for whether to normalize by Tn5 insertion bias. 
 #' @param force Set TRUE to overwrite existing files. Default is FALSE.
 #' @param slow Set TRUE to bypass optimisations and compute smoothing filter
 #'   directly on the whole genome. May run slower and consume more RAM. Default
 #'   is FALSE.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param numCores Number of cores to parallelize over
 #'
 #' @return outPaths List of paths of exported insertion files
 #'
@@ -296,7 +300,8 @@ exportLocalFootprints <- function(SampleTileObj,
 #' @noRd
            
 processFile <- function(objectList){
-    
+
+    V1 <- position <- partition <- score <- NULL
     chrIns <- objectList[[1]]
     insertBias <- objectList[[2]]
     windowSize <- objectList[[3]]
@@ -360,7 +365,7 @@ processFile <- function(objectList){
 
     ## Repeat process for median over the windows
     insertDT = as.data.table(plyranges::join_overlap_left(bpInsert, tilesGR2))
-    partitionDT = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
+    partitionDT = insertDT[,stats::median(score, na.rm = TRUE),by=list(position, partition)]
      # Transfer the rolling median score back to the GR object
     bpInsert$score = partitionDT[,V1][match(positionList, partitionDT[,position])]
     bpInsert <- plyranges::compute_coverage(bpInsert, weight= bpInsert$score)

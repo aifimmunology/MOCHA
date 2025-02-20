@@ -16,11 +16,10 @@
 #'  Default is NULL, at which point the optimal threshold will be found.
 #' @param minZeroDiff Minimum difference in average dropout rates across groups
 #'  require to keep tiles for differential testing. Default is 0.5 (50\%).
-#' @param fdrToDisplay False-discovery rate used only for standard
-#'  output messaging. Default is 0.2.
 #' @param qValueMethod String describing qvalue method. Can be 'standard', or 'experimental'. 
 #'           See methods in the MOCHA manuscript for description of the experimental. 
 #'           Otherwise, 'standard' applies standard q value. 
+#' @param qValueThreshold A number greater than 0 and less than 1, used to optimize the noise thresholding parameter by cell type. Default is 0.2. It is recommended to keep this paramter between 0.05 and 0.3.
 #' @param outputGRanges Outputs a GRanges if TRUE and a data.frame if
 #'  FALSE. Default is TRUE.
 #' @param numCores The number of cores to use with multiprocessing.
@@ -35,9 +34,6 @@
 #' cellPopulation <- "MAIT"
 #' foreground <- "Positive"
 #' background <- "Negative"
-#' # Standard output will display the number of tiles found below a false-discovery rate threshold.
-#' # This parameter does not filter results and only affects the aforementioned message.
-#' fdrToDisplay <- 0.2
 #' # Choose to output a GRanges or data.frame.
 #' # Default is TRUE
 #' outputGRanges <- TRUE
@@ -48,7 +44,6 @@
 #'   groupColumn = groupColumn,
 #'   foreground = foreground,
 #'   background = background,
-#'   fdrToDisplay = fdrToDisplay,
 #'   outputGRanges = outputGRanges,
 #'   numCores = numCores
 #' )
@@ -147,7 +142,7 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
       diff0s <- abs(zero_A - zero_B)
 
       if(is.null(signalThreshold)){
-        log2FC_filter = quantile(c(medians_a,medians_b), na.rm = TRUE, probs = 0.5)
+        log2FC_filter = stats::quantile(c(medians_a,medians_b), na.rm = TRUE, probs = 0.5)
       }else{
         log2FC_filter <- signalThreshold
       }
@@ -268,12 +263,6 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
   }
 
   return(full_results)
-}
-
-
-
-parallelDifferential <- function(rowVals, group){
-        cbind(Tile = x, estimate_differential_accessibility(sampleTileMatrix[x, ], group))
 }
 
 

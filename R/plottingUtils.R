@@ -945,7 +945,7 @@ counts_plot_motif_overlay <- function(p1,
 #' @noRd
 get_link_plot <- function(regionGRanges, legend.position = NULL,
                           relativeHeights, linkdf) {
-  start <- end <- y <- Correlation <- NULL
+  start1 <- end1 <- start2 <- end2 <- xlim <- Association <- start <- end <- y <- Correlation <- NULL
 
   linkdf2 <- dplyr::filter(linkdf, start1 + 250 > GenomicRanges::start(regionGRanges) &
                            end1 - 250 < GenomicRanges::end(regionGRanges) &
