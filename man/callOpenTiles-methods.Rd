@@ -20,6 +20,7 @@ callOpenTiles(
   genome,
   cellPopLabel,
   cellPopulations = "ALL",
+  sampleColumn = "Sample",
   studySignal = NULL,
   generalizeStudySignal = FALSE,
   cellCol = "RG",
@@ -38,6 +39,7 @@ callOpenTiles(
   genome,
   cellPopLabel,
   cellPopulations = "ALL",
+  sampleColumn = "Sample",
   studySignal = NULL,
   generalizeStudySignal = FALSE,
   cellCol = "RG",
@@ -56,6 +58,7 @@ callOpenTiles(
   genome,
   cellPopLabel,
   cellPopulations = "ALL",
+  sampleColumn = "Sample",
   studySignal = NULL,
   generalizeStudySignal = FALSE,
   cellCol = "RG",
@@ -74,6 +77,7 @@ callOpenTiles(
   genome,
   cellPopLabel,
   cellPopulations = "ALL",
+  sampleColumn = "Sample",
   studySignal = NULL,
   generalizeStudySignal = FALSE,
   cellCol = "RG",
@@ -89,6 +93,7 @@ callOpenTiles(
   ATACFragments,
   cellPopLabel,
   cellPopulations = "ALL",
+  sampleColumn = "Sample",
   studySignal = NULL,
   generalizeStudySignal = FALSE,
   TxDb,
@@ -125,6 +130,8 @@ peaks. This list of group names must be identical to names that appear in
 the ArchRProject metadata.  Optional, if cellPopulations='ALL', then peak
 calling is done on all cell populations in the ArchR project metadata.
 Default is 'ALL'.}
+
+\item{sampleColumn}{The name of the metadata column with biological sample names. Standard is 'Sample', as fixed by ArchR}
 
 \item{studySignal}{The median signal (number of fragments) in your study. If
 not set, this will be calculated using the input ArchR project but relies

@@ -2,7 +2,7 @@
 % Please edit documentation in R/extractRegion.R
 \name{extractRegion}
 \alias{extractRegion}
-\title{Get coverage for a given region}
+\title{Extract accessibility coverage for a given region}
 \usage{
 extractRegion(
   SampleTileObj,

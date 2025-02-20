@@ -173,10 +173,10 @@ runZIGLMM <- function(TSAM_Object,
       zi_threshold, ziformula
     )
   })
-  parallel::clusterExport(
-    cl = cl, varlist = c(iterList),
-    envir = environment()
-  )
+  #parallel::clusterExport(
+  #  cl = cl, varlist = c(iterList),
+  #  envir = environment()
+  #)
   parallel::clusterEvalQ(cl, {
     library(glmmTMB)
   })

@@ -35,6 +35,54 @@ MotifEnrichment <- function(Group1, Group2, motifPosList, type = NULL) {
   return(df_final)
 }
 
+#' @title Get motifset for a given cell type
+#'
+#' @description Extracts an existing motif set and filters it down to only motifs found within regions open in that celltype
+#'                A necessary step for accurate motif enrichment analysis. 
+#'
+#' @param STM A Sample-Tile Object from MOCHA
+#' @param cellPopulation The name of a cell type within MOCHA
+#' @param MotifSetName The name of the total motif set, saved as metadata within the MOCHA object
+#' @param specMotif Name of a specific motif or sets of motif that you wish to pull out. Default is NULL, with returns all motifs. 
+#' @param asGRangesList Default is FALSE. If TRUE, then converts list of GRanges to GRangesList, which takes quite a while. 
+#' 
+#'
+#' @return A GRangesList containing the motifs that are present in open regions for a given cell type
+#'
+#' @export
+#' @keywords downstream
+getCellTypeMotifs <- function(STM, cellPopulation, MotifSetName = 'Motifs', specMotif = NULL, 
+                              asGRangesList = TRUE) {
+  if(!MotifSetName %in% names(STM@metadata)){
+    stop('MotifSetName not found within STM Object.')
+  }
+  allMotifs <- STM@metadata[[MotifSetName]]
+    
+  if(!is.null(specMotif)){
+      if(all(specMotif %in% names(allMotifs))){
+          
+          allMotifs <- allMotifs[names(allMotifs) %in% specMotif]
+          
+      }else{
+      
+          stop('specMotif not found within motif names. Make sure you have an exact match to the motif name')
+          
+      }
+    }
+      
+    
+  #Pull out background tiles. 
+  backgroundTiles = getCellTypeTiles(STM, cellPopulation)
+  minWidth = min(unlist(lapply(allMotifs, GenomicRanges::width)))
+  subMotifs <- lapply(allMotifs, function(MM){
+              plyranges::filter_by_overlaps(MM, backgroundTiles, minoverlap = minWidth)
+              # minimum motif size is 6. 
+      })
+  if(asGRangesList){
+    subMotifs <- methods::as('GRangesList', subMotifs)
+  }
+  return(subMotifs)
+}
 
 #' @title \code{EnrichedRanges}
 #'
@@ -139,3 +187,4 @@ EnrichedRanges <- function(Group1,
 
   return(data.frame(p_value = pVal, enrichment = enrichment))
 }
+

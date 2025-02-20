@@ -1,4 +1,4 @@
-#' @title Get coverage for a given region
+#' @title Extract accessibility coverage for a given region
 #'
 #' @description \code{extractRegion} will extract the coverage files created by
 #'   callOpenTiles and return a specific region's coverage
@@ -48,7 +48,6 @@
 #'
 #' @export
 #' @keywords utils
-
 extractRegion <- function(SampleTileObj,
                           type = TRUE,
                           region,
@@ -241,8 +240,8 @@ extractRegion <- function(SampleTileObj,
 }
 
 
-## helper functions.
-                         
+# # helper functions.
+
 # Generates average single basepair coverage for a given region
 averageBPCoverage <- function(iterList) {
   regionGRanges <- iterList[[1]]
@@ -340,12 +339,12 @@ averageBinCoverage <- function(iterList) {
 }
 
 # This function is not used.
-## Efficiently subsets and bins coverage for a given region across samples
+# # Efficiently subsets and bins coverage for a given region across samples
 # subsetSlidingBinCoverage <- function(iterList) {
 #   idx <- NULL
 #   binnedData <- iterList[[1]]
 #   regionGRanges <- plyranges::reduce_ranges(binnedData)
-# 
+#
 #   tmpCounts <- lapply(subList, function(z) {
 #     tmpGR <- plyranges::join_overlap_intersect(z, regionGRanges) %>%
 #       tmpGR() <- plyranges::join_overlap_intersect(tmpGR, binnedData)
@@ -354,7 +353,7 @@ averageBinCoverage <- function(iterList) {
 #     tmpGR <- dplyr::ungroup(tmpGR)
 #     tmpGR
 #   })
-# 
+#
 #   return(tmpCounts)
 # }
 

@@ -15,10 +15,11 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel) {
 
   # Convert to data.table
   cellColDT <- data.table::as.data.table(cellColDataNoNA)
-
   BoolDT <- cellColDT[, lapply(.SD, function(x) {
+      unique(x)
     length(unique(x)) == 1
   }), by = c(sampleLabel)]
+
   trueCols <- apply(BoolDT, 2, all)
   trueCols[[sampleLabel]] <- TRUE
   cellColDF <- as.data.frame(cellColDT)
@@ -29,6 +30,59 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel) {
   rownames(sampleData) <- sampleData[[sampleLabel]]
   return(sampleData)
 }
+
+
+# Function to de-hash a list of fragments files by the true cell type. 
+# The function will identify the true list of samples, 
+# And then iterate over each arrow file and select all the fragments from cells from that sample.
+# And then combine the fragments into a new GRanges list. 
+dehashArchR <- function(frags, cellColData, sampleColumn, cl = cl) {
+
+  ##Identify cells for each true sample
+  trueSamples <- unique(cellColData[,sampleColumn])
+    
+  trueCells <- lapply(trueSamples, function(XX){
+                      trueCells = rownames(cellColData[cellColData[,sampleColumn] == XX,])
+                  })
+    
+  trueFrags <- pbapply::pblapply(cl = cl, X = trueCells, dehashIter, oldfrags = frags)
+  rm(frags)
+    
+  names(trueFrags) = trueSamples
+  return(trueFrags)
+}
+
+
+# To effectively iterate over fragments without without memory leaks,
+# This function is necessary. 
+dehashIter <- function(cellIDs, oldfrags){
+    RG <- NULL
+    newFrags <- lapply(oldfrags, function(ZZ){
+          
+                  plyranges::filter(ZZ, RG %in% cellIDs)
+          
+          })
+    
+    newFrags <- unlist(methods::as(newFrags, 'GRangesList'))
+
+    return(newFrags)
+}
+
+
+# To fix wierd cell type names within metadata, so that it doesn't break rownames and assay names
+fixCellTypeNames <- function(cellNames){
+
+    ##fix spaces and dashes
+    cellNames = gsub(" |-","_", cellNames)
+    
+    #fix + and - signs
+    cellNames = gsub("\\+","pos", cellNames)
+    cellNames = gsub("\\-","neg", cellNames)
+    cellNames = gsub("\\\\", "_", cellNames)
+
+    return(cellNames)
+}
+
 
 
 # Function to split the output of getPopFrags into a list
@@ -178,12 +232,12 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   if (!methods::is(dbName, "character")) {
     stop(
       "dbName must be a character string. ",
-      "Please provide TxDb or OrgDb as a string."
+      "Please provide TxDb, OrgDb, or BSgenome as a string."
     )
   }
 
-  if (!type %in% c("OrgDb", "TxDb")) {
-    stop('Invalid type. Type must be either "OrgDb" or "TxDb".')
+  if (!type %in% c("OrgDb", "TxDb", 'BSgenome')) {
+    stop('Invalid type. Type must be either "OrgDb", "TxDb", or "BSgenome".')
   }
 
   ok <- suppressWarnings(require(dbName,
@@ -205,7 +259,7 @@ getAnnotationDbFromInstalledPkgname <- function(dbName, type) {
   if (!methods::is(db, type)) {
     stop(dbName, " doesn't look like a valid ", type, " data package")
   }
-  db
+  return(db)
 }
 
 
@@ -245,10 +299,12 @@ getCellTypeTiles <- function(object, cellType) {
   } else if (class(object)[1] == "RangedSummarizedExperiment") {
     all_ranges <- SummarizedExperiment::rowRanges(object)
 
-    if (sum(cellType == names(SummarizedExperiment::assays(object))) != 1) {
-      stop("Please provide a single cell type, which must be present in the SampleTileObject. cellType is either not found, or is a list of multiple cell types.")
+    if (!all(cellType %in% SummarizedExperiment::assayNames(object))) {
+      stop("Please provide cell types that are present in the SampleTileObject.")
     } else {
-      subRange <- all_ranges[unlist(GenomicRanges::mcols(all_ranges)[, cellType])]
+
+      peak_subSet = GenomicRanges::mcols(all_ranges)[, cellType, drop = FALSE]
+      subRange <- all_ranges[apply(peak_subSet,1, any)]
     }
 
     return(subRange)

@@ -24,8 +24,7 @@
 #' @references XX
 #'
 #' @noRd
-estimate_differential_accessibility <- function(tile_values, group,
-                                                providePermutation = FALSE) {
+estimate_differential_accessibility <- function(tile_values, group) {
   data_vec <- as.numeric(tile_values)
 
   ## conduct two part test
@@ -62,29 +61,6 @@ estimate_differential_accessibility <- function(tile_values, group,
     Control_mu = stats::median(nonzero_control),
     Control_rho = mean(data_vec[group == 0] == 0)
   )
-
-  if (providePermutation) {
-    nPerm <- 10
-
-    permuted_pvals <- t(data.frame(sapply(1:nPerm, function(x) {
-
-      ## permutation test
-      n_a <- sum(group)
-      n_b <- length(group) - n_a
-
-      ## shuffle observations
-      sampled_data <- sample(data_vec, size = n_a + n_b, replace = FALSE)
-
-      ## calculate hypothesis test
-      ## based on shuffled values
-      TwoPart(sampled_data,
-        group = group, test = "wilcoxon",
-        point.mass = 0
-      )$pvalue
-    })))
-    colnames(permuted_pvals) <- paste("Permute", 1:nPerm, sep = "_")
-    res <- cbind(res, (permuted_pvals))
-  }
 
   res
 }

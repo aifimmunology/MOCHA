@@ -67,7 +67,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     cellCounts,
     cols = colnames(cellCounts),
     names_to = "Sample",
-    values_to = "Freq"
+    values_to = "CellCounts"
   )
   cellCounts <- dplyr::mutate(
     cellCounts,
@@ -82,7 +82,7 @@ combineSampleTileMatrix <- function(SampleTileObj,
     fragCounts,
     cols = colnames(fragCounts),
     names_to = "Sample",
-    values_to = "FragNumber"
+    values_to = "FragmentCounts"
   )
   fragCounts <- dplyr::mutate(
     fragCounts,

@@ -10,9 +10,10 @@ getDifferentialAccessibleTiles(
   groupColumn,
   foreground,
   background,
-  signalThreshold = 12,
   minZeroDiff = 0.5,
-  fdrToDisplay = 0.2,
+  qValueMethod = "experimental",
+  signalThreshold = NULL,
+  qValueThreshold = 0.2,
   outputGRanges = TRUE,
   numCores = 1,
   verbose = FALSE
@@ -30,15 +31,19 @@ getSampleTileMatrix}
 
 \item{background}{The background group of samples for differential comparison}
 
-\item{signalThreshold}{Minimum median intensity required to keep tiles for
-differential testing to increase statistical power in small sample cohorts.
-Default is 12.}
-
 \item{minZeroDiff}{Minimum difference in average dropout rates across groups
 require to keep tiles for differential testing. Default is 0.5 (50\%).}
 
-\item{fdrToDisplay}{False-discovery rate used only for standard
-output messaging. Default is 0.2.}
+\item{qValueMethod}{String describing qvalue method. Can be 'standard', or 'experimental'. 
+See methods in the MOCHA manuscript for description of the experimental. 
+Otherwise, 'standard' applies standard q value.}
+
+\item{signalThreshold}{Optional value. 
+This is Minimum median intensity required to keep tiles for
+differential testing to increase statistical power in small sample cohorts.
+Default is NULL, at which point the optimal threshold will be found.}
+
+\item{qValueThreshold}{A number greater than 0 and less than 1, used to optimize the noise thresholding parameter by cell type. Default is 0.2. It is recommended to keep this paramter between 0.05 and 0.3.}
 
 \item{outputGRanges}{Outputs a GRanges if TRUE and a data.frame if
 FALSE. Default is TRUE.}
@@ -62,9 +67,6 @@ full_results The differential accessibility results as a GRanges or
 cellPopulation <- "MAIT"
 foreground <- "Positive"
 background <- "Negative"
-# Standard output will display the number of tiles found below a false-discovery rate threshold.
-# This parameter does not filter results and only affects the aforementioned message.
-fdrToDisplay <- 0.2
 # Choose to output a GRanges or data.frame.
 # Default is TRUE
 outputGRanges <- TRUE
@@ -75,7 +77,6 @@ differentials <- MOCHA::getDifferentialAccessibleTiles(
   groupColumn = groupColumn,
   foreground = foreground,
   background = background,
-  fdrToDisplay = fdrToDisplay,
   outputGRanges = outputGRanges,
   numCores = numCores
 )
