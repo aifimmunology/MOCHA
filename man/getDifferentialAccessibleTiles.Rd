@@ -43,6 +43,8 @@ This is Minimum median intensity required to keep tiles for
 differential testing to increase statistical power in small sample cohorts.
 Default is NULL, at which point the optimal threshold will be found.}
 
+\item{qValueThreshold}{A number greater than 0 and less than 1, used to optimize the noise thresholding parameter by cell type. Default is 0.2. It is recommended to keep this paramter between 0.05 and 0.3.}
+
 \item{outputGRanges}{Outputs a GRanges if TRUE and a data.frame if
 FALSE. Default is TRUE.}
 
@@ -50,9 +52,6 @@ FALSE. Default is TRUE.}
 Default is 1.}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
-
-\item{fdrToDisplay}{False-discovery rate used only for standard
-output messaging. Default is 0.2.}
 }
 \value{
 full_results The differential accessibility results as a GRanges or
@@ -68,9 +67,6 @@ full_results The differential accessibility results as a GRanges or
 cellPopulation <- "MAIT"
 foreground <- "Positive"
 background <- "Negative"
-# Standard output will display the number of tiles found below a false-discovery rate threshold.
-# This parameter does not filter results and only affects the aforementioned message.
-fdrToDisplay <- 0.2
 # Choose to output a GRanges or data.frame.
 # Default is TRUE
 outputGRanges <- TRUE
@@ -81,7 +77,6 @@ differentials <- MOCHA::getDifferentialAccessibleTiles(
   groupColumn = groupColumn,
   foreground = foreground,
   background = background,
-  fdrToDisplay = fdrToDisplay,
   outputGRanges = outputGRanges,
   numCores = numCores
 )

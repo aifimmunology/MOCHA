@@ -21,10 +21,11 @@
 runChromVAR <- function(TSAM_Object,
                               motifSetName,
                               cellTypeSpecific = FALSE){
+    . <- NULL
 
     if(!cellTypeSpecific){
 
-        if(length(assays(TSAM_Object)) > 1){
+        if(length(SummarizedExperiment::assays(TSAM_Object)) > 1){
             assayList <- do.call('cbind', SummarizedExperiment::assays(TSAM_Object))
             newSamplesNames <- unlist(lapply(names(SummarizedExperiment::assays(TSAM_Object)), function(x){
         
@@ -53,31 +54,31 @@ runChromVAR <- function(TSAM_Object,
 
             allSampleData <-  allSampleData[nonEmptySamples,]
 
-            Obj1 <- SummarizedExperiment(
+            Obj1 <- SummarizedExperiment::SummarizedExperiment(
                 assays = list('counts' = assayList),
                 colData = allSampleData,
-                rowRanges = rowRanges(TSAM_Object),
+                rowRanges = SummarizedExperiment::rowRanges(TSAM_Object),
                 metadata = TSAM_Object@metadata
             )
         }else{
 
             Obj1 <- TSAM_Object
-            names(assays(Obj1)) <- 'counts'
-            assays(Obj1)$counts[is.na(assays(Obj1)$counts)] = 0
+            names(SummarizedExperiment::assays(Obj1)) <- 'counts'
+            SummarizedExperiment::assays(Obj1)$counts[is.na(SummarizedExperiment::assays(Obj1)$counts)] = 0
 
         }
 
         CisbpAnno <- chromVAR::getAnnotations(TSAM_Object@metadata[[motifSetName]],
-                                            rowRanges = rowRanges(Obj1))
+                                            rowRanges = SummarizedExperiment::rowRanges(Obj1))
 
-        Obj1 <- chromVAR::addGCBias(Obj1, genome = metadata(TSAM_Object)$Genome)
+        Obj1 <- chromVAR::addGCBias(Obj1, genome = TSAM_Object@metadata$Genome)
 
         if(any(is.na(SummarizedExperiment::rowData(Obj1)$bias))){
 
             naList <- is.na(SummarizedExperiment::rowData(Obj1)$bias)
             message(paste(sum(naList), "NaNs found within GC Bias", sep =" "))
 
-            SummarizedExperiment::rowData(Obj1)$bias[which(naList)] = mean(rowData(Obj1)$bias, na.rm = TRUE)
+            SummarizedExperiment::rowData(Obj1)$bias[which(naList)] = mean(SummarizedExperiment::rowData(Obj1)$bias, na.rm = TRUE)
 
         }
                                     
@@ -116,7 +117,7 @@ runChromVAR <- function(TSAM_Object,
                     assays = list('counts' = accMat),
                     colData = sampleData_filtered,
                     rowRanges = subRanges,
-                    metadata = STM@metadata
+                    metadata = TSAM_Object@metadata
                 )
 
                 Anno <- chromVAR::getAnnotations(motifList,
@@ -128,7 +129,7 @@ runChromVAR <- function(TSAM_Object,
                     naList <- is.na(SummarizedExperiment::rowData(Obj1)$bias)
                     message(paste(sum(naList), "NaNs found within GC Bias", sep =" "))
 
-                    SummarizedExperiment::rowData(Obj1)$bias[which(naList)] = mean(rowData(Obj1)$bias, na.rm = TRUE)
+                    SummarizedExperiment::rowData(Obj1)$bias[which(naList)] = mean(SummarizedExperiment::rowData(Obj1)$bias, na.rm = TRUE)
 
                 }
                                             
@@ -248,7 +249,7 @@ modelDeviations <- function(Obj, formula, type = 'z', numCores = 1){
             lmerTest::lmer(formula = formula, data = df)
         }, cl = cl), classes = "message")
 
-    stopCluster(cl)
+    parallel::stopCluster(cl)
     
     return(lmem_res)
 

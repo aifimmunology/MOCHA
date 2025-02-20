@@ -157,6 +157,7 @@ bulkDimReduction <- function(SampleTileObj, cellType = "All", componentNumber = 
 #' @param nNeighbors See  \link[uwot]{umap}. The size of local neighborhood (in terms of number of
 #'           neighboring sample points) used for manifold approximation. Default is 15.
 #' @param ... Additional arguments to be passed to \link[uwot]{umap}.
+#' @param verbose Set TRUE to display additional messages. Default is FALSE.
 #'
 #' @return fullUMAP data.frame of UMAP values with metadata attached.
 #'
@@ -171,6 +172,7 @@ bulkUMAP <- function(SEObj,
                      components = c(1:30),
                      nNeighbors = 15,
                      returnModel = FALSE,
+                     verbose = TRUE,
                      seed = 1,
                      ...) {
   if (!requireNamespace("uwot", quietly = TRUE)) {

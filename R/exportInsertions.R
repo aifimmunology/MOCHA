@@ -12,12 +12,16 @@
 #' @param outDir Directory to write output bigwig files. Default is NULL, where
 #'   the directory in `SampleTileObj@metadata$Directory` will be used.
 #' @param windowSize Window size for rolling sum & median over basepairs. Default is 10.
+#' @param groupColumn A string, corresponding to a metadata column within the SampleTileObj, that describes the groups by which you want to summarize motif footprints. If sampleSpecific = FALSE, then the function will average insertions across samples within each group. 
+#' @param subGroups A list of subgroups, if you want to only look at specific groups within the groupColumn. 
+#' @param sampleSpecific A boolean for whether to generate average motif footprints within each group, or to return a data.frame for all samples. 
 #' @param normTn5 A boolean for whether to normalize by Tn5 insertion bias. 
 #' @param force Set TRUE to overwrite existing files. Default is FALSE.
 #' @param slow Set TRUE to bypass optimisations and compute smoothing filter
 #'   directly on the whole genome. May run slower and consume more RAM. Default
 #'   is FALSE.
 #' @param verbose Set TRUE to display additional messages. Default is FALSE.
+#' @param numCores Number of cores to parallelize over
 #'
 #' @return outPaths List of paths of exported insertion files
 #'
@@ -48,7 +52,8 @@ exportLocalFootprints <- function(SampleTileObj,
     
     score <- start <- seqnames <- NULL
 
-    allCellTypes = names(SummarizedExperiment::assays(SampleTileObj))
+    allCellTypes = SummarizedExperiment::assayNames(SampleTileObj)
+    
     if(all(tolower(cellPopulation) == 'all')){
         cellPopulation = allCellTypes
     }
@@ -61,7 +66,7 @@ exportLocalFootprints <- function(SampleTileObj,
         allPaths = lapply(cellPopulation, function(ZZ){
                     gc()
                     exportLocalFootprints(SampleTileObj,
-                                     cellPopulation == ZZ,
+                                     cellPopulation = ZZ,
                                      outDir,
                                      windowSize,
                                      groupColumn ,
@@ -81,7 +86,6 @@ exportLocalFootprints <- function(SampleTileObj,
     sourcedir <- SampleTileObj@metadata$Directory
     metaFile <- SummarizedExperiment::colData(SampleTileObj)
     
-    
     if(numCores > 6){
     
         warning("You have set the number of cores (numCores) to be greater than 5. Be careful because more parallelization can lead to much higher RAM usage. We recommend less than 5 cores. ")
@@ -90,7 +94,7 @@ exportLocalFootprints <- function(SampleTileObj,
     
     ## Check and set directory for output. 
     if (is.null(outDir)){
-        outdir <- SampleTileObj@metadata$Directory
+        outDir <- SampleTileObj@metadata$Directory
     } else if (!dir.exists(outDir)){
         dir.create(outDir)
     }
@@ -187,7 +191,7 @@ exportLocalFootprints <- function(SampleTileObj,
         
         ##Print out the name of the insertion file. 
         type <- paste0("window", windowSize)
-        outfile <- file.path(outdir, paste0(
+        outfile <- file.path(outDir, paste0(
             cellPopulation, "__", sampleName, "__", type, ".bw"
         ))
         
@@ -253,7 +257,7 @@ exportLocalFootprints <- function(SampleTileObj,
       
       for(one_group in subGroups){
           
-        outfile <- file.path(outdir, paste0(
+        outfile <- file.path(outDir, paste0(
             cellPopulation, "__", groupColumn, "_", one_group, "__", type, ".bw"
         ))
         outfile <- gsub(" |\\.","_", outfile)
@@ -296,7 +300,8 @@ exportLocalFootprints <- function(SampleTileObj,
 #' @noRd
            
 processFile <- function(objectList){
-    
+
+    V1 <- position <- partition <- score <- NULL
     chrIns <- objectList[[1]]
     insertBias <- objectList[[2]]
     windowSize <- objectList[[3]]
@@ -360,7 +365,7 @@ processFile <- function(objectList){
 
     ## Repeat process for median over the windows
     insertDT = as.data.table(plyranges::join_overlap_left(bpInsert, tilesGR2))
-    partitionDT = insertDT[,median(score, na.rm = TRUE),by=list(position, partition)]
+    partitionDT = insertDT[,stats::median(score, na.rm = TRUE),by=list(position, partition)]
      # Transfer the rolling median score back to the GR object
     bpInsert$score = partitionDT[,V1][match(positionList, partitionDT[,position])]
     bpInsert <- plyranges::compute_coverage(bpInsert, weight= bpInsert$score)

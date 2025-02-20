@@ -7,9 +7,9 @@
 correctGenome(TSAM, genome)
 }
 \arguments{
-\item{genome}{genome to correct with.}
+\item{TSAM}{RangedSummarizedExperiment object, containing the TSAM from getSampleTileMatrix, with a motif set added via addMotifSet()}
 
-\item{TSAM_Object}{RangedSummarizedExperiment object, containing the TSAM from getSampleTileMatrix, with a motif set added via addMotifSet()}
+\item{genome}{genome to correct with.}
 }
 \value{
 chromVAR object

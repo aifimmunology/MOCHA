@@ -15,7 +15,6 @@ sampleDataFromCellColData <- function(cellColData, sampleLabel) {
 
   # Convert to data.table
   cellColDT <- data.table::as.data.table(cellColDataNoNA)
-
   BoolDT <- cellColDT[, lapply(.SD, function(x) {
       unique(x)
     length(unique(x)) == 1
@@ -57,14 +56,14 @@ dehashArchR <- function(frags, cellColData, sampleColumn, cl = cl) {
 # To effectively iterate over fragments without without memory leaks,
 # This function is necessary. 
 dehashIter <- function(cellIDs, oldfrags){
-
+    RG <- NULL
     newFrags <- lapply(oldfrags, function(ZZ){
           
                   plyranges::filter(ZZ, RG %in% cellIDs)
           
           })
     
-    newFrags <- unlist(as(newFrags, 'GRangesList'))
+    newFrags <- unlist(methods::as(newFrags, 'GRangesList'))
 
     return(newFrags)
 }

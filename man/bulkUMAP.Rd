@@ -10,6 +10,7 @@ bulkUMAP(
   components = c(1:30),
   nNeighbors = 15,
   returnModel = FALSE,
+  verbose = TRUE,
   seed = 1,
   ...
 )
@@ -25,6 +26,8 @@ bulkUMAP(
 neighboring sample points) used for manifold approximation. Default is 15.}
 
 \item{returnModel}{A boolean. Default is FALSE. If set to true, it will return a list, where the first is the UMAP coordinates with metadata for plotting, and the second is the full UMAP model so further projection can occur.}
+
+\item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 
 \item{seed}{an integer. Represents the random seed to pass to the UMAP. Default seed is 1.}
 
