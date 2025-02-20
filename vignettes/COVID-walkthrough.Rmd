@@ -168,7 +168,7 @@ SampleTileMatricesAnnotated <- MOCHA::annotateTiles(SampleTileMatrices)
 data(human_pwms_v2)
 SampleTileMatricesAnnotated <- MOCHA::addMotifSet(
   SampleTileMatricesAnnotated, 
-  pwms = human_pwms_v2, 
+  motifPWMs = human_pwms_v2, 
   w = 7 # weight parameter for motifmatchr
 )
 ```
