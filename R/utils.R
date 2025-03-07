@@ -218,6 +218,68 @@ differentialsToGRanges <- function(differentials, tileColumn = "Tile") {
   substr(x, 1L, nchar(.ORGDB_PREFIX)) == .ORGDB_PREFIX
 }
 
+#' @title isMOCHAObject
+#'
+#' @description \code{isMOCHAObject} Checks with the object is a MOCHA object, and/or returns the type of object
+#'
+#' @param Object The output of callOpenTiles or getSampleTileMatrix. Both have a path to saved files. 
+#' @param returnType A Boolean. If True, returns object type (OpenTiles, SampleTileMatrix, or NULL). If FALSE, returns True/FALSE 
+#' @return A string or list of strings in the format 'chr1:100-200' representing
+#'  ranges in the input GRanges
+#'
+#' @export
+#' @keywords utils
+isMOCHAObject <- function(Object, returnType = FALSE) {
+    required_names <- c("summarizedData", "Genome", "TxDb", "OrgDb", "Directory", "History")
+    if (inherits(Object, "MultiAssayExperiment")) {
+        type = 'OpenTiles'
+        metadata_names <- names(S4Vectors::metadata(Object))
+    } else if (inherits(Object, "SummarizedExperiment")) {
+        type = 'SampleTileMatrix'
+        metadata_names <- names(S4Vectors::metadata(Object))
+    }else if(!returnType){
+        return(FALSE)
+    }else{
+        return(NULL)
+    }
+
+    if(all(required_names %in% metadata_names) & returnType){
+        return(type)
+    }else if(all(required_names %in% metadata_names)){
+        return(TRUE)
+    }
+    return(FALSE)
+}
+
+
+#' @title updateDirectoryPath
+#'
+#' @description \code{updateDirectoryPath} Updated the path to save files, in case the directory moved.
+#'
+#' @param Object The output of callOpenTiles or getSampleTileMatrix. Both have a path to saved files. 
+#' @param directoryPath A string, containing the absolute path to the directory. 
+#' @return A string or list of strings in the format 'chr1:100-200' representing
+#'  ranges in the input GRanges
+#'
+#' @export
+#' @keywords utils
+updateDirectoryPath <- function(Object, directoryPath = NULL) {
+
+    if(!isMOCHAObject(Object)){
+        warning("Object is not a MOCHA-related object. Returning NULL")
+        return(NULL)
+    }else if(!is.null(directoryPath) & dir.exists(directoryPath)){
+        Object@metadata$Directory = directoryPath
+        return(Object)
+    }else if(is.null(directoryPath)) {
+        warning("Directory path was not provided. No changes made")
+        return(Object)
+    }else {
+         warning("Directory path not detected. No changes made")
+        return(Object)
+    }
+}
+
 
 #' @title Loads and attaches an installed TxDb or OrgDb-class Annotation database package.
 #'
