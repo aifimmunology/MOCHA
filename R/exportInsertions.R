@@ -266,8 +266,7 @@ exportLocalFootprints <- function(SampleTileObj,
             if (verbose) { message("Output file already exists: ", outfile) }
             next # Skip this one!
         }
-          
-          
+
         result <- tryCatch({
                     plyranges::write_bigwig(cellPopSubsampleCov[[one_group]], outfile)
                 }, warning = function(w) {

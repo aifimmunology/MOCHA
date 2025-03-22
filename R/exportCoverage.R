@@ -166,7 +166,11 @@ exportCoverage <- function(SampleTileObject,
     if (saveFile) {
       # Export bigwig
       for (i in 1:length(cellPopSubsampleCov)) {
-        fileName <- gsub(" ", "__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
+        if(!is.null(groupColumn)){
+            fileName <- gsub(" ", "__", paste(x, groupColumn, names(cellPopSubsampleCov)[i], sep = "__"))
+        }else{
+            fileName <- gsub(" ", "__", paste(x, names(cellPopSubsampleCov)[i], sep = "__"))
+        }
         if (!type) {
           fileName <- paste(fileName, "__Insertions", sep = "")
         }
@@ -183,7 +187,7 @@ exportCoverage <- function(SampleTileObject,
       }
     }
 
-    names(cellPopSubsampleCov) <- x
+    names(cellPopSubsampleCov) <- paste(x, names(cellPopSubsampleCov), sep = "__")
     allCellPopCoverage <- append(allCellPopCoverage, cellPopSubsampleCov)
 
   }
