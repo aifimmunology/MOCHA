@@ -2,7 +2,7 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [main, master]
+    branches: [pkgdown]
   pull_request:
   release:
     types: [published]
@@ -35,9 +35,6 @@ jobs:
         run: |
           Rscript -e "install.packages('remotes', repos='https://ftp.belnet.be/mirror/CRAN')"
 
-      - name: Install chromote
-        run: |
-          Rscript -e "remotes::install_url('https://github.com/GreenleafLab/ArchR')"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -45,7 +42,7 @@ jobs:
           needs: website
 
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: pkgdown::build_site_github_pages(clean = TRUE, new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages 🚀
