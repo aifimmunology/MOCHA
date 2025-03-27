@@ -70,9 +70,14 @@ getSampleTileMatrix <- function(tileResults,
   # Note that these are case-sensitive
   sampleData <- MultiAssayExperiment::colData(tileResults)
   validGroups <- colnames(sampleData)
+    
   if (!is.null(groupColumn)) {
-    if (!(groupColumn %in% validGroups)) {
+    if (!all(groupColumn %in% validGroups)) {
       stop("`groupColumn` not found in the column data of tileResults.")
+    }else{
+
+        sampleData$newGroupColumn = unlist(apply(sampleData[,groupColumn], 2, paste0, collapse="_"))
+        groupColumn = 'newGroupColumn'
     }
   }
   if (length(cellPopulations) == 1 & any(tolower(cellPopulations) == "all")) {
