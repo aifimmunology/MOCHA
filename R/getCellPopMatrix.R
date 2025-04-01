@@ -20,10 +20,24 @@ getCellPopMatrix <- function(SampleTileObj,
                              cellPopulation,
                              dropSamples = TRUE,
                              NAtoZero = TRUE) {
-  tilesCalled <- GenomicRanges::mcols(
-    SummarizedExperiment::rowRanges(SampleTileObj)
-  )[, cellPopulation]
 
+  if(cellPopulation == 'counts'){
+
+     tilesCalled = rownames(SampleTileObj)
+
+    }else if(all(cellPopulation %in% SummarizedExperiment::assayNames(SampleTileObj))){
+
+      stop('Cell population not found withinthe SampleTileObj')
+      
+    }else{
+      
+
+      tilesCalled <- GenomicRanges::mcols(
+        SummarizedExperiment::rowRanges(SampleTileObj)
+      )[, cellPopulation]
+
+    }
+    
   sampleTileMatrix <- SummarizedExperiment::assays(
     SampleTileObj
   )[[cellPopulation]][tilesCalled, , drop = FALSE]
