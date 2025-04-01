@@ -8,7 +8,6 @@
 exportCoverage(
   SampleTileObject,
   dir = getwd(),
-  type = TRUE,
   cellPopulations = "ALL",
   groupColumn = NULL,
   subGroups = NULL,
@@ -23,9 +22,6 @@ exportCoverage(
 getSampleTileMatrix}
 
 \item{dir}{string. Directory to save files to.}
-
-\item{type}{Boolean. Default is TRUE, and exports Coverage. If set to FALSE,
-exports Insertions.}
 
 \item{cellPopulations}{vector of strings. Cell subsets for which to call
 peaks. This list of group names must be identical to names that appear in
@@ -46,14 +42,12 @@ combination.}
 \item{saveFile}{Boolean. If TRUE, it will save to a BigWig. If FALSE, it will
 return the GRangesList without writing a BigWig.}
 
-\item{numCores}{integer. Number of cores to parallelize peak-calling across
-multiple cell populations}
+\item{numCores}{integer. Number of cores to parallelize over}
 
 \item{verbose}{Set TRUE to display additional messages. Default is FALSE.}
 }
 \value{
-countSE a SummarizedExperiment containing coverage for the given
-  input cell populations.
+A list of GRanges objects, or a list of paths to where the BigWigs are saved
 }
 \description{
 \code{exportCoverage} will export normalized coverage files to

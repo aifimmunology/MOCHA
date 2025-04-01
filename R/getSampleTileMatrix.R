@@ -76,7 +76,7 @@ getSampleTileMatrix <- function(tileResults,
       stop("`groupColumn` not found in the column data of tileResults.")
     }else{
 
-        sampleData$newGroupColumn = unlist(apply(sampleData[,groupColumn], 2, paste0, collapse="_"))
+        sampleData$newGroupColumn = unlist(apply(sampleData[,groupColumn, drop=FALSE], 1, paste0, collapse="_"))
         groupColumn = 'newGroupColumn'
     }
   }

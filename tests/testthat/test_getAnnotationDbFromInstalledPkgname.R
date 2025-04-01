@@ -1,6 +1,7 @@
 if (
   require("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
     require("org.Hs.eg.db", quietly = TRUE) &&
+    require("BSgenome.Hsapiens.UCSC.hg38", quietly = TRUE) &&
     require("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)
 ) {
   test_that("getAnnotationDbFromInstalledPkgname works in valid cases", {

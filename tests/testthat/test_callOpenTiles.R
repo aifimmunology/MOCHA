@@ -4,6 +4,7 @@ skip_on_cran()
 if (
   require("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
     require("org.Hs.eg.db", quietly = TRUE) &&
+    require("BSgenome.Hsapiens.UCSC.hg38", quietly = TRUE) &&
     require("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE) &&
   require("TxDb.Hsapiens.UCSC.hg19.knownGene", quietly = TRUE)
 ) {

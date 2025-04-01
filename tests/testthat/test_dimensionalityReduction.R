@@ -1,4 +1,5 @@
 skip_if_not_installed("BSgenome.Hsapiens.UCSC.hg19")
+skip_if_not_installed("BSgenome.Hsapiens.UCSC.hg38")
 if (requireNamespace("irlba", quietly = TRUE) &&
   requireNamespace("Matrix", quietly = TRUE) &&
   requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE) &&

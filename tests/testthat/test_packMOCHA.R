@@ -2,6 +2,7 @@ skip_on_cran()
 if (
   require("TxDb.Hsapiens.UCSC.hg38.refGene", quietly = TRUE) &&
   require("org.Hs.eg.db", quietly = TRUE) &&
+  require("BSgenome.Hsapiens.UCSC.hg38", quietly = TRUE) &&
   require("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)
 ) {
   # Working dir during tests is under projects/MOCHA/tests/testthat/. Assumes
