@@ -153,4 +153,4 @@ To contact the developers on issues and feature requests, please contact us via 
 
 # <a name="license"></a> License
 
-MOCHA follows the Allen Institute Software License - full information about the license can be found on the LICENSE file.
+MOCHA is licensed under the GPLv3 license - full information about the license can be found in the LICENSE.md file.
