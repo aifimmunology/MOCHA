@@ -14,7 +14,7 @@
       colData names(1): Sample
       
       $Genome
-      [1] "hg19"
+      [1] "BSgenome.Hsapiens.UCSC.hg19"
       
       $TxDb
       $TxDb$pkgname
@@ -100,7 +100,7 @@
       
       $History
       $History[[1]]
-      [1] "callOpenTiles 1.1.0"
+      [1] "callOpenTiles 1.2.0"
       
       
 

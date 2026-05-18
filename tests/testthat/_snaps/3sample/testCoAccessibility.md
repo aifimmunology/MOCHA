@@ -4,6 +4,7 @@
       results
     Output
           Correlation                  Tile1                  Tile2 pValues
+               <lgcl>                 <char>                 <char>   <num>
        1:          NA chr1:10009500-10009999 chr1:10002500-10002999      NA
        2:          NA chr1:10009500-10009999 chr1:10398000-10398499      NA
        3:          NA chr1:10009500-10009999   chr1:9644500-9644999      NA

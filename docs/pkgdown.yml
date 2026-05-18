@@ -1,0 +1,11 @@
+pandoc: 3.1.1
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  COVID-walkthrough: COVID-walkthrough.html
+  ImportingFromOtherSources: ImportingFromOtherSources.html
+last_built: 2024-02-06T21:28Z
+urls:
+  reference: https://aifimmunology.github.io/MOCHA/reference
+  article: https://aifimmunology.github.io/MOCHA/articles
+

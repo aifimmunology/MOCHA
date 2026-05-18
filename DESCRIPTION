@@ -108,7 +108,9 @@ Suggests:
     rtracklayer,
     cowplot,
     mixtools,
-    zoo
+    zoo,
+    Biostrings,
+    ggrastr
 Additional_repositories: https://imran-aifi.github.io/drat
 VignetteBuilder: knitr
 Config/testthat/edition: 3

@@ -267,14 +267,22 @@ getDifferentialAccessibleTiles <- function(SampleTileObj,
 
 
 optimizeThreshold <- function(differentials, qValue, minZeroDiff){
+
+        if(all(is.null(differentials))){
+
+            return(NULL)
+    
+        }
+        
         diffs = dplyr::filter(as.data.frame(differentials), !is.na(Test_Statistic))
         diffs$Avg_Intensity_Case[is.na(diffs$Avg_Intensity_Case)] = 0
         diffs$Avg_Intensity_Control[is.na(diffs$Avg_Intensity_Control)] = 0
         step1 = 0.05
         quantiles1 = seq(0.5, 0.95, by = step1)                                       
         while(step1 > 0.01){
-            subDiffs <- calculateSignificantTiles(diffs, quantileNum = quantiles1, minZeroDiff = minZeroDiff)
-            numSet <- unlist(lapply(subDiffs, function(XX)sum(XX$FDR < qValue)))
+            subDiffs <- calculateSignificantTiles(diffs, 
+                            quantileNum = quantiles1, minZeroDiff = minZeroDiff)
+            numSet <- unlist(lapply(subDiffs, function(XX)sum(XX$FDR < qValue, na.rm = TRUE)))
             names(numSet) = quantiles1
             ## Identify top 3 quantiles
             topNum = as.numeric(names(numSet)[order(numSet, decreasing = TRUE)][c(1:3)])
@@ -295,8 +303,9 @@ calculateSignificantTiles <- function(diffDF,
                                 quantileNum, minZeroDiff = 0.5){
 
     diff0s = diffDF$Pct0_Case - diffDF$Pct0_Control
-    newThresh <- stats::quantile(c(diffDF$Avg_Intensity_Case, na.rm = TRUE,
-                            diffDF$Avg_Intensity_Control), probs = quantileNum)
+    newThresh <- stats::quantile(c(diffDF$Avg_Intensity_Case,
+                                   diffDF$Avg_Intensity_Control), 
+                                 probs = quantileNum, na.rm = TRUE)
     
     filtList = list()
     for(i in newThresh){

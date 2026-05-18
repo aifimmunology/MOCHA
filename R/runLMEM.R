@@ -48,11 +48,11 @@ runLMEM <- function(ExperimentObj,
                     initialSampling = 5,
                     verbose = FALSE,
                     numCores = 2) {
-  lifecycle::deprecate_warn(
-    when="1.1.0", 
-    what="runLMEM()", 
-    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
-  )
+ # lifecycle::deprecate_warn(
+ #   when="1.1.0", 
+ #   what="runLMEM()", 
+ #   details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
+ # )
   Sample <- NULL
 
   if (!requireNamespace("lmerTest", quietly = TRUE)) {
@@ -316,11 +316,11 @@ runLMEM <- function(ExperimentObj,
 #' @noRd
 processModelOutputs <- function(modelOutputList, nullDFList, rownamesList, ranged = FALSE,
                                 SummarizedExperimentObj, returnList = FALSE) {
-  lifecycle::deprecate_warn(
-    when="1.1.0", 
-    what="processModelOutputs()", 
-    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
-  )
+ # lifecycle::deprecate_warn(
+  #  when="1.1.0", 
+  #  what="processModelOutputs()", 
+  #  details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
+  #)
   coeffNames <- rownames(nullDFList$Coeff)
   newColumnNames <- gsub("Pr\\(>\\|.\\|)", "p_value", gsub(" |\\. ", "_", colnames(nullDFList$Coeff)))
   output_list <- lapply(coeffNames, function(z) {
@@ -416,11 +416,11 @@ pilotLMEM <- function(ExperimentObj,
                       modelFormula,
                       pilotIndices = 1:10,
                       verbose = FALSE) {
-  lifecycle::deprecate_warn(
-    when="1.1.0", 
-    what="pilotLMEM()", 
-    details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
-  )
+ # lifecycle::deprecate_warn(
+  #  when="1.1.0", 
+ #   what="pilotLMEM()", 
+ #   details = "Please use improved modeling functions in the package `ChAI` at https://github.com/aifimmunology/ChAI"
+ # )
   Sample <- NULL
   if (length(assayName) > 1) {
     stop(
