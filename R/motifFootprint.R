@@ -178,7 +178,7 @@ motifFootprint <- function(SampleTileObj,
             stop(stringr::str_interp(c(
               "There is no insertion coverage for cell population '${x}' in the ",
               "following samples in sample grouping '${names(subSamples)[y]}': ",
-              "${missingSamples}"
+              "${missingSamples}. Set FORCE = TRUE to bypass error."
             )))
         }else{
             
@@ -256,7 +256,8 @@ motifFootprint <- function(SampleTileObj,
             colData2 = unique(allNorms[, c('Sample', 'Position'), with = FALSE])[
                             , Index := paste(Sample, Position, sep='__')]
             
-            matrix1 = data.table::dcast(allNorms[, c('Sample', 'Position', 'score', 'Location'), with = FALSE],
+            matrix1 = data.table::dcast(allNorms[, c('Sample', 'Position', 'score', 'Location'),
+                                                 with = FALSE],
                                               Location ~ Sample + Position, fun.aggregate = sum, 
                                                 value.var = 'score', sep = "__")
             rm(allNorms)

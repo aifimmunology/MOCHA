@@ -1,4 +1,5 @@
-if (require("BSgenome.Hsapiens.UCSC.hg19", quietly=TRUE)) {
+if (require("BSgenome.Hsapiens.UCSC.hg19", quietly=TRUE) & 
+   require("BSgenome.Hsapiens.UCSC.hg38", quietly=TRUE)) {
   test_that("exportDifferentials works on a 3 sample test dataset", {
     capture.output(
       SampleTileMatrix <- MOCHA::getSampleTileMatrix(

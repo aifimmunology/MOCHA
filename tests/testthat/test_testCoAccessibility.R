@@ -1,6 +1,7 @@
 skip_if_not_installed("chromVAR")
 skip_if_not_installed("BSgenome.Hsapiens.UCSC.hg19")
 if (requireNamespace("chromVAR", quietly = TRUE) & 
+    require("BSgenome.Hsapiens.UCSC.hg38", quietly = TRUE) &
     requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)) {
   test_that("testCoAccessibleLinks works on a 1 sample test dataset", {
     cellPopulations <- c("C2", "C5")

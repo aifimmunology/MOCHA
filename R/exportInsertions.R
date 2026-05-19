@@ -155,7 +155,7 @@ exportLocalFootprints <- function(SampleTileObj,
         subSamples <- list("All" = metaFile[, "Sample"])
         
     }
-    
+
     ## Filter to specific samples of interest from the SampleTileObject
     for(y in seq_along(subSamples)) {
       if (!all(subSamples[[y]] %in% names(insertionsGRangesList))) {
@@ -164,9 +164,9 @@ exportLocalFootprints <- function(SampleTileObj,
           
         if(!force){
             stop(stringr::str_interp(c(
-              "There is no insertion coverage for cell population '${x}' in the ",
+              "There is no insertion coverage for cell population '${cellPopulation}' in the ",
               "following samples in sample grouping '${names(subSamples)[y]}': ",
-              "${missingSamples}"
+              "${missingSamples}. Set force = TRUE to bypass error."
             )))
         }else{
             
@@ -190,7 +190,7 @@ exportLocalFootprints <- function(SampleTileObj,
     for (sampleName in names(insertionsGRangesList)) {
         
         ##Print out the name of the insertion file. 
-        type <- paste0("window", windowSize)
+        type <- paste0("Insertions_window", windowSize)
         outfile <- file.path(outDir, paste0(
             cellPopulation, "__", sampleName, "__", type, ".bw"
         ))
@@ -266,8 +266,7 @@ exportLocalFootprints <- function(SampleTileObj,
             if (verbose) { message("Output file already exists: ", outfile) }
             next # Skip this one!
         }
-          
-          
+
         result <- tryCatch({
                     plyranges::write_bigwig(cellPopSubsampleCov[[one_group]], outfile)
                 }, warning = function(w) {

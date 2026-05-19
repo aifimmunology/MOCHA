@@ -2,6 +2,7 @@ skip_on_cran() # Motif annotations take a long time
 if (requireNamespace("chromVAR", quietly = TRUE) &&
   requireNamespace("chromVARmotifs", quietly = TRUE) &&
   requireNamespace("motifmatchr", quietly = TRUE) &&
+    require("BSgenome.Hsapiens.UCSC.hg38", quietly = TRUE) &&
   requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)
 ) {
   test_that("addMotifSet works on a 3 sample test dataset", {

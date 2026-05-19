@@ -1,5 +1,6 @@
 skip_if_not_installed("chromVAR")
 skip_if_not_installed("BSgenome.Hsapiens.UCSC.hg19")
+skip_if_not_installed("BSgenome.Hsapiens.UCSC.hg38")
 if (requireNamespace("chromVAR", quietly = TRUE) & 
     requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)) {
   test_that("combineSampleTileMatrix works on a 3-sample dataset", {

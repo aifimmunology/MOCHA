@@ -31,11 +31,15 @@ combineSampleTileMatrix <- function(SampleTileObj,
   # Let's generate a new assay, that will contain the
   # the intensity for a given cell, as well as the
   # median intensity per sample-tile for all other cell types (i.e. the background)
-
+    
   newAssays <- list(do.call("cbind", methods::as(assays, "list")))
   newSamplesNames <- unlist(lapply(names(assays), function(x) {
     gsub(" ", "_", paste(x, colnames(SampleTileObj), sep = "__"))
   }))
+
+  if (length(newSamplesNames) != dim(newAssays[[1]])[2]) {
+    stop('columns corrupted in sample tile object')
+  }
 
   names(newAssays) <- "counts"
   colnames(newAssays[[1]]) <- newSamplesNames
